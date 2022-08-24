@@ -2048,11 +2048,21 @@ rt_err_t rt_usbd_ep_in_handler(udcd_t dcd, rt_uint8_t address, rt_size_t size)
     device = rt_usbd_find_device(dcd);
     if (device)
     {
-        /* UAC1 uses isochronous transactions, it's data is
-         * continuous and real-time, so needs to handle the
-         * data immediately in UAC1 function without waiting
-         * for usb device thread to process the msg. */
-        _data_notify(device, &msg.content.ep_msg);
+        uep_t ep;
+
+        ep = rt_usbd_find_endpoint(device, RT_NULL, address);
+        if (ep && USB_EP_ATTR(ep->ep_desc->bmAttributes) == USB_EP_ATTR_ISOC)
+        {
+            /* UAC1 uses isochronous transactions, it's data is
+             * continuous and real-time, so needs to handle the
+             * data immediately in UAC1 function without waiting
+             * for usb device thread to process the msg. */
+            _data_notify(device, &msg.content.ep_msg);
+        }
+        else
+        {
+            rt_usbd_event_signal(&msg);
+        }
     }
     else
     {
@@ -2081,11 +2091,21 @@ rt_err_t rt_usbd_ep_out_handler(udcd_t dcd, rt_uint8_t address, rt_size_t size)
     device = rt_usbd_find_device(dcd);
     if (device)
     {
-        /* UAC1 uses isochronous transactions, it's data is
-         * continuous and real-time, so needs to handle the
-         * data immediately in UAC1 function without waiting
-         * for usb device thread to process the msg. */
-        _data_notify(device, &msg.content.ep_msg);
+        uep_t ep;
+
+        ep = rt_usbd_find_endpoint(device, RT_NULL, address);
+        if (ep && USB_EP_ATTR(ep->ep_desc->bmAttributes) == USB_EP_ATTR_ISOC)
+        {
+            /* UAC1 uses isochronous transactions, it's data is
+             * continuous and real-time, so needs to handle the
+             * data immediately in UAC1 function without waiting
+             * for usb device thread to process the msg. */
+            _data_notify(device, &msg.content.ep_msg);
+        }
+        else
+        {
+            rt_usbd_event_signal(&msg);
+        }
     }
     else
     {
