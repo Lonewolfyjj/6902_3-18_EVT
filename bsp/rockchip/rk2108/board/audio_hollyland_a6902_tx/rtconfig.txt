@@ -135,7 +135,6 @@
 /* RT_USING_DFS_RAMFS is not set */
 /* RT_USING_DFS_UFFS is not set */
 /* RT_USING_DFS_JFFS2 is not set */
-/* RT_USING_DFS_NFS is not set */
 /* RT_USING_LITTLEFS is not set */
 
 /* Device Drivers */
@@ -190,8 +189,6 @@
 /* _RT_USB_DEVICE_CDC is not set */
 /* _RT_USB_DEVICE_MSTORAGE is not set */
 #define _RT_USB_DEVICE_HID
-/* _RT_USB_DEVICE_RNDIS is not set */
-/* _RT_USB_DEVICE_ECM is not set */
 /* _RT_USB_DEVICE_WINUSB is not set */
 /* _RT_USB_DEVICE_UAC1 is not set */
 /* _RT_USB_DEVICE_UVC is not set */
@@ -220,54 +217,7 @@
 
 /* light weight TCP/IP stack */
 
-#define RT_USING_LWIP
-/* RT_USING_LWIP141 is not set */
-#define RT_USING_LWIP202
-/* RT_USING_LWIP210 is not set */
-/* RT_USING_LWIP_IPV6 is not set */
-#define RT_LWIP_IGMP
-#define RT_LWIP_ICMP
-/* RT_LWIP_SNMP is not set */
-#define RT_LWIP_DNS
-#define RT_LWIP_DHCP
-#define IP_SOF_BROADCAST 1
-#define IP_SOF_BROADCAST_RECV 1
-
-/* Static IPv4 Address */
-
-#define RT_LWIP_IPADDR "192.168.1.30"
-#define RT_LWIP_GWADDR "192.168.1.1"
-#define RT_LWIP_MSKADDR "255.255.255.0"
-#define RT_LWIP_UDP
-#define RT_LWIP_TCP
-/* RT_LWIP_RAW is not set */
-/* RT_LWIP_PPP is not set */
-#define RT_MEMP_NUM_NETCONN 8
-#define RT_LWIP_PBUF_NUM 16
-#define RT_LWIP_RAW_PCB_NUM 4
-#define RT_LWIP_UDP_PCB_NUM 4
-#define RT_LWIP_TCP_PCB_NUM 4
-#define RT_LWIP_TCP_SEG_NUM 40
-#define RT_LWIP_TCP_SND_BUF 8196
-#define RT_LWIP_TCP_WND 8196
-#define RT_LWIP_TCPTHREAD_PRIORITY 10
-#define RT_LWIP_TCPTHREAD_MBOX_SIZE 8
-#define RT_LWIP_TCPTHREAD_STACKSIZE 1024
-/* LWIP_NO_RX_THREAD is not set */
-/* LWIP_NO_TX_THREAD is not set */
-#define RT_LWIP_ETHTHREAD_PRIORITY 12
-#define RT_LWIP_ETHTHREAD_STACKSIZE 1024
-#define RT_LWIP_ETHTHREAD_MBOX_SIZE 8
-/* RT_LWIP_REASSEMBLY_FRAG is not set */
-#define LWIP_NETIF_STATUS_CALLBACK 1
-#define SO_REUSE 1
-#define LWIP_SO_RCVTIMEO 1
-#define LWIP_SO_SNDTIMEO 1
-#define LWIP_SO_RCVBUF 1
-/* RT_LWIP_NETIF_LOOPBACK is not set */
-#define LWIP_NETIF_LOOPBACK 0
-/* RT_LWIP_STATS is not set */
-/* RT_LWIP_DEBUG is not set */
+/* RT_USING_LWIP is not set */
 
 /* Modbus master and slave stack */
 
@@ -276,7 +226,6 @@
 /* AT commands */
 
 /* RT_USING_AT is not set */
-/* LWIP_USING_DHCPD is not set */
 
 /* System */
 
@@ -297,7 +246,6 @@
 #define PKG_CMBACKTRACE_DUMP_STACK
 #define PKG_CMBACKTRACE_PRINT_ENGLISH
 /* PKG_CMBACKTRACE_PRINT_CHINESE is not set */
-/* PKG_CMBACKTRACE_FAULT_REBOOT is not set */
 /* PKG_CMBACKTRACE_FAULT_DUMP_TO_FLASH is not set */
 /* RT_USING_LOGTRACE is not set */
 /* RT_USING_RYM is not set */
@@ -350,17 +298,12 @@
 
 /* HFP_CLIENT_EXAMPLE is not set */
 /* RT_USING_CYPRESS is not set */
-#define RT_USING_AUDIO_SERVER
-#define AUDIO_USING_STATIC_LIBRARY
-/* AUDIO_USING_SOURCE_CODE is not set */
-/* RT_USING_EXT_CODEC is not set */
-/* AUDIO_ENABLE_PLAYER_TEST is not set */
-/* AUDIO_ENABLE_RECORDER_TEST is not set */
+/* RT_USING_AUDIO_SERVER is not set */
 /* RT_USING_PKGS is not set */
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -369,7 +312,7 @@
 
 /* HAL_DBG_ON is not set */
 /* RT_USING_SND_GLB_RST is not set */
-#define RT_USING_RESET
+/* RT_USING_RESET is not set */
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
 /* RT_USING_PROF_IRQ is not set */
@@ -454,33 +397,16 @@
 
 /* Enable Audio */
 
-#define RT_USING_CODEC
-#define RT_USING_CODEC_ES8311
+/* RT_USING_CODEC is not set */
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
 
 /* Audio Cards */
 
-#define RT_USING_AUDIO_CARD
-/* RT_USING_AUDIO_CARD_ACDCDIG is not set */
-/* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
-/* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-#define RT_USING_AUDIO_CARD_PDM_MIC
-/* RT_USING_AUDIO_CARD_PCM_BT is not set */
-/* RT_USING_AUDIO_CARD_AW8896 is not set */
-/* RT_USING_AUDIO_CARD_ES7243 is not set */
-/* RT_USING_AUDIO_CARD_ES8156 is not set */
-#define RT_USING_AUDIO_CARD_ES8311
-/* RT_USING_AUDIO_CARD_ES8388 is not set */
-/* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
-/* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
+/* RT_USING_AUDIO_CARD is not set */
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
-#define RT_USING_I2STDM
-#define RT_USING_I2STDM1
-#define RT_USING_PDM
-#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
@@ -488,7 +414,7 @@
 #define RT_USING_PMU
 /* RT_USING_DISPLAY is not set */
 /* RT_USING_KEYCTRL is not set */
-#define RT_USING_PWM0
+/* RT_USING_PWM0 is not set */
 
 /* Enable DSP */
 
@@ -497,7 +423,7 @@
 #define RT_USING_DSPFW_BUILTIN
 /* RT_USING_DSPFW_FILE is not set */
 #define RT_DSPFW_FILE_NAME "rkdsp_fw.c"
-/* RT_USING_DSP_TRACE is not set */
+#define RT_USING_DSP_TRACE
 #define RT_DSP_UART_PORT 0
 
 /* Enable UART */
@@ -505,7 +431,7 @@
 #define RT_USING_UART
 #define RT_USING_UART0
 /* RT_USING_UART1 is not set */
-#define RT_USING_UART2
+/* RT_USING_UART2 is not set */
 
 /* Enable I2C */
 
@@ -524,18 +450,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_RK_IOT_APP
-#define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
-/* PRJCONF_NET_EN is not set */
-/* PRJCONF_USING_AISPEECH is not set */
-#define PRJCONF_AI_RK
-/* PRJCONF_AI_SPEECH is not set */
-/* PRJCONF_AI_CUSTOM is not set */
-/* PRJCONF_AI_LWAKEUP is not set */
-#define PRJCONF_PLAYBACK_SOUND_CARD "es8311p"
-#define PRJCONF_ASR_SOUND_CARD "pdmc"
-/* PRJCONF_ASR_USE_VAD is not set */
+/* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
 
 /* RT-Thread bsp test case */
