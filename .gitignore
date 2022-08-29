@@ -18,8 +18,6 @@ documentation/html
 *.obj
 *.bak
 *.dep
-*.lib
-*.a
 *.i
 *.d
 *.patch
@@ -30,7 +28,9 @@ packages
 cconfig.h
 GPUCache
 
-# modify by lzh
+# modify by lzh | yxy
+# *.lib
+# *.a
 # bsp/rockchip/common/hal           
 .github/
 .repo/
