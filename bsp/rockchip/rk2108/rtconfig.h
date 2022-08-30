@@ -360,7 +360,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_rx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -377,7 +377,7 @@
 /* RT_USING_PWM_REGULATOR is not set */
 #define RT_USING_CACHE
 #define RT_USING_UNCACHE_HEAP
-#define RT_UNCACHE_HEAP_ORDER 0x0E
+#define RT_UNCACHE_HEAP_ORDER 0x0F
 #define RT_USING_LARGE_HEAP
 #define RT_LARGE_MALLOC_THRRESH 512
 #define RT_LARGE_HEAP_SIZE 524288
@@ -524,18 +524,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_RK_IOT_APP
-#define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
-/* PRJCONF_NET_EN is not set */
-/* PRJCONF_USING_AISPEECH is not set */
-#define PRJCONF_AI_RK
-/* PRJCONF_AI_SPEECH is not set */
-/* PRJCONF_AI_CUSTOM is not set */
-/* PRJCONF_AI_LWAKEUP is not set */
-#define PRJCONF_PLAYBACK_SOUND_CARD "es8311p"
-#define PRJCONF_ASR_SOUND_CARD "pdmc"
-/* PRJCONF_ASR_USE_VAD is not set */
+/* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
 
 /* RT-Thread bsp test case */
