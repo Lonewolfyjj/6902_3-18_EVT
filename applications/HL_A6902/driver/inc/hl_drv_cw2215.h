@@ -16,8 +16,8 @@
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
 
-#ifndef __CW2215_H__
-#define __CW2215_H__
+#ifndef __HL_DRV_CW2215_H__
+#define __HL_DRV_CW2215_H__
 
 /* Includes ------------------------------------------------------------------*/
 
