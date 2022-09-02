@@ -85,31 +85,46 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
 
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-rt_err_t hl_hal_gpio_init(hl_gpio_port_e gpio_index)
+rt_err_t hl_hal_gpio_init(hl_gpio_pin_e gpio_index)
 {
     rt_pin_mode(gpio_config_table[gpio_index].pin, gpio_config_table[gpio_index].mode);
     return RT_EOK;
 }
 
-rt_err_t hl_hal_gpio_deinit(hl_gpio_port_e gpio_index)
+rt_err_t hl_hal_gpio_deinit(hl_gpio_pin_e gpio_index)
 {
     rt_pin_mode(gpio_config_table[gpio_index].pin, PIN_MODE_INPUT);
     return RT_EOK;
 }
 
-void hl_hal_gpio_high(hl_gpio_port_e gpio_index)
+void hl_hal_gpio_high(hl_gpio_pin_e gpio_index)
 {
-    rt_pin_write(gpio_config_table[gpio_index].pin, 1);
+    rt_pin_write(gpio_config_table[gpio_index].pin, PIN_HIGH);
 }
 
-void hl_hal_gpio_low(hl_gpio_port_e gpio_index)
+void hl_hal_gpio_low(hl_gpio_pin_e gpio_index)
 {
-    rt_pin_write(gpio_config_table[gpio_index].pin, 0);
+    rt_pin_write(gpio_config_table[gpio_index].pin, PIN_LOW);
 }
 
-int hl_hal_gpio_read(hl_gpio_port_e gpio_index)
+int hl_hal_gpio_read(hl_gpio_pin_e gpio_index)
 {
     return rt_pin_read(gpio_config_table[gpio_index].pin);
+}
+
+rt_err_t hl_hal_gpio_attach_irq(hl_gpio_pin_e gpio_index, rt_uint32_t mode, void (*hdr)(void *args), void *args)
+{
+    return rt_pin_attach_irq(gpio_config_table[gpio_index].pin, mode, hdr, args);
+}
+
+rt_err_t hl_hal_gpio_detach_irq(hl_gpio_pin_e gpio_index)
+{
+    return rt_pin_detach_irq(gpio_config_table[gpio_index].pin);
+}
+
+rt_err_t hl_hal_gpio_irq_enable(hl_gpio_pin_e gpio_index, rt_uint32_t enabled)
+{
+    return rt_pin_irq_enable(gpio_config_table[gpio_index].pin, enabled);
 }
 
 /*

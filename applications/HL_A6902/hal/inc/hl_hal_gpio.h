@@ -63,7 +63,7 @@ typedef enum _hl_gpio_port_e
 
     // GPIO 总数
     USER_GPIO_COUNT
-} hl_gpio_port_e;
+} hl_gpio_pin_e;
 
 #else
 /// RX gpio 引脚枚举
@@ -111,7 +111,7 @@ typedef enum _hl_gpio_port_e
 
     // GPIO 总数
     USER_GPIO_COUNT
-} hl_gpio_port_e;
+} hl_gpio_pin_e;
 
 #endif
 
@@ -134,7 +134,7 @@ typedef enum _hl_gpio_port_e
  * <tr><td>2022-09-01      <td>luzhanghao     <td>新建
  * </table>
  */
-rt_err_t hl_hal_gpio_init(hl_gpio_port_e gpio_index);
+rt_err_t hl_hal_gpio_init(hl_gpio_pin_e gpio_index);
 
 /**
  * @brief gpio去初始化函数
@@ -151,7 +151,7 @@ rt_err_t hl_hal_gpio_init(hl_gpio_port_e gpio_index);
  * <tr><td>2022-09-01      <td>luzhanghao     <td>新建
  * </table>
  */
-rt_err_t hl_hal_gpio_deinit(hl_gpio_port_e gpio_index);
+rt_err_t hl_hal_gpio_deinit(hl_gpio_pin_e gpio_index);
 
 /**
  * @brief gpio输出高电平
@@ -166,7 +166,7 @@ rt_err_t hl_hal_gpio_deinit(hl_gpio_port_e gpio_index);
  * <tr><td>2022-09-01      <td>luzhanghao     <td>新建
  * </table>
  */
-void hl_hal_gpio_high(hl_gpio_port_e gpio_index);
+void hl_hal_gpio_high(hl_gpio_pin_e gpio_index);
 
 /**
  * @brief gpio输出低电平
@@ -181,7 +181,7 @@ void hl_hal_gpio_high(hl_gpio_port_e gpio_index);
  * <tr><td>2022-09-01      <td>luzhanghao     <td>新建
  * </table>
  */
-void hl_hal_gpio_low(hl_gpio_port_e gpio_index);
+void hl_hal_gpio_low(hl_gpio_pin_e gpio_index);
 
 /**
  * @brief 获取gpio电平
@@ -197,7 +197,64 @@ void hl_hal_gpio_low(hl_gpio_port_e gpio_index);
  * <tr><td>2022-09-01      <td>luzhanghao     <td>新建
  * </table>
  */
-int hl_hal_gpio_read(hl_gpio_port_e gpio_index);
+int hl_hal_gpio_read(hl_gpio_pin_e gpio_index);
+
+/**
+ * @brief 设置中断处理函数
+ * @param [in] gpio_index gpio_index gpio枚举值
+ * @param [in] mode 中断模式
+ *       #define PIN_IRQ_MODE_RISING             0x00
+ *       #define PIN_IRQ_MODE_FALLING            0x01
+ *       #define PIN_IRQ_MODE_RISING_FALLING     0x02
+ *       #define PIN_IRQ_MODE_HIGH_LEVEL         0x03
+ *       #define PIN_IRQ_MODE_LOW_LEVEL          0x04
+ * @param [in] hdr 中断处理函数
+ * @param [in] args 中断处理函数参数
+ * @return rt_err_t 函数绑定结果 RT_EOK：成功 | 其他：失败
+ * @date 2022-09-02
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-02      <td>luzhanghao     <td>新建
+ * </table>
+ */
+rt_err_t hl_hal_gpio_attach_irq(hl_gpio_pin_e gpio_index, rt_uint32_t mode, void (*hdr)(void *args), void *args);
+
+/**
+ * @brief 中断函数解除绑定
+ * @param [in] gpio_index gpio_index gpio枚举值
+ * @return rt_err_t 函数解除绑定结果 RT_EOK：成功 | 其他：失败
+ * @date 2022-09-02
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-02      <td>luzhanghao     <td>新建
+ * </table>
+ */
+rt_err_t hl_hal_gpio_detach_irq(hl_gpio_pin_e gpio_index);
+
+/**
+ * @brief 设置中断使能状态
+ * @param [in] gpio_index gpio_index gpio枚举值
+ * @param [in] enabled 使能：PIN_IRQ_ENABLE | 失能：PIN_IRQ_DISABLE
+ * @return rt_err_t gpio中断使能结果 RT_EOK：成功 | 其他：失败
+ * @date 2022-09-02
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-02      <td>luzhanghao     <td>新建
+ * </table>
+ */
+rt_err_t hl_hal_gpio_irq_enable(hl_gpio_pin_e gpio_index, rt_uint32_t enabled);
 
 #endif /* __HL_HAL_GPIO_H__ */
 
