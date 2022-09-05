@@ -27,19 +27,11 @@
 
 #ifndef __HL_DRV_SGM41518_H
 #define __HL_DRV_SGM41518_H
-#include "stdbool.h"
+#include "stdint.h"
 
 /**************************************************************************
  *                                基本宏                                     *
  **************************************************************************/
-/* 基本状态 */
-#ifndef TRUE
-#define TRUE            true
-#endif
-
-#ifndef FALSE
-#define FALSE           false
-#endif
 
 /* 函数返回状态 */
 #define HL_SUCCESS  	0
@@ -47,6 +39,7 @@
 
 /* 使用I2C */
 #define IIC_NAME        "i2c0"
+#define DEVICE_ADDRESS  0x38
 
 /* 寄存器地址 */
 #define	REG00_ADDR		0x00
@@ -65,6 +58,10 @@
 #define	REG0D_ADDR		0x0D
 #define	REG0E_ADDR		0x0E
 #define	REG0F_ADDR		0x0F
+
+#define	CMD_MASK	    0x80
+#define	RW_CMD_SET(x)   ((x) | (CMD_MASK))
+#define	R_CMD_SET(x)    ((x) & (~CMD_MASK))
 
 /**************************************************************************
  *                               功能选项参数宏                            *
@@ -115,15 +112,15 @@
 
 //reg 03
 #define PRE_CHARGE_SET(x)   (x > 12) ? (12):(x) //Pre-charge[7:4] 预充电电流，参数 n <= 12 , I = 20mA + (20 * n)mA
-#define TER_CURRENT_SET(x)  (x > 12) ? (12):(x)//TER_CURRENT[3:0] 终止电流，参数 n <= 12 , I = 20mA + (20 * n)mA
+#define TER_CURRENT_SET(x)  (x > 15) ? (15):(x)//TER_CURRENT[3:0] 终止电流，参数 n <= 12 , I = 20mA + (20 * n)mA
 
 //reg 04
 #define CHARGE_VOLTAGE_LIMIT(x) ((x > 24) & (x != 15 )) ? (15):(x) //VREG[7:3] 充电电流限制，参数 n <= 24 & n != 15
                                                                    // V = 3856mV + (32 * n)mV,n = 15,V = 4352mV
 #define TOP_TIMER_DISABLE           0   //关闭充电延长时间
-#define TOP_TIMER_15MIN             0   //充电延长时间15分钟
-#define TOP_TIMER_30MIN             0   //充电延长时间30分钟
-#define TOP_TIMER_45MIN             0   //充电延长时间45分钟
+#define TOP_TIMER_15MIN             1   //充电延长时间15分钟
+#define TOP_TIMER_30MIN             2   //充电延长时间30分钟
+#define TOP_TIMER_45MIN             3   //充电延长时间45分钟
 
 #define RECHARGE_THRESHOLD_100      0   //电池充电阈值 VREG - 100mV
 #define RECHARGE_THRESHOLD_200      1   //电池充电阈值 VREG - 200mV
@@ -137,8 +134,8 @@
 #define WDG_TIMER_SET_80S           2   //看门狗复位时间80秒
 #define WDG_TIMER_SET_160S          3   //看门狗复位时间160秒
 
-#define CHARGE_SAFET_TIMER_ENABLE   0   //使能充电安全计数器
-#define CHARGE_SAFET_TIMER_DISABLE  1   //失能充电安全计数器
+#define CHARGE_SAFET_TIMER_ENABLE   1   //使能充电安全计数器
+#define CHARGE_SAFET_TIMER_DISABLE  0   //失能充电安全计数器
 
 #define CHARGE_SAFET_TIMER_SET_20H  0   //安全计数器设置20小时
 #define CHARGE_SAFET_TIMER_SET_10H  1   //安全计数器设置0小时
@@ -156,9 +153,9 @@
 #define VAC_OVP_THRESHOLD_14V       3   //OVP输入电压阈值14V
 
 #define BOOST_VOL_THRESHOLD_4V85    0   //boost模式调压设置4.85V
-#define BOOST_VOL_THRESHOLD_5V      0   //boost模式调压设置5V
-#define BOOST_VOL_THRESHOLD_5V15    0   //boost模式调压设置5.15V
-#define BOOST_VOL_THRESHOLD_5V30    0   //boost模式调压设置5.30V
+#define BOOST_VOL_THRESHOLD_5V      1   //boost模式调压设置5V
+#define BOOST_VOL_THRESHOLD_5V15    2   //boost模式调压设置5.15V
+#define BOOST_VOL_THRESHOLD_5V30    3   //boost模式调压设置5.30V
 
 #define VINDPM_THRESHOLD(x)     (x > 15) ? (15):(x) //VINDPM[3:0] VINDPM电压阈值，参数 n <= 15 , V = VINDPM_OS + (0.1 * n)mV
 
@@ -169,8 +166,8 @@
 #define TMR2X_ENABLE                1   //使能半时钟安全计数器
 #define TMR2X_DISABLE               1  //失能半时钟安全计数器
 
-#define BATFET_ENABLE               0   //使能关闭BATFET延时
-#define BATFET_DISABLE              1   //失能关闭BATFET延时
+#define BATFET_ENABLE               0   //使能关闭BATFET
+#define BATFET_DISABLE              1   //失能关闭BATFET
 
 #define JEITA_VSET_H_SET_4V1        0   //设置高温区间（45℃ - 60℃）充电电压4.1V    
 #define JEITA_VSET_H_SET_VREG       1   //设置高温区间（45℃ - 60℃）充电电压等于VREG
@@ -273,10 +270,10 @@
 #define JEITA_COOL_VT2_15C          2   //寒冷区间阈值 15℃
 #define JEITA_COOL_VT2_20C          3   //寒冷区间阈值 20℃
 
-#define JEITA_WARM_VT2_40C          0   //温暖区间阈值 40℃
-#define JEITA_WARM_VT2_44C5         1   //温暖区间阈值 44.5℃
-#define JEITA_WARM_VT2_50C5         2   //温暖区间阈值 50.5℃
-#define JEITA_WARM_VT2_54C5         3   //温暖区间阈值 54.5℃
+#define JEITA_WARM_VT3_40C          0   //温暖区间阈值 40℃
+#define JEITA_WARM_VT3_44C5         1   //温暖区间阈值 44.5℃
+#define JEITA_WARM_VT3_50C5         2   //温暖区间阈值 50.5℃
+#define JEITA_WARM_VT3_54C5         3   //温暖区间阈值 54.5℃
 
 //reg 0D
 #define JEITA_ENABLE                0   //使能JEITA
@@ -398,7 +395,7 @@ enum hl_r18_param
     // reg 0A
     R_VBUS_GD,//良好输入源检测
     R_VINDPM_STAT,//输入电压调节功能状态
-    R_IINDPM_STA,//输入电流调节功能状态
+    R_IINDPM_STAT,//输入电流调节功能状态
     R_TOPOFF_ACTIVE,//top-off计数器状态
     R_ACOV_STAT,//输入过压状态
 
@@ -412,17 +409,6 @@ enum hl_r18_param
 /**************************************************************************
  *                             数据类型                                    *
  **************************************************************************/
-
-/* 数据类型 */
-typedef void              VOID;
-typedef unsigned char     uint8_t;
-typedef unsigned short    uint16_t;
-typedef unsigned int      uint32_t; 
-typedef bool              BOOL;
-typedef int               INT;
-typedef unsigned long     ULONG;
-typedef char              CHAR;
-typedef signed char       SCHAR;
 
 // REG00 TYPE 
 typedef struct _HL_SGM41518_REG00_T
@@ -764,7 +750,7 @@ typedef struct _HL_SGM41518_REG0C_T
 // REG0D TYPE 
 typedef struct _HL_SGM41518_REG0D_T
 {
-	uint8_t JEITA_VT3 		   :1;  // R/W JEITA使能设置
+	uint8_t JEITA_ENABLE 	    :1;  // R/W JEITA使能设置
                                     // 0 ：失能
                                     // 1 ：使能
 	
@@ -796,13 +782,32 @@ typedef struct _HL_SGM41518_REG0F_T
 	
 	uint8_t RESERVED           :2;  // R/W 保留
 
-	uint8_t VREG_TF            :2;  // R/W VREG修正设置
+	uint8_t VREG_FT            :2;  // R/W VREG修正设置
                                     // 0 ：不修正（默认）
                                     // 1 ：VREG + 8mV
                                     // 2 ：VREG - 8mV
                                     // 3 ：VREG - 16mV
         
 } HL_SGM41518_REG0F_T;
+
+typedef struct _HL_SGM41518_REGALL_T
+{
+    HL_SGM41518_REG00_T reg00;
+    HL_SGM41518_REG01_T reg01;
+    HL_SGM41518_REG02_T reg02;
+    HL_SGM41518_REG03_T reg03;
+    HL_SGM41518_REG04_T reg04;
+    HL_SGM41518_REG05_T reg05;
+    HL_SGM41518_REG06_T reg06;
+    HL_SGM41518_REG07_T reg07;
+    HL_SGM41518_REG08_T reg08;
+    HL_SGM41518_REG09_T reg09;
+    HL_SGM41518_REG0A_T reg0A;
+    HL_SGM41518_REG0B_T reg0B;
+    HL_SGM41518_REG0C_T reg0C;
+    HL_SGM41518_REG0D_T reg0D;
+    HL_SGM41518_REG0F_T reg0F;
+}HL_SGM41518_REGALL_T
 
 /**************************************************************************
  *                               常量                                       *
