@@ -750,7 +750,7 @@ typedef struct _HL_SGM41518_REG0C_T
 // REG0D TYPE 
 typedef struct _HL_SGM41518_REG0D_T
 {
-	uint8_t JEITA_ENABLE 	    :1;  // R/W JEITA使能设置
+	uint8_t JEITA_EN 	    :1;  // R/W JEITA使能设置
                                     // 0 ：失能
                                     // 1 ：使能
 	
@@ -807,7 +807,7 @@ typedef struct _HL_SGM41518_REGALL_T
     HL_SGM41518_REG0C_T reg0C;
     HL_SGM41518_REG0D_T reg0D;
     HL_SGM41518_REG0F_T reg0F;
-}HL_SGM41518_REGALL_T
+}HL_SGM41518_REGALL_T;
 
 /**************************************************************************
  *                               常量                                       *
@@ -833,6 +833,6 @@ typedef struct _HL_SGM41518_REGALL_T
 
 uint8_t hl_drv_sgm41518_init(void);
 uint8_t hl_drv_sgm41518_deinit(void);
-uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd,);
+uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, uint8_t *ptr, uint8_t len);
 #endif /* end of #ifndef __HL_DRV_SGM41518_H */
 

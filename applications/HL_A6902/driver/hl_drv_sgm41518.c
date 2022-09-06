@@ -24,7 +24,8 @@
 /*
  * EOF
  */
-
+#include "rtthread.h"
+#include "rtdevice.h"
 #include "hl_drv_sgm41518.h"
 
 #define SMG41518_DEBUG
@@ -45,15 +46,15 @@ static struct rt_i2c_bus_device *i2c_bus = RT_NULL;     /* I2C总线设备句柄
 
 /**
  * 
- * @brief 
- * @param [in] bus 
- * @param [in] reg 
- * @param [in] data 
- * @return rt_err_t 
+ * @brief i2c总线写数据
+ * @param [in] bus i2c总线句柄
+ * @param [in] reg 操作的寄存器
+ * @param [in] data 数据
+ * @return rt_err_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
- * @details 
+ * @details 一次只能写入一字节数据
  * @note 
  * @par 修改日志:
  * <table>
@@ -84,15 +85,15 @@ static rt_err_t i2c_write_reg(struct rt_i2c_bus_device *bus, rt_uint8_t reg, rt_
 
 /**
  * 
- * @brief 
- * @param [in] bus 
- * @param [in] reg 
- * @param [in] rbuf 
- * @return rt_err_t 
+ * @brief i2c总线读数据
+ * @param [in] bus i2c总线句柄
+ * @param [in] reg 操作的寄存器
+ * @param [in] rbuf 数据存放
+ * @return rt_err_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
- * @details 
+ * @details 一次只能读取一字节数据
  * @note 
  * @par 修改日志:
  * <table>
@@ -124,11 +125,11 @@ static rt_err_t i2c_read_regs(struct rt_i2c_bus_device *bus, rt_uint8_t reg, rt_
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x00寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -178,11 +179,11 @@ static uint8_t reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x01寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -241,11 +242,11 @@ static uint8_t reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x02寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -292,11 +293,11 @@ static uint8_t reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x03寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -341,6 +342,24 @@ static uint8_t reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
     return HL_FAILED;
 }
 
+/**
+ * 
+ * @brief 0x04寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
+ * @date 2022-09-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-06      <td>dujunjie     <td>新建
+ * </table>
+ */
 static uint8_t reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 {
     HL_SGM41518_REGALL_T reg_all;
@@ -379,11 +398,11 @@ static uint8_t reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x05寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -442,11 +461,11 @@ static uint8_t reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x06寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -496,11 +515,11 @@ static uint8_t reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x07寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -562,11 +581,11 @@ static uint8_t reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x08寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -625,11 +644,11 @@ static uint8_t reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x09寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -688,11 +707,11 @@ static uint8_t reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0A寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -726,7 +745,7 @@ static uint8_t reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
             case R_VINDPM_STAT:  
             param[0] = reg_all.reg0A.VINDPM_STAT;
             break;
-            case R_IINDPM_STA:  
+            case R_IINDPM_STAT:  
             param[0] = reg_all.reg0A.IINDPM_STAT;
             break;
             case R_TOPOFF_ACTIVE:  
@@ -765,11 +784,11 @@ static uint8_t reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0B寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -792,10 +811,10 @@ static uint8_t reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
         switch(cmd)
         {
             case RW_REG_RST:
-            param[0] = reg_all.reg0B.REG_RST
+            param[0] = reg_all.reg0B.REG_RST;
             break;   
             case R_DEVICE_ID:
-            param[0] = reg_all.reg0B.PN
+            param[0] = reg_all.reg0B.PN;
             break;           
             default:
             goto CTL_ERR;
@@ -824,11 +843,11 @@ static uint8_t reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0C寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -884,11 +903,11 @@ static uint8_t reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0D寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -914,7 +933,7 @@ static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
     switch(cmd)
     {
         case RW_JEITA_EN:  
-        reg_all.reg0D.JEITA_ENABLE = param[0];
+        reg_all.reg0D.JEITA_EN = param[0];
         break;
         default:
         goto CTL_ERR;
@@ -932,11 +951,11 @@ static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0E寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -948,18 +967,18 @@ static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
+static uint8_t reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 {
     return HL_SUCCESS;
 }
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
- * @return uint8_t 
+ * @brief 0x0F寄存器操作函数
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1009,9 +1028,9 @@ static uint8_t reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t *param)
 
 /**
  * 
- * @brief Get the reg serial object
- * @param [in] reg 
- * @return uint8_t 
+ * @brief 获取寄存器地址
+ * @param [in] reg 带解析的寄存器指令
+ * @return uint8_t 寄存器地址
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1069,7 +1088,7 @@ static uint8_t get_reg_serial(uint8_t reg)
 
 /**
  * 
- * @brief 
+ * @brief 注册寄存器操作函数
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1103,7 +1122,7 @@ static void reg_ctl_fun_init(void)
 
 /**
  * 
- * @brief 
+ * @brief 注销已注册的寄存器操作函数
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1124,7 +1143,7 @@ static void reg_ctl_fun_deinit(void)
 
 /**
  * 
- * @brief 
+ * @brief 初始化寄存器数组
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1145,7 +1164,7 @@ static void reg_arr_init(void)
 
 /**
  * 
- * @brief 
+ * @brief 注销寄存器数组
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1166,16 +1185,16 @@ static void reg_arr_deinit(void)
 
 /**
  * 
- * @brief 
- * @param [in] reg_ser 
- * @param [in] cmd 
- * @param [in] cmd_typ 
- * @param [in] param 
+ * @brief 寄存器操作入口函数
+ * @param [in] reg_ser 寄存器
+ * @param [in] cmd 具体操作的功能
+ * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] param 参数
  * @return uint8_t 
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
- * @details 
+ * @details 操作参数只有第一字节生效
  * @note 
  * @par 修改日志:
  * <table>
@@ -1197,9 +1216,9 @@ static uint8_t reg_ctl(uint8_t reg_ser, uint8_t cmd, uint8_t cmd_typ, uint8_t *p
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @return uint8_t 
+ * @brief 获取命令类型
+ * @param [in] cmd 待解析命令
+ * @return uint8_t 0读取，1写入
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1220,9 +1239,9 @@ static uint8_t command_type_get(uint8_t cmd)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @return uint8_t 
+ * @brief 获取寄存器可操作类型
+ * @param [in] cmd 待解析寄存器
+ * @return uint8_t 0只读，1读写
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1243,15 +1262,15 @@ static uint8_t reg_type_get(uint8_t cmd)
 
 /**
  * 
- * @brief 
- * @param [in] cmd 
- * @param [in] ptr 
- * @param [in] len 
- * @return uint8_t 
+ * @brief smg41518配置操作函数
+ * @param [in] cmd 配置项
+ * @param [in] ptr 配置参数指针
+ * @param [in] len 配置参数个数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
- * @details 
+ * @details 只支持一字节长度，每次只能配置一个功能参数
  * @note 
  * @par 修改日志:
  * <table>
@@ -1263,6 +1282,10 @@ uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, uint8_t *ptr, uint8_t len)
 {
     uint8_t reg_cmd,reg_serial;
     uint8_t cmd_typ = command_type_get(cmd);
+    if(ptr == NULL || len != 1){
+        smg_printf("Param err ! len : [ %X ]\n", len);
+        return HL_FAILED;
+    }
     if(cmd_typ != reg_type_get(cmd)){
         smg_printf("Register : [ %X ] type err !\n", cmd);
         return HL_FAILED;
@@ -1281,8 +1304,8 @@ uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, uint8_t *ptr, uint8_t len)
 
 /**
  * 
- * @brief 
- * @return uint8_t 
+ * @brief sgm41518初始化函数
+ * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
@@ -1428,7 +1451,11 @@ uint8_t hl_drv_sgm41518_init(void)
         smg_printf("reg %d write err !\n",REG0C_ADDR);
         goto INIT_ERR;
     }
-
+    rt_thread_mdelay(50);
+    if(i2c_write_reg(i2c_bus,REG00_ADDR,(uint8_t *)&reg_all.reg00)){
+        smg_printf("reg %d write err !\n",REG00_ADDR);
+        goto INIT_ERR;
+    }
     smg_printf("smg41518 init success !\n");
     return HL_SUCCESS;
     INIT_ERR:
