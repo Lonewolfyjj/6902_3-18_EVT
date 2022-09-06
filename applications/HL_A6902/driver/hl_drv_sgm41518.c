@@ -24,8 +24,8 @@
 /*
  * EOF
  */
-#include "rtthread.h"
-#include "rtdevice.h"
+#include <rtthread.h>
+#include <rtdevice.h>
 #include "hl_drv_sgm41518.h"
 
 #define SMG41518_DEBUG
@@ -63,20 +63,24 @@ static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
  */
 static rt_err_t i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* data)
 {
-    rt_uint8_t        buf[3];
-    struct rt_i2c_msg msgs;
-    rt_uint32_t       buf_size = 2;
+    rt_uint8_t        buf[4];
+    struct rt_i2c_msg msgs[2];
 
     buf[0] = reg;      // reg
     buf[1] = data[0];  // data
 
-    msgs.addr  = DEVICE_ADDRESS;
-    msgs.flags = RT_I2C_WR;
-    msgs.buf   = buf;
-    msgs.len   = buf_size;
+    msgs[0].addr  = SGM41518_DEVICE_ADDRESS;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf   = buf;
+    msgs[0].len   = 1;
+
+    msgs[1].addr  = SGM41518_DEVICE_ADDRESS;
+    msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
+    msgs[1].buf   = &buf[1];
+    msgs[1].len   = 1;
 
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 1) == 1)
+    if (rt_i2c_transfer(bus, &msgs, 2) == 1)
         return HL_SUCCESS;
     else
         return HL_FAILED;
@@ -100,21 +104,23 @@ static rt_err_t i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t i2c_read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf)
+static rt_err_t i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf)
 {
-    rt_uint8_t        buf[3];
-    struct rt_i2c_msg msgs;
-    rt_uint32_t       buf_size = 2;
+    rt_uint8_t        buf[4];
+    struct rt_i2c_msg msgs[2];
 
-    buf[0] = reg;
+    msgs[0].addr  = SGM41518_DEVICE_ADDRESS;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf   = &reg;
+    msgs[0].len   = 1;
 
-    msgs.addr  = DEVICE_ADDRESS;
-    msgs.flags = RT_I2C_RD;
-    msgs.buf   = buf;
-    msgs.len   = buf_size;
+    msgs[1].addr  = SGM41518_DEVICE_ADDRESS;
+    msgs[1].flags = RT_I2C_RD;
+    msgs[1].buf   = buf;
+    msgs[1].len   = 1;
 
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 1) == 1) {
+    if (rt_i2c_transfer(bus, &msgs, 2) == 1) {
         rbuf[0] = buf[1];
         return HL_SUCCESS;
     } else
@@ -142,7 +148,7 @@ static rt_err_t i2c_read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_
 static uint8_t reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+    if (i2c_read_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         smg_printf("reg00_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -195,7 +201,7 @@ CTL_ERR:
 static uint8_t reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+    if (i2c_read_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
         smg_printf("reg01_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -257,7 +263,7 @@ CTL_ERR:
 static uint8_t reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+    if (i2c_read_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
         smg_printf("reg02_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -307,7 +313,7 @@ CTL_ERR:
 static uint8_t reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+    if (i2c_read_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
         smg_printf("reg03_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -357,7 +363,7 @@ CTL_ERR:
 static uint8_t reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+    if (i2c_read_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
         smg_printf("reg04_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -410,7 +416,7 @@ CTL_ERR:
 static uint8_t reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+    if (i2c_read_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         smg_printf("reg05_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -472,7 +478,7 @@ CTL_ERR:
 static uint8_t reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+    if (i2c_read_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
         smg_printf("reg06_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -525,7 +531,7 @@ CTL_ERR:
 static uint8_t reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+    if (i2c_read_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         smg_printf("reg07_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -590,7 +596,7 @@ CTL_ERR:
 static uint8_t reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+    if (i2c_read_reg(i2c_bus, REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
         smg_printf("reg08_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -651,7 +657,7 @@ CTL_ERR:
 static uint8_t reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
+    if (i2c_read_reg(i2c_bus, REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
         smg_printf("reg09_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -712,7 +718,7 @@ CTL_ERR:
 static uint8_t reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
+    if (i2c_read_reg(i2c_bus, REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
         smg_printf("reg0A_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -787,7 +793,7 @@ CTL_ERR:
 static uint8_t reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
+    if (i2c_read_reg(i2c_bus, REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
         smg_printf("reg0B_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -844,7 +850,7 @@ CTL_ERR:
 static uint8_t reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+    if (i2c_read_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
         smg_printf("reg0C_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -903,7 +909,7 @@ CTL_ERR:
 static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
+    if (i2c_read_reg(i2c_bus, REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
         smg_printf("reg0D_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -973,7 +979,7 @@ static uint8_t reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 static uint8_t reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_regs(i2c_bus, REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
+    if (i2c_read_reg(i2c_bus, REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
         smg_printf("reg0F_ctl read err !\n");
         goto CTL_ERR;
     }
@@ -1242,7 +1248,7 @@ static uint8_t reg_type_get(uint8_t cmd)
 /**
  * 
  * @brief smg41518配置操作函数
- * @param [in] cmd 配置项
+ * @param [in] cmd 配置项，输入时请用 W_CMD_SET() 或者 R_CMD_SET() 处理输入
  * @param [in] ptr 配置参数指针
  * @param [in] len 配置参数个数
  * @return uint8_t 0成功，1失败
@@ -1250,6 +1256,8 @@ static uint8_t reg_type_get(uint8_t cmd)
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
  * @details 只支持一字节长度，每次只能配置一个功能参数
+ *          写命令使用：W_CMD_SET() 处理
+ *          读命令使用：R_CMD_SET() 处理
  * @note 
  * @par 修改日志:
  * <table>
@@ -1301,49 +1309,49 @@ uint8_t hl_drv_sgm41518_init(void)
     HL_SGM41518_REGALL_T reg_all;
 
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
-    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(IIC_NAME);
+    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
 
     reg_arr_init();
     reg_ctl_fun_init();
 
     if (i2c_bus == RT_NULL) {
-        smg_printf("can't find %s device!\n", IIC_NAME);
+        smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
         goto INIT_ERR;
     }
 
-    if (i2c_read_regs(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+    if (i2c_read_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         smg_printf("reg %d read err !\n", REG00_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+    if (i2c_read_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
         smg_printf("reg %d read err !\n", REG01_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+    if (i2c_read_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
         smg_printf("reg %d read err !\n", REG02_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+    if (i2c_read_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
         smg_printf("reg %d read err !\n", REG03_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+    if (i2c_read_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
         smg_printf("reg %d read err !\n", REG04_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+    if (i2c_read_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         smg_printf("reg %d read err !\n", REG05_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+    if (i2c_read_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
         smg_printf("reg %d read err !\n", REG06_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+    if (i2c_read_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         smg_printf("reg %d read err !\n", REG07_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_regs(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+    if (i2c_read_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
         smg_printf("reg %d read err !\n", REG0C_ADDR);
         goto INIT_ERR;
     }

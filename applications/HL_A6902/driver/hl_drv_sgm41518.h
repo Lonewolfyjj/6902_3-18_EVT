@@ -38,8 +38,8 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#define IIC_NAME "i2c0"
-#define DEVICE_ADDRESS 0x38
+#define SGM41518_IIC_NAME "i2c0"
+#define SGM41518_DEVICE_ADDRESS 0x38
 
 /* 寄存器地址 */
 #define REG00_ADDR 0x00
@@ -60,7 +60,7 @@
 #define REG0F_ADDR 0x0F
 
 #define CMD_MASK 0x80
-#define RW_CMD_SET(x) ((x) | (CMD_MASK))
+#define W_CMD_SET(x) ((x) | (CMD_MASK))
 #define R_CMD_SET(x) ((x) & (~CMD_MASK))
 
 /**************************************************************************
@@ -115,14 +115,13 @@
 #define TER_CURRENT_SET(x) (x > 15) ? (15) : (x)  //TER_CURRENT[3:0] 终止电流，参数 n <= 12 , I = 20mA + (20 * n)mA
 
 //reg 04
-#define CHARGE_VOLTAGE_LIMIT(x)                                                             \
-    ((x > 24) & (x != 15)) ? (15)                                                           \
-                           : (x)  //VREG[7:3] 充电电流限制，参数 n <= 24 & n != 15 \
+#define CHARGE_VOLTAGE_LIMIT(x) \
+    ((x > 24) & (x != 15)) ? (15) : (x)  //VREG[7:3] 充电电流限制，参数 n <= 24 & n != 15 \
                                   // V = 3856mV + (32 * n)mV,n = 15,V = 4352mV
-#define TOP_TIMER_DISABLE 0       //关闭充电延长时间
-#define TOP_TIMER_15MIN 1         //充电延长时间15分钟
-#define TOP_TIMER_30MIN 2         //充电延长时间30分钟
-#define TOP_TIMER_45MIN 3         //充电延长时间45分钟
+#define TOP_TIMER_DISABLE 0              //关闭充电延长时间
+#define TOP_TIMER_15MIN 1                //充电延长时间15分钟
+#define TOP_TIMER_30MIN 2                //充电延长时间30分钟
+#define TOP_TIMER_45MIN 3                //充电延长时间45分钟
 
 #define RECHARGE_THRESHOLD_100 0  //电池充电阈值 VREG - 100mV
 #define RECHARGE_THRESHOLD_200 1  //电池充电阈值 VREG - 200mV
