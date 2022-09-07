@@ -455,7 +455,7 @@
 /* Enable Audio */
 
 #define RT_USING_CODEC
-#define RT_USING_CODEC_ES8311
+#define RT_USING_CODEC_NAU88L25B
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
 
 /* Audio Cards */
@@ -469,10 +469,11 @@
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
 /* RT_USING_AUDIO_CARD_ES8156 is not set */
-#define RT_USING_AUDIO_CARD_ES8311
+/* RT_USING_AUDIO_CARD_ES8311 is not set */
 /* RT_USING_AUDIO_CARD_ES8388 is not set */
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
+#define RT_USING_AUDIO_CARD_NAU88L25B
 
 /* Audio Interfaces */
 

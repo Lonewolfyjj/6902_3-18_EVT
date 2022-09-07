@@ -182,6 +182,14 @@ menu "Enable Audio"
           PDM - stereo pdm digital mics
           External ES8388 - stereo loopback
 
+    config RT_USING_AUDIO_CARD_NAU88L25B
+        bool "Enable Everest Semi NAU88L25B audio card"
+        depends on RT_USING_AUDIO_CARD
+        select RT_USING_I2STDM1
+        select RT_USING_CODEC_NAU88L25B
+        default n
+        help
+          Say Y if you want to use Everest Semi NAU88L25B audio card.
     endmenu
 
     menu "Audio Interfaces"
