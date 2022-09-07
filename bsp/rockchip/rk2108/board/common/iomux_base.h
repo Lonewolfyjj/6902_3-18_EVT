@@ -46,4 +46,7 @@ void spi2_m0_iomux_config(void);
 void spi2_m1_iomux_config(void);
 void rt_hw_iomux_config(void);
 
+void i2s0_output_iomux_config(void);//< LX
+void i2s0_input_iomux_config(void);//< LX
+void pcm_m0_iomux_config(void);//< LX
 #endif
