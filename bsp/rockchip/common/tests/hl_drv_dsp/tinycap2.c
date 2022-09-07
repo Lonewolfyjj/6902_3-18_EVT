@@ -15,6 +15,8 @@
 #include <rtdevice.h>
 #include <rtthread.h>
 
+#include "hl_drv_rk_xtensa_dsp.h"
+#if 1
 #ifdef RT_USING_COMMON_TEST_AUDIO
 
 #include "rk_audio.h"
@@ -28,7 +30,7 @@ static uint16_t vol_l = 100, vol_r = 100;
 
 #define ID_RIFF 0x46464952
 #define ID_WAVE 0x45564157
-#define ID_FMT  0x20746d66
+#define ID_FMT 0x20746d66
 #define ID_DATA 0x61746164
 
 #define FORMAT_PCM 1
@@ -52,50 +54,46 @@ struct wav_header
 
 struct capture_config
 {
-    FILE *file;
-    struct rt_device *card;
-    uint32_t rate;
-    uint32_t channels;
-    uint32_t bits;
-    uint32_t period_size;
-    uint32_t period_count;
-    uint32_t total_frames;
+    FILE*             file;
+    struct rt_device* card;
+    uint32_t          rate;
+    uint32_t          channels;
+    uint32_t          bits;
+    uint32_t          period_size;
+    uint32_t          period_count;
+    uint32_t          total_frames;
 };
 
-static uint32_t capture_sample(FILE *file, struct rt_device *card,
-                               uint32_t channels, uint32_t rate,
-                               uint32_t bits, uint32_t period_size,
-                               uint32_t period_count, uint32_t total_frames)
+static uint32_t capture_sample(FILE* file, struct rt_device* card, uint32_t channels, uint32_t rate, uint32_t bits,
+                               uint32_t period_size, uint32_t period_count, uint32_t total_frames)
 {
     struct AUDIO_PARAMS param;
-    struct audio_buf abuf;
-    rt_err_t ret;
-    char *buffer;
-    uint32_t size;
-    uint32_t frames_read = 0, count = 0;
+    struct audio_buf    abuf;
+    rt_err_t            ret;
+    char*               buffer;
+    uint32_t            size;
+    uint32_t            frames_read = 0, count = 0;
 #ifdef RT_USING_DRIVER_AUDIO_PCM_PLUGIN_SOFTVOL
-    snd_softvol_t softvol, softvol2;
+    snd_softvol_t  softvol, softvol2;
     snd_pcm_type_t type = SND_PCM_TYPE_SOFTVOL;
 #endif
 
     ret = rt_device_open(card, RT_DEVICE_OFLAG_RDONLY);
-    if (ret < 0)
-    {
+    if (ret < 0) {
         rt_kprintf("Failed to open %s, err: %d\n", card->parent.name, ret);
         return 0;
     }
 
     abuf.period_size = period_size;
-    abuf.buf_size = period_size * period_count;
-    size = abuf.buf_size * channels * (bits >> 3); /* frames to bytes */
-    abuf.buf = rt_malloc_uncache(size);
-    if (!abuf.buf)
-    {
+    abuf.buf_size    = period_size * period_count;
+    size             = abuf.buf_size * channels * (bits >> 3); /* frames to bytes */
+    abuf.buf         = rt_malloc_uncache(size);
+    if (!abuf.buf) {
         rt_kprintf("Buffer alloc failed!\n");
         return 0;
     }
 
-    param.channels = channels;
+    param.channels   = channels;
     param.sampleRate = rate;
     param.sampleBits = bits;
 
@@ -103,7 +101,7 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     RT_ASSERT(ret == RT_EOK);
 
 #ifdef RT_USING_DRIVER_AUDIO_PCM_PLUGIN_SOFTVOL
-    ret = rt_device_control(card, RK_AUDIO_CTL_PLUGIN_PREPARE, (void *)type);
+    ret = rt_device_control(card, RK_AUDIO_CTL_PLUGIN_PREPARE, (void*)type);
     RT_ASSERT(ret == RT_EOK);
 
     softvol.vol_l = vol_l;
@@ -120,34 +118,52 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     ret = rt_device_control(card, RK_AUDIO_CTL_HW_PARAMS, &param);
     RT_ASSERT(ret == RT_EOK);
 
-    size = abuf.period_size * channels * 3;//(bits >> 3); 
+    // init dsp
+    hl_drv_rk_xtensa_dsp_config_t_p dsp_config =
+        (hl_drv_rk_xtensa_dsp_config_t_p)malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
+    dsp_config->bits                     = bits;
+    dsp_config->channels                 = channels;
+    dsp_config->period_size              = period_size;
+    dsp_config->rate                     = rate;
+    dsp_config->process_size             = dsp_config->period_size * dsp_config->channels * (4);
+    dsp_config->audio_process_in_buffer  = malloc(dsp_config->process_size+5);
+    dsp_config->audio_process_out_buffer = malloc(dsp_config->process_size+5);
+    dsp_config->audio_process_out_buffer_24bit = malloc(dsp_config->process_size +5);
+
+    hl_drv_rk_xtensa_dsp_init();
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_START_DSP, NULL, 0);
+
+    size   = abuf.period_size * channels * (bits >> 3);//3;//
     buffer = rt_malloc(size);
-    if (!buffer)
-    {
+    if (!buffer) {
         rt_kprintf("Unable to allocate %ld bytes\n", size);
         rt_device_close(card);
         return 0;
     }
 
     rt_kprintf("Capturing sample: %lu ch, %lu hz, %lu bits\n", channels, rate, bits);
-
+#if 0
     count = total_frames / period_size;
-    while (count && rt_device_read(card, 0, buffer, abuf.period_size))
-    {
-        if (fwrite(buffer, 1, size, file) != size)
-        {
+    while (count && rt_device_read(card, 0, dsp_config->audio_process_in_buffer, abuf.period_size)) {
+
+        hl_drv_rk_xtensa_dsp_transfer();
+
+        if (fwrite(dsp_config->audio_process_out_buffer_24bit, 1, size, file) != size) {
             rt_kprintf("Error capturing sample\n");
             break;
         }
         frames_read += abuf.period_size;
         count--;
     }
+#endif
 
     free(buffer);
+#if 1
     rt_free_uncache(abuf.buf);
 
 #ifdef RT_USING_DRIVER_AUDIO_PCM_PLUGIN_SOFTVOL
-    ret = rt_device_control(card, RK_AUDIO_CTL_PLUGIN_RELEASE, (void *)type);
+    ret = rt_device_control(card, RK_AUDIO_CTL_PLUGIN_RELEASE, (void*)type);
     RT_ASSERT(ret == RT_EOK);
 #endif
 
@@ -157,37 +173,36 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     RT_ASSERT(ret == RT_EOK);
 
     rt_device_close(card);
-
+#endif
     return frames_read;
 }
 
-static void do_tinycap(void *arg)
+static void do_tinycap(void* arg)
 {
-    struct wav_header header;
-    struct capture_config *config = arg;
-    FILE *file = config->file;
-    uint32_t frames;
+    struct wav_header      header;
+    struct capture_config* config = arg;
+    FILE*                  file   = config->file;
+    uint32_t               frames;
 
-    header.riff_id = ID_RIFF;
-    header.riff_sz = 0;
-    header.riff_fmt = ID_WAVE;
-    header.fmt_id = ID_FMT;
-    header.fmt_sz = 16;
+    header.riff_id      = ID_RIFF;
+    header.riff_sz      = 0;
+    header.riff_fmt     = ID_WAVE;
+    header.fmt_id       = ID_FMT;
+    header.fmt_sz       = 16;
     header.audio_format = FORMAT_PCM;
     header.num_channels = config->channels;
-    header.sample_rate = config->rate;
+    header.sample_rate  = config->rate;
 
     header.bits_per_sample = 24;//config->bits;
-    header.byte_rate = (header.bits_per_sample / 8) * config->channels * config->rate;
-    header.block_align = config->channels * (header.bits_per_sample / 8);
-    header.data_id = ID_DATA;
+    header.byte_rate       = (header.bits_per_sample / 8) * config->channels * config->rate;
+    header.block_align     = config->channels * (header.bits_per_sample / 8);
+    header.data_id         = ID_DATA;
 
     /* leave enough room for header */
     fseek(file, sizeof(struct wav_header), SEEK_SET);
 
-    frames = capture_sample(file, config->card, config->channels,
-                            config->rate, config->bits,
-                            config->period_size, config->period_count, config->total_frames);
+    frames = capture_sample(file, config->card, config->channels, config->rate, config->bits, config->period_size,
+                            config->period_count, config->total_frames);
 
     printf("Captured %ld frames\n", frames);
 
@@ -198,21 +213,21 @@ static void do_tinycap(void *arg)
     fwrite(&header, sizeof(struct wav_header), 1, file);
 
     fclose(file);
-    rt_free(config);
+    //rt_free(config);
 }
 
-static int tinycap(int argc, char **argv)
+static int tinycap2(int argc, char** argv)
 {
-    rt_thread_t tid = RT_NULL;
-    struct capture_config *config;
-    char card[RT_NAME_MAX] = {0};
-    uint32_t timeout = 10; /* 10 seconds default */
-    FILE *file = RT_NULL;
+    rt_thread_t            tid = RT_NULL;
+    struct capture_config* config;
+    char                   card[RT_NAME_MAX] = { 0 };
+    uint32_t               timeout           = 10; /* 10 seconds default */
+    FILE*                  file              = RT_NULL;
 
-    if (argc < 2)
-    {
+    if (argc < 2) {
         rt_kprintf("Usage: %s file.wav [-D card] [-c channels] "
-                   "[-r rate] [-b bits] [-p period_size] [-n n_periods] [-t seconds]\n", argv[0]);
+                   "[-r rate] [-b bits] [-p period_size] [-n n_periods] [-t seconds]\n",
+                   argv[0]);
         return 1;
     }
 
@@ -221,83 +236,65 @@ static int tinycap(int argc, char **argv)
         return 1;
 
     file = fopen(argv[1], "wb");
-    if (!file)
-    {
+    if (!file) {
         rt_kprintf("Unable to create file '%s'\n", argv[1]);
         goto err;
     }
 
-    config->file = file;
-    config->rate = 16000;
-    config->bits = 16;
-    config->channels = 2;
-    config->period_size = 1024;
+    config->file         = file;
+    config->rate         = 16000;
+    config->bits         = 16;
+    config->channels     = 2;
+    config->period_size  = 1024;
     config->period_count = 4;
 
     /* parse command line arguments */
     argv += 2;
     argc -= 2;
-    while (argc)
-    {
-        if (strcmp(*argv, "-t") == 0)
-        {
+    while (argc) {
+        if (strcmp(*argv, "-t") == 0) {
             argv++;
             argc--;
             if (*argv)
                 timeout = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-c") == 0)
-        {
+        } else if (strcmp(*argv, "-c") == 0) {
             argv++;
             argc--;
             if (*argv)
                 config->channels = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-r") == 0)
-        {
+        } else if (strcmp(*argv, "-r") == 0) {
             argv++;
             argc--;
             if (*argv)
                 config->rate = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-b") == 0)
-        {
+        } else if (strcmp(*argv, "-b") == 0) {
             argv++;
             argc--;
             if (*argv)
                 config->bits = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-D") == 0)
-        {
+        } else if (strcmp(*argv, "-D") == 0) {
             argv++;
             argc--;
             if (*argv)
                 rt_strncpy(card, *argv, RT_NAME_MAX);
-        }
-        else if (strcmp(*argv, "-p") == 0)
-        {
+        } else if (strcmp(*argv, "-p") == 0) {
             argv++;
             argc--;
             if (*argv)
                 config->period_size = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-n") == 0)
-        {
+        } else if (strcmp(*argv, "-n") == 0) {
             argv++;
             argc--;
             if (*argv)
                 config->period_count = atoi(*argv);
         }
 #ifdef RT_USING_DRIVER_AUDIO_PCM_PLUGIN_SOFTVOL
-        else if (strcmp(*argv, "-L") == 0)
-        {
+        else if (strcmp(*argv, "-L") == 0) {
             argv++;
             argc--;
             if (*argv)
                 vol_l = atoi(*argv);
-        }
-        else if (strcmp(*argv, "-R") == 0)
-        {
+        } else if (strcmp(*argv, "-R") == 0) {
             argv++;
             argc--;
             if (*argv)
@@ -309,8 +306,7 @@ static int tinycap(int argc, char **argv)
     }
 
     config->card = rt_device_find(card);
-    if (!config->card)
-    {
+    if (!config->card) {
         rt_kprintf("Can't find sound device: %s\n", card);
         goto err;
     }
@@ -326,13 +322,14 @@ static int tinycap(int argc, char **argv)
 err:
     if (file)
         fclose(file);
-    rt_free(config);
+    //rt_free(config);
     return 1;
 }
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-MSH_CMD_EXPORT(tinycap, capture wav file);
+MSH_CMD_EXPORT(tinycap2, capture wav file);
 #endif
 
+#endif
 #endif
