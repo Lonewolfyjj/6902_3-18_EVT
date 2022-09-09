@@ -36,11 +36,9 @@
 #define smg_printf(...)
 #endif
 
-typedef uint8_t (*reg_ctl_fun)(uint8_t cmd, uint8_t cmd_typ, uint8_t* param);
-static const uint8_t             READ_CMD  = 0x00;
-static const uint8_t             WRITE_CMD = 0x01;
-static reg_ctl_fun               fun_arr[0x10];
-static uint8_t                   reg_arr[0x10];
+typedef uint8_t (*hl_reg_ctl_fun)(uint8_t cmd, uint8_t cmd_typ, uint8_t* param);
+static hl_reg_ctl_fun            fun_arr[SGM_REG_NUM];
+static uint8_t                   reg_arr[SGM_REG_NUM];
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 
 /**
@@ -61,7 +59,7 @@ static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* data)
+static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* data)
 {
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
@@ -72,15 +70,15 @@ static rt_err_t i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_
     msgs[0].addr  = SGM41518_DEVICE_ADDRESS;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = buf;
-    msgs[0].len   = 1;
-
+    msgs[0].len   = 2;
+    /*
     msgs[1].addr  = SGM41518_DEVICE_ADDRESS;
     msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
     msgs[1].buf   = &buf[1];
     msgs[1].len   = 1;
-
+    */
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 2) == 1)
+    if (rt_i2c_transfer(bus, msgs, 1) == 1)
         return HL_SUCCESS;
     else
         return HL_FAILED;
@@ -104,7 +102,7 @@ static rt_err_t i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf)
+static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf)
 {
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
@@ -120,7 +118,7 @@ static rt_err_t i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_u
     msgs[1].len   = 1;
 
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 2) == 1) {
+    if (rt_i2c_transfer(bus, msgs, 2) == 1) {
         rbuf[0] = buf[1];
         return HL_SUCCESS;
     } else
@@ -145,14 +143,14 @@ static rt_err_t i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_u
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg00_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        smg_printf("hl_reg00_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg0 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -170,13 +168,13 @@ static uint8_t reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg00_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        smg_printf("hl_reg00_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg00_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg00_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -198,14 +196,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg01_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        smg_printf("hl_reg01_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg1 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -232,13 +230,13 @@ static uint8_t reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg01_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        smg_printf("hl_reg01_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg01_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg01_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -260,14 +258,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg02_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        smg_printf("hl_reg02_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg2 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -282,13 +280,13 @@ static uint8_t reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg02_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        smg_printf("hl_reg02_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg02_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg02_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -310,14 +308,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg03_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+        smg_printf("hl_reg03_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg3 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -332,13 +330,13 @@ static uint8_t reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg03_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+        smg_printf("hl_reg03_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg03_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg03_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -360,14 +358,14 @@ CTL_ERR:
  * <tr><td>2022-09-06      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg04_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        smg_printf("hl_reg04_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg4 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -385,13 +383,13 @@ static uint8_t reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg04_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        smg_printf("hl_reg04_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg04_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg04_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -413,14 +411,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg05_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        smg_printf("hl_reg05_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg5 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -447,13 +445,13 @@ static uint8_t reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg05_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        smg_printf("hl_reg05_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg05_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg05_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -475,14 +473,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg06_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        smg_printf("hl_reg06_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg6 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -500,13 +498,13 @@ static uint8_t reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg06_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        smg_printf("hl_reg06_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg06_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg06_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -528,14 +526,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg07_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("hl_reg07_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("reg7 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -565,13 +563,13 @@ static uint8_t reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg07_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("hl_reg07_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg07_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg07_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -593,14 +591,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
-        smg_printf("reg08_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+        smg_printf("hl_reg08_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         switch (cmd) {
             case R_VBUS_STAT:
                 param[0] = reg_all.reg08.VBUS_STAT;
@@ -626,13 +624,13 @@ static uint8_t reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         smg_printf("reg8 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
-        smg_printf("reg08_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+        smg_printf("hl_reg08_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg08_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg08_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -654,14 +652,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
-        smg_printf("reg09_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
+        smg_printf("hl_reg09_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         switch (cmd) {
             case R_WDG_FAULT:
                 param[0] = reg_all.reg09.WATCHDOG_FAULT;
@@ -687,13 +685,13 @@ static uint8_t reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         smg_printf("reg9 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
-        smg_printf("reg09_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
+        smg_printf("hl_reg09_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg09_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg09_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -715,14 +713,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
-        smg_printf("reg0A_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
+        smg_printf("hl_reg0A_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         switch (cmd) {
             case RW_VINDPM_INT_MASK:
                 param[0] = reg_all.reg0A.VINDPM_INT_MASK;
@@ -762,13 +760,13 @@ static uint8_t reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
-        smg_printf("reg0A_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
+        smg_printf("hl_reg0A_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg0A_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg0A_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -790,14 +788,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
-        smg_printf("reg0B_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
+        smg_printf("hl_reg0B_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         switch (cmd) {
             case RW_REG_RST:
                 param[0] = reg_all.reg0B.REG_RST;
@@ -819,13 +817,13 @@ static uint8_t reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
-        smg_printf("reg0B_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
+        smg_printf("hl_reg0B_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg0B_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg0B_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -847,14 +845,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg0C_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+        smg_printf("hl_reg0C_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("regC command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -878,13 +876,13 @@ static uint8_t reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg0C_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+        smg_printf("hl_reg0C_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg0C_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg0C_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -906,14 +904,14 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
-        smg_printf("reg0D_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
+        smg_printf("hl_reg0D_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("regD command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -925,13 +923,13 @@ static uint8_t reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
-        smg_printf("reg0D_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
+        smg_printf("hl_reg0D_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg0D_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg0D_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -953,7 +951,7 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     return HL_SUCCESS;
 }
@@ -976,14 +974,14 @@ static uint8_t reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SGM41518_REGALL_T reg_all;
-    if (i2c_read_reg(i2c_bus, REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
-        smg_printf("reg0F_ctl read err !\n");
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
+        smg_printf("hl_reg0F_ctl read err !\n");
         goto CTL_ERR;
     }
-    if (cmd_typ == READ_CMD) {
+    if (cmd_typ == SGM_READ_CMD) {
         smg_printf("regF command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
@@ -1001,13 +999,13 @@ static uint8_t reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (i2c_write_reg(i2c_bus, REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
-        smg_printf("reg0F_ctl write err !\n");
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
+        smg_printf("hl_reg0F_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    smg_printf("[ %X ] reg0F_ctl fail !\n", param[0]);
+    smg_printf("[ %X ] hl_reg0F_ctl fail !\n", param[0]);
     return HL_FAILED;
 }
 
@@ -1027,46 +1025,120 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t get_reg_serial(uint8_t reg)
+static uint8_t hl_get_reg_serial(uint8_t reg)
 {
     uint8_t reg_ser;
-    if (reg < RW_EN_PFM)
-        reg_ser = REG00_ADDR;
-    else if (reg < RW_Q1_FULLON)
-        reg_ser = REG01_ADDR;
-    else if (reg < RW_PRECHARGE_CURRENT_LIMIT)
-        reg_ser = REG02_ADDR;
-    else if (reg < RW_CHARGE_VOLTAGE_LIMIT)
-        reg_ser = REG03_ADDR;
-    else if (reg < RW_CHARGE_TER_ENABLE)
-        reg_ser = REG04_ADDR;
-    else if (reg < RW_OVP_CHG)
-        reg_ser = REG05_ADDR;
-    else if (reg < RW_INPUT_CRRENT_LIMIT_DETECTION)
-        reg_ser = REG06_ADDR;
-    else if (reg < RW_VINDPM_INT_MASK)
-        reg_ser = REG07_ADDR;
-    else if (reg < RW_REG_RST)
-        reg_ser = REG0A_ADDR;
-    else if (reg < RW_JEITA_VSET_L)
-        reg_ser = REG0B_ADDR;
-    else if (reg < RW_JEITA_EN)
-        reg_ser = REG0C_ADDR;
-    else if (reg < RW_VREG_FT)
-        reg_ser = REG0D_ADDR;
-    else if (reg < RW_CNT_MAX)
-        reg_ser = REG0F_ADDR;
-    else if (reg < R_WDG_FAULT)
-        reg_ser = REG08_ADDR;
-    else if (reg < R_VBUS_GD)
-        reg_ser = REG09_ADDR;
-    else if (reg < R_DEVICE_ID)
-        reg_ser = REG0A_ADDR;
-    else if (reg < R_CNT_MAX)
-        reg_ser = REG0B_ADDR;
-    else {
-        smg_printf("Register : [ %X ] overrun !\n", reg);
-        return 0xFF;
+
+    switch (reg) {
+        // reg 00
+        case RW_EN_HIZ_MOD:
+        case RW_EN_ICHG_MON:
+        case RW_IINDPM_SET:
+            reg_ser = SGM_REG00_ADDR;
+            break;
+        // reg 01
+        case RW_EN_PFM:
+        case RW_WDG_RST:
+        case RW_EN_OTG:
+        case RW_EN_BAT_CHARGING:
+        case RW_SYS_MIN:
+        case RW_MIN_BAT_SEL:
+            reg_ser = SGM_REG01_ADDR;
+            break;
+        // reg 02
+        case RW_Q1_FULLON:
+        case RW_CHARGE_CURRENT:
+            reg_ser = SGM_REG02_ADDR;
+            break;
+        // reg 03
+        case RW_PRECHARGE_CURRENT_LIMIT:
+        case RW_TER_CURRENT_LIMIT:
+            reg_ser = SGM_REG03_ADDR;
+            break;
+        // reg 04
+        case RW_CHARGE_VOLTAGE_LIMIT:
+        case RW_TOPOFF_TIME:
+        case RW_RECHARGE_THRESHOLD:
+            reg_ser = SGM_REG04_ADDR;
+            break;
+        // reg 05
+        case RW_CHARGE_TER_ENABLE:
+        case RW_WDOG_TIMER_CHG:
+        case RW_CHARGE_SAFETY_TIMER_ENABLE:
+        case RW_CHARGE_SAFETY_TIMER_CHG:
+        case RW_TER_REGULATION_THRESHOLD:
+        case RW_JEITA_CHARGING_CURRENT:
+            reg_ser = SGM_REG05_ADDR;
+            break;
+        // reg 06
+        case RW_OVP_CHG:
+        case RW_BOOSTV_CHG:
+        case RW_VINDPM_CHG:
+            reg_ser = SGM_REG06_ADDR;
+            break;
+        // reg 07
+        case RW_INPUT_CRRENT_LIMIT_DETECTION:
+        case RW_TMR2X_EN:
+        case RW_BATFET_DIS:
+        case RW_JEITA_VSET_H:
+        case RW_BATFET_DLY:
+        case RW_BATFET_RST_EN:
+        case RW_VDPM_BAT_TRACK:
+            reg_ser = SGM_REG07_ADDR;
+            break;
+        // reg 08
+        case R_VBUS_STAT:
+        case R_CHRG_STAT:
+        case R_PG_STAT:
+        case R_THERM_STAT:
+        case R_VSYS_STAT:
+            reg_ser = SGM_REG08_ADDR;
+            break;
+        // reg 09
+        case R_WDG_FAULT:
+        case R_BOOST_FAULT:
+        case R_CHRG_FAULT:
+        case R_BAT_FAULT:
+        case R_NTC_FAULT:
+            reg_ser = SGM_REG09_ADDR;
+            break;
+        // reg 0A
+        case RW_VINDPM_INT_MASK:
+        case RW_IINDPM_INT_MASK:
+        case R_VBUS_GD:
+        case R_VINDPM_STAT:
+        case R_IINDPM_STAT:
+        case R_TOPOFF_ACTIVE:
+        case R_ACOV_STAT:
+            reg_ser = SGM_REG0A_ADDR;
+            break;
+        // reg 0B
+        case RW_REG_RST:
+        case R_DEVICE_ID:
+            reg_ser = SGM_REG0B_ADDR;
+            break;
+        // reg 0C
+        case RW_JEITA_VSET_L:
+        case RW_JEITA_ISET_L_EN:
+        case RW_JEITA_ISET_H:
+        case RW_JEITA_VT2:
+        case RW_JEITA_VT3:
+            reg_ser = SGM_REG0C_ADDR;
+            break;
+        // reg 0D
+        case RW_JEITA_EN:
+            reg_ser = SGM_REG0D_ADDR;
+            break;
+        // reg 0F
+        case RW_VREG_FT:
+        case RW_STAT_SET:
+        case RW_VINDPM_OS:
+            reg_ser = SGM_REG0F_ADDR;
+            break;
+        default:
+            smg_printf("Register : [ %X ] overrun !\n", reg);
+            return 0xFF;
+            break;
     }
     return reg_ser;
 }
@@ -1085,24 +1157,24 @@ static uint8_t get_reg_serial(uint8_t reg)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static void reg_ctl_fun_init(void)
+static void hl_reg_ctl_fun_init(void)
 {
-    fun_arr[0]  = reg00_ctl;
-    fun_arr[1]  = reg01_ctl;
-    fun_arr[2]  = reg02_ctl;
-    fun_arr[3]  = reg03_ctl;
-    fun_arr[4]  = reg04_ctl;
-    fun_arr[5]  = reg05_ctl;
-    fun_arr[6]  = reg06_ctl;
-    fun_arr[7]  = reg07_ctl;
-    fun_arr[8]  = reg08_ctl;
-    fun_arr[9]  = reg09_ctl;
-    fun_arr[10] = reg0A_ctl;
-    fun_arr[11] = reg0B_ctl;
-    fun_arr[12] = reg0C_ctl;
-    fun_arr[13] = reg0D_ctl;
-    fun_arr[14] = reg0E_ctl;
-    fun_arr[15] = reg0F_ctl;
+    fun_arr[0]  = hl_reg00_ctl;
+    fun_arr[1]  = hl_reg01_ctl;
+    fun_arr[2]  = hl_reg02_ctl;
+    fun_arr[3]  = hl_reg03_ctl;
+    fun_arr[4]  = hl_reg04_ctl;
+    fun_arr[5]  = hl_reg05_ctl;
+    fun_arr[6]  = hl_reg06_ctl;
+    fun_arr[7]  = hl_reg07_ctl;
+    fun_arr[8]  = hl_reg08_ctl;
+    fun_arr[9]  = hl_reg09_ctl;
+    fun_arr[10] = hl_reg0A_ctl;
+    fun_arr[11] = hl_reg0B_ctl;
+    fun_arr[12] = hl_reg0C_ctl;
+    fun_arr[13] = hl_reg0D_ctl;
+    fun_arr[14] = hl_reg0E_ctl;
+    fun_arr[15] = hl_reg0F_ctl;
 }
 
 /**
@@ -1119,10 +1191,10 @@ static void reg_ctl_fun_init(void)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static void reg_ctl_fun_deinit(void)
+static void hl_reg_ctl_fun_deinit(void)
 {
     uint8_t i;
-    for (i = 0; i <= 0x0F; i++)
+    for (i = 0; i < SGM_REG_NUM; i++)
         fun_arr[i] = NULL;
 }
 
@@ -1140,10 +1212,10 @@ static void reg_ctl_fun_deinit(void)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static void reg_arr_init(void)
+static void hl_reg_arr_init(void)
 {
     uint8_t i;
-    for (i = 0; i <= 0x0F; i++)
+    for (i = 0; i < SGM_REG_NUM; i++)
         reg_arr[i] = i;
 }
 
@@ -1161,10 +1233,10 @@ static void reg_arr_init(void)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static void reg_arr_deinit(void)
+static void hl_reg_arr_deinit(void)
 {
     uint8_t i;
-    for (i = 0; i <= 0x0F; i++)
+    for (i = 0; i < SGM_REG_NUM; i++)
         reg_arr[i] = 0;
 }
 
@@ -1187,39 +1259,17 @@ static void reg_arr_deinit(void)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg_ctl(uint8_t reg_ser, uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
+static uint8_t hl_reg_ctl(uint8_t reg_ser, uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     uint8_t i;
-    for (i = 0; i <= 0x0F; i++) {
+    for (i = 0; i < SGM_REG_NUM; i++) {
         if (reg_arr[i] == reg_ser) {
             if (fun_arr[i](cmd, cmd_typ, param))
                 return HL_FAILED;
+            return HL_SUCCESS;
         }
     }
-    return HL_SUCCESS;
-}
-
-/**
- * 
- * @brief 获取命令类型
- * @param [in] cmd 待解析命令
- * @return uint8_t 0读取，1写入
- * @date 2022-09-05
- * @author dujunjie (junjie.du@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-05      <td>dujunjie     <td>新建
- * </table>
- */
-static uint8_t command_type_get(uint8_t cmd)
-{
-    if (cmd < CMD_MASK)
-        return READ_CMD;
-    return WRITE_CMD;
+    return HL_FAILED;
 }
 
 /**
@@ -1238,26 +1288,24 @@ static uint8_t command_type_get(uint8_t cmd)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t reg_type_get(uint8_t cmd)
+static uint8_t hl_reg_type_get(uint8_t cmd)
 {
     if (cmd < RW_CNT_MAX)
-        return WRITE_CMD;
-    return READ_CMD;
+        return SGM_WRITE_CMD;
+    return SGM_READ_CMD;
 }
 
 /**
  * 
- * @brief smg41518配置操作函数
- * @param [in] cmd 配置项，输入时请用 W_CMD_SET() 或者 R_CMD_SET() 处理输入
- * @param [in] ptr 配置参数指针
+ * @brief smg41518配置操作函数接口
+ * @param [in] cmd 配置项
+ * @param [in] ptr 配置参数指针，类型应该为 HL_SGM_INPUT_PARAM_T
  * @param [in] len 配置参数个数
  * @return uint8_t 0成功，1失败
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
  * @details 只支持一字节长度，每次只能配置一个功能参数
- *          写命令使用：W_CMD_SET() 处理
- *          读命令使用：R_CMD_SET() 处理
  * @note 
  * @par 修改日志:
  * <table>
@@ -1265,26 +1313,27 @@ static uint8_t reg_type_get(uint8_t cmd)
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, uint8_t* ptr, uint8_t len)
+uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 {
-    uint8_t reg_cmd, reg_serial;
-    uint8_t cmd_typ = command_type_get(cmd);
+    uint8_t               reg_cmd, reg_serial, cmd_typ;
+    HL_SGM_INPUT_PARAM_T* param = (HL_SGM_INPUT_PARAM_T*)ptr;
     if (ptr == NULL || len != 1) {
         smg_printf("Param err ! len : [ %X ]\n", len);
         return HL_FAILED;
     }
-    if (cmd_typ != reg_type_get(cmd)) {
+    cmd_typ = cmd;
+    if (cmd_typ != hl_reg_type_get(param->reg)) {
         smg_printf("Register : [ %X ] type err !\n", cmd);
         return HL_FAILED;
     }
-    reg_cmd    = cmd & (~CMD_MASK);
-    reg_serial = get_reg_serial(reg_cmd);
-    if (cmd_typ == WRITE_CMD && (reg_cmd == REG08_ADDR || reg_cmd == REG09_ADDR)) {
+    reg_cmd    = param->reg;
+    reg_serial = hl_get_reg_serial(reg_cmd);
+    if (cmd_typ == SGM_WRITE_CMD && (reg_cmd == SGM_REG08_ADDR || reg_cmd == SGM_REG09_ADDR)) {
         smg_printf("Register : [ %X ] type err !\n", cmd);
         return HL_FAILED;
     }
 
-    if (reg_ctl(reg_serial, reg_cmd, cmd_typ, ptr))
+    if (hl_reg_ctl(reg_serial, reg_cmd, cmd_typ, &param->param))
         return HL_FAILED;
     return HL_SUCCESS;
 }
@@ -1311,48 +1360,48 @@ uint8_t hl_drv_sgm41518_init(void)
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
 
-    reg_arr_init();
-    reg_ctl_fun_init();
+    hl_reg_arr_init();
+    hl_reg_ctl_fun_init();
 
     if (i2c_bus == RT_NULL) {
         smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
         goto INIT_ERR;
     }
 
-    if (i2c_read_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d read err !\n", REG00_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        smg_printf("reg %d read err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg %d read err !\n", REG01_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        smg_printf("reg %d read err !\n", SGM_REG01_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg %d read err !\n", REG02_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        smg_printf("reg %d read err !\n", SGM_REG02_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg %d read err !\n", REG03_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+        smg_printf("reg %d read err !\n", SGM_REG03_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg %d read err !\n", REG04_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        smg_printf("reg %d read err !\n", SGM_REG04_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg %d read err !\n", REG05_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        smg_printf("reg %d read err !\n", SGM_REG05_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg %d read err !\n", REG06_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        smg_printf("reg %d read err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg %d read err !\n", REG07_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("reg %d read err !\n", SGM_REG07_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_read_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg %d read err !\n", REG0C_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+        smg_printf("reg %d read err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
     }
 
@@ -1402,54 +1451,54 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg0C.JEITA_ISET_L_EN = JEITA_ISET_L_ENABLE;    //开启低温充电
     reg_all.reg0C.JEITA_VSET_L    = JEITA_VSET_L_SET_VREG;  //设置低温区间（0℃ - 10℃）充电电压等于VREG
 
-    if (i2c_write_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d write err !\n", REG00_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        smg_printf("reg %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg %d write err !\n", REG01_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        smg_printf("reg %d write err !\n", SGM_REG01_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg %d write err !\n", REG02_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        smg_printf("reg %d write err !\n", SGM_REG02_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg %d write err !\n", REG03_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+        smg_printf("reg %d write err !\n", SGM_REG03_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg %d write err !\n", REG04_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        smg_printf("reg %d write err !\n", SGM_REG04_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg %d write err !\n", REG05_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        smg_printf("reg %d write err !\n", SGM_REG05_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg %d write err !\n", REG06_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        smg_printf("reg %d write err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg %d write err !\n", REG07_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("reg %d write err !\n", SGM_REG07_ADDR);
         goto INIT_ERR;
     }
-    if (i2c_write_reg(i2c_bus, REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg %d write err !\n", REG0C_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+        smg_printf("reg %d write err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
     }
     rt_thread_mdelay(50);
-    if (i2c_write_reg(i2c_bus, REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d write err !\n", REG00_ADDR);
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        smg_printf("reg %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
     smg_printf("smg41518 init success !\n");
     return HL_SUCCESS;
 INIT_ERR:
     smg_printf("smg41518 init fail !\n");
-    reg_arr_deinit();
-    reg_ctl_fun_deinit();
+    hl_reg_arr_deinit();
+    hl_reg_ctl_fun_deinit();
     return HL_FAILED;
 }
 
-INIT_DEVICE_EXPORT(hl_drv_sgm41518_init);
+MSH_CMD_EXPORT(hl_drv_sgm41518_init,run hl_drv_sgm41518_init);

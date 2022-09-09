@@ -42,26 +42,28 @@
 #define SGM41518_DEVICE_ADDRESS 0x38
 
 /* 寄存器地址 */
-#define REG00_ADDR 0x00
-#define REG01_ADDR 0x01
-#define REG02_ADDR 0x02
-#define REG03_ADDR 0x03
-#define REG04_ADDR 0x04
-#define REG05_ADDR 0x05
-#define REG06_ADDR 0x06
-#define REG07_ADDR 0x07
-#define REG08_ADDR 0x08
-#define REG09_ADDR 0x09
-#define REG0A_ADDR 0x0A
-#define REG0B_ADDR 0x0B
-#define REG0C_ADDR 0x0C
-#define REG0D_ADDR 0x0D
-#define REG0E_ADDR 0x0E
-#define REG0F_ADDR 0x0F
+#define SGM_REG00_ADDR 0x00
+#define SGM_REG01_ADDR 0x01
+#define SGM_REG02_ADDR 0x02
+#define SGM_REG03_ADDR 0x03
+#define SGM_REG04_ADDR 0x04
+#define SGM_REG05_ADDR 0x05
+#define SGM_REG06_ADDR 0x06
+#define SGM_REG07_ADDR 0x07
+#define SGM_REG08_ADDR 0x08
+#define SGM_REG09_ADDR 0x09
+#define SGM_REG0A_ADDR 0x0A
+#define SGM_REG0B_ADDR 0x0B
+#define SGM_REG0C_ADDR 0x0C
+#define SGM_REG0D_ADDR 0x0D
+#define SGM_REG0E_ADDR 0x0E
+#define SGM_REG0F_ADDR 0x0F
 
-#define CMD_MASK 0x80
-#define W_CMD_SET(x) ((x) | (CMD_MASK))
-#define R_CMD_SET(x) ((x) & (~CMD_MASK))
+#define SGM_REG_NUM    16
+
+/* 读写操作 */
+#define SGM_READ_CMD   0x00
+#define SGM_WRITE_CMD  0x01
 
 /**************************************************************************
  *                               功能选项参数宏                            *
@@ -115,13 +117,12 @@
 #define TER_CURRENT_SET(x) (x > 15) ? (15) : (x)  //TER_CURRENT[3:0] 终止电流，参数 n <= 12 , I = 20mA + (20 * n)mA
 
 //reg 04
-#define CHARGE_VOLTAGE_LIMIT(x) \
-    ((x > 24) & (x != 15)) ? (15) : (x)  //VREG[7:3] 充电电流限制，参数 n <= 24 & n != 15 \
-                                  // V = 3856mV + (32 * n)mV,n = 15,V = 4352mV
-#define TOP_TIMER_DISABLE 0              //关闭充电延长时间
-#define TOP_TIMER_15MIN 1                //充电延长时间15分钟
-#define TOP_TIMER_30MIN 2                //充电延长时间30分钟
-#define TOP_TIMER_45MIN 3                //充电延长时间45分钟
+#define CHARGE_VOLTAGE_LIMIT(x)   ((x > 24) & (x != 15)) ? (15) : (x)  //VREG[7:3] 充电电流限制，参数 n <= 24 & n != 15 
+                                                                        // V = 3856mV + (32 * n)mV,n = 15,V = 4352mV
+#define TOP_TIMER_DISABLE 0       //关闭充电延长时间
+#define TOP_TIMER_15MIN 1         //充电延长时间15分钟
+#define TOP_TIMER_30MIN 2         //充电延长时间30分钟
+#define TOP_TIMER_45MIN 3         //充电延长时间45分钟
 
 #define RECHARGE_THRESHOLD_100 0  //电池充电阈值 VREG - 100mV
 #define RECHARGE_THRESHOLD_200 1  //电池充电阈值 VREG - 200mV
@@ -410,6 +411,13 @@ enum hl_r18_param
 /**************************************************************************
  *                             数据类型                                    *
  **************************************************************************/
+// 参数选项
+typedef struct _HL_SGM_INPUT_PARAM_T
+{
+    uint8_t reg;
+    uint8_t param;
+}HL_SGM_INPUT_PARAM_T;
+
 
 // REG00 TYPE
 typedef struct _HL_SGM41518_REG00_T
@@ -503,8 +511,7 @@ typedef struct _HL_SGM41518_REG04_T
                          // 0 = 100mV below VREG[4:0] (default)
                          // 1 = 200mV below VREG[4:0]
 
-    uint8_t
-        TOPOFF_TIMER : 2;  // Top-Off Timer(The charge extension time added after the termination condition is detected.)
+    uint8_t TOPOFF_TIMER : 2;  // Top-Off Timer(The charge extension time added after the termination condition is detected.)
                            // 00 = Disabled (default)
                            // 01 = 15 minutes
                            // 10 = 30 minutes
@@ -834,5 +841,5 @@ typedef struct _HL_SGM41518_REGALL_T
 
 uint8_t hl_drv_sgm41518_init(void);
 uint8_t hl_drv_sgm41518_deinit(void);
-uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, uint8_t* ptr, uint8_t len);
+uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len);
 #endif /* end of #ifndef __HL_DRV_SGM41518_H */

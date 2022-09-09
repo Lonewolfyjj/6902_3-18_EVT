@@ -92,7 +92,7 @@ void rt_hw_iomux_config(void)
 
     sfc0_iomux_config();
 
-    sdio_iomux_config();
+//    sdio_iomux_config();
 
     uart2_iomux_config();
 
@@ -100,7 +100,7 @@ void rt_hw_iomux_config(void)
 
     uart0_iomux_config();
 
-    i2c0_m1_iomux_config();
+    i2c0_m0_iomux_config();//i2c0_m1_iomux_config();
 
 #ifdef RT_USING_I2STDM1
     i2s1_output_iomux_config();
