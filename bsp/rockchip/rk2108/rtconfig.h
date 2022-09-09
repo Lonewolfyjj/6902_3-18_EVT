@@ -98,7 +98,7 @@
 #define FINSH_USING_MSH
 #define FINSH_USING_MSH_DEFAULT
 #define FINSH_USING_MSH_ONLY
-#define FINSH_ARG_MAX 10
+#define FINSH_ARG_MAX 20
 
 /* Device virtual file system */
 
@@ -135,7 +135,6 @@
 /* RT_USING_DFS_RAMFS is not set */
 /* RT_USING_DFS_UFFS is not set */
 /* RT_USING_DFS_JFFS2 is not set */
-/* RT_USING_DFS_NFS is not set */
 /* RT_USING_LITTLEFS is not set */
 
 /* Device Drivers */
@@ -165,12 +164,13 @@
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */
 /* RT_USING_SFUD is not set */
-/* RT_USING_W25QXX is not set */
+#define RT_USING_W25QXX
 /* RT_USING_GD is not set */
 /* RT_USING_ENC28J60 is not set */
 /* RT_USING_SPI_WIFI is not set */
 /* RT_USING_WDT is not set */
 #define RT_USING_AUDIO
+#define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
 /* RT_USING_TOUCH is not set */
 
@@ -188,19 +188,14 @@
 /* RT_USB_DEVICE_COMPOSITE is not set */
 /* _RT_USB_DEVICE_NONE is not set */
 /* _RT_USB_DEVICE_CDC is not set */
-/* _RT_USB_DEVICE_MSTORAGE is not set */
-#define _RT_USB_DEVICE_HID
-/* _RT_USB_DEVICE_RNDIS is not set */
-/* _RT_USB_DEVICE_ECM is not set */
+#define _RT_USB_DEVICE_MSTORAGE
+/* _RT_USB_DEVICE_HID is not set */
 /* _RT_USB_DEVICE_WINUSB is not set */
 /* _RT_USB_DEVICE_UAC1 is not set */
 /* _RT_USB_DEVICE_UVC is not set */
-#define RT_USB_DEVICE_HID
-#define RT_USB_DEVICE_HID_KEYBOARD
-#define RT_USB_DEVICE_HID_KEYBOARD_NUMBER 1
-/* RT_USB_DEVICE_HID_MOUSE is not set */
-/* RT_USB_DEVICE_HID_GENERAL is not set */
-/* RT_USB_DEVICE_HID_MEDIA is not set */
+#define RT_USB_DEVICE_MSTORAGE
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
 
 /* POSIX layer and C standard library */
 
@@ -220,54 +215,7 @@
 
 /* light weight TCP/IP stack */
 
-#define RT_USING_LWIP
-/* RT_USING_LWIP141 is not set */
-#define RT_USING_LWIP202
-/* RT_USING_LWIP210 is not set */
-/* RT_USING_LWIP_IPV6 is not set */
-#define RT_LWIP_IGMP
-#define RT_LWIP_ICMP
-/* RT_LWIP_SNMP is not set */
-#define RT_LWIP_DNS
-#define RT_LWIP_DHCP
-#define IP_SOF_BROADCAST 1
-#define IP_SOF_BROADCAST_RECV 1
-
-/* Static IPv4 Address */
-
-#define RT_LWIP_IPADDR "192.168.1.30"
-#define RT_LWIP_GWADDR "192.168.1.1"
-#define RT_LWIP_MSKADDR "255.255.255.0"
-#define RT_LWIP_UDP
-#define RT_LWIP_TCP
-/* RT_LWIP_RAW is not set */
-/* RT_LWIP_PPP is not set */
-#define RT_MEMP_NUM_NETCONN 8
-#define RT_LWIP_PBUF_NUM 16
-#define RT_LWIP_RAW_PCB_NUM 4
-#define RT_LWIP_UDP_PCB_NUM 4
-#define RT_LWIP_TCP_PCB_NUM 4
-#define RT_LWIP_TCP_SEG_NUM 40
-#define RT_LWIP_TCP_SND_BUF 8196
-#define RT_LWIP_TCP_WND 8196
-#define RT_LWIP_TCPTHREAD_PRIORITY 10
-#define RT_LWIP_TCPTHREAD_MBOX_SIZE 8
-#define RT_LWIP_TCPTHREAD_STACKSIZE 1024
-/* LWIP_NO_RX_THREAD is not set */
-/* LWIP_NO_TX_THREAD is not set */
-#define RT_LWIP_ETHTHREAD_PRIORITY 12
-#define RT_LWIP_ETHTHREAD_STACKSIZE 1024
-#define RT_LWIP_ETHTHREAD_MBOX_SIZE 8
-/* RT_LWIP_REASSEMBLY_FRAG is not set */
-#define LWIP_NETIF_STATUS_CALLBACK 1
-#define SO_REUSE 1
-#define LWIP_SO_RCVTIMEO 1
-#define LWIP_SO_SNDTIMEO 1
-#define LWIP_SO_RCVBUF 1
-/* RT_LWIP_NETIF_LOOPBACK is not set */
-#define LWIP_NETIF_LOOPBACK 0
-/* RT_LWIP_STATS is not set */
-/* RT_LWIP_DEBUG is not set */
+/* RT_USING_LWIP is not set */
 
 /* Modbus master and slave stack */
 
@@ -276,7 +224,6 @@
 /* AT commands */
 
 /* RT_USING_AT is not set */
-/* LWIP_USING_DHCPD is not set */
 
 /* System */
 
@@ -314,7 +261,14 @@
 
 /* RT_USING_BENCHMARK is not set */
 /* RT_USING_NET_HTTP is not set */
-/* RT_USING_OTA is not set */
+#define RT_USING_OTA
+
+/* OTA Component Options */
+
+/* RT_USING_OTA_RECOVERY is not set */
+#define RT_USING_OTA_FROM_LOCAL
+/* RT_USING_OTA_FROM_HTTP is not set */
+/* RT_SUPPORT_ROOT_AB is not set */
 
 /* RT-Thread third party package */
 
@@ -377,7 +331,7 @@
 /* RT_USING_PWM_REGULATOR is not set */
 #define RT_USING_CACHE
 #define RT_USING_UNCACHE_HEAP
-#define RT_UNCACHE_HEAP_ORDER 0x0E
+#define RT_UNCACHE_HEAP_ORDER 0x0F
 #define RT_USING_LARGE_HEAP
 #define RT_LARGE_MALLOC_THRRESH 512
 #define RT_LARGE_HEAP_SIZE 524288
@@ -456,6 +410,8 @@
 
 #define RT_USING_CODEC
 #define RT_USING_CODEC_NAU88L25B
+#define RT_USING_I2STDM
+#define RT_USING_I2STDM1
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
 
 /* Audio Cards */
@@ -464,7 +420,7 @@
 /* RT_USING_AUDIO_CARD_ACDCDIG is not set */
 /* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
 /* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-#define RT_USING_AUDIO_CARD_PDM_MIC
+/* RT_USING_AUDIO_CARD_PDM_MIC is not set */
 /* RT_USING_AUDIO_CARD_PCM_BT is not set */
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
@@ -478,10 +434,6 @@
 /* Audio Interfaces */
 
 #define RT_USING_PCM
-#define RT_USING_I2STDM
-#define RT_USING_I2STDM1
-#define RT_USING_PDM
-#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
@@ -525,18 +477,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_RK_IOT_APP
-#define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
-/* PRJCONF_NET_EN is not set */
-/* PRJCONF_USING_AISPEECH is not set */
-#define PRJCONF_AI_RK
-/* PRJCONF_AI_SPEECH is not set */
-/* PRJCONF_AI_CUSTOM is not set */
-/* PRJCONF_AI_LWAKEUP is not set */
-#define PRJCONF_PLAYBACK_SOUND_CARD "es8311p"
-#define PRJCONF_ASR_SOUND_CARD "pdmc"
-/* PRJCONF_ASR_USE_VAD is not set */
+/* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
 
 /* RT-Thread bsp test case */
@@ -547,7 +488,31 @@
 
 /* RT_USING_TC is not set */
 /* RT_USING_FILE_TEST is not set */
-/* RT_USING_COMMON_TEST is not set */
+#define RT_USING_COMMON_TEST
+/* RT_USING_AUTO_TEST is not set */
+/* RT_USING_COMMON_TEST_SUSPEND is not set */
+#define RT_USING_COMMON_TEST_AUDIO
+/* RT_USING_COMMON_TEST_CODEC_ES8388 is not set */
+/* RT_USING_COMMON_TEST_CPU_USAGE is not set */
+/* RT_USING_COMMON_TEST_DCACHE is not set */
+/* RT_USING_COMMON_TEST_ICACHE is not set */
+/* RT_USING_COMMON_TEST_DSP is not set */
+/* RT_USING_DSP_OPUS_CODEC_TEST is not set */
+/* RT_USING_COMMON_TEST_GPIO is not set */
+/* RT_USING_COMMON_TEST_I2C is not set */
+/* RT_USING_COMMON_TEST_INTC is not set */
+/* RT_USING_COMMON_TEST_MBOX is not set */
+/* RT_USING_COMMON_MEMTESTER is not set */
+/* RT_USING_COMMON_TEST_MPU is not set */
+/* RT_USING_COMMON_TEST_PM is not set */
+/* RT_USING_COMMON_TEST_SNOR is not set */
+/* RT_USING_COMMON_TEST_SPI is not set */
+/* RT_USING_COMMON_TEST_SPI2APB is not set */
+/* RT_USING_COMMON_STRESS_TEST is not set */
+/* RT_USING_COMMON_TEST_PERFORMANCE is not set */
+/* RT_USING_COMMON_TEST_FWANALYSIS is not set */
+#define RT_USING_COMMON_TEST_OTA
+/* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
 #endif

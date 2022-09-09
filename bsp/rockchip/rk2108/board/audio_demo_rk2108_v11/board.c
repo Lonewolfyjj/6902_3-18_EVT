@@ -139,7 +139,7 @@ const struct audio_card_desc rk_board_audio_cards[] =
 #if 1 //def RT_USING_AUDIO_CARD_NAU88L25B
 //#if 1//HL_DEVICE_TYPE_RX //设备类型
     {
-        .name = "88l25b",
+        .name = "codec",
         .dai = I2STDM0,
         .codec = (void *) &codec_nau88l25b,
         .capture = true,
@@ -160,7 +160,7 @@ const struct audio_card_desc rk_board_audio_cards[] =
     },
 //#else
     {
-        .name = "88l25b",
+        .name = "codec",
         .dai = I2STDM0,
         .codec = (void *) &codec_nau88l25b,
         .capture = false,

@@ -16,7 +16,7 @@
 #include <rtthread.h>
 
 #include "hl_drv_rk_xtensa_dsp.h"
-#if 1
+#if 0
 #ifdef RT_USING_COMMON_TEST_AUDIO
 
 #include "rk_audio.h"

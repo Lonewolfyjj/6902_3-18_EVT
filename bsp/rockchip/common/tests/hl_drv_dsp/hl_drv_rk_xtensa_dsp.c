@@ -30,11 +30,12 @@
 
 typedef struct _lib_bypass_param_
 {
-    uint8_t* in_buf;
-    uint8_t* out_buf;
-    uint8_t* out_24bit_buf;
-    uint16_t buff_len;
-    uint16_t buff_len_24bit;
+    uint8_t *in_buf;
+    uint8_t *out_buf;
+    uint8_t *out_24bit_buf_after_process;
+    uint8_t *out_24bit_buf_before_process;
+    uint16_t process_buff_len;
+    uint16_t out_buff_len_24bit;
 } lib_bypass_param_type_t, *lib_bypass_param_type_t_p;
 
 /**
@@ -73,7 +74,7 @@ typedef struct _lib_alango_srp_param_
 #endif
 
 #define DSP_FRAME_CHANNEL 2
-#define DSP_FRAME_BIT 16
+#define DSP_FRAME_BIT 32
 #define DSP_FRAME_RATE 48000
 #define DSP_FRAME_PERIOD 120
 
@@ -286,10 +287,11 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
     // todo: set rx param
     sg_rx_dsp_param->in_buf         = config->audio_process_in_buffer;
     sg_rx_dsp_param->out_buf        = config->audio_process_out_buffer;
-    sg_rx_dsp_param->out_24bit_buf  = config->audio_process_out_buffer_24bit;
-    sg_rx_dsp_param->buff_len       = config->period_size * config->channels * (4);
-    sg_rx_dsp_param->buff_len_24bit = config->period_size * config->channels * (3);
-    sg_dsp_frame_bytes              = sg_rx_dsp_param->buff_len;
+    sg_rx_dsp_param->out_24bit_buf_after_process  = config->audio_process_out_buffer_24bit_a;
+    sg_rx_dsp_param->out_24bit_buf_before_process  = config->audio_process_out_buffer_24bit_b;
+    sg_rx_dsp_param->process_buff_len = config->period_size * config->channels * (4);
+    sg_rx_dsp_param->out_buff_len_24bit = config->period_size * config->channels * (3);
+    sg_dsp_frame_bytes              = sg_rx_dsp_param->process_buff_len;
     RT_ASSERT(sg_dsp_frame_bytes != 0);
 
     // HL_DRV_DSP_LOG("\r\nsg_rx_dsp_param->in_buf = %08x\r\n", sg_tx_dsp_param->main_in_buf);
@@ -424,7 +426,8 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     // do rx dsp process
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_dsp_param->in_buf, sg_dsp_frame_bytes);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf, sg_dsp_frame_bytes);
-    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_24bit_buf, sg_dsp_frame_bytes);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_24bit_buf_after_process, sg_rx_dsp_param->out_buff_len_24bit);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_24bit_buf_before_process, sg_rx_dsp_param->out_buff_len_24bit);
 
     ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
     if (ret) {

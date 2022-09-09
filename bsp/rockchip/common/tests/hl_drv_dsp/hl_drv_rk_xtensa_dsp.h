@@ -62,6 +62,8 @@ typedef struct _hl_drv_rk_xtensa_dsp_config_t_
 {
     /// 采集和输出的操作的大小
     uint32_t process_size;
+    /// 采集和输出的操作的大小
+    uint32_t process_size_24bit;
     /// 采样率
     uint32_t rate;
     /// 采集的通道数 默认为2
@@ -75,7 +77,9 @@ typedef struct _hl_drv_rk_xtensa_dsp_config_t_
     /// 音频处理过程中的暂存输出buffer
     char* audio_process_out_buffer;
     /// 音频处理过程中的暂存输出buffer
-    char* audio_process_out_buffer_24bit;
+    char* audio_process_out_buffer_24bit_a;
+    /// 音频处理过程中的暂存输出buffer
+    char* audio_process_out_buffer_24bit_b;
 } hl_drv_rk_xtensa_dsp_config_t, *hl_drv_rk_xtensa_dsp_config_t_p;
 
 /**

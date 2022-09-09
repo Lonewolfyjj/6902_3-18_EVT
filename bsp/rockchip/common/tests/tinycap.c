@@ -91,7 +91,7 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     abuf.buf = rt_malloc_uncache(size);
     if (!abuf.buf)
     {
-        rt_kprintf("Buffer alloc failed!\n");
+        rt_kprintf("Buffer alloc failed (%d)!\n", size);
         return 0;
     }
 

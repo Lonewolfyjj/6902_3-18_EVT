@@ -23,7 +23,7 @@
 #include "rk_audio.h"
 #include "drv_heap.h"
 
-#define HL_AUDIO_BITS_24 1 //< ÓÉÔ­À´µÄ16Î»¿í¸Ä³É24Î»¿í  @lixiang
+#define HL_AUDIO_BITS_24 1 //< ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½16Î»ï¿½ï¿½ï¿½Ä³ï¿½24Î»ï¿½ï¿½  @lixiang
 
 #define F_AUDIO_NUM_INTERFACES      2 /* Number of streaming interfaces */
 #define USB_OUT_IT_ID               1
