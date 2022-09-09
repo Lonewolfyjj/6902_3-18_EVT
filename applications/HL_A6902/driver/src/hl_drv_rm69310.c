@@ -28,20 +28,21 @@
 #include "hl_drv_rm69310.h"
 #include <rtdevice.h>
 #include "hal_base.h"
+#include "hl_hal_gpio.h"
 //#if (!HL_GET_DEVICE_TYPE())
 
-#define HL_GPIO_OLED_RST GPIO0, GPIO_PIN_A1
-#define HL_GPIO_OLED_DCX GPIO1, GPIO_PIN_C7
-#define HL_GPIO_OLED_POWER GPIO1, GPIO_PIN_C1
+// #define HL_GPIO_OLED_RST GPIO0, GPIO_PIN_A1
+#define HL_GPIO_OLED_DCX BANK_PIN(GPIO_BANK1, GPIO_PIN_C7)
+#define HL_GPIO_OLED_POWER BANK_PIN(GPIO_BANK1, GPIO_PIN_C1)
 
-#define OLED_PWR_ON() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_RST, GPIO_HIGH)  // hl_hal_gpio_high(HL_GPIO_OLED_POWER)
-#define OLED_PWR_OFF() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_RST, GPIO_LOW)  // hl_hal_gpio_low(HL_GPIO_OLED_POWER)
+#define OLED_PWR_ON() hl_hal_gpio_high(HL_GPIO_OLED_POWER)
+#define OLED_PWR_OFF() hl_hal_gpio_low(HL_GPIO_OLED_POWER)
 
-#define OLED_RST_H() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_RST, GPIO_HIGH)  // hl_hal_gpio_high(HL_GPIO_OLED_RST)
-#define OLED_RST_L() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_RST, GPIO_LOW)   // hl_hal_gpio_low(HL_GPIO_OLED_RST)
+#define OLED_RST_H()  hl_hal_gpio_high(GPIO_OLED_RST)
+#define OLED_RST_L()  hl_hal_gpio_low(GPIO_OLED_RST)
 
-#define OLED_DCX_DATA() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_DCX, GPIO_HIGH)  // hl_hal_gpio_high(HL_GPIO_OLED_DCX)
-#define OLED_DCX_CMD() HAL_GPIO_SetPinLevel(HL_GPIO_OLED_DCX, GPIO_LOW)    // hl_hal_gpio_low(HL_GPIO_OLED_DCX)
+#define OLED_DCX_DATA() hl_hal_gpio_high(HL_GPIO_OLED_DCX)
+#define OLED_DCX_CMD()  hl_hal_gpio_low(HL_GPIO_OLED_DCX)
 
 // #define OLED_TE_PORT          GPIOA
 // #define OLED_TE_PIN           GPIO_PIN_14
