@@ -1,5 +1,5 @@
 /**
- * @file cw2215.h
+ * @file hl_drv_cw2215.h
  * @author lilin (lin.li@hollyland-tech.com)
  * @brief 电量计驱动头文件，对外提供控制电量计的接口。
  * @version 1.0
@@ -106,6 +106,12 @@ typedef struct _hl_st_drv_guage_temp
 } hl_st_drv_guage_temp_t;
 
 /* define --------------------------------------------------------------------*/
+
+#define CW2215_FUNC_RET_ERR 1
+#define CW2215_FUNC_RET_OK 0
+
+#define CW2215_CHIP_ID (0xa0)
+
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/

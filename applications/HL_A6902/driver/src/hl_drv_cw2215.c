@@ -1,5 +1,5 @@
 /**
- * @file cw2215.c
+ * @file hl_drv_cw2215.c
  * @author lilin (lin.li@hollyland-tech.com)
  * @brief 电量计驱动源文件，使用IIC驱动来控制CW2215电量计。
  * @version 1.0
@@ -64,12 +64,8 @@
 /* chip info Macro */
 
 ///chip id
-#define CW2215_CHIP_ID (0xa0)
 #define CW2215_BATINFO_SIZE 80
 #define CW2215_RSENSE 10
-
-#define CW2215_FUNC_RET_ERR 1
-#define CW2215_FUNC_RET_OK 0
 
 #define CW2215_ERROR_IIC -1
 #define CW2215_ERROR_CHIP_ID -2
@@ -148,19 +144,18 @@ static inline int cw_read(unsigned char PointReg, unsigned char* pData)
 
 static inline int cw_write(unsigned char PointReg, unsigned char* pData)
 {
-    struct rt_i2c_msg msgs[2] = { 0 };
+    struct rt_i2c_msg msgs[1] = { 0 };
+    uint8_t buf[2];
+
+    buf[0] = PointReg;
+    buf[1] = *pData;
 
     msgs[0].addr  = CW2215_IIC_DEV_ADDR;
-    msgs[0].flags = RT_I2C_WR;  //| RT_I2C_NO_STOP;
-    msgs[0].buf   = &PointReg;
-    msgs[0].len   = 1;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf   = buf;
+    msgs[0].len   = 2;
 
-    msgs[1].addr  = CW2215_IIC_DEV_ADDR;
-    msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
-    msgs[1].buf   = pData;
-    msgs[1].len   = 1;
-
-    if (rt_i2c_transfer(_p_i2c_bus, msgs, 2) == 2) {
+    if (rt_i2c_transfer(_p_i2c_bus, msgs, 1) == 1) {
         return CW2215_FUNC_RET_OK;
     } else {
         return CW2215_FUNC_RET_ERR;
