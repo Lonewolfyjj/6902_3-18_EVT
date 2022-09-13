@@ -113,13 +113,13 @@ typedef struct _hl_drv_aw2016a_pattern_param
 typedef struct _hl_drv_aw2016a_output_current
 {
     hl_drv_aw2016a_led_channel_e led_chan;
-    uint8_t current;
+    uint8_t                      current;
 } hl_drv_aw2016a_output_current_st;
 
 typedef struct _hl_drv_aw2016a_pwm_level
 {
     hl_drv_aw2016a_led_channel_e led_chan;
-    uint8_t pwm_level;
+    uint8_t                      pwm_level;
 } hl_drv_aw2016a_pwm_level_st;
 
 /* define --------------------------------------------------------------------*/

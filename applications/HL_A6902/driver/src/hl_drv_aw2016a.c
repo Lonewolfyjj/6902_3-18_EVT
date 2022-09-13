@@ -513,7 +513,7 @@ static int set_pwm_level(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_pwm
 
 int hl_drv_aw2016a_init(void)
 {
-    int ret;
+    int     ret;
     uint8_t chip_id;
 
     if (_init_flag == 1) {
@@ -540,7 +540,7 @@ int hl_drv_aw2016a_init(void)
 
     if (chip_id != AW2016A_CHIP_ID) {
         //("aw2016a chip0 id err: %02x!", chip_id);
-        return AW2016A_FUNC_RET_ERR;       
+        return AW2016A_FUNC_RET_ERR;
     }
 
     ret = get_chip_id(_p_i2c_bus_1, &chip_id);
@@ -550,7 +550,7 @@ int hl_drv_aw2016a_init(void)
 
     if (chip_id != AW2016A_CHIP_ID) {
         //("aw2016a chip1 id err: %02x!", chip_id);
-        return AW2016A_FUNC_RET_ERR;       
+        return AW2016A_FUNC_RET_ERR;
     }
 
     _init_flag = 1;

@@ -145,7 +145,7 @@ static inline int cw_read(unsigned char PointReg, unsigned char* pData)
 static inline int cw_write(unsigned char PointReg, unsigned char* pData)
 {
     struct rt_i2c_msg msgs[1] = { 0 };
-    uint8_t buf[2];
+    uint8_t           buf[2];
 
     buf[0] = PointReg;
     buf[1] = *pData;
