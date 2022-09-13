@@ -41,10 +41,14 @@ typedef enum _hl_drv_aw2016a_op
     HL_DRV_AW2016A_CLOSE_LED_CHANNEL,
     ///set aw2016a pattern mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_PATTERN_MODE,
+    ///set aw2016a pattern mode param, type of parameter is <hl_drv_aw2016a_pattern_param_st> pointer
     HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM,
     ///set aw2016a manual mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_MANUAL_MODE,
-    HL_DRV_AW2016A_SET_MANUAL_MODE_PARAM,
+    ///set aw2016a led channel output current, type of parameter is <hl_drv_aw2016a_output_current_st> pointer
+    HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT,
+    ///set aw2016a led channel pwm level, type of parameter is <hl_drv_aw2016a_pwm_level_st> pointer
+    HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL,
 } hl_drv_aw2016a_op_t;
 
 typedef enum _hl_drv_aw2016a_led_num
@@ -67,11 +71,56 @@ typedef enum _hl_drv_aw2016a_max_output_current
     HL_DRV_AW2016A_IMAX_10MA = 0x11,
 } hl_drv_aw2016a_max_output_current_e;
 
-typedef enum _hl_drv_aw2016a_led_channel {
+typedef enum _hl_drv_aw2016a_led_channel
+{
     HL_DRV_AW2016A_LED_CHANNEL1 = 0x01,
     HL_DRV_AW2016A_LED_CHANNEL2 = 0x02,
     HL_DRV_AW2016A_LED_CHANNEL3 = 0x04,
 } hl_drv_aw2016a_led_channel_e;
+
+typedef enum _hl_drv_aw2016a_pattern_time
+{
+    ///T1、T3：0秒，T2、T4、T0：0.04秒
+    HL_DRV_AW2016A_PATTERN_0S_OR_0S04 = 0x00,
+    HL_DRV_AW2016A_PATTERN_0S13,
+    HL_DRV_AW2016A_PATTERN_0S26,
+    HL_DRV_AW2016A_PATTERN_0S38,
+    HL_DRV_AW2016A_PATTERN_0S51,
+    HL_DRV_AW2016A_PATTERN_0S77,
+    HL_DRV_AW2016A_PATTERN_1S04,
+    HL_DRV_AW2016A_PATTERN_1S60,
+    HL_DRV_AW2016A_PATTERN_2S10,
+    HL_DRV_AW2016A_PATTERN_2S60,
+    HL_DRV_AW2016A_PATTERN_3S10,
+    HL_DRV_AW2016A_PATTERN_4S20,
+    HL_DRV_AW2016A_PATTERN_5S20,
+    HL_DRV_AW2016A_PATTERN_6S20,
+    HL_DRV_AW2016A_PATTERN_7S30,
+    HL_DRV_AW2016A_PATTERN_8S30,
+} hl_drv_aw2016a_pattern_time_e;
+
+typedef struct _hl_drv_aw2016a_pattern_param
+{
+    hl_drv_aw2016a_led_channel_e  led_chan;
+    hl_drv_aw2016a_pattern_time_e t0;
+    hl_drv_aw2016a_pattern_time_e t1;
+    hl_drv_aw2016a_pattern_time_e t2;
+    hl_drv_aw2016a_pattern_time_e t3;
+    hl_drv_aw2016a_pattern_time_e t4;
+    uint8_t                       repeat;
+} hl_drv_aw2016a_pattern_param_st;
+
+typedef struct _hl_drv_aw2016a_output_current
+{
+    hl_drv_aw2016a_led_channel_e led_chan;
+    uint8_t current;
+} hl_drv_aw2016a_output_current_st;
+
+typedef struct _hl_drv_aw2016a_pwm_level
+{
+    hl_drv_aw2016a_led_channel_e led_chan;
+    uint8_t pwm_level;
+} hl_drv_aw2016a_pwm_level_st;
 
 /* define --------------------------------------------------------------------*/
 
