@@ -28,7 +28,7 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-int8_t hl_util_fifo_init(hl_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size)
+int8_t hl_util_fifo_init(hl_util_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size)
 {
     if ((p_fifo == NULL) || (buf_size == 0)) {
         return -1;
@@ -46,7 +46,7 @@ int8_t hl_util_fifo_init(hl_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size)
     return 0;
 }
 
-int8_t hl_util_fifo_deinit(hl_fifo_t *p_fifo)
+int8_t hl_util_fifo_deinit(hl_util_fifo_t *p_fifo)
 {
     if ((p_fifo == NULL) || (p_fifo->buffer == NULL)) {
         return -1;
@@ -60,7 +60,7 @@ int8_t hl_util_fifo_deinit(hl_fifo_t *p_fifo)
     return 0;
 }
 
-uint32_t hl_util_fifo_data_size(hl_fifo_t *p_fifo)
+uint32_t hl_util_fifo_data_size(hl_util_fifo_t *p_fifo)
 {
     if ((p_fifo == NULL) || (p_fifo->fifo_size == 0)) {
         return 0;
@@ -73,12 +73,12 @@ uint32_t hl_util_fifo_data_size(hl_fifo_t *p_fifo)
     }
 }
 
-uint32_t hl_util_fifo_free_size(hl_fifo_t *p_fifo)
+uint32_t hl_util_fifo_free_size(hl_util_fifo_t *p_fifo)
 {
     return (p_fifo->fifo_size - hl_util_fifo_data_size(p_fifo) - 1);
 }
 
-uint32_t hl_util_fifo_read(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
+uint32_t hl_util_fifo_read(hl_util_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
 {
    uint32_t size       = 0;
    uint32_t targe_size = 0;
@@ -105,7 +105,7 @@ uint32_t hl_util_fifo_read(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
    }
 }
 
-uint32_t hl_util_fifo_write(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
+uint32_t hl_util_fifo_write(hl_util_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
 {
     uint32_t targe_size = 0;
     uint32_t size = 0;
@@ -129,7 +129,7 @@ uint32_t hl_util_fifo_write(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len)
     return targe_size;
 }
 
-int8_t hl_util_fifo_clear(hl_fifo_t *p_fifo)
+int8_t hl_util_fifo_clear(hl_util_fifo_t *p_fifo)
 {
     if (p_fifo == NULL) {
         return -1;

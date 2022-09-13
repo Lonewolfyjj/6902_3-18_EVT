@@ -24,7 +24,7 @@
 
 /* typedef -------------------------------------------------------------------*/
 /// fifo结构体
-typedef struct _hl_fifo_t
+typedef struct _hl_util_fifo_t
 {
     /// fifo 大小
     uint32_t fifo_size;
@@ -34,7 +34,7 @@ typedef struct _hl_fifo_t
     uint32_t read_pointer;
     /// fifo 环形缓冲区
     uint8_t  *buffer;
-} hl_fifo_t;
+} hl_util_fifo_t;
 
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -56,7 +56,7 @@ typedef struct _hl_fifo_t
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-int8_t hl_util_fifo_init(hl_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size);
+int8_t hl_util_fifo_init(hl_util_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size);
 
 /**
  * @brief fifo去初始化
@@ -72,7 +72,7 @@ int8_t hl_util_fifo_init(hl_fifo_t *p_fifo, uint8_t *buff, uint32_t buf_size);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-int8_t hl_util_fifo_deinit(hl_fifo_t *p_fifo);
+int8_t hl_util_fifo_deinit(hl_util_fifo_t *p_fifo);
 
 /**
  * @brief 
@@ -88,7 +88,7 @@ int8_t hl_util_fifo_deinit(hl_fifo_t *p_fifo);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-uint32_t hl_util_fifo_data_size(hl_fifo_t *p_fifo);
+uint32_t hl_util_fifo_data_size(hl_util_fifo_t *p_fifo);
 
 /**
  * @brief 获取fifo剩余空间大小
@@ -104,7 +104,7 @@ uint32_t hl_util_fifo_data_size(hl_fifo_t *p_fifo);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-uint32_t hl_util_fifo_free_size(hl_fifo_t *p_fifo);
+uint32_t hl_util_fifo_free_size(hl_util_fifo_t *p_fifo);
 
 /**
  * @brief 读fifo
@@ -122,7 +122,7 @@ uint32_t hl_util_fifo_free_size(hl_fifo_t *p_fifo);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-uint32_t hl_util_fifo_read(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
+uint32_t hl_util_fifo_read(hl_util_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
 
 /**
  * @brief 写fifo
@@ -140,7 +140,7 @@ uint32_t hl_util_fifo_read(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-uint32_t hl_util_fifo_write(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
+uint32_t hl_util_fifo_write(hl_util_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
 
 /**
  * @brief 清除fifo
@@ -156,7 +156,7 @@ uint32_t hl_util_fifo_write(hl_fifo_t *p_fifo, uint8_t *p_buf, uint32_t len);
  * <tr><td>2022-09-09      <td>luzhanghao     <td>新建
  * </table>
  */
-int8_t hl_util_fifo_clear(hl_fifo_t *p_fifo);
+int8_t hl_util_fifo_clear(hl_util_fifo_t *p_fifo);
 
 #endif /* APPLICATIONS_UTILITY_INC_HL_UTIL_FIFO_H_ */
 
