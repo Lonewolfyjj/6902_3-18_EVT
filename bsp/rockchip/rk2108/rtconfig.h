@@ -26,7 +26,8 @@
 /* RT_USING_TIMER_SOFT is not set */
 #define RT_DEBUG
 /* RT_DEBUG_COLOR is not set */
-/* RT_DEBUG_INIT_CONFIG is not set */
+#define RT_DEBUG_INIT_CONFIG
+#define RT_DEBUG_INIT 1
 #define RT_DEBUG_USING_IO
 /* RT_DEBUG_USING_GPIO is not set */
 /* RT_DEBUG_THREAD_CONFIG is not set */
@@ -360,7 +361,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -377,7 +378,7 @@
 /* RT_USING_PWM_REGULATOR is not set */
 #define RT_USING_CACHE
 #define RT_USING_UNCACHE_HEAP
-#define RT_UNCACHE_HEAP_ORDER 0x0E
+#define RT_UNCACHE_HEAP_ORDER 0x0F
 #define RT_USING_LARGE_HEAP
 #define RT_LARGE_MALLOC_THRRESH 512
 #define RT_LARGE_HEAP_SIZE 524288
@@ -389,7 +390,7 @@
 /* RT_USNING_FAULT_DUMP_HOOK is not set */
 #define RT_USING_SNOR
 #define RT_SNOR_SPEED 80000000
-/* RT_SNOR_DUAL_IO is not set */
+#define RT_SNOR_DUAL_IO
 #define RT_USING_SNOR_FSPI_HOST
 /* RT_USING_SNOR_SFC_HOST is not set */
 /* RT_USING_SNOR_SPI_HOST is not set */
@@ -524,18 +525,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_RK_IOT_APP
-#define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
-/* PRJCONF_NET_EN is not set */
-/* PRJCONF_USING_AISPEECH is not set */
-#define PRJCONF_AI_RK
-/* PRJCONF_AI_SPEECH is not set */
-/* PRJCONF_AI_CUSTOM is not set */
-/* PRJCONF_AI_LWAKEUP is not set */
-#define PRJCONF_PLAYBACK_SOUND_CARD "es8311p"
-#define PRJCONF_ASR_SOUND_CARD "pdmc"
-/* PRJCONF_ASR_USE_VAD is not set */
+/* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
 
 /* RT-Thread bsp test case */
@@ -546,7 +536,30 @@
 
 /* RT_USING_TC is not set */
 /* RT_USING_FILE_TEST is not set */
-/* RT_USING_COMMON_TEST is not set */
+#define RT_USING_COMMON_TEST
+/* RT_USING_AUTO_TEST is not set */
+/* RT_USING_COMMON_TEST_SUSPEND is not set */
+/* RT_USING_COMMON_TEST_AUDIO is not set */
+/* RT_USING_COMMON_TEST_CODEC_ES8388 is not set */
+/* RT_USING_COMMON_TEST_CPU_USAGE is not set */
+/* RT_USING_COMMON_TEST_DCACHE is not set */
+/* RT_USING_COMMON_TEST_ICACHE is not set */
+/* RT_USING_COMMON_TEST_DSP is not set */
+/* RT_USING_DSP_OPUS_CODEC_TEST is not set */
+#define RT_USING_COMMON_TEST_GPIO
+/* RT_USING_COMMON_TEST_I2C is not set */
+/* RT_USING_COMMON_TEST_INTC is not set */
+/* RT_USING_COMMON_TEST_MBOX is not set */
+/* RT_USING_COMMON_MEMTESTER is not set */
+/* RT_USING_COMMON_TEST_MPU is not set */
+/* RT_USING_COMMON_TEST_PM is not set */
+/* RT_USING_COMMON_TEST_SNOR is not set */
+/* RT_USING_COMMON_TEST_SPI is not set */
+/* RT_USING_COMMON_TEST_SPI2APB is not set */
+/* RT_USING_COMMON_STRESS_TEST is not set */
+/* RT_USING_COMMON_TEST_PERFORMANCE is not set */
+/* RT_USING_COMMON_TEST_FWANALYSIS is not set */
+/* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
 #endif
