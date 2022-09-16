@@ -104,7 +104,7 @@
 
 #define RT_USING_DFS
 #define DFS_USING_WORKDIR
-#define DFS_FILESYSTEMS_MAX 2
+#define DFS_FILESYSTEMS_MAX 4
 #define DFS_FILESYSTEM_TYPES_MAX 2
 #define DFS_FD_MAX 16
 #define RT_USING_DFS_MNTTABLE
@@ -159,7 +159,14 @@
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
 /* RT_USING_RTC is not set */
-/* RT_USING_SDIO is not set */
+#define RT_USING_SDIO
+#define RT_SDIO_STACK_SIZE 512
+#define RT_SDIO_THREAD_PRIORITY 15
+#define RT_MMCSD_STACK_SIZE 1536
+#define RT_MMCSD_THREAD_PREORITY 22
+#define RT_MMCSD_MAX_PARTITION 16
+#define RT_SDCARD_MOUNT_POINT "/mnt/sdcard"
+#define RT_SDIO_DEBUG
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */
@@ -181,21 +188,14 @@
 /* Using USB */
 
 /* RT_USING_USB_HOST is not set */
-#define RT_USING_USB_DEVICE
-#define RT_USBD_THREAD_STACK_SZ 4096
-#define USB_VENDOR_ID 0x2207
-#define USB_PRODUCT_ID 0x0007
-/* RT_USB_DEVICE_COMPOSITE is not set */
+/* RT_USING_USB_DEVICE is not set */
 /* _RT_USB_DEVICE_NONE is not set */
 /* _RT_USB_DEVICE_CDC is not set */
-#define _RT_USB_DEVICE_MSTORAGE
+/* _RT_USB_DEVICE_MSTORAGE is not set */
 /* _RT_USB_DEVICE_HID is not set */
 /* _RT_USB_DEVICE_WINUSB is not set */
 /* _RT_USB_DEVICE_UAC1 is not set */
 /* _RT_USB_DEVICE_UVC is not set */
-#define RT_USB_DEVICE_MSTORAGE
-#define RT_USB_MSTORAGE_DISK_NAME "root"
-#define RT_USB_MSTORAGE_BUFLEN 4096
 
 /* POSIX layer and C standard library */
 
@@ -261,14 +261,7 @@
 
 /* RT_USING_BENCHMARK is not set */
 /* RT_USING_NET_HTTP is not set */
-#define RT_USING_OTA
-
-/* OTA Component Options */
-
-/* RT_USING_OTA_RECOVERY is not set */
-#define RT_USING_OTA_FROM_LOCAL
-/* RT_USING_OTA_FROM_HTTP is not set */
-/* RT_SUPPORT_ROOT_AB is not set */
+/* RT_USING_OTA is not set */
 
 /* RT-Thread third party package */
 
@@ -314,7 +307,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -326,6 +319,7 @@
 #define RT_USING_RESET
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
+/* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
 /* RT_USING_PWM_REGULATOR is not set */
@@ -343,7 +337,7 @@
 /* RT_USNING_FAULT_DUMP_HOOK is not set */
 #define RT_USING_SNOR
 #define RT_SNOR_SPEED 80000000
-/* RT_SNOR_DUAL_IO is not set */
+#define RT_SNOR_DUAL_IO
 #define RT_USING_SNOR_FSPI_HOST
 /* RT_USING_SNOR_SFC_HOST is not set */
 /* RT_USING_SNOR_SPI_HOST is not set */
@@ -458,7 +452,7 @@
 #define RT_USING_UART
 #define RT_USING_UART0
 /* RT_USING_UART1 is not set */
-#define RT_USING_UART2
+/* RT_USING_UART2 is not set */
 
 /* Enable I2C */
 
@@ -471,6 +465,10 @@
 #define RT_USING_SPI2APB
 #define RT_USING_SPI1
 #define RT_USING_SPI2
+
+/* Enable SDIO/SDMMC/eMMC */
+
+#define RT_USING_SDIO0
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
@@ -511,7 +509,6 @@
 /* RT_USING_COMMON_STRESS_TEST is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
-#define RT_USING_COMMON_TEST_OTA
 /* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 

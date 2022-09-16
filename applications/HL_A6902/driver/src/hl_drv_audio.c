@@ -1,16 +1,29 @@
 /**
-  * Copyright (c) 2019 Fuzhou Rockchip Electronics Co., Ltd
-  *
-  * SPDX-License-Identifier: Apache-2.0
-  ******************************************************************************
-  * @file    rk_audio.c
-  * @author  sugar
-  * @version V0.1
-  * @date    2019/7/10
-  * @brief   AUDIO Driver
-  *
-  ******************************************************************************
-  */
+ * @file hl_drv_audio.c
+ * @author lixiang (rd37@hollyland-tech.com)
+ * @brief 
+ * @version 0.1
+ * @date 2022-09-08
+ * 
+ * @copyright Copyright (c) 2022 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2022-09-13     <td>v1.0     <td>lixiang     <td>内容
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 
 
 #include <rtdevice.h>
@@ -21,7 +34,6 @@
 #ifdef RT_USING_AUDIO
 
 #include "hal_base.h"
-#include "rk_audio.h"
 #include "hl_drv_audio.h"
 
 #ifdef RK_AUDIO_DEBUG

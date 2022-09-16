@@ -34,7 +34,7 @@ const struct codec_desc codec_es8311 =
 #endif
 
 #ifdef RT_USING_CODEC_NAU88L25B
-#define RT_CODEC_NAU88L21 1
+//#define RT_CODEC_NAU88L21 1
 const struct codec_desc codec_nau88l25b =
 {
     .if_type = IF_TYPE_I2C,
