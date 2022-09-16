@@ -13,7 +13,7 @@
  * <tr><td>2022-09-08     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -57,13 +57,13 @@
  **************************************************************************/
 
 /* 基本操作命令 */
-#define NAU_READ_REG_CMD  0x00
-#define NAU_WRITE_REG_CMD  0x01
+#define NAU_READ_REG_CMD 0x00
+#define NAU_WRITE_REG_CMD 0x01
 
-#define NAU_GET_GAIN  0x02
-#define NAU_SET_GAIN  0x03
-#define NAU_GET_MUTE  0x04
-#define NAU_SET_MUTE  0x05
+#define NAU_GET_GAIN 0x02
+#define NAU_SET_GAIN 0x03
+#define NAU_GET_MUTE 0x04
+#define NAU_SET_MUTE 0x05
 
 /**************************************************************************
  *                             数据类型                                    *
@@ -72,53 +72,53 @@
 /* 可配置项枚举 */
 enum hl_nau_param_w
 {
-  //reg33
-  OPT_DACL_CTRL_DAC_MIXER = 0, 
-  OPT_DACL_CTRL_DAC_CH_SEL0,
-  OPT_DACL_CTRL_DGAINL_DAC,
-  //reg34
-  OPT_DACR_CTRL_DAC_CH_SEL1, 
-  OPT_DACR_CTRL_DGAINR_DAC, 
+    //reg33
+    OPT_DACL_CTRL_DAC_MIXER = 0,
+    OPT_DACL_CTRL_DAC_CH_SEL0,
+    OPT_DACL_CTRL_DGAINL_DAC,
+    //reg34
+    OPT_DACR_CTRL_DAC_CH_SEL1,
+    OPT_DACR_CTRL_DGAINR_DAC,
 
-  // 特殊 6902专用操作
-  OPT_GAIN = 0xF0,
-  OPT_MUTE,
-  PARAM_CNT_MAX_W
+    // 特殊 6902专用操作
+    OPT_GAIN = 0xF0,
+    OPT_MUTE,
+    PARAM_CNT_MAX_W
 };
 
 // 配置入口参数
 typedef struct _HL_NAU_INPUT_PARAM_T
 {
     uint16_t reg;
-    int param;
-}HL_NAU_INPUT_PARAM_T;
+    int      param;
+} HL_NAU_INPUT_PARAM_T;
 
 typedef struct _HL_nau88l25b_REG33_T
 {
-  uint16_t DGAINL_DAC : 8;  //左声道增益
+    uint16_t DGAINL_DAC : 8;  //左声道增益
 
-  uint16_t Reserved1 : 1;
+    uint16_t Reserved1 : 1;
 
-  uint16_t DAC_CH_SEL0 : 1;
+    uint16_t DAC_CH_SEL0 : 1;
 
-  uint16_t Reserved2 : 4;
-          
-  uint16_t DAC_MIXER : 2;
+    uint16_t Reserved2 : 4;
 
-}HL_nau88l25b_REG33_T;
+    uint16_t DAC_MIXER : 2;
+
+} HL_nau88l25b_REG33_T;
 
 // REG34 TYPE
 typedef struct _HL_nau88l25b_REG34_T
 {
-  uint16_t DGAINR_DAC : 8;  //右声道增益
+    uint16_t DGAINR_DAC : 8;  //右声道增益
 
-  uint16_t Reserved1 : 1;
+    uint16_t Reserved1 : 1;
 
-  uint16_t DAC_CH_SEL1 : 1;  //0:左声道  1：右声道
+    uint16_t DAC_CH_SEL1 : 1;  //0:左声道  1：右声道
 
-  uint16_t Reserved2 : 6;
+    uint16_t Reserved2 : 6;
 
-}HL_nau88l25b_REG34_T;
+} HL_nau88l25b_REG34_T;
 
 uint8_t hl_drv_nau88l25b_init(void);
 uint8_t hl_drv_nau88l25b_deinit(void);

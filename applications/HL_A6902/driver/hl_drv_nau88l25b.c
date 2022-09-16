@@ -13,7 +13,7 @@
  * <tr><td>2022-09-08     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -107,7 +107,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
     msgs[1].len   = 2;
     */
     /* 调用I2C设备接口传输数据 */
-    nau_printf("%s : buf[2] = %X buf[3] = %X \n",__FUNCTION__,buf[2],buf[3]);
+    nau_printf("%s : buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[2], buf[3]);
     if (rt_i2c_transfer(bus, msgs, 1) == 1)
         return HL_SUCCESS;
     else
@@ -153,7 +153,7 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, 
     /* 调用I2C设备接口传输数据 */
     if (rt_i2c_transfer(bus, msgs, 2) == 2) {
         rbuf[0] = ((buf[2] << 8) + buf[3]);
-        nau_printf("%s : buf[2] = %X buf[3] = %X \n",__FUNCTION__,buf[2],buf[3]);
+        nau_printf("%s : buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[2], buf[3]);
         return HL_SUCCESS;
     } else
         return HL_FAILED;
@@ -206,7 +206,7 @@ static uint8_t hl_reg00_ctl(void)
 {
     uint16_t reset = 0x0000;
     if (hl_i2c_write_reg(i2c_bus, NAU88L25B_RESET_REG00, &reset)) {
-        nau_printf("%s reset fail !\n",__FUNCTION__);
+        nau_printf("%s reset fail !\n", __FUNCTION__);
         return HL_FAILED;
     }
     return HL_SUCCESS;
@@ -675,7 +675,7 @@ uint8_t hl_drv_nau88l25b_init(void)
     if (i2c_bus == RT_NULL) {
         nau_printf("can't find %s device!\n", NAU88L25B_IIC_NAME);
         goto INIT_ERR;
-    }    
+    }
     hl_reg_arr_init();
     hl_reg_ctl_fun_init();
     hl_reg00_ctl();
@@ -689,26 +689,29 @@ uint8_t hl_drv_nau88l25b_init(void)
     return HL_SUCCESS;
 INIT_ERR:
     nau_printf("hl_drv_nau88l25b_init fail !\n");
+    hl_reg_arr_deinit();
+    hl_reg_ctl_fun_deinit();
+    hl_reg00_ctl();
     return HL_FAILED;
 }
 
 void tt(void)
 {
     uint16_t buff = 0x1234;
-   i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);  
+    i2c_bus       = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
 
-   if (i2c_bus == RT_NULL) {
+    if (i2c_bus == RT_NULL) {
         nau_printf("can't find %s device!\n", NAU88L25B_IIC_NAME);
-    }  
+    }
 
     if (hl_i2c_write_reg(i2c_bus, 0x3D, &buff)) {
         nau_printf("%s read fail !\n", __FUNCTION__);
     }
-    
+
     if (hl_i2c_read_reg(i2c_bus, 0x3D, &buff)) {
         nau_printf("%s read fail !\n", __FUNCTION__);
     }
 }
 
-MSH_CMD_EXPORT(hl_drv_nau88l25b_init,run hl_drv_nau88l25b_init);
-MSH_CMD_EXPORT(tt,run nau88l25b_test);
+MSH_CMD_EXPORT(hl_drv_nau88l25b_init, run hl_drv_nau88l25b_init);
+MSH_CMD_EXPORT(tt, run nau88l25b_test);

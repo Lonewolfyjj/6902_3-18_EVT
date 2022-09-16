@@ -361,7 +361,7 @@
 /* RT-Thread board config */
 
 #define RT_BOARD_NAME "audio_demo_rk2108_v11"
-#define RK_SRAM_END 0x200C0000
+#define RK_SRAM_END 0x20100000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
 
@@ -389,7 +389,7 @@
 /* RT_USNING_FAULT_DUMP_HOOK is not set */
 #define RT_USING_SNOR
 #define RT_SNOR_SPEED 80000000
-/* RT_SNOR_DUAL_IO is not set */
+#define RT_SNOR_DUAL_IO
 #define RT_USING_SNOR_FSPI_HOST
 /* RT_USING_SNOR_SFC_HOST is not set */
 /* RT_USING_SNOR_SPI_HOST is not set */
@@ -526,7 +526,7 @@
 /* RT_USING_ROCKCHIP_DEMO is not set */
 #define RT_USING_RK_IOT_APP
 #define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
+#define PRJCONF_BOOT_AUTOMATICALLY
 /* PRJCONF_NET_EN is not set */
 /* PRJCONF_USING_AISPEECH is not set */
 #define PRJCONF_AI_RK
