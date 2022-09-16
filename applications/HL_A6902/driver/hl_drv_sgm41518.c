@@ -119,7 +119,7 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, r
 
     /* 调用I2C设备接口传输数据 */
     if (rt_i2c_transfer(bus, msgs, 2) == 2) {
-        rbuf[0] = buf[1];
+        rbuf[0] = buf[0];
         return HL_SUCCESS;
     } else
         return HL_FAILED;
