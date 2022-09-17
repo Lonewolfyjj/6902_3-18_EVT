@@ -104,9 +104,9 @@ static rt_err_t rk_audio_config(struct audio_stream *as, struct AUDIO_PARAMS *pa
     eAUDIO_streamType stream = as->stream;
     rt_err_t ret = RT_EOK;
 
-#ifndef RT_USB_DEVICE_UAC1
+//#ifndef RT_USB_DEVICE_UAC1
     rk_audio_set_clk(as, params->sampleRate);
-#endif
+//#endif
 
     if (vad_dai)
     {
