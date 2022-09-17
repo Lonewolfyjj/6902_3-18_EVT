@@ -1,4 +1,5 @@
 #include "hl_mod_telink.h"
+#include "hl_hal_gpio.h"
 #include <stdlib.h>
 
 uint8_t cmd;
@@ -195,7 +196,11 @@ void telink_pair_test(void)
 {
     rt_mq_t mq;
 
-    cmd = 3;
+    cmd = '3';
+    hl_hal_gpio_init(GPIO_2831P_EN);
+    hl_hal_gpio_high(GPIO_2831P_EN);
+
+    rt_thread_mdelay(3000);
 
     hl_mod_telink_init(&mq);
     hl_mod_telink_start();
