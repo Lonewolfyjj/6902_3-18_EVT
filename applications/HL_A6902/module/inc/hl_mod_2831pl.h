@@ -1,7 +1,7 @@
 /**
- * @file hl_mod_2831p.c
+ * @file hl_mod_2831pl.h
  * @author lilin (lin.li@hollyland-tech.com)
- * @brief 2831p无线模块源文件
+ * @brief 2831p无线模块头文件
  * @version 1.0
  * @date 2022-09-13
  * 
@@ -15,28 +15,53 @@
  * 
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
+
+#ifndef __HL_MOD_2831PL_H__
+#define __HL_MOD_2831PL_H__
+
 /* Includes ------------------------------------------------------------------*/
 
-#include "hl_mod_2831p.h"
+#include "rtthread.h"
+#include "rtdevice.h"
+#include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
+
+typedef enum _hl_mod_pm_op
+{
+    ///start wireless pair, type of parameter is <hl_mod_pm_wireless_pair_e> pointer
+    HL_MOD_PM_WIRELESS_PAIR,
+    ///switch slave or master, type of parameter is <hl_mod_pm_swicth_s_m_e> pointer
+    HL_MOD_PM_SWITCH_SLAVE_MASTER,
+} hl_mod_pm_op_e;
+
+typedef enum _hl_mod_pm_wireless_pair
+{
+    PM_WIRELESS_PAIR_START,
+    PM_WIRELESS_PAIR_STOP,
+} hl_mod_pm_wireless_pair_e;
+
+typedef enum _hl_mod_pm_switch_s_m
+{
+    PM_SWITCH_SLAVE,
+    PM_SWITCH_MASTER,
+} hl_mod_pm_swicth_s_m_e;
 /* define --------------------------------------------------------------------*/
+
+#define HL_MOD_PM_FUNC_RET_ERR 1
+#define HL_MOD_PM_FUNC_RET_OK 0
+
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-int hl_mod_pm_init(void* msgHd)
-{
-}
+int hl_mod_pm_init(void* msgHd);
 
-void hl_mod_pm_deinit(void)
-{
-}
+void hl_mod_pm_deinit(void);
 
-int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
-{
-}
+int hl_mod_pm_ctrl(int op, void* arg, int arg_size);
 
+#endif
 /*
  * EOF
  */

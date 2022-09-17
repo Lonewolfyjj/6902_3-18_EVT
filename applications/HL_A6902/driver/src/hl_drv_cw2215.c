@@ -22,6 +22,8 @@
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 
+#define DBG_LOG rt_kprintf
+
 /* IIC Macro */
 
 #define CW2215_IIC_READ_FLAG 1
@@ -31,7 +33,7 @@
 #define CW2215_IIC_DEV_ADDR 0x64
 
 ///使用的IIC接口名字
-#define CW2215_IIC_BUS_NAME "i2c0"
+#define CW2215_IIC_BUS_NAME "i2c1"
 
 /* CW2215 reg base addr Macro */
 
@@ -641,13 +643,13 @@ int8_t hl_drv_cw2215_init(void)
     int ret;
 
     if (_init_flag != 0) {
-        //("Guage is already inited!");
+        DBG_LOG("Guage is already inited!\n");
         return CW2215_FUNC_RET_ERR;
     }
 
     _p_i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(CW2215_IIC_BUS_NAME);
     if (_p_i2c_bus == NULL) {
-        //("i2c dev not found!:%s", CW2215_IIC_BUS_NAME);
+        DBG_LOG("i2c dev not found!:%s", CW2215_IIC_BUS_NAME);
         return CW2215_FUNC_RET_ERR;
     }
 
@@ -656,8 +658,10 @@ int8_t hl_drv_cw2215_init(void)
         return CW2215_FUNC_RET_ERR;
     }
 
-    //("Guage init success!");
+    DBG_LOG("\nGuage init success!\n");
+
     _init_flag = 1;
+
     return CW2215_FUNC_RET_OK;
 }
 
@@ -665,7 +669,7 @@ int8_t hl_drv_cw2215_deinit(void)
 {
     int ret;
     if (_init_flag != 1) {
-        //("Guage is not inited!");
+        DBG_LOG("Guage is not inited!\n");
         return CW2215_FUNC_RET_ERR;
     }
 
@@ -676,7 +680,7 @@ int8_t hl_drv_cw2215_deinit(void)
 
     _p_i2c_bus = NULL;
 
-    //("Guage deinit success!");
+    DBG_LOG("Guage deinit success!\n");
     _init_flag = 0;
     return CW2215_FUNC_RET_OK;
 }
@@ -685,14 +689,14 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
 {
     int ret;
     if (_init_flag != 1) {
-        //("Guage is not inited!");
+        DBG_LOG("Guage is not inited!\n");
         return CW2215_FUNC_RET_ERR;
     }
 
     switch (op) {
         case HL_DRV_GUAGE_GET_CHIP_ID: {
             if (arg_size != sizeof(char)) {
-                //("size err, ctrl arg need <char> type pointer!");
+                DBG_LOG("size err, ctrl arg need <char> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -703,7 +707,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_VOLTAGE: {
             if (arg_size != sizeof(uint16_t)) {
-                //("size err, ctrl arg need <uint16_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint16_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -714,7 +718,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_SOC: {
             if (arg_size != sizeof(hl_st_drv_guage_soc_t)) {
-                //("size err, ctrl arg need <hl_st_drv_guage_soc_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <hl_st_drv_guage_soc_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -725,7 +729,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_TEMP: {
             if (arg_size != sizeof(hl_st_drv_guage_temp_t)) {
-                //("size err, ctrl arg need <hl_st_drv_guage_temp_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <hl_st_drv_guage_temp_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -736,7 +740,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_CURRENT: {
             if (arg_size != sizeof(int32_t)) {
-                //("size err, ctrl arg need <int32_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <int32_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -747,7 +751,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_SOH: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 
@@ -758,7 +762,7 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_GET_CYCLE_COUNT: {
             if (arg_size != sizeof(uint32_t)) {
-                //("size err, ctrl arg need <uint32_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint32_t> type pointer!\n");
                 return CW2215_FUNC_RET_ERR;
             }
 

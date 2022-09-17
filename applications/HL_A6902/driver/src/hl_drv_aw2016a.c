@@ -22,8 +22,13 @@
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 
-#define AW2016_IIC_BUS_0_NAME "i2c0"
-#define AW2016_IIC_BUS_1_NAME "i2c1"
+#define DBG_LOG rt_kprintf
+
+#define AW2016_IIC_BUS_0_NAME "i2c2"
+#define AW2016_IIC_BUS_1_NAME "i2c2"
+
+/* chip info */
+#define AW2016A_IIC_DEV_ADDR 0x64
 
 /* AW2016A reg base addr Macro */
 #define AW2016A_REG_RSTR 0x00
@@ -47,9 +52,6 @@
 #define AW2016A_REG_LED3_T1_T2 0x3D
 #define AW2016A_REG_LED3_T3_T4 0x3E
 #define AW2016A_REG_LED3_T0_REPEAT 0x3F
-
-/* chip info */
-#define AW2016A_IIC_DEV_ADDR 0x64
 
 /* variables -----------------------------------------------------------------*/
 
@@ -509,27 +511,43 @@ static int set_pwm_level(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_pwm
     return AW2016A_FUNC_RET_OK;
 }
 
+static int dump_register_value(struct rt_i2c_bus_device* p_i2c_bus, uint8_t* reg_addr)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = aw_read(p_i2c_bus, *reg_addr, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    DBG_LOG("reg:%02x,value:%02x\n", *reg_addr, reg_val);
+
+    return AW2016A_FUNC_RET_OK;
+}
+
 /* Exported functions --------------------------------------------------------*/
 
 int hl_drv_aw2016a_init(void)
 {
     int     ret;
     uint8_t chip_id;
+    uint8_t flag;
 
     if (_init_flag == 1) {
-        //("LED is already inited!");
+        DBG_LOG("LED is already inited!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 
     _p_i2c_bus_0 = (struct rt_i2c_bus_device*)rt_device_find(AW2016_IIC_BUS_0_NAME);
     if (_p_i2c_bus_0 == NULL) {
-        //("i2c dev not found!:%s", AW2016_IIC_BUS_0_NAME);
+        DBG_LOG("i2c dev not found!:%s", AW2016_IIC_BUS_0_NAME);
         return AW2016A_FUNC_RET_ERR;
     }
 
     _p_i2c_bus_1 = (struct rt_i2c_bus_device*)rt_device_find(AW2016_IIC_BUS_1_NAME);
     if (_p_i2c_bus_1 == NULL) {
-        //("i2c dev not found!:%s", AW2016_IIC_BUS_1_NAME);
+        DBG_LOG("i2c dev not found!:%s", AW2016_IIC_BUS_1_NAME);
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -539,7 +557,7 @@ int hl_drv_aw2016a_init(void)
     }
 
     if (chip_id != AW2016A_CHIP_ID) {
-        //("aw2016a chip0 id err: %02x!", chip_id);
+        DBG_LOG("aw2016a chip0 id err: %02x!", chip_id);
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -549,9 +567,23 @@ int hl_drv_aw2016a_init(void)
     }
 
     if (chip_id != AW2016A_CHIP_ID) {
-        //("aw2016a chip1 id err: %02x!", chip_id);
+        DBG_LOG("aw2016a chip1 id err: %02x!", chip_id);
         return AW2016A_FUNC_RET_ERR;
     }
+
+    flag = 1;
+
+    ret = set_charge_indicator(_p_i2c_bus_0, &flag);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_charge_indicator(_p_i2c_bus_1, &flag);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    DBG_LOG("\nLED init success!\n");
 
     _init_flag = 1;
 
@@ -561,7 +593,7 @@ int hl_drv_aw2016a_init(void)
 int hl_drv_aw2016a_deinit(void)
 {
     if (_init_flag == 0) {
-        //("LED is not inited!");
+        DBG_LOG("LED is not inited!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -576,7 +608,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
     struct rt_i2c_bus_device* p_i2c_bus;
 
     if (_init_flag == 0) {
-        //("LED is not inited!");
+        DBG_LOG("LED is not inited!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -585,14 +617,14 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
     } else if (led_num == HL_DRV_AW2016A_LED1) {
         p_i2c_bus = _p_i2c_bus_1;
     } else {
-        //("LED NUM is not 0 or 1!");
+        DBG_LOG("LED NUM is not 0 or 1!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 
     switch (op) {
         case HL_DRV_AW2016A_GET_CHIP_ID: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -603,7 +635,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_WORK_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -614,7 +646,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -625,7 +657,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_OPEN_LED_CHANNEL: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -636,7 +668,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_CLOSE_LED_CHANNEL: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -647,7 +679,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_PATTERN_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -658,7 +690,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM: {
             if (arg_size != sizeof(hl_drv_aw2016a_pattern_param_st)) {
-                //("size err, ctrl arg need <hl_drv_aw2016a_pattern_param_st> type pointer!");
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_pattern_param_st> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -669,7 +701,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_MANUAL_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                //("size err, ctrl arg need <uint8_t> type pointer!");
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -680,7 +712,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT: {
             if (arg_size != sizeof(hl_drv_aw2016a_output_current_st)) {
-                //("size err, ctrl arg need <hl_drv_aw2016a_output_current_st> type pointer!");
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_output_current_st> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -691,11 +723,22 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL: {
             if (arg_size != sizeof(hl_drv_aw2016a_pwm_level_st)) {
-                //("size err, ctrl arg need <hl_drv_aw2016a_pwm_level_st> type pointer!");
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_pwm_level_st> type pointer!\n");
                 return AW2016A_FUNC_RET_ERR;
             }
 
             ret = set_pwm_level(p_i2c_bus, (hl_drv_aw2016a_pwm_level_st*)arg);
+            if (ret < 0) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_DUMP_REGISTER_VALUE: {
+            if (arg_size != sizeof(uint8_t)) {
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                return AW2016A_FUNC_RET_ERR;
+            }
+
+            ret = dump_register_value(p_i2c_bus, (uint8_t*)arg);
             if (ret < 0) {
                 return AW2016A_FUNC_RET_ERR;
             }
