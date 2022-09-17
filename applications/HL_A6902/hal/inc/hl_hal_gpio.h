@@ -109,6 +109,11 @@ typedef enum _hl_gpio_port_e
     /// (放大器使能，无外部上下拉，低电平有效)
     GPIO_AMP_EN,
 
+    /// (demo板上指示灯，)
+    GPIO_LED_TEST,
+    // (demo板按键)
+    GPIO_KEY_TEST,
+
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;
