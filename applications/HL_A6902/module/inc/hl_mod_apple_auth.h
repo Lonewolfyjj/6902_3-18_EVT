@@ -15,8 +15,8 @@
  * 
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HL_MOD_IAP2_H__
-#define __HL_MOD_IAP2_H__
+#ifndef __HL_MOD_APPLE_AUTH_H__
+#define __HL_MOD_APPLE_AUTH_H__
 
 /* Includes ------------------------------------------------------------------*/
 #include <rtthread.h>

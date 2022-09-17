@@ -20,12 +20,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <rtthread.h>
+#include <stdint.h>
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
 
 /* typedef -------------------------------------------------------------------*/
 typedef struct
 {
+    rt_bool_t thread_flag;
     /// APP层消息队列
     rt_mq_t* app_msq;
     /// 串口设备

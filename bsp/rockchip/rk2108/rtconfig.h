@@ -360,7 +360,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -389,7 +389,7 @@
 /* RT_USNING_FAULT_DUMP_HOOK is not set */
 #define RT_USING_SNOR
 #define RT_SNOR_SPEED 80000000
-/* RT_SNOR_DUAL_IO is not set */
+#define RT_SNOR_DUAL_IO
 #define RT_USING_SNOR_FSPI_HOST
 /* RT_USING_SNOR_SFC_HOST is not set */
 /* RT_USING_SNOR_SPI_HOST is not set */
@@ -454,33 +454,16 @@
 
 /* Enable Audio */
 
-#define RT_USING_CODEC
-#define RT_USING_CODEC_ES8311
+/* RT_USING_CODEC is not set */
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
 
 /* Audio Cards */
 
-#define RT_USING_AUDIO_CARD
-/* RT_USING_AUDIO_CARD_ACDCDIG is not set */
-/* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
-/* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-#define RT_USING_AUDIO_CARD_PDM_MIC
-/* RT_USING_AUDIO_CARD_PCM_BT is not set */
-/* RT_USING_AUDIO_CARD_AW8896 is not set */
-/* RT_USING_AUDIO_CARD_ES7243 is not set */
-/* RT_USING_AUDIO_CARD_ES8156 is not set */
-#define RT_USING_AUDIO_CARD_ES8311
-/* RT_USING_AUDIO_CARD_ES8388 is not set */
-/* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
-/* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
+/* RT_USING_AUDIO_CARD is not set */
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
-#define RT_USING_I2STDM
-#define RT_USING_I2STDM1
-#define RT_USING_PDM
-#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
@@ -546,7 +529,29 @@
 
 /* RT_USING_TC is not set */
 /* RT_USING_FILE_TEST is not set */
-/* RT_USING_COMMON_TEST is not set */
+#define RT_USING_COMMON_TEST
+/* RT_USING_AUTO_TEST is not set */
+/* RT_USING_COMMON_TEST_SUSPEND is not set */
+/* RT_USING_COMMON_TEST_AUDIO is not set */
+/* RT_USING_COMMON_TEST_CPU_USAGE is not set */
+/* RT_USING_COMMON_TEST_DCACHE is not set */
+/* RT_USING_COMMON_TEST_ICACHE is not set */
+/* RT_USING_COMMON_TEST_DSP is not set */
+/* RT_USING_DSP_OPUS_CODEC_TEST is not set */
+#define RT_USING_COMMON_TEST_GPIO
+/* RT_USING_COMMON_TEST_I2C is not set */
+/* RT_USING_COMMON_TEST_INTC is not set */
+/* RT_USING_COMMON_TEST_MBOX is not set */
+/* RT_USING_COMMON_MEMTESTER is not set */
+/* RT_USING_COMMON_TEST_MPU is not set */
+/* RT_USING_COMMON_TEST_PM is not set */
+/* RT_USING_COMMON_TEST_SNOR is not set */
+/* RT_USING_COMMON_TEST_SPI is not set */
+/* RT_USING_COMMON_TEST_SPI2APB is not set */
+/* RT_USING_COMMON_STRESS_TEST is not set */
+/* RT_USING_COMMON_TEST_PERFORMANCE is not set */
+/* RT_USING_COMMON_TEST_FWANALYSIS is not set */
+/* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
 #endif

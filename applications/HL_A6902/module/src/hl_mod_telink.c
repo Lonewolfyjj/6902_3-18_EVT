@@ -1,6 +1,7 @@
 #include "hl_mod_telink.h"
 #include <stdlib.h>
 
+uint8_t cmd;
 /// 线程句柄
 static struct rt_thread telink_thread;
 /// 线程栈数组
@@ -35,7 +36,13 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
     uint32_t ret = 0;
 
     ret = rt_device_read(s_telink.serial, 0, s_uart_recv_buf, TELINK_UART_BUF_SIZE);
-    ret = hl_util_fifo_write(&s_telink.fifo, s_uart_recv_buf, ret);
+    // ret = hl_util_fifo_write(&s_telink.fifo, s_uart_recv_buf, ret);
+    
+    rt_kprintf("\n[ LEN = %02x ]\n[ ", ret);
+    for(int i= 0 ; i<8;i++){
+        rt_kprintf("%c\t", s_uart_recv_buf[i]);
+    }
+    rt_kprintf(" ]\n");
 
     return RT_EOK;
 }
@@ -44,11 +51,10 @@ static void hl_mod_telink_thread_entry(void* parameter)
 {
     uint32_t data     = 0;
     uint8_t  buf[256] = { 0 };
-    uint8_t  temp[5]  = { 0x11, 0x22, 0x33, 0x44, 0x55 };
 
-    hl_mod_telink_ioctl(0x01, temp, 5);
+    hl_mod_telink_ioctl(cmd, &cmd, 1);
 
-    while (1) {
+    while (s_telink.thread_flag == RT_TRUE) {
         data = hl_util_fifo_data_size(&s_telink.fifo);
         if (data > 0) {
             data = hl_util_fifo_read(&s_telink.fifo, buf, data);
@@ -96,6 +102,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 
     // Telink获取并赋值APP层下发的消息队列指针
     s_telink.app_msq = input_msq;
+    s_telink.thread_flag = RT_TRUE;
 
     // 初始化Telink模块串口交互所需的资源
     // 初始化hup
@@ -153,21 +160,44 @@ uint8_t hl_mod_telink_stop(void)
 
 uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
+    if (TELINK_UART_BUF_SIZE < data_len) {
+        rt_kprintf("[ERROR] telink send data len is too long\n");
+        return -1;
+    }
     uint8_t frame_buf[TELINK_UART_BUF_SIZE] = { 0 };
 
     uint16_t frame_len =
         hl_util_hup_encode(s_telink.hup.hup_handle.role, cmd, frame_buf, TELINK_UART_BUF_SIZE, data_addr, data_len);
 
-    rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
+    for (uint8_t i = 0; i < frame_len; i++) {
+        rt_kprintf("%02x\t", frame_buf[i]);
+    }
+    rt_kprintf("\n");
+
+    frame_len = rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
+    rt_kprintf("write len = %d\n", frame_len);
 
     return 0;
 }
 
-static void telink_test(void)
+static void telink_test(int argc, char** argv)
 {
     rt_mq_t mq;
+
+    cmd = atoi(argv[1]);
 
     hl_mod_telink_init(&mq);
     hl_mod_telink_start();
 }
 MSH_CMD_EXPORT(telink_test, test cmd);
+
+void telink_pair_test(void)
+{
+    rt_mq_t mq;
+
+    cmd = 3;
+
+    hl_mod_telink_init(&mq);
+    hl_mod_telink_start();
+}
+INIT_APP_EXPORT(telink_pair_test);
