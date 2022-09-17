@@ -136,15 +136,21 @@ static void hl_mod_audio_record(uint8_t *buffer, uint32_t size)
 
     //fseek(cap_config->file, 0, SEEK_SET);
     /* write header now all information is known */
-    s_audio_header.data_sz = size * s_audio_header.block_align;
-    s_audio_header.riff_sz = s_audio_header.data_sz + sizeof(s_audio_header) - 8;
+    s_audio_header.data_sz = (size / dsp_config->channels / (3)) + s_audio_header.data_sz;    
     //fwrite(&s_audio_header, sizeof(struct wav_header), 1, cap_config->file);
     //hl_mod_audio_record_save();
 }
 
 static void hl_mod_audio_record_stop(void)
-{
+{    
+    s_audio_header.data_sz = s_audio_header.data_sz * s_audio_header.block_align;
+    s_audio_header.riff_sz = s_audio_header.data_sz + sizeof(s_audio_header) - 8;
+
+    fseek(cap_config->file, 0, SEEK_SET);
+    fwrite(&s_audio_header, sizeof(struct wav_header), 1, cap_config->file);
     fclose(cap_config->file);
+
+    rt_kprintf("Auaio recoord stop (data_sz:(0x%08x),riff_sz:(0x%08x)) \n", s_audio_header.data_sz, s_audio_header.riff_sz);
 }
 
 static void hl_mod_audio_record_save(void)
