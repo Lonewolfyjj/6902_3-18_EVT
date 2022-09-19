@@ -5,6 +5,12 @@
  * @version 0.1
  * @date 2022-08-10
  * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
  * @copyright Copyright (c) 2022 hollyland
  * 
  * @par 修改日志:
@@ -25,7 +31,6 @@
 #include "dma.h"
 #include "rk_audio.h"
 #include "drv_heap.h"
-#include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -54,22 +59,27 @@ typedef struct _lib_bypass_param_
  */
 typedef struct _lib_alango_srp_param_
 {
-    /// 音频输入数据地址
-    uint8_t* main_in_buf;
-    uint8_t* subs_in_buf;
-    /// 音频输出数据地址
-    uint8_t* out_buf;
-    /// 采样数据长度，字节
-    uint32_t sample_size;
-    /// 帧长， 采样周期
-    uint32_t frame_length;
-    /// 通道数
+    /// role = 0:RX role = 1:TX
+    uint16_t role;
     uint16_t channel;
+    uint16_t b24_2ch_len;
+    uint16_t b24_1ch_len;
+    uint32_t b32_2ch_len;
+    uint16_t sample_size;
+    uint16_t srp_profile_length;
+    uint32_t frame_length;
+    long*    in_buf_b32_2ch;
+    long*    out_buf_b32_2ch;
+    long*    out_buf_b24_1ch_after_process;
+    long*    out_buf_b24_1ch_before_process;
+    long*    out_buf_b24_2ch_after_process;
+    long*    out_buf_b24_2ch_before_process;
+    char*    srp_profile;
 } lib_alango_srp_param_type_t, *lib_alango_srp_param_type_t_p;
 
 /* define --------------------------------------------------------------------*/
 
-#ifndef HL_GET_DEVICE_TYPE
+#ifndef HL_GET_DEVICE_TYPE()
 #error "HL_GET_DEVICE_TYPE() not define"
 #endif
 
@@ -77,7 +87,7 @@ typedef struct _lib_alango_srp_param_
 /// DSP的处理采样通道数
 #define DSP_FRAME_CHANNEL 2
 /// DSP的处理采样深度
-#define DSP_FRAME_BIT 16
+#define DSP_FRAME_BIT 32
 /// DSP的处理采样率
 #define DSP_FRAME_RATE 48000
 /// DSP的处理采样周期
@@ -127,6 +137,8 @@ static lib_alango_srp_param_type_t_p sg_tx_dsp_param = NULL;
 // rx = 0
 static lib_bypass_param_type_t_p sg_rx_dsp_param = NULL;
 #endif
+
+extern const unsigned char srp_profile[356];
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -188,11 +200,16 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
 
 #if HL_GET_DEVICE_TYPE()
     RT_ASSERT(sg_tx_dsp_param != NULL);
-    sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_tx_dsp_param,
+    sg_dsp_work = dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_tx_dsp_param,
                                   sizeof(lib_alango_srp_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
+    HL_DRV_DSP_LOG("dsp create config work OK\n");
+
+    HL_DRV_DSP_LOG("dsp create config work srp OK,addr = 0x%08x, size is %ld\n", sg_tx_dsp_param->srp_profile, sg_tx_dsp_param->srp_profile_length);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->srp_profile, sg_tx_dsp_param->srp_profile_length + 1);
+
     ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
     RT_ASSERT(!ret);
     ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_DEQUEUE_WORK, sg_dsp_work);
@@ -203,7 +220,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     // todo rx dsp init
     RT_ASSERT(sg_rx_dsp_param != NULL);
     sg_dsp_work =
-        _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_BYPASS_INIT, (uint32_t)sg_rx_dsp_param, sizeof(lib_bypass_param_type_t));
+        dsp_create_work(ASR_WAKE_ID, DSP_ALGO_BYPASS_INIT, (uint32_t)sg_rx_dsp_param, sizeof(lib_bypass_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
@@ -289,17 +306,23 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
         HL_DRV_DSP_LOG("not init\r\n");
         return 1;
     }
-    sg_tx_dsp_param->main_in_buf  = config->audio_process_in_buffer;
-    sg_tx_dsp_param->out_buf      = config->audio_process_out_buffer;
-    sg_tx_dsp_param->out_buf      = config->audio_process_out_buffer;
-    sg_tx_dsp_param->channel      = config->channels;
-    sg_tx_dsp_param->sample_size  = config->bits >> 3;
-    sg_tx_dsp_param->frame_length = config->period_size;
+    sg_tx_dsp_param->in_buf_b32_2ch                 = config->audio_process_in_buffer_b32_2ch;
+    sg_tx_dsp_param->out_buf_b32_2ch                = config->audio_process_out_buffer_b32_2ch;
+    sg_tx_dsp_param->out_buf_b24_1ch_before_process = config->audio_before_process_out_buffer_b24_1ch;
+    sg_tx_dsp_param->out_buf_b24_1ch_after_process  = config->audio_after_process_out_buffer_b24_1ch;
+    sg_tx_dsp_param->channel                        = config->channels;
+    sg_tx_dsp_param->sample_size                    = config->bits >> 3;
+    sg_tx_dsp_param->frame_length                   = config->period_size;
+    sg_tx_dsp_param->b32_2ch_len                    = config->buffer_size_b32_2ch;
+    sg_tx_dsp_param->b24_1ch_len                    = config->buffer_size_b24_1ch;
+    sg_tx_dsp_param->role                           = 1;
+    sg_tx_dsp_param->srp_profile                    = srp_profile;
+    sg_tx_dsp_param->srp_profile_length             = sizeof(srp_profile);
     sg_dsp_frame_bytes = sg_tx_dsp_param->frame_length * sg_tx_dsp_param->sample_size * sg_tx_dsp_param->channel;
     RT_ASSERT(sg_dsp_frame_bytes != 0);
 
-    HL_DRV_DSP_LOG("\r\nsg_tx_dsp_param->main_in_buf = %08x\r\n", sg_tx_dsp_param->main_in_buf);
-    HL_DRV_DSP_LOG("sg_tx_dsp_param->out_buf = %08x\r\n", sg_tx_dsp_param->out_buf);
+    HL_DRV_DSP_LOG("\r\nsg_tx_dsp_param->main_in_buf = %08x\r\n", sg_tx_dsp_param->in_buf_b32_2ch);
+    HL_DRV_DSP_LOG("sg_tx_dsp_param->out_buf = %08x\r\n", sg_tx_dsp_param->out_buf_b32_2ch);
     HL_DRV_DSP_LOG("sg_tx_dsp_param->channel = %d\r\n", sg_tx_dsp_param->channel);
     HL_DRV_DSP_LOG("sg_tx_dsp_param->sample_size = %d\r\n", sg_tx_dsp_param->sample_size);
     HL_DRV_DSP_LOG("sg_tx_dsp_param->frame_length = %d\r\n", sg_tx_dsp_param->frame_length);
@@ -350,11 +373,7 @@ static uint8_t _hl_drv_rk_stensa_dsp_init_frame(hl_drv_rk_xtensa_dsp_t_p handle)
     if (!handle) {
         return 1;
     }
-
-    handle->frame.frame_channel     = DSP_FRAME_CHANNEL;
-    handle->frame.frame_sample_bit  = DSP_FRAME_BIT;
-    handle->frame.frame_sample_rate = DSP_FRAME_RATE;
-    handle->frame.frame_period      = DSP_FRAME_PERIOD;
+    handle->is_init = 1;
     return 0;
 }
 
@@ -433,8 +452,12 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     }
     // HL_DRV_DSP_LOG("dsp work type = 0x%02x\r\n", sg_dsp_work->algo_type);
 #if HL_GET_DEVICE_TYPE()
-    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->main_in_buf, sg_dsp_frame_bytes);
-    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf, sg_dsp_frame_bytes);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->in_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b24_1ch_after_process,
+                         sg_tx_dsp_param->b24_1ch_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b24_1ch_before_process,
+                         sg_tx_dsp_param->b24_1ch_len);
 
     ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
     if (ret) {
@@ -470,6 +493,11 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
 
 uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
+    if (!sg_dsp_drv_handle->is_init) {
+        // not init
+        return 1;
+    }
+
     switch (cmd) {
         case HL_EM_DRV_RK_DSP_CMD_SET_CONFIG:
             _hl_drv_rk_xtensa_dsp_set_dsp_config((hl_drv_rk_xtensa_dsp_t_p)ptr);

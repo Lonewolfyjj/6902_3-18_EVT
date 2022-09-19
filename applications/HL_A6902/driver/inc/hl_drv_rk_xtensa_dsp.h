@@ -8,6 +8,12 @@
  * @version 0.1
  * @date 2022-08-10
  * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
  * @copyright Copyright (c) 2022 hollyland
  * 
  * @par 修改日志:
@@ -22,6 +28,7 @@
 #define __HL_DRV_RK_XTENSA_DSP_H__
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include "hl_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,13 +80,24 @@ typedef struct _hl_drv_rk_xtensa_dsp_config_t_
     /// 采样深度
     uint32_t bits;
     /// 采集周期，与帧长正相关
+    uint32_t buffer_size_b32_2ch;
     uint32_t period_size;
     /// 音频处理过程中的暂存输入buffer
-    char* audio_process_in_buffer;
+    char* audio_process_in_buffer_b32_2ch;
     /// 音频处理过程中的暂存输出buffer
-    char* audio_process_out_buffer;
+    char* audio_process_out_buffer_b32_2ch;
     /// 音频处理过程中的暂存输出buffer
-    char* audio_process_out_buffer_24bit;
+#if HL_GET_DEVICE_TYPE()
+    /// tx
+    uint32_t buffer_size_b24_1ch;
+    char* audio_before_process_out_buffer_b24_1ch;
+    char* audio_after_process_out_buffer_b24_1ch;
+#else
+    /// rx
+    uint32_t buffer_size_b24_2ch;
+    char* audio_before_process_out_buffer_b24_2ch;
+    char* audio_after_process_out_buffer_b24_2ch;
+#endif
 } hl_drv_rk_xtensa_dsp_config_t, *hl_drv_rk_xtensa_dsp_config_t_p;
 
 /**
@@ -126,6 +144,8 @@ typedef struct _hl_drv_rk_xtensa_dsp_t_
 {
     /// 是否使能DSP， 1：已使能 0：未使能
     uint8_t enable;
+    /// 是否使初始化， 1：已初始化 0：未初始化
+    uint8_t is_init;
     /// 驱动所在的设备类型
     hl_drv_rk_xtensa_dsp_role_e device_role;
     /// 驱动所使用的帧格式数据
