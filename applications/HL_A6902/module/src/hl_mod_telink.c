@@ -94,8 +94,8 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     rt_err_t result;
 
     // 申请缓冲区内存空间
-    s_telink_hup_buf  = (uint8_t*)malloc(sizeof(uint8_t) * TELINK_HUP_BUF_SIZE);
-    s_telink_fifo_buf = (uint8_t*)malloc(sizeof(uint8_t) * TELINK_FIFO_BUF_SIZE);
+    s_telink_hup_buf  = (uint8_t*)rt_malloc(sizeof(uint8_t) * TELINK_HUP_BUF_SIZE);
+    s_telink_fifo_buf = (uint8_t*)rt_malloc(sizeof(uint8_t) * TELINK_FIFO_BUF_SIZE);
     if ((NULL == s_telink_hup_buf) || (NULL == s_telink_fifo_buf)) {
         rt_kprintf("[ERROR] telink malloc buf failed!\n");
         return -1;
@@ -136,8 +136,8 @@ uint8_t hl_mod_telink_deinit(void)
     hl_util_fifo_deinit(&s_telink.fifo);
 
     // 释放已申请的缓冲区内存空间
-    free(s_telink_hup_buf);
-    free(s_telink_fifo_buf);
+    rt_free(s_telink_hup_buf);
+    rt_free(s_telink_fifo_buf);
 
     return 0;
 }
