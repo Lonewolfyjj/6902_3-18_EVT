@@ -46,14 +46,14 @@ static void uart_cmd_pair_p(void)
 
 static void uart_cmd_slave(void)
 {
-    hl_mod_pm_wireless_pair_e arg = PM_SWITCH_SLAVE;
+    hl_mod_pm_work_mode_e arg = PM_WORK_MODE_SLAVE;
 
     hl_mod_pm_ctrl(HL_MOD_PM_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
 }
 
 static void uart_cmd_master(void)
 {
-    hl_mod_pm_wireless_pair_e arg = PM_SWITCH_MASTER;
+    hl_mod_pm_work_mode_e arg = PM_WORK_MODE_MASTER;
 
     hl_mod_pm_ctrl(HL_MOD_PM_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
 }

@@ -26,6 +26,7 @@ typedef struct _hl_mod_pm
 {
     int                     init_flag;
     void*                   msg_handle;
+    int                     work_mode;
     hl_util_fifo_t          fifo;
     rt_thread_t             thread;
     int                     thread_shutdown;
@@ -169,18 +170,23 @@ static int handle_wireless_pair(hl_mod_pm_wireless_pair_e* p_param)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static int handle_switch_slave_master(hl_mod_pm_swicth_s_m_e* p_param)
+static int handle_switch_slave_master(hl_mod_pm_work_mode_e* p_param)
 {
-    if (*p_param == PM_SWITCH_SLAVE) {
+    if (*p_param == PM_WORK_MODE_SLAVE) {
         char buf_send[] = {0xAA, 0xDD, 0x03, 0x01, 0x00, 0x00, 0x75};
         rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
-    } else if (*p_param == PM_SWITCH_MASTER) {
+    } else if (*p_param == PM_WORK_MODE_MASTER) {
         char buf_send[] = {0xAA, 0xDD, 0x03, 0x01, 0x00, 0x01, 0x74};
         rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
     } else {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
+    return HL_MOD_PM_FUNC_RET_OK;
+}
+
+static int handle_get_link_state()
+{
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
@@ -259,14 +265,20 @@ int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
             }
         } break;
         case HL_MOD_PM_SWITCH_SLAVE_MASTER: {
-            if (arg_size != sizeof(hl_mod_pm_swicth_s_m_e)) {
-                DBG_LOG("size err, ctrl arg need <hl_mod_pm_swicth_s_m_e> type pointer!");
+            if (arg_size != sizeof(hl_mod_pm_work_mode_e)) {
+                DBG_LOG("size err, ctrl arg need <hl_mod_pm_work_mode_e> type pointer!");
             }
 
-            ret = handle_switch_slave_master((hl_mod_pm_swicth_s_m_e*)arg);
+            ret = handle_switch_slave_master((hl_mod_pm_work_mode_e*)arg);
             if (ret == HL_MOD_PM_FUNC_RET_ERR) {
                 return HL_MOD_PM_FUNC_RET_ERR;
             }
+        } break;
+        case HL_MOD_PM_GET_LINK_STATE: {
+            ret = handle_get_link_state();
+            if (ret == HL_MOD_PM_FUNC_RET_ERR) {
+                return HL_MOD_PM_FUNC_RET_ERR;
+            }            
         } break;
         default:
             break;

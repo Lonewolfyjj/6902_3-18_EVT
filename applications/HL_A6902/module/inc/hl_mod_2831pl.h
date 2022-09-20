@@ -31,8 +31,10 @@ typedef enum _hl_mod_pm_op
 {
     ///start wireless pair, type of parameter is <hl_mod_pm_wireless_pair_e> pointer
     HL_MOD_PM_WIRELESS_PAIR,
-    ///switch slave or master, type of parameter is <hl_mod_pm_swicth_s_m_e> pointer
+    ///switch slave or master, type of parameter is <hl_mod_pm_work_mode_e> pointer
     HL_MOD_PM_SWITCH_SLAVE_MASTER,
+    ///get link state, type of parameter is <NULL> pointer
+    HL_MOD_PM_GET_LINK_STATE,
 } hl_mod_pm_op_e;
 
 typedef enum _hl_mod_pm_wireless_pair
@@ -41,11 +43,11 @@ typedef enum _hl_mod_pm_wireless_pair
     PM_WIRELESS_PAIR_STOP,
 } hl_mod_pm_wireless_pair_e;
 
-typedef enum _hl_mod_pm_switch_s_m
+typedef enum _hl_mod_pm_work_mode
 {
-    PM_SWITCH_SLAVE,
-    PM_SWITCH_MASTER,
-} hl_mod_pm_swicth_s_m_e;
+    PM_WORK_MODE_SLAVE,
+    PM_WORK_MODE_MASTER,
+} hl_mod_pm_work_mode_e;
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_PM_FUNC_RET_ERR 1
