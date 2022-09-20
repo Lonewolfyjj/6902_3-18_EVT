@@ -19,6 +19,7 @@
 
 #include "hl_mod_2831pl.h"
 #include "hl_util_fifo.h"
+#include "hl_util_hup.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -27,12 +28,27 @@ typedef struct _hl_mod_pm
     int                     init_flag;
     void*                   msg_handle;
     int                     work_mode;
+    hl_util_hup_t           hup;
     hl_util_fifo_t          fifo;
     rt_thread_t             thread;
     int                     thread_shutdown;
     rt_device_t             uart_dev;
     struct serial_configure uart_config;
 } hl_mod_pm_st;
+
+typedef enum _hl_mod_pm_hup_cmd
+{
+    CMD_GET_VERSION = 0x00,
+    CMD_WIRELESS_PAIR,
+    CMD_GET_LINK_STATE,
+    CMD_SWITCH_SLAVE_MASTER,
+    CMD_GET_LOCAL_PAIR_INFO,
+    CMD_SET_REMOTE_PAIR_INFO,
+    CMD_GET_REMOTE_PAIR_INFO,
+    CMD_GET_RSSI,
+    CMD_BY_PASS,
+    CMD_ASK_L_R_CHANNEL,
+} hl_mod_pm_hup_cmd_e;
 
 /* define --------------------------------------------------------------------*/
 
@@ -42,29 +58,70 @@ typedef struct _hl_mod_pm
 
 #define HL_MOD_PM_UART_BUFSZ 256
 #define HL_MOD_PM_FIFO_BUFSZ 256
+#define HL_MOD_PM_HUP_BUFSZ 256
 
 /* variables -----------------------------------------------------------------*/
 
 static hl_mod_pm_st _pm_mod = { .init_flag       = 0,
-                               .msg_handle      = NULL,
-                               .fifo            = { 0 },
-                               .thread          = NULL,
-                               .thread_shutdown = 0,
-                               .uart_dev        = NULL,
-                               .uart_config     = {
-                                   .baud_rate = BAUD_RATE_115200,
-                                   .data_bits = DATA_BITS_8,
-                                   .parity    = PARITY_NONE,
-                                   .stop_bits = STOP_BITS_1,
-                                   .invert    = NRZ_NORMAL,
-                                   .flow_ctrl = RT_SERIAL_AUTO_FLOW_DISABLE,
-                                   .bit_order = BIT_ORDER_LSB,
-                                   .bufsz     = HL_MOD_PM_UART_BUFSZ,
-                               } };
+                                .msg_handle      = NULL,
+                                .hup             = { 0 },
+                                .fifo            = { 0 },
+                                .thread          = NULL,
+                                .thread_shutdown = 0,
+                                .uart_dev        = NULL,
+                                .uart_config     = {
+                                    .baud_rate = BAUD_RATE_115200,
+                                    .data_bits = DATA_BITS_8,
+                                    .parity    = PARITY_NONE,
+                                    .stop_bits = STOP_BITS_1,
+                                    .invert    = NRZ_NORMAL,
+                                    .flow_ctrl = RT_SERIAL_AUTO_FLOW_DISABLE,
+                                    .bit_order = BIT_ORDER_LSB,
+                                    .bufsz     = HL_MOD_PM_UART_BUFSZ,
+                                } };
 
 static uint8_t fifo_buf[HL_MOD_PM_FIFO_BUFSZ] = { 0 };
+static uint8_t hup_buf[HL_MOD_PM_HUP_BUFSZ]   = { 0 };
 
 /* Private function(only *.c)  -----------------------------------------------*/
+
+static void hup_success_handle_func(hup_protocol_type_t hup_frame)
+{
+    switch (hup_frame.cmd) {
+        case CMD_GET_VERSION: {
+
+        } break;
+        case CMD_WIRELESS_PAIR: {
+
+        } break;
+        case CMD_GET_LINK_STATE: {
+
+        } break;
+        case CMD_SWITCH_SLAVE_MASTER: {
+
+        } break;
+        case CMD_GET_LOCAL_PAIR_INFO: {
+
+        } break;
+        case CMD_SET_REMOTE_PAIR_INFO: {
+
+        } break;
+        case CMD_GET_REMOTE_PAIR_INFO: {
+
+        } break;
+        case CMD_GET_RSSI: {
+
+        } break;
+        case CMD_BY_PASS: {
+
+        } break;
+        case CMD_ASK_L_R_CHANNEL: {
+
+        } break;
+        default:
+            break;
+    }
+}
 
 static rt_err_t uart_rx_callback(rt_device_t dev, rt_size_t size)
 {
@@ -157,12 +214,20 @@ static void serial_thread_entry(void* parameter)
 
 static int handle_wireless_pair(hl_mod_pm_wireless_pair_e* p_param)
 {
+    int  size;
+    uint8_t buf_send[64] = { 0 };
+    uint8_t data_buf[1];
+
     if (*p_param == PM_WIRELESS_PAIR_START) {
-        char buf_send[] = {0xAA, 0xDD, 0x01, 0x01, 0x00, 0x01, 0x76};
-        rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
+        data_buf[0] = 0x01;
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_WIRELESS_PAIR, buf_send, sizeof(buf_send), data_buf,
+                                  sizeof(data_buf));
+        rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
     } else if (*p_param == PM_WIRELESS_PAIR_STOP) {
-        char buf_send[] = {0xAA, 0xDD, 0x01, 0x01, 0x00, 0x00, 0x77};
-        rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
+        data_buf[0] = 0x00;
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_WIRELESS_PAIR, buf_send, sizeof(buf_send), data_buf,
+                                  sizeof(data_buf));
+        rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
     } else {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
@@ -172,12 +237,20 @@ static int handle_wireless_pair(hl_mod_pm_wireless_pair_e* p_param)
 
 static int handle_switch_slave_master(hl_mod_pm_work_mode_e* p_param)
 {
+    int  size;
+    uint8_t buf_send[64] = { 0 };
+    uint8_t data_buf[1];
+
     if (*p_param == PM_WORK_MODE_SLAVE) {
-        char buf_send[] = {0xAA, 0xDD, 0x03, 0x01, 0x00, 0x00, 0x75};
-        rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
+        data_buf[0] = 0x00;
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send), data_buf,
+                                  sizeof(data_buf));
+        rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
     } else if (*p_param == PM_WORK_MODE_MASTER) {
-        char buf_send[] = {0xAA, 0xDD, 0x03, 0x01, 0x00, 0x01, 0x74};
-        rt_device_write(_pm_mod.uart_dev, -1, buf_send, sizeof(buf_send));
+        data_buf[0] = 0x01;
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send), data_buf,
+                                  sizeof(data_buf));
+        rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
     } else {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
@@ -199,6 +272,15 @@ int hl_mod_pm_init(void* msgHd)
 
     if (_pm_mod.init_flag == 1) {
         DBG_LOG("pm mod already inited!");
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    _pm_mod.hup.hup_handle.frame_data_len = sizeof(hup_buf);
+    _pm_mod.hup.hup_handle.role           = EM_HUP_ROLE_MASTER;
+    _pm_mod.hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    ret                                   = hl_util_hup_init(&(_pm_mod.hup), hup_buf, NULL, hup_success_handle_func);
+    if (ret == -1) {
+        DBG_LOG("hup init err!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
@@ -241,6 +323,8 @@ void hl_mod_pm_deinit(void)
 
     hl_util_fifo_deinit(&(_pm_mod.fifo));
 
+    hl_util_hup_deinit(&(_pm_mod.hup));
+
     return;
 }
 
@@ -278,7 +362,7 @@ int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
             ret = handle_get_link_state();
             if (ret == HL_MOD_PM_FUNC_RET_ERR) {
                 return HL_MOD_PM_FUNC_RET_ERR;
-            }            
+            }
         } break;
         default:
             break;
