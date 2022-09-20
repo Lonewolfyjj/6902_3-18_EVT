@@ -24,8 +24,13 @@
 
 #define DBG_LOG rt_kprintf
 
+#if HL_GET_DEVICE_TYPE() == 1
 #define AW2016_IIC_BUS_0_NAME "i2c2"
 #define AW2016_IIC_BUS_1_NAME "i2c2"
+#else
+#define AW2016_IIC_BUS_0_NAME "i2c1"
+#define AW2016_IIC_BUS_1_NAME "i2c1"
+#endif
 
 /* chip info */
 #define AW2016A_IIC_DEV_ADDR 0x64
@@ -78,6 +83,7 @@ static inline int aw_read(struct rt_i2c_bus_device* p_i2c_bus, uint8_t PointReg,
     if (rt_i2c_transfer(p_i2c_bus, msgs, 2) == 2) {
         return AW2016A_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c read err!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 }
@@ -98,6 +104,7 @@ static inline int aw_write(struct rt_i2c_bus_device* p_i2c_bus, uint8_t PointReg
     if (rt_i2c_transfer(p_i2c_bus, msgs, 1) == 1) {
         return AW2016A_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c write err!\n");
         return AW2016A_FUNC_RET_ERR;
     }
 }

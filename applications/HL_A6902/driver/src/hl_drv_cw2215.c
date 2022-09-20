@@ -32,9 +32,12 @@
 ///IIC设备地址
 #define CW2215_IIC_DEV_ADDR 0x64
 
+#if HL_GET_DEVICE_TYPE() == 1
 ///使用的IIC接口名字
 #define CW2215_IIC_BUS_NAME "i2c1"
-
+#else
+#define CW2215_IIC_BUS_NAME "i2c0"
+#endif
 /* CW2215 reg base addr Macro */
 
 #define CW2215_REG_CHIP_ID 0x00
@@ -140,6 +143,7 @@ static inline int cw_read(unsigned char PointReg, unsigned char* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 2) == 2) {
         return CW2215_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c read err!\n");
         return CW2215_FUNC_RET_ERR;
     }
 }
@@ -160,6 +164,7 @@ static inline int cw_write(unsigned char PointReg, unsigned char* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 1) == 1) {
         return CW2215_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c write err!\n");
         return CW2215_FUNC_RET_ERR;
     }
 }

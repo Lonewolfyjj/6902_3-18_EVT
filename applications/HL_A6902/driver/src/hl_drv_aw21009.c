@@ -33,11 +33,13 @@
 *****************************************************/
 #define DBG_LOG rt_kprintf
 
-#define HL_DRV_AW21009_I2C_NAME "i2c2"
-
 #if HL_GET_DEVICE_TYPE() == 0
 ///Rx
+#define HL_DRV_AW21009_I2C_NAME "i2c1"
+
 #define HL_DRV_AW21009_OTHER_DEV_ADDR (0x21)
+#else
+#define HL_DRV_AW21009_I2C_NAME "i2c2"
 #endif
 
 #define AW210XX_I2C_ADDR (0x20)
@@ -261,6 +263,7 @@ static inline int aw_read(uint8_t dev_addr, uint8_t PointReg, uint8_t* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 2) == 2) {
         return AW21009_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c read err!\n");
         return AW21009_FUNC_RET_ERR;
     }
 }
@@ -281,6 +284,7 @@ static inline int aw_write(uint8_t dev_addr, uint8_t PointReg, uint8_t* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 1) == 1) {
         return AW21009_FUNC_RET_OK;
     } else {
+        DBG_LOG("i2c write err!\n");
         return AW21009_FUNC_RET_ERR;
     }
 }
