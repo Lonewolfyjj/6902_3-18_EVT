@@ -31,6 +31,7 @@ int hl_util_hup_init(hl_util_hup_t* hup_ptr, uint8_t* frame_data_addr, uint32_t 
     hup_ptr->max_timeout           = HUP_MAX_TIMEOUT;
     hup_ptr->get_time_stamp        = get_time_stamp;
     hup_ptr->hup_success_handle_cb = hup_success_handle_cb;
+    hup_ptr->hup_frame.data_addr   = frame_data_addr;
 
     return 0;
 }
