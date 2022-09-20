@@ -93,7 +93,6 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
     uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
 
-    DBG_LOG("cmd: %02x, len: %d\n", hup_frame.cmd, len);
     switch (hup_frame.cmd) {
         case CMD_GET_VERSION: {
 
