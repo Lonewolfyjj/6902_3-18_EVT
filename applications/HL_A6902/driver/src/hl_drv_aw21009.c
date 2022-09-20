@@ -552,6 +552,7 @@ int hl_drv_aw21009_init(void)
     ret = aw210xx_init(AW210XX_I2C_ADDR);
     if (ret == -1) {
         DBG_LOG("aw21009 init failed!");
+        return AW21009_FUNC_RET_ERR;
     }
 
 #if HL_GET_DEVICE_TYPE() == 0
@@ -559,6 +560,7 @@ int hl_drv_aw21009_init(void)
     ret = aw210xx_init(HL_DRV_AW21009_OTHER_DEV_ADDR);
     if (ret == -1) {
         DBG_LOG("aw21009 init failed!");
+        return AW21009_FUNC_RET_ERR;
     }
 #endif
 
