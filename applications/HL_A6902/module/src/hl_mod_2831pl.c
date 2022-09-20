@@ -294,22 +294,8 @@ static void serial_thread_entry(void* parameter)
                 DBG_LOG("find 2831pl timeout!\n");
                 timeout_count = 0;
             }
-        } else if (_pm_mod.work_mode == PM_WORK_MODE_SLAVE) {
-#if HL_GET_DEVICE_TYPE()
-            timeout_count = 0;
-#else
-            hl_mod_pm_work_mode_e arg = PM_WORK_MODE_MASTER;
-
-            handle_switch_slave_master(&arg);
-#endif
         } else {
-#if HL_GET_DEVICE_TYPE()
-            hl_mod_pm_work_mode_e arg = PM_WORK_MODE_SLAVE;
-
-            handle_switch_slave_master(&arg); 
-#else  
             timeout_count = 0;
-#endif
         }
 
         size = hl_util_fifo_read(&(_pm_mod.fifo), buf, sizeof(buf));
