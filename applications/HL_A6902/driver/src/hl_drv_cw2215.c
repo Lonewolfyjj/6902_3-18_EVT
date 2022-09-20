@@ -232,6 +232,7 @@ static int get_state(void)
     }
 
     if (reg_val != CW2215_CONFIG_MODE_ACTIVE) {
+        DBG_LOG("Guage state: not active!\n");
         return CW2215_NOT_ACTIVE;
     }
 
@@ -241,6 +242,7 @@ static int get_state(void)
     }
 
     if (0x00 == (reg_val & CW2215_CONFIG_UPDATE_FLG)) {
+        DBG_LOG("Guage state: not ready!\n");
         return CW2215_PROFILE_NOT_READY;
     }
 
@@ -254,8 +256,13 @@ static int get_state(void)
         if (battery_profile_info[i] != reg_val)
             break;
     }
-    if (i != CW2215_BATINFO_SIZE)
+
+    if (i != CW2215_BATINFO_SIZE) {
+        DBG_LOG("Guage state: need update!\n");
         return CW2215_PROFILE_NEED_UPDATE;
+    }
+
+    DBG_LOG("Guage state: normal!\n");
 
     return 0;
 }
@@ -465,14 +472,17 @@ static int init(void)
     }
 
     if (chip_id != CW2215_CHIP_ID) {
+        DBG_LOG("chip id err:%02x, STD id:%02x", chip_id, CW2215_CHIP_ID);
         return CW2215_ERROR_CHIP_ID;
     }
 
     ret = get_state();
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
 
     if (ret != 0) {
+        DBG_LOG("config Guage!\n");
         ret = config_start_ic();
         if (ret < 0)
             return ret;
@@ -660,6 +670,7 @@ int8_t hl_drv_cw2215_init(void)
 
     ret = init();
     if (ret < 0) {
+        DBG_LOG("Guage init err!\n");
         return CW2215_FUNC_RET_ERR;
     }
 
