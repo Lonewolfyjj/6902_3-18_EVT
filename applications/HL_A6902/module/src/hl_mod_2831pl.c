@@ -279,34 +279,51 @@ static int handle_get_work_mode()
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static void serial_thread_entry(void* parameter)
+static void ats2831pl_check(void)
+{
+    static int timeout_count = 0;
+
+    if (_pm_mod.work_mode == PM_WORK_MODE_UNKNOWN) {
+        handle_get_work_mode();
+        timeout_count++;
+        if (timeout_count == 100) {
+            DBG_LOG("find 2831pl timeout!\n");
+            timeout_count = 0;
+        }
+    } else {
+        timeout_count = 0;
+    }
+}
+
+static void drv_check(void)
+{
+    ats2831pl_check();
+}
+
+static void uart_data_process()
 {
     uint8_t buf[64];
     int     size;
+
+    size = hl_util_fifo_read(&(_pm_mod.fifo), buf, sizeof(buf));
+    if (size <= 0) {
+        rt_thread_mdelay(50);
+        return;
+    }
+
+    for (int i = 0; i < size; i++) {
+        hl_util_hup_decode(&(_pm_mod.hup), buf[i]);
+    }
+}
+
+static void serial_thread_entry(void* parameter)
+{
+
     int timeout_count = 0;
 
     while (_pm_mod.thread_shutdown == 0) {
-        if (_pm_mod.work_mode == PM_WORK_MODE_UNKNOWN) {
-            handle_get_work_mode();
-            rt_thread_mdelay(500);
-            timeout_count++;
-            if (timeout_count == 10) {
-                DBG_LOG("find 2831pl timeout!\n");
-                timeout_count = 0;
-            }
-        } else {
-            timeout_count = 0;
-        }
-
-        size = hl_util_fifo_read(&(_pm_mod.fifo), buf, sizeof(buf));
-        if (size <= 0) {
-            rt_thread_mdelay(50);
-            continue;
-        }
-
-        for (int i = 0; i < size; i++) {
-            hl_util_hup_decode(&(_pm_mod.hup), buf[i]);
-        }
+        drv_check();  //检测驱动，并且上报
+        uart_data_process();
     }
 
     _pm_mod.thread_shutdown = -1;
