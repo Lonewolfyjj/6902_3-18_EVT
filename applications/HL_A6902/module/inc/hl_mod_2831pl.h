@@ -47,6 +47,7 @@ typedef enum _hl_mod_pm_work_mode
 {
     PM_WORK_MODE_SLAVE,
     PM_WORK_MODE_MASTER,
+    PM_WORK_MODE_UNKNOWN,
 } hl_mod_pm_work_mode_e;
 /* define --------------------------------------------------------------------*/
 

@@ -27,7 +27,7 @@ typedef struct _hl_mod_pm
 {
     int                     init_flag;
     void*                   msg_handle;
-    int                     work_mode;
+    hl_mod_pm_work_mode_e   work_mode;
     hl_util_hup_t           hup;
     hl_util_fifo_t          fifo;
     rt_thread_t             thread;
@@ -48,6 +48,7 @@ typedef enum _hl_mod_pm_hup_cmd
     CMD_GET_RSSI,
     CMD_BY_PASS,
     CMD_ASK_L_R_CHANNEL,
+    CMD_GET_WORK_MODE,
 } hl_mod_pm_hup_cmd_e;
 
 /* define --------------------------------------------------------------------*/
@@ -64,6 +65,7 @@ typedef enum _hl_mod_pm_hup_cmd
 
 static hl_mod_pm_st _pm_mod = { .init_flag       = 0,
                                 .msg_handle      = NULL,
+                                .work_mode       = PM_WORK_MODE_UNKNOWN,
                                 .hup             = { 0 },
                                 .fifo            = { 0 },
                                 .thread          = NULL,
@@ -83,10 +85,15 @@ static hl_mod_pm_st _pm_mod = { .init_flag       = 0,
 static uint8_t fifo_buf[HL_MOD_PM_FIFO_BUFSZ] = { 0 };
 static uint8_t hup_buf[HL_MOD_PM_HUP_BUFSZ]   = { 0 };
 
+static hl_mod_pm_work_mode_e work_mode_temp = PM_WORK_MODE_UNKNOWN;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static void hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
+    uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+
+    DBG_LOG("cmd: %02x, len: %d\n", hup_frame.cmd, len);
     switch (hup_frame.cmd) {
         case CMD_GET_VERSION: {
 
@@ -98,7 +105,11 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
 
         } break;
         case CMD_SWITCH_SLAVE_MASTER: {
-
+            if (hup_frame.data_addr[0] == 1) {
+                _pm_mod.work_mode = work_mode_temp;
+            } else {
+                _pm_mod.work_mode = PM_WORK_MODE_UNKNOWN;
+            }
         } break;
         case CMD_GET_LOCAL_PAIR_INFO: {
 
@@ -117,6 +128,13 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case CMD_ASK_L_R_CHANNEL: {
 
+        } break;
+        case CMD_GET_WORK_MODE: {
+            if (hup_frame.data_addr[0] == 0) {
+                _pm_mod.work_mode = PM_WORK_MODE_SLAVE;
+            } else {
+                _pm_mod.work_mode = PM_WORK_MODE_MASTER;
+            }
         } break;
         default:
             break;
@@ -190,31 +208,9 @@ static void uart_deinit()
     _pm_mod.uart_dev = NULL;
 }
 
-static void serial_thread_entry(void* parameter)
-{
-    uint8_t buf[64];
-    int     size;
-
-    while (_pm_mod.thread_shutdown == 0) {
-        size = hl_util_fifo_read(&(_pm_mod.fifo), buf, sizeof(buf));
-        if (size <= 0) {
-            rt_thread_mdelay(50);
-            continue;
-        }
-
-        DBG_LOG("thread: size:%d\n", size);
-        for (int i = 0; i < size; i++) {
-            DBG_LOG("%02x", buf[i]);
-        }
-        DBG_LOG("\n");
-    }
-
-    _pm_mod.thread_shutdown = -1;
-}
-
 static int handle_wireless_pair(hl_mod_pm_wireless_pair_e* p_param)
 {
-    int  size;
+    int     size;
     uint8_t buf_send[64] = { 0 };
     uint8_t data_buf[1];
 
@@ -237,20 +233,22 @@ static int handle_wireless_pair(hl_mod_pm_wireless_pair_e* p_param)
 
 static int handle_switch_slave_master(hl_mod_pm_work_mode_e* p_param)
 {
-    int  size;
+    int     size;
     uint8_t buf_send[64] = { 0 };
     uint8_t data_buf[1];
 
     if (*p_param == PM_WORK_MODE_SLAVE) {
         data_buf[0] = 0x00;
-        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send), data_buf,
-                                  sizeof(data_buf));
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send),
+                                  data_buf, sizeof(data_buf));
         rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
+        work_mode_temp = PM_WORK_MODE_SLAVE;
     } else if (*p_param == PM_WORK_MODE_MASTER) {
         data_buf[0] = 0x01;
-        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send), data_buf,
-                                  sizeof(data_buf));
+        size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_SWITCH_SLAVE_MASTER, buf_send, sizeof(buf_send),
+                                  data_buf, sizeof(data_buf));
         rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
+        work_mode_temp = PM_WORK_MODE_MASTER;
     } else {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
@@ -260,7 +258,73 @@ static int handle_switch_slave_master(hl_mod_pm_work_mode_e* p_param)
 
 static int handle_get_link_state()
 {
+    int     size;
+    uint8_t buf_send[64] = { 0 };
+    uint8_t data_buf[1];
+
+    size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_GET_LINK_STATE, buf_send, sizeof(buf_send), data_buf, 0);
+    rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
+
     return HL_MOD_PM_FUNC_RET_OK;
+}
+
+static int handle_get_work_mode()
+{
+    int     size;
+    uint8_t buf_send[64] = { 0 };
+    uint8_t data_buf[1];
+
+    size = hl_util_hup_encode(_pm_mod.hup.hup_handle.role, CMD_GET_WORK_MODE, buf_send, sizeof(buf_send), data_buf, 0);
+    rt_device_write(_pm_mod.uart_dev, -1, buf_send, size);
+
+    return HL_MOD_PM_FUNC_RET_OK;
+}
+
+static void serial_thread_entry(void* parameter)
+{
+    uint8_t buf[64];
+    int     size;
+    int timeout_count = 0;
+
+    while (_pm_mod.thread_shutdown == 0) {
+        if (_pm_mod.work_mode == PM_WORK_MODE_UNKNOWN) {
+            handle_get_work_mode();
+            rt_thread_mdelay(500);
+            timeout_count++;
+            if (timeout_count == 10) {
+                DBG_LOG("find 2831pl timeout!\n");
+                timeout_count = 0;
+            }
+        } else if (_pm_mod.work_mode == PM_WORK_MODE_SLAVE) {
+#if HL_GET_DEVICE_TYPE()
+            timeout_count = 0;
+#else
+            hl_mod_pm_work_mode_e arg = PM_WORK_MODE_MASTER;
+
+            handle_switch_slave_master(&arg);
+#endif
+        } else {
+#if HL_GET_DEVICE_TYPE()
+            hl_mod_pm_work_mode_e arg = PM_WORK_MODE_SLAVE;
+
+            handle_switch_slave_master(&arg); 
+#else  
+            timeout_count = 0;
+#endif
+        }
+
+        size = hl_util_fifo_read(&(_pm_mod.fifo), buf, sizeof(buf));
+        if (size <= 0) {
+            rt_thread_mdelay(50);
+            continue;
+        }
+
+        for (int i = 0; i < size; i++) {
+            hl_util_hup_decode(&(_pm_mod.hup), buf[i]);
+        }
+    }
+
+    _pm_mod.thread_shutdown = -1;
 }
 
 /* Exported functions --------------------------------------------------------*/
@@ -278,7 +342,8 @@ int hl_mod_pm_init(void* msgHd)
     _pm_mod.hup.hup_handle.frame_data_len = sizeof(hup_buf);
     _pm_mod.hup.hup_handle.role           = EM_HUP_ROLE_MASTER;
     _pm_mod.hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
-    ret                                   = hl_util_hup_init(&(_pm_mod.hup), hup_buf, NULL, hup_success_handle_func);
+
+    ret = hl_util_hup_init(&(_pm_mod.hup), hup_buf, NULL, hup_success_handle_func);
     if (ret == -1) {
         DBG_LOG("hup init err!");
         return HL_MOD_PM_FUNC_RET_ERR;
@@ -334,6 +399,11 @@ int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
 
     if (_pm_mod.init_flag == 0) {
         DBG_LOG("pm mod is not inited!");
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    if (_pm_mod.work_mode == PM_WORK_MODE_UNKNOWN) {
+        DBG_LOG("2831pl is not find yet!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
