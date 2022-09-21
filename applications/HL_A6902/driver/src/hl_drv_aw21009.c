@@ -39,6 +39,7 @@
 
 #define HL_DRV_AW21009_OTHER_DEV_ADDR (0x21)
 #else
+//Tx
 #define HL_DRV_AW21009_I2C_NAME "i2c2"
 #endif
 
@@ -497,41 +498,41 @@ static int32_t aw210xx_init(uint8_t dev_addr)
 
     /*light effect*/
     // aw210xx_effect_select(AW210XX_I2C_ADDR, AW21018_GROUP_BREATH_LEDS_ON);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x20, 0x01);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x58, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x80, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x81, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x8b, 0x07);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x88, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x89, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x8a, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x86, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x87, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x45, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x20, 0x01);
+    led_soft_i2c_writereg(dev_addr, 0x58, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x80, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x81, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x8b, 0x07);
+    led_soft_i2c_writereg(dev_addr, 0x88, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x89, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x8a, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x86, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x87, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x45, 0x00);
 
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x58, 0x60);  //电流控制
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x80, 0x03);  //patten config breath mode
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x8b, 0x41);  //工作模式
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x88, 0x60);  //RGB R
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x89, 0x60);  //RGB G
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x8a, 0x60);  //RGB B
+    led_soft_i2c_writereg(dev_addr, 0x58, 0x60);  //电流控制
+    led_soft_i2c_writereg(dev_addr, 0x80, 0x03);  //patten config breath mode
+    led_soft_i2c_writereg(dev_addr, 0x8b, 0x41);  //工作模式
+    led_soft_i2c_writereg(dev_addr, 0x88, 0x60);  //RGB R
+    led_soft_i2c_writereg(dev_addr, 0x89, 0x60);  //RGB G
+    led_soft_i2c_writereg(dev_addr, 0x8a, 0x60);  //RGB B
     // led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x8a, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x46, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x47, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x48, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x46, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x47, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x48, 0x00);
 
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x49, 0x00);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x4a, 0x60);
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x4b, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x49, 0x00);
+    led_soft_i2c_writereg(dev_addr, 0x4a, 0x60);
+    led_soft_i2c_writereg(dev_addr, 0x4b, 0x60);
 
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x86, 0x60);  //brightness/fade
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x87, 0x00);  //brightness/fade
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x82, 0x44);  //T0T1
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x83, 0x44);  //T2T3
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x84, 0x00);  //LOOP conf
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x85, 0x00);  //LOOP config
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x45, 0x00);  //refresh SL BR
-    led_soft_i2c_writereg(AW210XX_I2C_ADDR, 0x81, 0x01);  //start patten
+    led_soft_i2c_writereg(dev_addr, 0x86, 0x60);  //brightness/fade
+    led_soft_i2c_writereg(dev_addr, 0x87, 0x00);  //brightness/fade
+    led_soft_i2c_writereg(dev_addr, 0x82, 0x44);  //T0T1
+    led_soft_i2c_writereg(dev_addr, 0x83, 0x44);  //T2T3
+    led_soft_i2c_writereg(dev_addr, 0x84, 0x00);  //LOOP conf
+    led_soft_i2c_writereg(dev_addr, 0x85, 0x00);  //LOOP config
+    led_soft_i2c_writereg(dev_addr, 0x45, 0x00);  //refresh SL BR
+    led_soft_i2c_writereg(dev_addr, 0x81, 0x01);  //start patten
 
     return 0;
 }
