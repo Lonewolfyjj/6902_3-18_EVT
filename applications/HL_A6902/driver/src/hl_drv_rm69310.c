@@ -29,28 +29,23 @@
 #include <rtdevice.h>
 #include "hal_base.h"
 #include "hl_hal_gpio.h"
+#include "rtdef.h"
+
 //#if (!HL_GET_DEVICE_TYPE())
 
-// #define HL_GPIO_OLED_RST GPIO0, GPIO_PIN_A1
-#define HL_GPIO_OLED_DCX BANK_PIN(GPIO_BANK1, GPIO_PIN_C7)
-#define HL_GPIO_OLED_POWER BANK_PIN(GPIO_BANK1, GPIO_PIN_C1)
+#define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
+#define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
 
-#define OLED_PWR_ON() hl_hal_gpio_high(HL_GPIO_OLED_POWER)
-#define OLED_PWR_OFF() hl_hal_gpio_low(HL_GPIO_OLED_POWER)
+#define OLED_RST_H() hl_hal_gpio_high(GPIO_OLED_RST)
+#define OLED_RST_L() hl_hal_gpio_low(GPIO_OLED_RST)
 
-#define OLED_RST_H()  hl_hal_gpio_high(GPIO_OLED_RST)
-#define OLED_RST_L()  hl_hal_gpio_low(GPIO_OLED_RST)
+#define OLED_DCX_DATA() hl_hal_gpio_high(GPIO_OLED_DCX)
+#define OLED_DCX_CMD() hl_hal_gpio_low(GPIO_OLED_DCX)
 
-#define OLED_DCX_DATA() hl_hal_gpio_high(HL_GPIO_OLED_DCX)
-#define OLED_DCX_CMD()  hl_hal_gpio_low(HL_GPIO_OLED_DCX)
-
-// #define OLED_TE_PORT          GPIOA
-// #define OLED_TE_PIN           GPIO_PIN_14
-// #define OLED_TE_PORT_CLK()    __HAL_RCC_GPIOA_CLK_ENABLE()
-// #define OLED_READ_TE()        HAL_GPIO_ReadPin(OLED_TE_PORT, OLED_TE_PIN)
+#define OLED_READ_TE() hl_hal_gpio_read(GPIO_OLED_TE)
 
 /// 显示屏使用的SPI 设备
-#define OLED_SPI_DEVICE "spi2_1"
+#define OLED_SPI_DEVICE "spi2_0"
 #define HL_FAILED 1
 #define HL_SUCCESS 0
 
@@ -667,17 +662,19 @@ static void hl_drv_rm69310_gpio_init(void)
 {
 
     /* 初始化SPI管脚 */
-    // hl_hal_gpio_init(HL_GPIO_OLED_RST);
+    hl_hal_gpio_init(GPIO_OLED_DCX);
 
-    // hl_hal_gpio_init(HL_GPIO_OLED_POWER);
+    hl_hal_gpio_init(GPIO_OLED_RST);
 
-    // hl_hal_gpio_init(HL_GPIO_SPI_CS);
+    hl_hal_gpio_init(GPIO_OLED_SWIRE);
 
-    // hl_hal_gpio_init(HL_GPIO_OLED_DCX);
+    // hl_hal_gpio_init(GPIO_OLED_TE);
 
     OLED_DCX_DATA();
-
     OLED_PWR_ON();
+
+    // OLED_PWR_OFF();
+
     hl_util_delay_sys_ms(10);
 
     OLED_RST_H();
