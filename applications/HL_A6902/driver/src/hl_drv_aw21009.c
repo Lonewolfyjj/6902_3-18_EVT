@@ -37,7 +37,7 @@
 ///Rx
 #define HL_DRV_AW21009_I2C_NAME "i2c1"
 
-#define HL_DRV_AW21009_OTHER_DEV_ADDR (0x21)
+#define HL_DRV_AW21009_OTHER_DEV_ADDR (0x24)
 #else
 //Tx
 #define HL_DRV_AW21009_I2C_NAME "i2c2"
