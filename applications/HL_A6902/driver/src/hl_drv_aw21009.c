@@ -489,7 +489,7 @@ static int32_t aw210xx_init(uint8_t dev_addr)
 
     chip_id = aw210xx_read_chipid(dev_addr);
     if (chip_id != AW21009_CHIPID) {
-        DBG_LOG("aw2016a chip id err: %02x!", chip_id);
+        DBG_LOG("aw2016a chip id err: %02x!\n", chip_id);
         return -1;
     }
 
@@ -549,23 +549,27 @@ int hl_drv_aw21009_init(void)
 
     _p_i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(HL_DRV_AW21009_I2C_NAME);
     if (_p_i2c_bus == NULL) {
-        DBG_LOG("i2c dev not found!:%s", HL_DRV_AW21009_I2C_NAME);
+        DBG_LOG("i2c dev not found!:%s\n", HL_DRV_AW21009_I2C_NAME);
         return AW21009_FUNC_RET_ERR;
     }
 
     ret = aw210xx_init(AW210XX_I2C_ADDR);
     if (ret == -1) {
-        DBG_LOG("aw21009 init failed!");
+        DBG_LOG("aw21009 init failed!\n");
         return AW21009_FUNC_RET_ERR;
     }
+
+    DBG_LOG("LED init success: i2c addr:%02x\n", AW210XX_I2C_ADDR);
 
 #if HL_GET_DEVICE_TYPE() == 0
     ///Rx
     ret = aw210xx_init(HL_DRV_AW21009_OTHER_DEV_ADDR);
     if (ret == -1) {
-        DBG_LOG("aw21009 init failed!");
+        DBG_LOG("aw21009 init failed!\n");
         return AW21009_FUNC_RET_ERR;
     }
+
+    DBG_LOG("LED init success: i2c addr:%02x\n", HL_DRV_AW21009_OTHER_DEV_ADDR);
 #endif
 
     DBG_LOG("\naw21009 init success!\n");

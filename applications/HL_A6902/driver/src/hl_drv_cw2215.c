@@ -85,9 +85,9 @@
 #define CW2215_CONFIG_MODE_SLEEP 0xF0
 
 ///中断配置寄存器默认值，[6:4]为中断源使能，[2:0]为中断事件标志位
-#define CW2215_REG_GPIO_CONFIG_DEFAULT_VALUE 0
+#define CW2215_REG_GPIO_CONFIG_DEFAULT_VALUE 0x40
 ///0 ~ 0x7F。 0 ~ 0x64:SOC达到指定值中断，0x65~0x7F：SOC每变化1产生中断
-#define CW2215_GPIO_SOC_IRQ_DEFAULT_VALUE 0
+#define CW2215_GPIO_SOC_IRQ_DEFAULT_VALUE 0x65
 #define CW2215_REG_TEMP_MAX_DEFAULT_VALUE 0
 #define CW2215_REG_TEMP_MIN_DEFAULT_VALUE 0
 #define CW2215_IC_READY_MARK 0x0C
@@ -633,6 +633,64 @@ static int get_cycle_count(uint32_t* p_cycle_count)
     return 0;
 }
 
+static int check_it_flag(hl_drv_guage_check_it_flag_st* p_param)
+{
+    int     ret;
+    uint8_t reg_val;
+    uint8_t val;
+
+    ret = cw_read(CW2215_REG_GPIO_CONFIG, &reg_val);
+    if (ret) {
+        return CW2215_ERROR_IIC;
+    }
+
+    if (p_param->it_flag == HL_DRV_GUAGE_IT_FLAG_SOC) {
+        val = 1 << 2;
+    } else if (p_param->it_flag == HL_DRV_GUAGE_IT_FLAG_TMAX) {
+        val = 1 << 1;
+    } else if (p_param->it_flag == HL_DRV_GUAGE_IT_FLAG_TMIN) {
+        val = 1 << 0;
+    } else {
+        return CW2215_ERROR_IIC;
+    }
+
+    if (reg_val & val) {
+        p_param->ret = 1;
+    } else {
+        p_param->ret = 0;
+    }
+
+    return 0;
+}
+
+static int clear_it_flag(uint8_t* p_param)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = cw_read(CW2215_REG_GPIO_CONFIG, &reg_val);
+    if (ret) {
+        return CW2215_ERROR_IIC;
+    }
+
+    if (*p_param == HL_DRV_GUAGE_IT_FLAG_SOC) {
+        reg_val &= (~(1 << 2));
+    } else if (*p_param == HL_DRV_GUAGE_IT_FLAG_TMAX) {
+        reg_val &= (~(1 << 1));
+    } else if (*p_param == HL_DRV_GUAGE_IT_FLAG_TMIN) {
+        reg_val &= (~(1 << 0));
+    } else {
+        return CW2215_ERROR_IIC;
+    }
+
+    ret = cw_write(CW2215_REG_GPIO_CONFIG, &reg_val);
+    if (ret == CW2215_FUNC_RET_ERR) {
+        return CW2215_ERROR_IIC;
+    }
+
+    return 0;
+}
+
 static int dump_all_register_value(void)
 {
     unsigned char reg_val = 0;
@@ -783,6 +841,28 @@ int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size)
             }
 
             ret = get_cycle_count((uint32_t*)arg);
+            if (ret < 0) {
+                return CW2215_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_GUAGE_CHECK_IT_FLAG: {
+            if (arg_size != sizeof(hl_drv_guage_check_it_flag_st)) {
+                DBG_LOG("size err, ctrl arg need <hl_drv_guage_check_it_flag_st> type pointer!\n");
+                return CW2215_FUNC_RET_ERR;
+            }
+
+            ret = check_it_flag((hl_drv_guage_check_it_flag_st*)arg);
+            if (ret < 0) {
+                return CW2215_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_GUAGE_CLEAR_IT_FLAG: {
+            if (arg_size != sizeof(uint8_t)) {
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                return CW2215_FUNC_RET_ERR;
+            }
+
+            ret = clear_it_flag((uint8_t*)arg);
             if (ret < 0) {
                 return CW2215_FUNC_RET_ERR;
             }

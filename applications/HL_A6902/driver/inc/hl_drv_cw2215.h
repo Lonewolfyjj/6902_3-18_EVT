@@ -57,6 +57,10 @@ typedef enum _hl_drv_guage_op
     HL_DRV_GUAGE_GET_SOH,
     ///get bat cycle count, param type of parameter is <uint32_t> pointer
     HL_DRV_GUAGE_GET_CYCLE_COUNT,
+    ///check guage interrupt flag, param type of parameter is <hl_drv_guage_check_it_flag_st> pointer
+    HL_DRV_GUAGE_CHECK_IT_FLAG,
+    ///clear guage interrupt flag, param type of parameter is <uint8_t> pointer, see <hl_drv_guage_it_flag_e>
+    HL_DRV_GUAGE_CLEAR_IT_FLAG,
     ///dump all register value, no param
     HL_DRV_GUAGE_DUMP_ALL_REGISTER_VALUE,
 } hl_drv_guage_op_t;
@@ -104,6 +108,49 @@ typedef struct _hl_st_drv_guage_temp
     ///小数部分，值为 [0,5]
     uint8_t temp_d;
 } hl_st_drv_guage_temp_t;
+
+/**
+ * 
+ * @brief 电量计中断标志位枚举
+ * @date 2022-09-21
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 该枚举描述了电量计的中断标志位类型
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-21      <td>lilin     <td>新建
+ * </table>
+ */
+typedef enum _hl_drv_guage_it_flag
+{
+    HL_DRV_GUAGE_IT_FLAG_SOC,
+    HL_DRV_GUAGE_IT_FLAG_TMAX,
+    HL_DRV_GUAGE_IT_FLAG_TMIN,
+} hl_drv_guage_it_flag_e;
+
+/**
+ * 
+ * @brief 获取中断标志位结构体
+ * @date 2022-09-21
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 该结构体用来获取中断标志位的状态
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-21      <td>lilin     <td>新建
+ * </table>
+ */
+typedef struct _hl_drv_guage_check_it_flag
+{
+    ///中断标志位类型
+    hl_drv_guage_it_flag_e it_flag;
+    ///标志位状态，1表示set，0表示reset
+    uint8_t ret;
+} hl_drv_guage_check_it_flag_st;
 
 /* define --------------------------------------------------------------------*/
 
