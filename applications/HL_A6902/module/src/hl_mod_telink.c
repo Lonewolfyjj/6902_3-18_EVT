@@ -2,7 +2,6 @@
 #include "hl_hal_gpio.h"
 #include <stdlib.h>
 
-uint8_t cmd;
 /// 线程句柄
 static struct rt_thread telink_thread;
 /// 线程栈数组
@@ -38,22 +37,26 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
 
     ret = rt_device_read(s_telink.serial, 0, s_uart_recv_buf, TELINK_UART_BUF_SIZE);
     // ret = hl_util_fifo_write(&s_telink.fifo, s_uart_recv_buf, ret);
-    
-    rt_kprintf("\n[ LEN = %02x ]\n[ ", ret);
-    for(int i= 0 ; i<8;i++){
-        rt_kprintf("%c\t", s_uart_recv_buf[i]);
-    }
-    rt_kprintf(" ]\n");
+
+    rt_kprintf("\n[ Telink Recv Len = %d ]\n", ret);
+    rt_kprintf("[cmd] = %02x\n", s_uart_recv_buf[0]);
+    rt_kprintf("[pair] = %02x\n", s_uart_recv_buf[1]);
+    rt_kprintf("[left] = %02x\n", s_uart_recv_buf[2]);
+    rt_kprintf("[right] = %02x\n", s_uart_recv_buf[3]);
+    rt_kprintf("[ok] = %02x\n", s_uart_recv_buf[4]);
+    rt_kprintf("\n");
 
     return RT_EOK;
 }
 
 static void hl_mod_telink_thread_entry(void* parameter)
 {
-    uint32_t data     = 0;
-    uint8_t  buf[256] = { 0 };
+    uint32_t data      = 0;
+    uint8_t  send_data = 0;
+    uint8_t  buf[256]  = { 0 };
 
-    hl_mod_telink_ioctl(cmd, &cmd, 1);
+    // 通过串口给Telink发送配对命令(0x03)
+    hl_mod_telink_ioctl(0x03, &send_data, 1);
 
     while (s_telink.thread_flag == RT_TRUE) {
         data = hl_util_fifo_data_size(&s_telink.fifo);
@@ -102,7 +105,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     }
 
     // Telink获取并赋值APP层下发的消息队列指针
-    s_telink.app_msq = input_msq;
+    s_telink.app_msq     = input_msq;
     s_telink.thread_flag = RT_TRUE;
 
     // 初始化Telink模块串口交互所需的资源
@@ -170,37 +173,45 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
     uint16_t frame_len =
         hl_util_hup_encode(s_telink.hup.hup_handle.role, cmd, frame_buf, TELINK_UART_BUF_SIZE, data_addr, data_len);
 
-    for (uint8_t i = 0; i < frame_len; i++) {
-        rt_kprintf("%02x\t", frame_buf[i]);
-    }
-    rt_kprintf("\n");
-
     frame_len = rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
-    rt_kprintf("write len = %d\n", frame_len);
+    rt_kprintf("\n[ Telink Write Len = %d]\n[", frame_len);
+    for (uint8_t i = 0; i < frame_len; i++) {
+        rt_kprintf(" %02x ", frame_buf[i]);
+    }
+    rt_kprintf("]\n\n");
 
     return 0;
 }
 
-static void telink_test(int argc, char** argv)
+void hl_telink_get_state(void)
 {
-    rt_mq_t mq;
+    uint8_t data = 0;
 
-    cmd = atoi(argv[1]);
-
-    hl_mod_telink_init(&mq);
-    hl_mod_telink_start();
+    // 通过串口给Telink发送获取配对信息命令(0x02)
+    hl_mod_telink_ioctl(0x02, &data, 1);
 }
-MSH_CMD_EXPORT(telink_test, test cmd);
+MSH_CMD_EXPORT(hl_telink_get_state, telink get pair state cmd);
+
+void hl_telink_start_pair(void)
+{
+    uint8_t data = 0;
+
+    // 通过串口给Telink发送配对命令(0x03)
+    hl_mod_telink_ioctl(0x03, &data, 1);
+}
+MSH_CMD_EXPORT(hl_telink_start_pair, telink start pair cmd);
 
 void telink_pair_test(void)
 {
     rt_mq_t mq;
 
-    cmd = '3';
+#if HL_GET_DEVICE_TYPE()
     hl_hal_gpio_init(GPIO_2831P_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
-
-    rt_thread_mdelay(3000);
+#else
+    hl_hal_gpio_init(GPIO_RF_PWR_EN);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#endif
 
     hl_mod_telink_init(&mq);
     hl_mod_telink_start();
