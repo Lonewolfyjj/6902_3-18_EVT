@@ -101,7 +101,13 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
             DBG_LOG("wireless pair ack: %d\n", hup_frame.data_addr[0]);
         } break;
         case CMD_GET_LINK_STATE: {
-
+            if (_pl_mod.work_mode == PL_WORK_MODE_SLAVE) {
+                DBG_LOG("link state: %d\n", hup_frame.data_addr[0]);
+            } else if (_pl_mod.work_mode == PL_WORK_MODE_MASTER) {
+                DBG_LOG("link state: L: %d R: %d\n", hup_frame.data_addr[0], hup_frame.data_addr[1]);
+            } else {
+                DBG_LOG("2831pl work mode unknown!");
+            }
         } break;
         case CMD_SWITCH_SLAVE_MASTER: {
             if (hup_frame.data_addr[0] == 1) {

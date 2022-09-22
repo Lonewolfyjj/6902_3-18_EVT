@@ -58,6 +58,11 @@ static void uart_cmd_master(void)
     hl_mod_2831pl_ctrl(HL_MOD_PL_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
 }
 
+static void uart_cmd_get_link_state(void)
+{
+    hl_mod_2831pl_ctrl(HL_MOD_PL_GET_LINK_STATE, NULL, 0);
+}
+
 MSH_CMD_EXPORT(hl_mod_2831pl_test_init, init 2831pl test mode);
 
 MSH_CMD_EXPORT(uart_cmd_pair_s, start wireless pair);
@@ -67,6 +72,8 @@ MSH_CMD_EXPORT(uart_cmd_pair_p, stop wireless pair);
 MSH_CMD_EXPORT(uart_cmd_slave, switch slave mode);
 
 MSH_CMD_EXPORT(uart_cmd_master, switch master mode);
+
+MSH_CMD_EXPORT(uart_cmd_get_link_state, get link state);
 
 /*
  * EOF
