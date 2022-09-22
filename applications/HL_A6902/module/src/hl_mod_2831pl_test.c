@@ -26,36 +26,36 @@
 /* Exported functions --------------------------------------------------------*/
 int hl_mod_2831pl_test_init(void)
 {
-    hl_mod_pm_init(NULL);
+    hl_mod_2831pl_init(NULL);
     return 0;
 }
 
 static void uart_cmd_pair_s(void)
 {
-    hl_mod_pm_wireless_pair_e arg = PM_WIRELESS_PAIR_START;
+    hl_mod_2831pl_wireless_pair_e arg = PL_WIRELESS_PAIR_START;
 
-    hl_mod_pm_ctrl(HL_MOD_PM_WIRELESS_PAIR, &arg, sizeof(arg));
+    hl_mod_2831pl_ctrl(HL_MOD_PL_WIRELESS_PAIR, &arg, sizeof(arg));
 }
 
 static void uart_cmd_pair_p(void)
 {
-    hl_mod_pm_wireless_pair_e arg = PM_WIRELESS_PAIR_STOP;
+    hl_mod_2831pl_wireless_pair_e arg = PL_WIRELESS_PAIR_STOP;
 
-    hl_mod_pm_ctrl(HL_MOD_PM_WIRELESS_PAIR, &arg, sizeof(arg));
+    hl_mod_2831pl_ctrl(HL_MOD_PL_WIRELESS_PAIR, &arg, sizeof(arg));
 }
 
 static void uart_cmd_slave(void)
 {
-    hl_mod_pm_work_mode_e arg = PM_WORK_MODE_SLAVE;
+    hl_mod_2831pl_work_mode_e arg = PL_WORK_MODE_SLAVE;
 
-    hl_mod_pm_ctrl(HL_MOD_PM_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
+    hl_mod_2831pl_ctrl(HL_MOD_PL_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
 }
 
 static void uart_cmd_master(void)
 {
-    hl_mod_pm_work_mode_e arg = PM_WORK_MODE_MASTER;
+    hl_mod_2831pl_work_mode_e arg = PL_WORK_MODE_MASTER;
 
-    hl_mod_pm_ctrl(HL_MOD_PM_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
+    hl_mod_2831pl_ctrl(HL_MOD_PL_SWITCH_SLAVE_MASTER, &arg, sizeof(arg));
 }
 
 MSH_CMD_EXPORT(hl_mod_2831pl_test_init, init 2831pl test mode);

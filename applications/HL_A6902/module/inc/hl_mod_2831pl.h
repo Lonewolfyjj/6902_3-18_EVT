@@ -27,42 +27,42 @@
 
 /* typedef -------------------------------------------------------------------*/
 
-typedef enum _hl_mod_pm_op
+typedef enum _hl_mod_2831pl_op
 {
-    ///start wireless pair, type of parameter is <hl_mod_pm_wireless_pair_e> pointer
-    HL_MOD_PM_WIRELESS_PAIR,
-    ///switch slave or master, type of parameter is <hl_mod_pm_work_mode_e> pointer
-    HL_MOD_PM_SWITCH_SLAVE_MASTER,
+    ///start wireless pair, type of parameter is <hl_mod_2831pl_wireless_pair_e> pointer
+    HL_MOD_PL_WIRELESS_PAIR,
+    ///switch slave or master, type of parameter is <hl_mod_2831pl_work_mode_e> pointer
+    HL_MOD_PL_SWITCH_SLAVE_MASTER,
     ///get link state, type of parameter is <NULL> pointer
-    HL_MOD_PM_GET_LINK_STATE,
-} hl_mod_pm_op_e;
+    HL_MOD_PL_GET_LINK_STATE,
+} hl_mod_2831pl_op_e;
 
-typedef enum _hl_mod_pm_wireless_pair
+typedef enum _hl_mod_2831pl_wireless_pair
 {
-    PM_WIRELESS_PAIR_START,
-    PM_WIRELESS_PAIR_STOP,
-} hl_mod_pm_wireless_pair_e;
+    PL_WIRELESS_PAIR_START,
+    PL_WIRELESS_PAIR_STOP,
+} hl_mod_2831pl_wireless_pair_e;
 
-typedef enum _hl_mod_pm_work_mode
+typedef enum _hl_mod_2831pl_work_mode
 {
-    PM_WORK_MODE_SLAVE,
-    PM_WORK_MODE_MASTER,
-    PM_WORK_MODE_UNKNOWN,
-} hl_mod_pm_work_mode_e;
+    PL_WORK_MODE_SLAVE,
+    PL_WORK_MODE_MASTER,
+    PL_WORK_MODE_UNKNOWN,
+} hl_mod_2831pl_work_mode_e;
 /* define --------------------------------------------------------------------*/
 
-#define HL_MOD_PM_FUNC_RET_ERR 1
-#define HL_MOD_PM_FUNC_RET_OK 0
+#define HL_MOD_PL_FUNC_RET_ERR 1
+#define HL_MOD_PL_FUNC_RET_OK 0
 
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-int hl_mod_pm_init(void* msgHd);
+int hl_mod_2831pl_init(void* msgHd);
 
-void hl_mod_pm_deinit(void);
+void hl_mod_2831pl_deinit(void);
 
-int hl_mod_pm_ctrl(int op, void* arg, int arg_size);
+int hl_mod_2831pl_ctrl(int op, void* arg, int arg_size);
 
 #endif
 /*
