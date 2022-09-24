@@ -104,18 +104,18 @@ RT_WEAK RT_UNUSED void i2s1_input_iomux_config(void)
                          GPIO_PIN_A0 |  // I2S_IN_SCLK
                          GPIO_PIN_A1 |  // I2S_IN_LRCK
                          GPIO_PIN_A2 |  // I2S_IN_SDI0
-                         GPIO_PIN_A3 |  // I2S_IN_SDI1
-                         GPIO_PIN_A4 |  // I2S_IN_MCLK
-                         GPIO_PIN_A5,   // I2S_IN_SDI2
+                         //GPIO_PIN_A3 |  // I2S_IN_SDI1
+                         GPIO_PIN_A4,// |  // I2S_IN_MCLK
+                         //GPIO_PIN_A5,   // I2S_IN_SDI2
                          PIN_CONFIG_MUX_FUNC4);
 
     HAL_PINCTRL_SetParam(GPIO_BANK0,
                          GPIO_PIN_A0 |  // I2S_IN_SCLK
                          GPIO_PIN_A1 |  // I2S_IN_LRCK
                          GPIO_PIN_A2 |  // I2S_IN_SDI0
-                         GPIO_PIN_A3 |  // I2S_IN_SDI1
-                         GPIO_PIN_A4 |  // I2S_IN_MCLK
-                         GPIO_PIN_A5,   // I2S_IN_SDI2
+                         //GPIO_PIN_A3 |  // I2S_IN_SDI1
+                         GPIO_PIN_A4, //|  // I2S_IN_MCLK
+                         //GPIO_PIN_A5,   // I2S_IN_SDI2
                          PIN_CONFIG_PUL_NORMAL);
 
     WRITE_REG_MASK_WE(GRF->SOC_CON4,
@@ -147,6 +147,68 @@ RT_WEAK RT_UNUSED void i2s1_output_iomux_config(void)
     WRITE_REG_MASK_WE(GRF->SOC_CON4,
                       GRF_SOC_CON4_GRF_CON_AUDIO_PRO_APP_I2S1_MASK,  // used I2S1 as audio input
                       (0x1 << GRF_SOC_CON4_GRF_CON_AUDIO_PRO_APP_I2S1_SHIFT));
+}
+
+/**
+ * @brief  Config iomux for I2S0 //< LX
+ */
+void i2s0_output_iomux_config(void)
+{
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
+                         GPIO_PIN_D3 |  // PCM_CLK_M0
+                         GPIO_PIN_D4 |  // PCM_SYNC_M0
+                         GPIO_PIN_D6,   // PCM_OUT_M0
+                         PIN_CONFIG_MUX_FUNC4);
+
+HAL_PINCTRL_SetParam(GPIO_BANK0,
+                         GPIO_PIN_D3 |  // PCM_CLK_M0
+                         GPIO_PIN_D4 |  // PCM_SYNC_M0
+                         GPIO_PIN_D6,   // PCM_OUT_M0
+                         PIN_CONFIG_PUL_NORMAL);
+
+    WRITE_REG_MASK_WE(GRF->SOC_CON4,
+                      GRF_SOC_CON4_GRF_CON_BT_PCM_I2S0_MASK,  // used I2S1 as audio input and output
+                      (0x1 << GRF_SOC_CON4_GRF_CON_BT_PCM_I2S0_SHIFT));
+                      
+
+    WRITE_REG_MASK_WE(GRF->SOC_CON2,
+                      GRF_SOC_CON2_GRF_CON_I2S_LRCK_MUX_MASK |
+                      GRF_SOC_CON2_GRF_CON_I2S_SCLK_MUX_MASK |
+                      GRF_SOC_CON2_GRF_CON_I2S_OUT_MCLK_OUT_EN_MASK,
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_LRCK_MUX_SHIFT) |
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_SCLK_MUX_SHIFT) |
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_OUT_MCLK_OUT_EN_SHIFT));
+}
+
+/**
+ * @brief  Config iomux for I2S0 //< LX
+ */
+void i2s0_input_iomux_config(void)
+{
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
+                         GPIO_PIN_D3 |  // PCM_CLK_M0
+                         GPIO_PIN_D4 |  // PCM_SYNC_M0
+                         GPIO_PIN_D5,// |  // PCM_IN_M0
+                         PIN_CONFIG_MUX_FUNC4);
+
+HAL_PINCTRL_SetParam(GPIO_BANK0,
+                         GPIO_PIN_D3 |  // PCM_CLK_M0
+                         GPIO_PIN_D4 |  // PCM_SYNC_M0
+                         GPIO_PIN_D5,// |  // PCM_IN_M0
+                         PIN_CONFIG_PUL_NORMAL);
+
+    WRITE_REG_MASK_WE(GRF->SOC_CON4,
+                      GRF_SOC_CON4_GRF_CON_BT_PCM_I2S0_MASK,  // used I2S1 as audio input and output
+                      (0x1 << GRF_SOC_CON4_GRF_CON_BT_PCM_I2S0_SHIFT));
+                      
+
+    WRITE_REG_MASK_WE(GRF->SOC_CON2,
+                      GRF_SOC_CON2_GRF_CON_I2S_LRCK_MUX_MASK |
+                      GRF_SOC_CON2_GRF_CON_I2S_SCLK_MUX_MASK |
+                      GRF_SOC_CON2_GRF_CON_I2S_OUT_MCLK_OUT_EN_MASK,
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_LRCK_MUX_SHIFT) |
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_SCLK_MUX_SHIFT) |
+                      (0x1 << GRF_SOC_CON2_GRF_CON_I2S_OUT_MCLK_OUT_EN_SHIFT));
 }
 
 /**

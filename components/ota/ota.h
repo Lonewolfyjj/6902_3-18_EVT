@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #ifdef RT_USING_OTA_FROM_LOCAL
-#define OTA_FW_LOCAL_PATH       "/sdcard/Firmware.img"
+#define OTA_FW_LOCAL_PATH       "/sdcard/Firmware.img" //"/sdcard/rtthread.img"//
 #endif
 
 typedef enum image_state_t_

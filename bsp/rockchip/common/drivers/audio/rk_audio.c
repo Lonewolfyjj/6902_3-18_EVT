@@ -12,8 +12,10 @@
   ******************************************************************************
   */
 
+
 #include <rtdevice.h>
 #include <rtthread.h>
+#ifndef RT_USING_HL_AUDIO
 
 #ifdef RT_USING_AUDIO
 
@@ -39,6 +41,61 @@ static struct rt_mutex dai_lock;
 static struct rt_mutex codec_lock;
 
 /********************* Private Function Definition ***************************/
+
+#if 1 ///读写数据
+/**
+ * struct data_32 - audio codec struct.
+ */
+typedef union _hl_data_32
+{
+    uint8_t u8datas[4]; /**< list node */
+    uint32_t u32data; /**< assign from codee base as the unique id. */
+}hl_data_32;
+
+static void *hl_audio_32bit_to_24bit(void *dst, const void *src, rt_ubase_t count)
+{
+
+    char *tmp = (char *)dst, *s = (char *)src;
+    rt_ubase_t len;
+
+    if ((count % 4) != 0)
+    { // 音频数据32bit需要被4整除
+        rt_kprintf("hl_audio_32bit_to_24bit error(%d)\n", (count % 4));
+    }
+
+    while (count)
+    {
+        *s++;
+        *tmp++ = *s++;
+        *tmp++ = *s++;
+        *tmp++ = *s++;
+        count -= 4;
+    }
+
+    return dst;
+}
+
+static void *hl_audio_24bit_to_32bit(void *dst, const void *src, rt_ubase_t count)
+{
+
+    char *tmp = (char *)dst, *s = (char *)src;
+    rt_ubase_t len;
+
+    if((count%3) != 0) { // 音频数据24bit需要被3整除
+        rt_kprintf("hl_audio_24bit_to_32bit error(%d)\n", (count%3));
+    }
+  
+    while (count) {
+        *tmp ++ = 0x00;
+        *tmp ++ = *s ++;
+        *tmp ++ = *s ++;
+        *tmp ++ = *s ++;            
+        count -= 3;
+    }            
+    
+    return dst;
+}
+#endif
 
 static void audio_stream_set_state(struct audio_stream *as, audio_stream_state_t state)
 {
@@ -753,6 +810,129 @@ err:
     return 0;
 }
 
+
+/// @brief 读出24bit的数据给buffer
+/// @param dev 设备句柄
+/// @param pos 无
+/// @param buffer 存储读取数据的空间
+/// @param size 一次读取的帧的数量
+/// @return 函数状态返回
+rt_size_t rk_audio_read_24bit(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size)
+{
+    struct audio_stream *as = dev->user_data;
+    struct audio_pcm *pcm = as->pcm;
+    audio_pcm_uframes_t avail, appl_ptr, appl_ofs;
+    uint8_t *hwbuf;
+    rt_err_t ret = RT_EOK;
+
+    if (!size)
+        return 0;
+
+    switch (as->state)
+    {
+    case AUDIO_STREAM_STATE_PREPARED:
+    case AUDIO_STREAM_STATE_XRUN:
+        rk_audio_start(as);
+        break;
+    case AUDIO_STREAM_STATE_RUNNING:
+        break;
+    default:
+        ret = -RT_ERROR;
+        goto err;
+    }
+
+    avail = audio_pcm_capture_avail(pcm);
+    RK_AUDIO_DBG("[0x%08x] %s: %ld frames, %ld bytes, avail: %ld, sem: %d\n",
+                 HAL_GetTick(), __func__, size, frames_to_bytes(pcm, size),
+                 avail, pcm->wait->value);
+
+    if (avail < size)
+    {
+        ret = audio_wait_for_avail(as);
+        if (ret != RT_EOK)
+            goto err;
+    }
+
+    appl_ptr = pcm->status.appl_ptr;
+    appl_ofs = appl_ptr % pcm->abuf.buf_size;
+
+    hwbuf = pcm->abuf.buf + (appl_ofs * (32 * pcm->params.channels) / 8);
+
+    hl_audio_32bit_to_24bit(buffer, hwbuf, (size * (32 * pcm->params.channels) / 8)); // 32bit data len
+
+    appl_ptr += size;
+    if (appl_ptr >= pcm->boundary)
+        appl_ptr -= pcm->boundary;
+    pcm->status.appl_ptr = appl_ptr;
+
+    return size;
+err:
+    rt_set_errno(ret);
+    return 0;
+}
+
+/// @brief 将24bit的数据转换成32bit写入设备
+/// @param dev 设备句柄
+/// @param pos 无
+/// @param buffer 需要写入的数据
+/// @param size 一次写入的帧的数量
+/// @return 函数状态返回
+rt_size_t rk_audio_write_24bit(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)
+{
+    struct audio_stream *as = dev->user_data;
+    struct audio_pcm *pcm = as->pcm;
+    audio_pcm_uframes_t avail, appl_ptr, appl_ofs;
+    uint8_t *hwbuf;
+    rt_err_t ret = RT_EOK;
+
+    if (!size)
+        return 0;
+
+    avail = audio_pcm_playback_avail(pcm);
+    RK_AUDIO_DBG("[0x%08x] %s: %ld frames, %ld bytes, avail: %ld, sem: %d\n",
+                 HAL_GetTick(), __func__, size, frames_to_bytes(pcm, size),
+                 avail, pcm->wait->value);
+
+    if (avail < size)
+    {
+        ret = audio_wait_for_avail(as);
+        if (ret != RT_EOK)
+            goto err;
+    }
+
+    appl_ptr = pcm->status.appl_ptr;
+    appl_ofs = appl_ptr % pcm->abuf.buf_size;
+
+    hwbuf = pcm->abuf.buf + (appl_ofs * (32 * pcm->params.channels) / 8); //每次写入32
+
+    hl_audio_24bit_to_32bit(hwbuf, buffer, (size * (24 * pcm->params.channels) / 8));// 24bit data len
+
+    appl_ptr += size;
+    if (appl_ptr >= pcm->boundary)
+        appl_ptr -= pcm->boundary;
+    pcm->status.appl_ptr = appl_ptr;
+
+    switch (as->state)
+    {
+    case AUDIO_STREAM_STATE_PREPARED:
+    case AUDIO_STREAM_STATE_XRUN:
+        rk_audio_start(as);
+        break;
+    case AUDIO_STREAM_STATE_RUNNING:
+        break;
+    default:
+        ret = -RT_ERROR;
+        goto err;
+    }
+
+    return size;
+
+err:
+    rt_set_errno(ret);
+    return 0;
+}
+
+
 rt_err_t rk_audio_control(rt_device_t dev, int cmd, void *args)
 {
     struct audio_stream *as = dev->user_data;
@@ -839,8 +1019,14 @@ static const struct rt_device_ops rk_audio_ops =
     .read = rk_audio_plugin_read,
     .write = rk_audio_plugin_write,
 #else
+#if 1 
+    //24bit set 1
+    .read = rk_audio_read_24bit,
+    .write = rk_audio_write_24bit,
+#else
     .read = rk_audio_read,
     .write = rk_audio_write,
+#endif
 #endif
     .control = rk_audio_control,
 };
@@ -915,3 +1101,5 @@ int rk_audio_core_init(void)
 
 INIT_PREV_EXPORT(rk_audio_core_init);
 #endif
+
+#endif /* RT_USING_HL_AUDIO */
