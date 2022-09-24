@@ -26,7 +26,8 @@
 /* RT_USING_TIMER_SOFT is not set */
 #define RT_DEBUG
 /* RT_DEBUG_COLOR is not set */
-/* RT_DEBUG_INIT_CONFIG is not set */
+#define RT_DEBUG_INIT_CONFIG
+#define RT_DEBUG_INIT 1
 #define RT_DEBUG_USING_IO
 /* RT_DEBUG_USING_GPIO is not set */
 /* RT_DEBUG_THREAD_CONFIG is not set */
