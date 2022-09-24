@@ -50,7 +50,7 @@
 #endif
 
 #ifdef RT_USING_USB_DEVICE
-//#define USB_VBUS_PIN            BANK_PIN(GPIO_BANK1, 24)  //<
+#define USB_VBUS_PIN            BANK_PIN(GPIO_BANK1, 4)
 #endif
 
 #ifdef RT_USING_PMIC_RK816

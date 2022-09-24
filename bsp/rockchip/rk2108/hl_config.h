@@ -1,6 +1,6 @@
 #define A6902_TX_HL 0
 #define A6902_RX_HL_CH 1
-#define A6902_RX_HL_EN 1
+#define A6902_RX_HL_EN 0
 #define A6902_TX_JF 0
 #define A6902_RX_JF_CH 0
 #define A6902_RX_JF_EN 0
@@ -39,7 +39,7 @@
 
 #endif
 
-// TX返回0 RX返回1
+// RX返回0 TX返回1
 #define HL_GET_DEVICE_TYPE() (A6902_TX_HL | A6902_TX_JF)
 
 // HL返回0 飓风返回1
