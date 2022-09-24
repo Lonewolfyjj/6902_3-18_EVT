@@ -20,6 +20,7 @@ static struct rt_thread led_thread;
 static char             led_thread_stack[512];
 hl_gpio_pin_e           key_left_gpio;
 hl_gpio_pin_e           key_right_gpio;
+hl_gpio_pin_e           rx_key_pair_gpio;
 uint8_t                 telink_pair_state;
 uint8_t                 get_pair_count = 1;
 
@@ -28,7 +29,7 @@ static void hl_hal_gpio_telink_pairleft_irq_process(void* args)
     hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
 
     uint8_t data = 0;
-    rt_kprintf("telink pair key\n");
+    rt_kprintf("telink pair leftkey\n");
     hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_LEFT, &data, 1);
 }
 static void hl_hal_gpio_telink_pairright_irq_process(void* args)
@@ -36,12 +37,21 @@ static void hl_hal_gpio_telink_pairright_irq_process(void* args)
     hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
 
     uint8_t data = 0;
-    rt_kprintf("telink pair key\n");
+    rt_kprintf("telink pair rightkey\n");
     hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_RIGHT, &data, 1);
+}
+static void hl_hal_gpio_telink_pairall_irq_process(void* args)
+{
+    hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
+
+    uint8_t data = 0;
+    rt_kprintf("telink pair allkey\n");
+    hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_ALL, &data, 1);
 }
 
 static void _hl_drv_key_init(void)
 {
+#if HL_GET_DEVICE_TYPE()
     key_left_gpio = GPIO_PAIR_KEY;
     hl_hal_gpio_init(GPIO_PAIR_KEY);
     hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairleft_irq_process, &key_left_gpio);
@@ -51,6 +61,12 @@ static void _hl_drv_key_init(void)
     hl_hal_gpio_init(GPIO_REC_KEY);
     hl_hal_gpio_attach_irq(GPIO_REC_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairright_irq_process, &key_right_gpio);
     hl_hal_gpio_irq_enable(GPIO_REC_KEY, PIN_IRQ_ENABLE);
+#else
+    rx_key_pair_gpio = GPIO_PWR_KEY;
+    hl_hal_gpio_init(GPIO_PWR_KEY);
+    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairall_irq_process, &rx_key_pair_gpio);
+    hl_hal_gpio_irq_enable(GPIO_PWR_KEY, PIN_IRQ_ENABLE);
+#endif
 }
 
 static void _hl_drv_led_init(void)
@@ -404,8 +420,6 @@ void telink_pair_test(void)
 
     rt_thread_mdelay(10);
 
-    // KEY
-    _hl_drv_key_init();
     // LED
     _hl_drv_led_init();
 
@@ -413,7 +427,8 @@ void telink_pair_test(void)
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
 #endif
-
+    // KEY
+    _hl_drv_key_init();
 
     // telink_thread init
     hl_mod_telink_init(&mq);
