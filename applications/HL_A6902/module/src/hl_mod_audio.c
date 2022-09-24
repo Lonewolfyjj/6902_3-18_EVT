@@ -33,7 +33,7 @@
 #include "hl_mod_audio.h"
 #include "hl_drv_audio.h"
 #include "hl_drv_rk_xtensa_dsp.h"
-
+#include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -87,11 +87,16 @@ struct playback_config
 #define HL_MOD_AUDIO_PERIOD_SIZE (120)
 #define HL_MOD_AUDIO_PERIOD_COUNT (4)
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
-#define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE ((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
+#define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30) //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
 
-#define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "codecp"
+#if HL_GET_DEVICE_TYPE()
+#define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wifip"
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecc"
+#else
+#define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wific"
+#define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecp"
+#endif
 
 #define ID_RIFF 0x46464952
 #define ID_WAVE 0x45564157
@@ -523,6 +528,7 @@ int hl_mod_audio_record_test(int argc, char** argv)
 
     if (argc > 1) {
         if (!strcmp("start", argv[1])) {
+            rt_ringbuffer_reset(s_audio_rb);
             s_record_switch = 1;
             hl_mod_audio_record_start("/mnt/sdcard/hl.wav");
             rt_kprintf("Audio mod record test start\r\n");
@@ -542,17 +548,33 @@ int hl_mod_audio_record_test(int argc, char** argv)
      return 0;
 }
 
-#ifdef RT_USING_FINSH
-
-#include <finsh.h>
-MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
-MSH_CMD_EXPORT(hl_mod_audio_record_test, audio record test cmd);
-#endif
 
 /* Exported functions --------------------------------------------------------*/
 
 uint8_t hl_mod_audio_init(void* p_msg_handle)
 {
+    rt_thread_t audio_tid = RT_NULL;
+    rt_thread_t record_tid = RT_NULL;    
+    
+    card_play[0] = NULL;
+    card_capture[0] = NULL;              
+
+    s_audio_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
+    RT_ASSERT(s_audio_rb != RT_NULL);
+
+    s_record_switch = 0;
+    hl_mod_audio_codec_config();   
+    hl_mod_audio_dsp_config();
+    hl_drv_audio_register_stream(hl_mod_audio_stream_cb);
+
+    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
+    if (audio_tid)
+        rt_thread_startup(audio_tid);
+
+    record_tid = rt_thread_create("do_hl_record", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
+    if (record_tid)
+        rt_thread_startup(record_tid);
+
     return 0;
 }
 
@@ -564,6 +586,17 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     return 0;
 }
+
+#ifdef RT_USING_FINSH
+
+#include <finsh.h>
+MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
+MSH_CMD_EXPORT(hl_mod_audio_record_test, audio record test cmd);
+#endif
+
+INIT_APP_EXPORT(hl_mod_audio_init);
+
+
 
 #endif /* __HL_MOD_AUDIO_C__ */
        /*
