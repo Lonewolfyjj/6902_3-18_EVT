@@ -42,7 +42,7 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_PWR_KEY
     {GPIO1_C1,  PIN_MODE_INPUT},            // GPIO_REC_KEY
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
-    {GPIO1_B1,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_GAUGE_INT
+    {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
     {GPIO1_C5,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_MIC_DET
     // OUT
     {GPIO0_A3,  PIN_MODE_OUTPUT},           // GPIO_EMMC_RST
@@ -67,8 +67,8 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
     {GPIO0_C5,  PIN_MODE_INPUT},            // GPIO_R_VOL_B
     {GPIO0_C6,  PIN_MODE_INPUT},            // GPIO_R_VOL_KEY
     {GPIO0_A3,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
-    {GPIO1_A4,  PIN_MODE_INPUT},            // GPIO_VBUS_DET
-    {GPIO0_C1,  PIN_MODE_INPUT},            // GPIO_HP_DET
+    {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
+    {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_HP_DET
     {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_GSENSOR_INT
     // OUT
     {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
