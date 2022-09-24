@@ -36,8 +36,100 @@
 
 typedef enum _hl_drv_aw21009_op
 {
+    ///获取芯片id，需要<uint8_t>类型的指针作为参数
     HL_DRV_AW21009_GET_CHIP_ID,
+    ///检测power-on-reset是否出现，需要<uint8_t>类型的指针作为参数
     HL_DRV_AW21009_CHECK_POR_STATU,
+    /**
+     * 
+     * @brief 设置自动呼吸参数，需要<hl_drv_aw21009_auto_breath_param_st>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 需要在自动呼吸模式下用
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_AUTO_BREATH_PARAM,
+    /**
+     * 
+     * @brief 设置组控制失能，需要<bool>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 失能时，每个在组内的led通道的颜色独立控制，使能时，每个在组内的led通道的颜色共享同一个r/g/b参数
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE,
+    /**
+     * 
+     * @brief 设置LED组模式，需要<hl_drv_aw21009_led_group_e>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details led通道分组：[1-3]、[4-6]、[7-9]
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_LED_GROUP_MODE,
+    /**
+     * 
+     * @brief 设置pattern控制模式，需要<hl_drv_aw21009_pattern_mode_e>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details pattern控制模式下，分为自动呼吸模式和manual模式
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_PATTERN_MODE,
+    /**
+     * 
+     * @brief 设置led灯光效果，需要<hl_drv_aw21009_led_light_st>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 注意：亮度参数是所有led组共用的，改变亮度会改变所有led组的亮度，而颜色每个led组独立。
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_LED_LIGHT_EFFECT,
+    /**
+     * 
+     * @brief 设置led灯光效果，需要<hl_drv_aw21009_led_light_st>类型的指针作为参数
+     * @date 2022-09-24
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details led_group参数被忽略，所有led组共享同一个灯光参数
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-24      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_LED_GROUP_LIGHT_EFFECT,
     HL_DRV_AW21009_TEMP_LED_OPEN,
     HL_DRV_AW21009_TEMP_LED_CLOSE,
 } hl_drv_aw21009_op_e;
@@ -51,7 +143,7 @@ typedef enum _hl_drv_aw21009_pattern_time
 typedef enum _hl_drv_aw21009_loop_stop_point
 {
     HL_DRV_AW21009_STOP_POINT_T3 = 0,
-    HL_DRV_AW21009_STOP_POINT_T0,
+    HL_DRV_AW21009_STOP_POINT_T1,
 } hl_drv_aw21009_loop_stop_point_e;
 
 typedef enum _hl_drv_aw21009_loop_start_point
@@ -62,12 +154,31 @@ typedef enum _hl_drv_aw21009_loop_start_point
     HL_DRV_AW21009_START_POINT_T3,
 } hl_drv_aw21009_loop_start_point_e;
 
+typedef enum _hl_drv_aw21009_led_group
+{
+    HL_DRV_AW21009_LED_GROUP_NONE = 0x00,
+    HL_DRV_AW21009_LED_GROUP_1    = 0x01,
+    HL_DRV_AW21009_LED_GROUP_2    = 0x02,
+    HL_DRV_AW21009_LED_GROUP_3    = 0x04,
+} hl_drv_aw21009_led_group_e;
+
+typedef enum _hl_drv_aw21009_pattern_mode
+{
+    HL_DRV_AW21009_PAT_MANUAL_MODE      = 0,
+    HL_DRV_AW21009_PAT_AUTO_BREATH_MODE = 1,
+} hl_drv_aw21009_pattern_mode_e;
+
+typedef struct _hl_drv_aw21009_led_light_param
+{
+    hl_drv_aw21009_led_group_e led_group;
+    uint8_t                    r;
+    uint8_t                    g;
+    uint8_t                    b;
+    uint16_t                   brightness;
+} hl_drv_aw21009_led_light_st;
+
 typedef struct _hl_drv_aw21009_auto_breath_param
 {
-    uint8_t                           r;
-    uint8_t                           g;
-    uint8_t                           b;
-    uint8_t                           l;
     hl_drv_aw21009_pattern_time_e     rise_time;
     hl_drv_aw21009_pattern_time_e     on_time;
     hl_drv_aw21009_pattern_time_e     fall_time;
@@ -76,13 +187,6 @@ typedef struct _hl_drv_aw21009_auto_breath_param
     hl_drv_aw21009_loop_stop_point_e  stop_point;
     uint16_t                          repeat_times;
 } hl_drv_aw21009_auto_breath_param_st;
-
-typedef struct _hl_drv_aw21009_set_auto_breath
-{
-    hl_drv_aw21009_auto_breath_param_st led1;
-    hl_drv_aw21009_auto_breath_param_st led2;
-    hl_drv_aw21009_auto_breath_param_st led3;
-} hl_drv_aw21009_set_auto_breath_st;
 
 typedef enum _hl_drv_aw21009_led_dev_num
 {
@@ -146,7 +250,7 @@ int hl_drv_aw21009_deinit(void);
 /**
  * 
  * @brief led 控制函数
- * @param [in] led_num led设备编号，对应rx上两个aw21009芯片, see<hl_drv_aw21009_led_dev_num_e>。 
+ * @param [in] led_num led设备编号，对应rx上两个aw21009芯片，tx上则没有区别，两个编号都操作同一个芯片, see<hl_drv_aw21009_led_dev_num_e>。 
  * @param [in] op 
  * @param [in] arg 
  * @param [in] arg_size 
