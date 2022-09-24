@@ -490,13 +490,50 @@ static int32_t aw210xx_init(uint8_t dev_addr)
 
     chip_id = aw210xx_read_chipid(dev_addr);
     if (chip_id != AW21009_CHIPID) {
-        DBG_LOG("aw2016a chip id err: %02x!\n", chip_id);
+        DBG_LOG("aw21009 chip id err: %02x!\n", chip_id);
         return -1;
     }
 
     aw210xx_led_init(dev_addr);
 
-    /*light effect*/
+    return 0;
+}
+
+static int check_por_statu(uint8_t dev_addr, uint8_t *arg)
+{
+    int ret;
+    uint8_t reg_val;
+
+    ret = aw_read(dev_addr, AW210XX_REG_UVCR, &reg_val);
+    if (ret == AW21009_FUNC_RET_ERR) {
+        return AW21009_FUNC_RET_ERR;
+    }
+
+    if (reg_val & (1 << 4)) {
+        *arg = 1;
+    } else {
+        *arg = 0;
+    }
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int soft_reset(uint8_t dev_addr)
+{
+    int ret;
+    uint8_t reg_val = 0;
+
+    ret = aw_write(dev_addr, AW210XX_REG_RESET, &reg_val);
+    if (ret == AW21009_FUNC_RET_ERR) {
+        return AW21009_FUNC_RET_ERR;
+    }
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static void temp_led_open(uint8_t dev_addr)
+{
+        /*light effect*/
     // aw210xx_effect_select(AW210XX_I2C_ADDR, AW21018_GROUP_BREATH_LEDS_ON);
     led_soft_i2c_writereg(dev_addr, 0x20, 0x01);
     led_soft_i2c_writereg(dev_addr, 0x58, 0x60);
@@ -533,8 +570,11 @@ static int32_t aw210xx_init(uint8_t dev_addr)
     led_soft_i2c_writereg(dev_addr, 0x85, 0x00);  //LOOP config
     led_soft_i2c_writereg(dev_addr, 0x45, 0x00);  //refresh SL BR
     led_soft_i2c_writereg(dev_addr, 0x81, 0x01);  //start patten
+}
 
-    return 0;
+static void temp_led_close(uint8_t dev_addr)
+{
+    aw210xx_chipen_set(dev_addr, false);
 }
 
 /* Exported functions --------------------------------------------------------*/
@@ -596,9 +636,53 @@ int hl_drv_aw21009_deinit(void)
 int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size)
 {
     int ret;
+    uint8_t dev_addr;
+
     if (_init_flag != 1) {
         DBG_LOG("aw21009 is not inited!\n");
         return AW21009_FUNC_RET_ERR;
+    }
+
+    if (led_num == HL_DRV_AW21009_LED_DEV_0) {
+        dev_addr = AW210XX_I2C_ADDR;
+    } else if (led_num == HL_DRV_AW21009_LED_DEV_1) {
+#if HL_GET_DEVICE_TYPE() == 0
+        dev_addr = HL_DRV_AW21009_OTHER_DEV_ADDR;
+#else
+        dev_addr = AW210XX_I2C_ADDR;
+#endif
+    } else {
+        return AW21009_FUNC_RET_ERR;
+    }
+
+    switch (op) {
+        case HL_DRV_AW21009_GET_CHIP_ID: {
+            if (arg_size != sizeof(uint8_t)) {
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            *((uint8_t *)arg) = aw210xx_read_chipid(dev_addr);
+        } break;
+        case HL_DRV_AW21009_CHECK_POR_STATU: {
+            if (arg_size != sizeof(uint8_t)) {
+                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = check_por_statu(dev_addr, (uint8_t *)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_TEMP_LED_OPEN: {
+            temp_led_open(dev_addr);
+        } break;
+        case HL_DRV_AW21009_TEMP_LED_CLOSE: {
+            temp_led_close(dev_addr);
+        } break;
+        default:
+            break;
     }
 
     return AW21009_FUNC_RET_OK;

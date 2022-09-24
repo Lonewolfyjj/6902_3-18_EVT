@@ -636,7 +636,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = get_chip_id(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -647,7 +647,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_work_mode(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -658,7 +658,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_global_max_output_current(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -669,7 +669,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = open_led_channel(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -680,7 +680,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = close_led_channel(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -691,7 +691,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_pattern_mode(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -702,7 +702,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_pattern_mode_param(p_i2c_bus, (hl_drv_aw2016a_pattern_param_st*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -713,7 +713,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_manual_mode(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -724,7 +724,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_output_current(p_i2c_bus, (hl_drv_aw2016a_output_current_st*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -735,7 +735,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_pwm_level(p_i2c_bus, (hl_drv_aw2016a_pwm_level_st*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
@@ -746,7 +746,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = dump_register_value(p_i2c_bus, (uint8_t*)arg);
-            if (ret < 0) {
+            if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
