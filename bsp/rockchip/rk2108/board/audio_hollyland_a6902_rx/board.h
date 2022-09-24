@@ -21,5 +21,11 @@
 #define PA_PIN_FUNC_GPIO PIN_CONFIG_MUX_FUNC0
 #endif
 
+#ifdef RT_USING_CODEC_NAU88L25B
+#define PA_GPIO_BANK     GPIO_BANK0
+#define PA_GPIO          GPIO0
+#define PA_PIN           GPIO_PIN_B1
+#define PA_PIN_FUNC_GPIO PIN_CONFIG_MUX_FUNC0
+#endif
 
 #endif

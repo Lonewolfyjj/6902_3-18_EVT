@@ -142,7 +142,7 @@ RT_WEAK RT_UNUSED void i2s1_output_iomux_config(void)
                          GPIO_PIN_A6 |  // I2S1_OUT_SCLK_MUX0
                          GPIO_PIN_A7 |  // I2S1_OUT_LRCK_MUX0
                          GPIO_PIN_B0,   // I2S1_OUT_SDO0_MUX0
-                         PIN_CONFIG_PUL_NORMAL);
+                         PIN_CONFIG_PUL_UP);//PIN_CONFIG_PUL_NORMAL);
 
     WRITE_REG_MASK_WE(GRF->SOC_CON4,
                       GRF_SOC_CON4_GRF_CON_AUDIO_PRO_APP_I2S1_MASK,  // used I2S1 as audio input
@@ -359,9 +359,9 @@ RT_WEAK RT_UNUSED void uart2_iomux_config(void)
     // for uart2
     HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
                          GPIO_PIN_A0 |  // UART2_RX
-                         GPIO_PIN_A1 |  // UART2_TX
-                         GPIO_PIN_A2 |  // UART2_CTS
-                         GPIO_PIN_A3,   // UART2_RTS
+                         GPIO_PIN_A1,// |  // UART2_TX
+                         //GPIO_PIN_A2 |  // UART2_CTS
+                         //GPIO_PIN_A3,   // UART2_RTS
                          PIN_CONFIG_MUX_FUNC4);
 }
 

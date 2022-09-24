@@ -26,8 +26,7 @@
 /* RT_USING_TIMER_SOFT is not set */
 #define RT_DEBUG
 /* RT_DEBUG_COLOR is not set */
-#define RT_DEBUG_INIT_CONFIG
-#define RT_DEBUG_INIT 1
+/* RT_DEBUG_INIT_CONFIG is not set */
 #define RT_DEBUG_USING_IO
 /* RT_DEBUG_USING_GPIO is not set */
 /* RT_DEBUG_THREAD_CONFIG is not set */
@@ -190,13 +189,6 @@
 
 /* RT_USING_USB_HOST is not set */
 /* RT_USING_USB_DEVICE is not set */
-/* _RT_USB_DEVICE_NONE is not set */
-/* _RT_USB_DEVICE_CDC is not set */
-/* _RT_USB_DEVICE_MSTORAGE is not set */
-/* _RT_USB_DEVICE_HID is not set */
-/* _RT_USB_DEVICE_WINUSB is not set */
-/* _RT_USB_DEVICE_UAC1 is not set */
-/* _RT_USB_DEVICE_UVC is not set */
 
 /* POSIX layer and C standard library */
 
@@ -453,7 +445,7 @@
 #define RT_USING_UART
 #define RT_USING_UART0
 /* RT_USING_UART1 is not set */
-/* RT_USING_UART2 is not set */
+#define RT_USING_UART2
 
 /* Enable I2C */
 

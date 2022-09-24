@@ -100,7 +100,7 @@ void rt_hw_iomux_config(void)
 
     uart0_iomux_config();
 
-    i2c2_m2_iomux_config();//i2c0_m1_iomux_config();
+    //i2c0_m1_iomux_config();
 
     i2c1_m1_iomux_config();
 
