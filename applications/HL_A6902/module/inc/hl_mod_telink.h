@@ -49,6 +49,13 @@ typedef struct
 #define TELINK_HUP_BUF_SIZE 128
 
 #define TELINK_CMD_PAIR 0x01
+#define TELINK_CMD_WIRELESS_PAIR 0x03
+#define TELINK_CMD_GET_PAIR_INFO 0x02
+
+#define TELINK_PAIR_START 0x01
+#define TELINK_PAIR_FAILED 0x02
+#define TELINK_PAIR_SUCCEDD_L 0x03
+#define TELINK_PAIR_SUCCEDD_R 0x04
 
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

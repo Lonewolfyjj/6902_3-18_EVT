@@ -1,5 +1,6 @@
 #include "hl_mod_telink.h"
 #include "hl_hal_gpio.h"
+#include "hl_drv_aw2016a.h"
 #include <stdlib.h>
 
 /// 线程句柄
@@ -14,6 +15,124 @@ static uint8_t s_uart_recv_buf[TELINK_UART_BUF_SIZE];
 // util数据缓冲区
 static uint8_t* s_telink_hup_buf;
 static uint8_t* s_telink_fifo_buf;
+
+static struct rt_thread led_thread;
+static char             led_thread_stack[512];
+hl_gpio_pin_e           key_gpio;
+uint8_t                 telink_pair_state;
+uint8_t                 get_pair_count = 1;
+
+static void hl_drv_led_ctrl(uint8_t red, uint8_t green, uint8_t blue)
+{
+    int                              ret;
+    uint8_t                          chip_id;
+    uint8_t                          work_mode;
+    uint8_t                          led_chan;
+    hl_drv_aw2016a_pattern_param_st  pattern_param;
+    hl_drv_aw2016a_output_current_st output_param;
+    hl_drv_aw2016a_pwm_level_st      pwm_param;
+
+    work_mode = HL_DRV_AW2016A_ACTIVE_MODE;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_WORK_MODE, &work_mode, sizeof(work_mode));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set work mode\n");
+
+    work_mode = HL_DRV_AW2016A_IMAX_5MA;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT, &work_mode,
+                              sizeof(work_mode));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set g current max\n");
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_OPEN_LED_CHANNEL, &led_chan, sizeof(led_chan));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("open led \n");
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE, &led_chan, sizeof(led_chan));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set pattern mode \n");
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 0;
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM, &pattern_param,
+                              sizeof(pattern_param));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set pattern mode param \n");
+
+    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    output_param.current  = red;
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param,
+                              sizeof(output_param));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set output current \n");
+
+    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    output_param.current  = green;
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param,
+                              sizeof(output_param));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set output current \n");
+
+    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    output_param.current  = blue;
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param,
+                              sizeof(output_param));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set output current \n");
+
+    pwm_param.led_chan  = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    pwm_param.pwm_level = 50;
+    ret                 = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL, &pwm_param,
+                              sizeof(pwm_param));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("set brightness \n");
+}
+
+static void hl_hal_gpio_telink_pairkey_irq_process(void* args)
+{
+    hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
+
+    uint8_t       data       = 0;
+    rt_kprintf("telink pair key\n");
+    hl_mod_telink_ioctl(0x03, &data, 1);
+}
 
 static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 {
@@ -45,6 +164,24 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
     rt_kprintf("[right] = %02x\n", s_uart_recv_buf[3]);
     rt_kprintf("[ok] = %02x\n", s_uart_recv_buf[4]);
     rt_kprintf("\n");
+    switch (s_uart_recv_buf[0]) {
+        case TELINK_CMD_WIRELESS_PAIR:
+            telink_pair_state = TELINK_PAIR_START;
+            break;
+
+        case TELINK_CMD_GET_PAIR_INFO:
+            if (s_uart_recv_buf[1] == 0x00 && s_uart_recv_buf[2] == 0x00 && s_uart_recv_buf[3] == 0x00) {
+                telink_pair_state = TELINK_PAIR_FAILED;
+            } else if (s_uart_recv_buf[2] > 0) {
+                telink_pair_state = TELINK_PAIR_SUCCEDD_L;
+            } else if (s_uart_recv_buf[3] > 0) {
+                telink_pair_state = TELINK_PAIR_SUCCEDD_R;
+            }
+            break;
+
+        default:
+            break;
+    }
 
     return RT_EOK;
 }
@@ -66,6 +203,37 @@ static void hl_mod_telink_thread_entry(void* parameter)
                 hl_util_hup_decode(&s_telink.hup, buf[i]);
             }
         }
+        rt_thread_mdelay(10);
+    }
+}
+
+static void hl_mod_led_thread_entry(void* parameter)
+{
+    uint8_t data = 0;
+
+    while (1) {
+        if (telink_pair_state == TELINK_PAIR_START) {
+            hl_drv_led_ctrl(0, 0, 15);
+            // rt_kprintf("[OK] start pair\n");
+        } else if (telink_pair_state == TELINK_PAIR_FAILED) {
+            hl_drv_led_ctrl(15, 0, 0);
+            // rt_kprintf("[OK] pair failed\n");
+        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_L) {
+            hl_drv_led_ctrl(0, 15, 0);
+            // rt_kprintf("[OK] pair succedd left\n");
+        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_R) {
+            hl_drv_led_ctrl(0, 15, 15);
+            // rt_kprintf("[OK] pair succedd right\n");
+        }
+
+        get_pair_count %= 100;
+        if (get_pair_count == 0) {
+            // 通过串口给Telink发送获取配对信息命令(0x02)
+            hl_mod_telink_ioctl(0x02, &data, 1);
+            rt_kprintf("[OK] send get pair info\n");
+        }
+
+        get_pair_count++;
         rt_thread_mdelay(10);
     }
 }
@@ -203,11 +371,56 @@ MSH_CMD_EXPORT(hl_telink_start_pair, telink start pair cmd);
 
 void telink_pair_test(void)
 {
-    rt_mq_t mq;
+    rt_mq_t  mq;
+    rt_err_t result;
+    int      ret;
+    uint8_t  chip_id;
 
 #if HL_GET_DEVICE_TYPE()
+    hl_hal_gpio_init(GPIO_EMMC_RST);
+    // hl_hal_gpio_init(GPIO_LVT_EN);
+    hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
+    hl_hal_gpio_init(GPIO_PWR_EN);
+    hl_hal_gpio_init(GPIO_DC3V3_EN);
     hl_hal_gpio_init(GPIO_2831P_EN);
+    hl_hal_gpio_init(GPIO_RF_PWR_EN);
+    // hl_hal_gpio_init(GPIO_MIC_SW);
+    hl_hal_gpio_init(GPIO_ATS_RESET);
+
+    hl_hal_gpio_high(GPIO_EMMC_RST);
+    // hl_hal_gpio_high(GPIO_LVT_EN);
+    hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
+    hl_hal_gpio_high(GPIO_PWR_EN);
+    hl_hal_gpio_high(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+    // hl_hal_gpio_low(GPIO_MIC_SW);
+    hl_hal_gpio_high(GPIO_ATS_RESET);
+
+    // LED
+    hl_drv_aw2016a_init();
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_GET_CHIP_ID, &chip_id, sizeof(chip_id));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    // rt_kprintf("chip_id:%02x\n", chip_id);
+
+    // KEY
+    key_gpio = GPIO_PAIR_KEY;
+    hl_hal_gpio_init(GPIO_PAIR_KEY);
+    hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairkey_irq_process, &key_gpio);
+    hl_hal_gpio_irq_enable(GPIO_PAIR_KEY, PIN_IRQ_ENABLE);
+
+    // led_thread
+    result = rt_thread_init(&led_thread, "led", hl_mod_led_thread_entry, RT_NULL, &led_thread_stack[0],
+                            sizeof(led_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
+    if (RT_EOK != result) {
+        rt_kprintf("[ERROR] hl_mod_telink_thread init failed!\n");
+        return -1;
+    }
+
 #else
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
@@ -215,5 +428,17 @@ void telink_pair_test(void)
 
     hl_mod_telink_init(&mq);
     hl_mod_telink_start();
+
+    rt_thread_delay(1);
+
+#if HL_GET_DEVICE_TYPE()
+    // result = rt_thread_startup(&led_thread);
+    // if (RT_EOK != result) {
+    //     rt_kprintf("[ERROR] hl_mod_led_thread startup failed!\n");
+    //     return -1;
+    // }
+#endif
+
+    return 0;
 }
 INIT_APP_EXPORT(telink_pair_test);
