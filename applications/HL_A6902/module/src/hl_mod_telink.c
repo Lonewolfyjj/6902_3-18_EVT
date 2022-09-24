@@ -17,7 +17,7 @@ static uint8_t* s_telink_hup_buf;
 static uint8_t* s_telink_fifo_buf;
 
 static struct rt_thread led_thread;
-static char             led_thread_stack[512];
+static char             led_thread_stack[1024];
 hl_gpio_pin_e           key_left_gpio;
 hl_gpio_pin_e           key_right_gpio;
 hl_gpio_pin_e           rx_key_pair_gpio;
@@ -187,13 +187,12 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
     ret = rt_device_read(s_telink.serial, 0, s_uart_recv_buf, TELINK_UART_BUF_SIZE);
     // ret = hl_util_fifo_write(&s_telink.fifo, s_uart_recv_buf, ret);
 
-    rt_kprintf("\n[ Telink Recv Len = %d ]\n", ret);
-    rt_kprintf("[cmd] = %02x\n", s_uart_recv_buf[0]);
-    rt_kprintf("[pair] = %02x\n", s_uart_recv_buf[1]);
-    rt_kprintf("[left] = %02x\n", s_uart_recv_buf[2]);
-    rt_kprintf("[right] = %02x\n", s_uart_recv_buf[3]);
+    rt_kprintf("[ Telink Recv Len = %d ] ", ret);
+    rt_kprintf("[cmd] = %02x ", s_uart_recv_buf[0]);
+    rt_kprintf("[pair] = %02x ", s_uart_recv_buf[1]);
+    rt_kprintf("[left] = %02x ", s_uart_recv_buf[2]);
+    rt_kprintf("[right] = %02x ", s_uart_recv_buf[3]);
     rt_kprintf("[ok] = %02x\n", s_uart_recv_buf[4]);
-    rt_kprintf("\n");
     switch (s_uart_recv_buf[0]) {
         case TELINK_CMD_GET_PAIR_INFO:
             if (s_uart_recv_buf[1] == 0x00 && s_uart_recv_buf[2] == 0x00 && s_uart_recv_buf[3] == 0x00) {
@@ -373,11 +372,11 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
         hl_util_hup_encode(s_telink.hup.hup_handle.role, cmd, frame_buf, TELINK_UART_BUF_SIZE, data_addr, data_len);
 
     frame_len = rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
-    rt_kprintf("\n[ Telink Write Len = %d]\n[", frame_len);
+    rt_kprintf("[ Telink Write Len = %d] [", frame_len);
     for (uint8_t i = 0; i < frame_len; i++) {
         rt_kprintf(" %02x ", frame_buf[i]);
     }
-    rt_kprintf("]\n\n");
+    rt_kprintf("]\n");
 
     return 0;
 }
