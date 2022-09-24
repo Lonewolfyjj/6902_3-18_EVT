@@ -36,6 +36,7 @@
 #define nau_printf(...)
 #endif
 
+static uint8_t IIC_ADDR = 0;
 typedef uint8_t (*hl_reg_ctl_fun)(uint16_t cmd, uint8_t cmd_typ, void* param);
 static hl_reg_ctl_fun            fun_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
 static uint16_t                  reg_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
@@ -72,7 +73,7 @@ static NAU88L25B_REG_T s_nau88l25b_param[] = {
  * 
  * @brief i2c总线写数据
  * @param [in] bus i2c总线句柄
- * @param [in] reg 操作的寄存器
+ * @param [in] cfg_opt 操作的寄存器
  * @param [in] data 数据
  * @return rt_err_t 0成功，1失败
  * @date 2022-09-08
@@ -88,6 +89,7 @@ static NAU88L25B_REG_T s_nau88l25b_param[] = {
  */
 static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint16_t* data)
 {
+    rt_err_t          ret;
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
@@ -96,7 +98,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
     buf[2] = (data[0] >> 8);    // data
     buf[3] = (data[0] & 0xFF);  //
 
-    msgs[0].addr  = NAU88L25B_DEVICE_ADDRESS;
+    msgs[0].addr  = IIC_ADDR;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = buf;
     msgs[0].len   = 4;
@@ -108,7 +110,9 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
     */
     /* 调用I2C设备接口传输数据 */
     nau_printf("%s : buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[2], buf[3]);
-    if (rt_i2c_transfer(bus, msgs, 1) == 1)
+    ret = rt_i2c_transfer(bus, msgs, 1);
+    nau_printf("write ret = %d \n", ret);
+    if (ret == 1)
         return HL_SUCCESS;
     else
         return HL_FAILED;
@@ -118,7 +122,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
  * 
  * @brief i2c总线读数据
  * @param [in] bus i2c总线句柄
- * @param [in] reg 操作的寄存器
+ * @param [in] cfg_opt 操作的寄存器
  * @param [in] data 数据
  * @return rt_err_t 0成功，1失败
  * @date 2022-09-08
@@ -134,26 +138,29 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
  */
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint16_t* rbuf)
 {
-    rt_uint8_t        buf[4];
+    rt_err_t          ret    = 0;
+    rt_uint8_t        buf[4] = { 0, 0, 0, 0 };
     struct rt_i2c_msg msgs[2];
 
     buf[0] = (reg >> 8);      // reg
     buf[1] = (reg & 0x00FF);  //
 
-    msgs[0].addr  = NAU88L25B_DEVICE_ADDRESS;
+    msgs[0].addr  = IIC_ADDR;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = buf;
     msgs[0].len   = 2;
 
-    msgs[1].addr  = NAU88L25B_DEVICE_ADDRESS;
+    msgs[1].addr  = IIC_ADDR;
     msgs[1].flags = RT_I2C_RD;
     msgs[1].buf   = &buf[2];
     msgs[1].len   = 2;
 
+    ret = rt_i2c_transfer(bus, msgs, 2);
+    nau_printf("read ret = %d \n", ret);
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, msgs, 2) == 2) {
+    if (ret == 2) {
         rbuf[0] = ((buf[2] << 8) + buf[3]);
-        nau_printf("%s : buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[2], buf[3]);
+        nau_printf("%s : buf[0] = %X buf[1] = %X buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[0], buf[1], buf[2], buf[3]);
         return HL_SUCCESS;
     } else
         return HL_FAILED;
@@ -229,7 +236,7 @@ static uint8_t hl_reg00_ctl(void)
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_reg33_ctl(uint8_t cmd, uint8_t cmd_typ, void* param)
+static uint8_t hl_reg33_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
     int*                 tmp = (int*)param;
     HL_nau88l25b_REG33_T reg33;
@@ -301,7 +308,7 @@ CTL_ERR:
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_reg34_ctl(uint8_t cmd, uint8_t cmd_typ, void* param)
+static uint8_t hl_reg34_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
     int*                 tmp = (int*)param;
     HL_nau88l25b_REG34_T reg34;
@@ -368,7 +375,7 @@ CTL_ERR:
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_gain_ctl(uint8_t cmd, uint8_t cmd_typ, void* param)
+static uint8_t hl_gain_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
     int  gainl = 0, gainr = 0;
     int* gain = (int*)param;
@@ -416,7 +423,7 @@ CTL_ERR:
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_mute_ctl(uint8_t cmd, uint8_t cmd_typ, void* param)
+static uint8_t hl_mute_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
     int  mutel = 0, muter = 0, mutea = 0;
     int* mute = (int*)param;
@@ -536,7 +543,7 @@ static void hl_reg_arr_deinit(void)
 /**
  * 
  * @brief 获取寄存器地址
- * @param [in] reg 带解析的寄存器指令
+ * @param [in] cfg_opt 带解析的寄存器指令
  * @return uint8_t 寄存器地址
  * @date 2022-09-08
  * @author dujunjie (junjie.du@hollyland-tech.com)
@@ -549,10 +556,10 @@ static void hl_reg_arr_deinit(void)
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_get_reg_serial(uint16_t reg)
+static uint8_t hl_get_reg_serial(uint16_t cfg_opt)
 {
     uint8_t reg_ser;
-    switch (reg) {
+    switch (cfg_opt) {
         //reg33
         case OPT_DACL_CTRL_DAC_MIXER:
         case OPT_DACL_CTRL_DAC_CH_SEL0:
@@ -571,7 +578,7 @@ static uint8_t hl_get_reg_serial(uint16_t reg)
             reg_ser = NAU_REGMUTE_ADDR;
             break;
         default:
-            nau_printf("Register : [ %X ] overrun !\n", reg);
+            nau_printf("Register : [ %X ] overrun !\n", cfg_opt);
             return 0xFF;
             break;
     }
@@ -639,8 +646,8 @@ uint8_t hl_drv_nau88l25b_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     }
     param      = (HL_NAU_INPUT_PARAM_T*)ptr;
     cmd_typ    = cmd;
-    cmd_reg    = param->reg;
-    reg_serial = hl_get_reg_serial(param->reg);
+    cmd_reg    = param->cfg_opt;
+    reg_serial = hl_get_reg_serial(param->cfg_opt);
 
     if (hl_reg_ctl(reg_serial, cmd_reg, cmd_typ, &param->param))
         return HL_FAILED;
@@ -668,7 +675,7 @@ CTL_ERR:
 uint8_t hl_drv_nau88l25b_init(void)
 {
     uint16_t i, j = sizeof(s_nau88l25b_param) / 4;
-    nau_printf("nau reg num : %d \n", j);
+    nau_printf("nau cfg_opt num : %d \n", j);
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
 
@@ -681,7 +688,7 @@ uint8_t hl_drv_nau88l25b_init(void)
     hl_reg00_ctl();
     for (i = 0; i < j; i++) {
         if (hl_i2c_write_reg(i2c_bus, s_nau88l25b_param[i].reg_addr, &s_nau88l25b_param[i].reg_value)) {
-            nau_printf("nau reg init fail !\n");
+            nau_printf("nau cfg_opt init fail !\n");
             goto INIT_ERR;
         }
     }
@@ -695,23 +702,85 @@ INIT_ERR:
     return HL_FAILED;
 }
 
-void tt(void)
+/*
+static rt_err_t es_rd_reg(struct rt_i2c_bus_device *bus,
+                          uint16_t reg16, uint16_t *data16)
 {
-    uint16_t buff = 0x1234;
-    i2c_bus       = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
+#if HL_CODEC_SET
+    return RT_EOK;  // LX
+#else
+    struct rt_i2c_msg msgs[2];
+    uint8_t data_buf_send[2];
+    uint8_t data_buf_rev[2];
+    rt_err_t ret;
+
+    data_buf_send[0] = (reg16>>8) & 0xff;
+    data_buf_send[1] = reg16 & 0xff;
+
+    msgs[0].addr = NAU88L25B_DEVICE_ADDRESS;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf = data_buf_send;
+    msgs[0].len = 2;
+
+    msgs[1].addr = NAU88L25B_DEVICE_ADDRESS;
+    msgs[1].flags = RT_I2C_RD;
+    msgs[1].buf = data_buf_rev;
+    msgs[1].len = 2;
+
+    ret = rt_i2c_transfer(bus, msgs, 2);
+    if (ret != 2)
+    {
+        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
+        return ret;
+    }
+    *data16 = ((uint16_t)data_buf_rev[0]<<8) | ((uint16_t)data_buf_rev[1]);
+
+    return RT_EOK;
+#endif
+}
+*/
+
+void tt25(int argc, char** argv)
+{
+    uint16_t buf = 0;
+
+    if (argc != 5) {
+        nau_printf("argc param err : %d \n", argc);
+        return;
+    }
+    
+    uint16_t rw      = atoi(argv[2]);
+    uint16_t cfg_opt = atoi(argv[3]);
+    uint16_t data    = atoi(argv[4]);
+
+    IIC_ADDR = atoi(argv[1]); 
+
+    nau_printf("ADDRESS = %X,rw = %d,cfg_opt = %d,data = %d\n",IIC_ADDR, rw, cfg_opt, data);
+
+    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
 
     if (i2c_bus == RT_NULL) {
         nau_printf("can't find %s device!\n", NAU88L25B_IIC_NAME);
     }
-
-    if (hl_i2c_write_reg(i2c_bus, 0x3D, &buff)) {
-        nau_printf("%s read fail !\n", __FUNCTION__);
+    //    es_rd_reg(i2c_bus,cfg_opt,buf);
+    if (rw == 0) {
+        nau_printf("read !\n");
+        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
+            nau_printf("cfg_opt %d read err !\n", cfg_opt);
+        }
     }
 
-    if (hl_i2c_read_reg(i2c_bus, 0x3D, &buff)) {
-        nau_printf("%s read fail !\n", __FUNCTION__);
+    if (rw == 1) {
+        nau_printf("write !\n");
+        if (hl_i2c_write_reg(i2c_bus, cfg_opt, &data)) {
+            nau_printf("cfg_opt %d write err !\n", cfg_opt);
+        }
+        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
+            nau_printf("cfg_opt %d read err !\n", cfg_opt);
+        }
     }
+
+    nau_printf("buf = 0x%04X \n", buf);
 }
 
-MSH_CMD_EXPORT(hl_drv_nau88l25b_init, run hl_drv_nau88l25b_init);
-MSH_CMD_EXPORT(tt, run nau88l25b_test);
+MSH_CMD_EXPORT(tt25, run tt25);

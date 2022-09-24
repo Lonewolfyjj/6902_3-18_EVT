@@ -38,8 +38,8 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#define NAU88L25B_IIC_NAME "i2c0"
-#define NAU88L25B_DEVICE_ADDRESS 0x1B
+#define NAU88L25B_IIC_NAME "i2c2"
+#define NAU88L25B_DEVICE_ADDRESS 0x1C
 
 /* 寄存器地址 */
 #define NAU88L25B_RESET_REG00 0x00 /*reset digital,csm,clock manager etc.*/
@@ -89,7 +89,7 @@ enum hl_nau_param_w
 // 配置入口参数
 typedef struct _HL_NAU_INPUT_PARAM_T
 {
-    uint16_t reg;
+    uint16_t cfg_opt;//参数参考 ： hl_nau_param_w 枚举内容
     int      param;
 } HL_NAU_INPUT_PARAM_T;
 
@@ -99,7 +99,7 @@ typedef struct _HL_nau88l25b_REG33_T
 
     uint16_t Reserved1 : 1;
 
-    uint16_t DAC_CH_SEL0 : 1;
+    uint16_t DAC_CH_SEL0 : 1;//0:左声道  1：右声道
 
     uint16_t Reserved2 : 4;
 

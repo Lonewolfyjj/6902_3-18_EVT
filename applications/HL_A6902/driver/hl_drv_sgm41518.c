@@ -45,7 +45,7 @@ static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
  * 
  * @brief i2c总线写数据
  * @param [in] bus i2c总线句柄
- * @param [in] reg 操作的寄存器
+ * @param [in] cfg_opt 操作的寄存器
  * @param [in] data 数据
  * @return rt_err_t 0成功，1失败
  * @date 2022-09-05
@@ -59,12 +59,12 @@ static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* data)
+static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_opt, rt_uint8_t* data)
 {
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
-    buf[0] = reg;      // reg
+    buf[0] = cfg_opt;  // cfg_opt
     buf[1] = data[0];  // data
 
     msgs[0].addr  = SGM41518_DEVICE_ADDRESS;
@@ -88,7 +88,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, 
  * 
  * @brief i2c总线读数据
  * @param [in] bus i2c总线句柄
- * @param [in] reg 操作的寄存器
+ * @param [in] cfg_opt 操作的寄存器
  * @param [in] rbuf 数据存放
  * @return rt_err_t 0成功，1失败
  * @date 2022-09-05
@@ -102,14 +102,14 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, 
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf)
+static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_opt, rt_uint8_t* rbuf)
 {
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
     msgs[0].addr  = SGM41518_DEVICE_ADDRESS;
     msgs[0].flags = RT_I2C_WR;
-    msgs[0].buf   = &reg;
+    msgs[0].buf   = &cfg_opt;
     msgs[0].len   = 1;
 
     msgs[1].addr  = SGM41518_DEVICE_ADDRESS;
@@ -151,8 +151,21 @@ static uint8_t hl_reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg0 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_EN_HIZ_MOD:
+                param[0] = reg_all.reg00.EN_HIZ;
+                break;
+            case RW_EN_ICHG_MON:
+                param[0] = reg_all.reg00.EN_ICHG_MON;
+                break;
+            case RW_IINDPM_SET:
+                param[0] = reg_all.reg00.IINDPM;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_EN_HIZ_MOD:
@@ -204,8 +217,30 @@ static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg1 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_EN_PFM:
+                param[0] = reg_all.reg01.PFM_DIS;
+                break;
+            case RW_WDG_RST:
+                param[0] = reg_all.reg01.WD_RST;
+                break;
+            case RW_EN_OTG:
+                param[0] = reg_all.reg01.PFM_DIS;
+                break;
+            case RW_EN_BAT_CHARGING:
+                param[0] = reg_all.reg01.PFM_DIS;
+                break;
+            case RW_SYS_MIN:
+                param[0] = reg_all.reg01.PFM_DIS;
+                break;
+            case RW_MIN_BAT_SEL:
+                param[0] = reg_all.reg01.PFM_DIS;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_EN_PFM:
@@ -266,8 +301,18 @@ static uint8_t hl_reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg2 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_Q1_FULLON:
+                param[0] = reg_all.reg02.Q1_FULLON;
+                break;
+            case RW_CHARGE_CURRENT:
+                param[0] = reg_all.reg02.ICHG;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_Q1_FULLON:
@@ -316,8 +361,18 @@ static uint8_t hl_reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg3 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_PRECHARGE_CURRENT_LIMIT:
+                param[0] = reg_all.reg03.IPRECHG;
+                break;
+            case RW_TER_CURRENT_LIMIT:
+                param[0] = reg_all.reg03.ITERM;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_PRECHARGE_CURRENT_LIMIT:
@@ -366,8 +421,21 @@ static uint8_t hl_reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg4 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_CHARGE_VOLTAGE_LIMIT:
+                param[0] = reg_all.reg04.VREG;
+                break;
+            case RW_TOPOFF_TIME:
+                param[0] = reg_all.reg04.TOPOFF_TIMER;
+                break;
+            case RW_RECHARGE_THRESHOLD:
+                param[0] = reg_all.reg04.VRECHG;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_CHARGE_VOLTAGE_LIMIT:
@@ -419,8 +487,30 @@ static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg5 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_CHARGE_TER_ENABLE:
+                param[0] = reg_all.reg05.EN_TERM;
+                break;
+            case RW_WDOG_TIMER_CHG:
+                param[0] = reg_all.reg05.CHG_TIMER;
+                break;
+            case RW_CHARGE_SAFETY_TIMER_ENABLE:
+                param[0] = reg_all.reg05.EN_TIMER;
+                break;
+            case RW_CHARGE_SAFETY_TIMER_CHG:
+                param[0] = reg_all.reg05.CHG_TIMER;
+                break;
+            case RW_TER_REGULATION_THRESHOLD:
+                param[0] = reg_all.reg05.TREG;
+                break;
+            case RW_JEITA_CHARGING_CURRENT:
+                param[0] = reg_all.reg05.JEITA_ISET;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_CHARGE_TER_ENABLE:
@@ -481,8 +571,21 @@ static uint8_t hl_reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg6 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_OVP_CHG:
+                param[0] = reg_all.reg06.OVP;
+                break;
+            case RW_BOOSTV_CHG:
+                param[0] = reg_all.reg06.BOOSTV;
+                break;
+            case RW_VINDPM_CHG:
+                param[0] = reg_all.reg06.VINDPM;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_OVP_CHG:
@@ -534,8 +637,33 @@ static uint8_t hl_reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("reg7 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_INPUT_CRRENT_LIMIT_DETECTION:
+                param[0] = reg_all.reg07.IINDET_EN;
+                break;
+            case RW_TMR2X_EN:
+                param[0] = reg_all.reg07.TMR2X_EN;
+                break;
+            case RW_BATFET_DIS:
+                param[0] = reg_all.reg07.BATFET_DIS;
+                break;
+            case RW_JEITA_VSET_H:
+                param[0] = reg_all.reg07.JEITA_VSET;
+                break;
+            case RW_BATFET_DLY:
+                param[0] = reg_all.reg07.BATFET_DLY;
+                break;
+            case RW_BATFET_RST_EN:
+                param[0] = reg_all.reg07.BATFET_RST_EN;
+                break;
+            case RW_VDPM_BAT_TRACK:
+                param[0] = reg_all.reg07.VDPM_BAT_TRACK;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_INPUT_CRRENT_LIMIT_DETECTION:
@@ -577,7 +705,7 @@ CTL_ERR:
  * 
  * @brief 0x08寄存器操作函数
  * @param [in] cmd 具体操作的功能
- * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] cmd_typ 功能类型：读
  * @param [in] param 参数
  * @return uint8_t 0成功，1失败
  * @date 2022-09-05
@@ -624,10 +752,6 @@ static uint8_t hl_reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         smg_printf("reg8 command : [ %X ] type err !\n", cmd);
         goto CTL_ERR;
     }
-    if (hl_i2c_write_reg(i2c_bus, SGM_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
-        smg_printf("hl_reg08_ctl write err !\n");
-        goto CTL_ERR;
-    }
     return HL_SUCCESS;
 CTL_ERR:
     smg_printf("[ %X ] hl_reg08_ctl fail !\n", param[0]);
@@ -638,7 +762,7 @@ CTL_ERR:
  * 
  * @brief 0x09寄存器操作函数
  * @param [in] cmd 具体操作的功能
- * @param [in] cmd_typ 功能类型：读/写
+ * @param [in] cmd_typ 功能类型：读
  * @param [in] param 参数
  * @return uint8_t 0成功，1失败
  * @date 2022-09-05
@@ -683,10 +807,6 @@ static uint8_t hl_reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         return HL_SUCCESS;
     } else {
         smg_printf("reg9 command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
-    }
-    if (hl_i2c_write_reg(i2c_bus, SGM_REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
-        smg_printf("hl_reg09_ctl write err !\n");
         goto CTL_ERR;
     }
     return HL_SUCCESS;
@@ -853,8 +973,27 @@ static uint8_t hl_reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("regC command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_JEITA_VSET_L:
+                param[0] = reg_all.reg0C.JEITA_VSET_L;
+                break;
+            case RW_JEITA_ISET_L_EN:
+                param[0] = reg_all.reg0C.JEITA_ISET_L_EN;
+                break;
+            case RW_JEITA_ISET_H:
+                param[0] = reg_all.reg0C.JEITA_ISET_H;
+                break;
+            case RW_JEITA_VT2:
+                param[0] = reg_all.reg0C.JEITA_VT2;
+                break;
+            case RW_JEITA_VT3:
+                param[0] = reg_all.reg0C.JEITA_VT3;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_JEITA_VSET_L:
@@ -912,8 +1051,15 @@ static uint8_t hl_reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("regD command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_JEITA_EN:
+                param[0] = reg_all.reg0D.JEITA_EN;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_JEITA_EN:
@@ -982,8 +1128,21 @@ static uint8_t hl_reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
         goto CTL_ERR;
     }
     if (cmd_typ == SGM_READ_CMD) {
-        smg_printf("regF command : [ %X ] type err !\n", cmd);
-        goto CTL_ERR;
+        switch (cmd) {
+            case RW_VREG_FT:
+                param[0] = reg_all.reg0F.VREG_FT;
+                break;
+            case RW_STAT_SET:
+                param[0] = reg_all.reg0F.STATSET;
+                break;
+            case RW_VINDPM_OS:
+                param[0] = reg_all.reg0F.VINDPM_OS;
+                break;
+            default:
+                goto CTL_ERR;
+                break;
+        }
+        return HL_SUCCESS;
     }
     switch (cmd) {
         case RW_VREG_FT:
@@ -1012,7 +1171,7 @@ CTL_ERR:
 /**
  * 
  * @brief 获取寄存器地址
- * @param [in] reg 带解析的寄存器指令
+ * @param [in] cfg_opt 带解析的寄存器指令
  * @return uint8_t 寄存器地址
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
@@ -1025,18 +1184,18 @@ CTL_ERR:
  * <tr><td>2022-09-05      <td>dujunjie     <td>新建
  * </table>
  */
-static uint8_t hl_get_reg_serial(uint8_t reg)
+static uint8_t hl_get_reg_serial(uint8_t cfg_opt)
 {
     uint8_t reg_ser;
 
-    switch (reg) {
-        // reg 00
+    switch (cfg_opt) {
+        // cfg_opt 00
         case RW_EN_HIZ_MOD:
         case RW_EN_ICHG_MON:
         case RW_IINDPM_SET:
             reg_ser = SGM_REG00_ADDR;
             break;
-        // reg 01
+        // cfg_opt 01
         case RW_EN_PFM:
         case RW_WDG_RST:
         case RW_EN_OTG:
@@ -1045,23 +1204,23 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case RW_MIN_BAT_SEL:
             reg_ser = SGM_REG01_ADDR;
             break;
-        // reg 02
+        // cfg_opt 02
         case RW_Q1_FULLON:
         case RW_CHARGE_CURRENT:
             reg_ser = SGM_REG02_ADDR;
             break;
-        // reg 03
+        // cfg_opt 03
         case RW_PRECHARGE_CURRENT_LIMIT:
         case RW_TER_CURRENT_LIMIT:
             reg_ser = SGM_REG03_ADDR;
             break;
-        // reg 04
+        // cfg_opt 04
         case RW_CHARGE_VOLTAGE_LIMIT:
         case RW_TOPOFF_TIME:
         case RW_RECHARGE_THRESHOLD:
             reg_ser = SGM_REG04_ADDR;
             break;
-        // reg 05
+        // cfg_opt 05
         case RW_CHARGE_TER_ENABLE:
         case RW_WDOG_TIMER_CHG:
         case RW_CHARGE_SAFETY_TIMER_ENABLE:
@@ -1070,13 +1229,13 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case RW_JEITA_CHARGING_CURRENT:
             reg_ser = SGM_REG05_ADDR;
             break;
-        // reg 06
+        // cfg_opt 06
         case RW_OVP_CHG:
         case RW_BOOSTV_CHG:
         case RW_VINDPM_CHG:
             reg_ser = SGM_REG06_ADDR;
             break;
-        // reg 07
+        // cfg_opt 07
         case RW_INPUT_CRRENT_LIMIT_DETECTION:
         case RW_TMR2X_EN:
         case RW_BATFET_DIS:
@@ -1086,7 +1245,7 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case RW_VDPM_BAT_TRACK:
             reg_ser = SGM_REG07_ADDR;
             break;
-        // reg 08
+        // cfg_opt 08
         case R_VBUS_STAT:
         case R_CHRG_STAT:
         case R_PG_STAT:
@@ -1094,7 +1253,7 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case R_VSYS_STAT:
             reg_ser = SGM_REG08_ADDR;
             break;
-        // reg 09
+        // cfg_opt 09
         case R_WDG_FAULT:
         case R_BOOST_FAULT:
         case R_CHRG_FAULT:
@@ -1102,7 +1261,7 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case R_NTC_FAULT:
             reg_ser = SGM_REG09_ADDR;
             break;
-        // reg 0A
+        // cfg_opt 0A
         case RW_VINDPM_INT_MASK:
         case RW_IINDPM_INT_MASK:
         case R_VBUS_GD:
@@ -1112,12 +1271,12 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case R_ACOV_STAT:
             reg_ser = SGM_REG0A_ADDR;
             break;
-        // reg 0B
+        // cfg_opt 0B
         case RW_REG_RST:
         case R_DEVICE_ID:
             reg_ser = SGM_REG0B_ADDR;
             break;
-        // reg 0C
+        // cfg_opt 0C
         case RW_JEITA_VSET_L:
         case RW_JEITA_ISET_L_EN:
         case RW_JEITA_ISET_H:
@@ -1125,18 +1284,18 @@ static uint8_t hl_get_reg_serial(uint8_t reg)
         case RW_JEITA_VT3:
             reg_ser = SGM_REG0C_ADDR;
             break;
-        // reg 0D
+        // cfg_opt 0D
         case RW_JEITA_EN:
             reg_ser = SGM_REG0D_ADDR;
             break;
-        // reg 0F
+        // cfg_opt 0F
         case RW_VREG_FT:
         case RW_STAT_SET:
         case RW_VINDPM_OS:
             reg_ser = SGM_REG0F_ADDR;
             break;
         default:
-            smg_printf("Register : [ %X ] overrun !\n", reg);
+            smg_printf("Register : [ %X ] overrun !\n", cfg_opt);
             return 0xFF;
             break;
     }
@@ -1322,19 +1481,21 @@ uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
         return HL_FAILED;
     }
     cmd_typ = cmd;
-    if (cmd_typ != hl_reg_type_get(param->reg)) {
-        smg_printf("Register : [ %X ] type err !\n", cmd);
+    if ((cmd_typ != hl_reg_type_get(param->cfg_opt)) && (cmd_typ == SGM_WRITE_CMD)) {
+        smg_printf("Register0 : [ %X ] type err !\n", cmd);
         return HL_FAILED;
     }
-    reg_cmd    = param->reg;
+    reg_cmd    = param->cfg_opt;
     reg_serial = hl_get_reg_serial(reg_cmd);
     if (cmd_typ == SGM_WRITE_CMD && (reg_cmd == SGM_REG08_ADDR || reg_cmd == SGM_REG09_ADDR)) {
-        smg_printf("Register : [ %X ] type err !\n", cmd);
+        smg_printf("Register1 : [ %X ] type err !\n", cmd);
         return HL_FAILED;
     }
 
-    if (hl_reg_ctl(reg_serial, reg_cmd, cmd_typ, &param->param))
+    if (hl_reg_ctl(reg_serial, reg_cmd, cmd_typ, &param->param)) {
+        smg_printf("hl_reg_ctl fail !\n");
         return HL_FAILED;
+    }
     return HL_SUCCESS;
 }
 
@@ -1369,39 +1530,39 @@ uint8_t hl_drv_sgm41518_init(void)
     }
 
     if (hl_i2c_read_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d read err !\n", SGM_REG00_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg %d read err !\n", SGM_REG01_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG01_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg %d read err !\n", SGM_REG02_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG02_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg %d read err !\n", SGM_REG03_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG03_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg %d read err !\n", SGM_REG04_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG04_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg %d read err !\n", SGM_REG05_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG05_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg %d read err !\n", SGM_REG06_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg %d read err !\n", SGM_REG07_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG07_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg %d read err !\n", SGM_REG0C_ADDR);
+        smg_printf("cfg_opt %d read err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
     }
 
@@ -1452,44 +1613,44 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg0C.JEITA_VSET_L    = JEITA_VSET_L_SET_VREG;  //设置低温区间（0℃ - 10℃）充电电压等于VREG
 
     if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d write err !\n", SGM_REG00_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
-        smg_printf("reg %d write err !\n", SGM_REG01_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG01_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
-        smg_printf("reg %d write err !\n", SGM_REG02_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG02_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
-        smg_printf("reg %d write err !\n", SGM_REG03_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG03_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
-        smg_printf("reg %d write err !\n", SGM_REG04_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG04_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
-        smg_printf("reg %d write err !\n", SGM_REG05_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG05_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        smg_printf("reg %d write err !\n", SGM_REG06_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("reg %d write err !\n", SGM_REG07_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG07_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
-        smg_printf("reg %d write err !\n", SGM_REG0C_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
     }
     rt_thread_mdelay(50);
     if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("reg %d write err !\n", SGM_REG00_ADDR);
+        smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
     }
     smg_printf("smg41518 init success !\n");
@@ -1501,4 +1662,79 @@ INIT_ERR:
     return HL_FAILED;
 }
 
-MSH_CMD_EXPORT(hl_drv_sgm41518_init,run hl_drv_sgm41518_init);
+void tt1518(int argc, char** argv)
+{
+    uint8_t buf = 0;
+
+    if (argc != 4) {
+        smg_printf("argc param err : %d \n", argc);
+        return;
+    }
+
+    uint8_t rw      = atoi(argv[1]);
+    uint8_t cfg_opt = atoi(argv[2]);
+    uint8_t data    = atoi(argv[3]);
+
+    if (cfg_opt > 0x0F) {
+        smg_printf("cfg_opt param err : %X \n", cfg_opt);
+        return;
+    }
+
+    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
+
+    if (i2c_bus == RT_NULL) {
+        smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
+    }
+
+    if (rw == 0) {
+        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
+            smg_printf("cfg_opt %d read err !\n", cfg_opt);
+        }
+    }
+
+    if (rw == 1) {
+        if (hl_i2c_write_reg(i2c_bus, cfg_opt, &data)) {
+            smg_printf("cfg_opt %d write err !\n", cfg_opt);
+        }
+        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
+            smg_printf("cfg_opt %d read err !\n", cfg_opt);
+        }
+    }
+
+    smg_printf("buf = 0x%02X \n", buf);
+}
+
+void test1518(int argc, char** argv)
+{
+    uint8_t              buf = 0;
+    HL_SGM_INPUT_PARAM_T par;
+    if (argc != 4) {
+        smg_printf("argc param err : %d \n", argc);
+        return;
+    }
+
+    uint8_t cmd     = atoi(argv[1]);
+    uint8_t cfg_opt = atoi(argv[2]);
+    uint8_t data    = atoi(argv[3]);
+
+    hl_reg_arr_init();
+    hl_reg_ctl_fun_init();
+
+    par.cfg_opt = cfg_opt;
+    par.param   = data;
+
+    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
+
+    if (i2c_bus == RT_NULL) {
+        smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
+    }
+
+    if (hl_drv_sgm41518_io_ctrl(cmd, &par, 1) != HL_SUCCESS) {
+        smg_printf("hl_drv_sgm41518_io_ctrl fail!\n");
+    }
+
+    smg_printf("par.param = 0x%02X \n", par.param);
+}
+
+MSH_CMD_EXPORT(tt1518, run tt1518);
+MSH_CMD_EXPORT(test1518, run test1518);

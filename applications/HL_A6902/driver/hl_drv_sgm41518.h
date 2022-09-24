@@ -38,8 +38,8 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#define SGM41518_IIC_NAME "i2c0"
-#define SGM41518_DEVICE_ADDRESS 0x38
+#define SGM41518_IIC_NAME "i2c1"
+#define SGM41518_DEVICE_ADDRESS 0x3B
 
 /* 寄存器地址 */
 #define SGM_REG00_ADDR 0x00
@@ -159,8 +159,7 @@
 #define BOOST_VOL_THRESHOLD_5V15 2  //boost模式调压设置5.15V
 #define BOOST_VOL_THRESHOLD_5V30 3  //boost模式调压设置5.30V
 
-#define VINDPM_THRESHOLD(x) \
-    (x > 15) ? (15) : (x)  //VINDPM[3:0] VINDPM电压阈值，参数 n <= 15 , V = VINDPM_OS + (0.1 * n)mV
+#define VINDPM_THRESHOLD(x)     (x > 15) ? (15) : (x)  //VINDPM[3:0] VINDPM电压阈值，参数 n <= 15 , V = VINDPM_OS + (0.1 * n)mV
 
 //reg 07
 #define IINDET_ENABLE 1   //使能输入电流检测
@@ -414,8 +413,8 @@ enum hl_r18_param
 // 参数选项
 typedef struct _HL_SGM_INPUT_PARAM_T
 {
-    uint8_t reg;
-    uint8_t param;
+    uint8_t cfg_opt;//参数参考 ： hl_rw18_param 或者 hl_r18_param 枚举内容
+    uint8_t param; //参数参考 ： 功能选项参数宏
 }HL_SGM_INPUT_PARAM_T;
 
 

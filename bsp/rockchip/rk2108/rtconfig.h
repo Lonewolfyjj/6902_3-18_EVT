@@ -360,7 +360,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_demo_rk2108_v11"
+#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
 #define RK_SRAM_END 0x20100000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -504,7 +504,7 @@
 
 #define RT_USING_UART
 #define RT_USING_UART0
-/* RT_USING_UART1 is not set */
+#define RT_USING_UART1
 #define RT_USING_UART2
 
 /* Enable I2C */
