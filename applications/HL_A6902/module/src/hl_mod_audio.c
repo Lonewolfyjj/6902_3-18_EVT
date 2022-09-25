@@ -94,8 +94,8 @@ struct playback_config
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wifip"
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecc"
 #else
-#define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wific"
-#define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecp"
+#define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "codecp"
+#define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "wific"
 #endif
 
 #define ID_RIFF 0x46464952
@@ -230,7 +230,7 @@ static void hl_mod_audio_record_start(char* p_file_name)
 static void hl_mod_audio_stream_cb(void* dst, const void* src, rt_ubase_t count)
 {
     char *tmp = (char*)dst, *s = (char*)src;
-#if 1
+#if 0
     dsp_config->audio_process_in_buffer = s;
     dsp_config->process_size            = count;
 
@@ -365,6 +365,7 @@ static void do_start_audio(void* arg)
     //-------------------start prepare cap a frame-------------------
     cap_ret = rt_device_open(cap_config->card, RT_DEVICE_OFLAG_RDONLY);
     if (cap_ret < 0) {
+        rt_kprintf("dev:%s \n",cap_config->card);
         rt_kprintf("[%d]: Failed to open %s, err: %d\n", __LINE__, cap_config->card->parent.name, cap_ret);
         return 0;
     }
