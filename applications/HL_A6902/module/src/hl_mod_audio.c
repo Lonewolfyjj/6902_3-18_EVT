@@ -112,8 +112,10 @@ static char                            card_play[RT_NAME_MAX]    = { 0 };
 static char                            card_capture[RT_NAME_MAX] = { 0 };
 struct wav_header                      s_audio_header            = { 0 };
 static char                            s_cap_file_name[255]      = { 0 };
+static struct rt_ringbuffer*           s_record_rb               = RT_NULL;
 static struct rt_ringbuffer*           s_audio_rb                = RT_NULL;
-static char                            s_record_switch           = 0; 
+static char                            s_record_switch           = 0;
+static char                            s_audio_switch            = 0;
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static void hl_mod_audio_record(uint8_t *buffer, uint32_t size);
@@ -230,7 +232,7 @@ static void hl_mod_audio_record_start(char* p_file_name)
 static void hl_mod_audio_stream_cb(void* dst, const void* src, rt_ubase_t count)
 {
     char *tmp = (char*)dst, *s = (char*)src;
-#if 0
+#if 1
     dsp_config->audio_process_in_buffer = s;
     dsp_config->process_size            = count;
 
@@ -296,7 +298,7 @@ static void hl_mod_audio_codec_config(void)
         ply_config->card = rt_device_find(card_play);
     }
 
-    rt_kprintf("[%d]: audio codec config succeed! \n", __LINE__);
+    rt_kprintf("[%d]: audio codec config succeed! , dev is %d\n", __LINE__, HL_GET_DEVICE_TYPE());
 }
 
 static void hl_mod_audio_dsp_config(void)
@@ -329,9 +331,30 @@ static void do_record_audio(void* arg)
     record_buffer = rt_malloc(record_size);
 
     while (1) {
-        if ((rt_ringbuffer_data_len(s_audio_rb) >= record_size)&&(s_record_switch == 1)) {
-            rt_ringbuffer_get(s_audio_rb, record_buffer, record_size);
+        if ((rt_ringbuffer_data_len(s_record_rb) >= record_size)&&(s_record_switch == 1)) {
+            rt_ringbuffer_get(s_record_rb, record_buffer, record_size);
             hl_mod_audio_record(record_buffer, record_size);
+        } else {
+            rt_thread_delay(1);
+        }
+    }
+}
+
+static void do_run_audio(void* arg)
+{
+    char*    audio_buffer;
+    uint32_t audio_size;
+
+    audio_size = dsp_config->process_size;
+    audio_buffer = rt_malloc(audio_size);
+
+    while (1) {
+        if ((rt_ringbuffer_data_len(s_audio_rb) >= audio_size)&&(s_audio_switch == 1)) {
+            rt_ringbuffer_get(s_audio_rb, audio_buffer, audio_size);
+            /* 写入无线 */
+            if (rt_device_write(ply_config->card, 0, dsp_config->audio_process_out_buffer, ply_config->period_size) <= 0) {
+                rt_kprintf("Error playing sample\n");
+            }
         } else {
             rt_thread_delay(1);
         }
@@ -427,12 +450,28 @@ static void do_start_audio(void* arg)
         return 0;
     }
 
+    //hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
+    //
+
     while (1) {
-        if (rt_device_read(cap_config->card, 0, cap_buffer, cap_abuf.period_size) <= 0) {
+        if (rt_device_read(cap_config->card, 0, dsp_config->audio_process_in_buffer, cap_abuf.period_size) <= 0) {
             rt_kprintf("Error capturing sample\n");
             break;
         }
-        rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_out_buffer_24bit_a, dsp_config->process_size_24bit);
+
+        hl_drv_rk_xtensa_dsp_transfer();
+        
+        if ( (rt_ringbuffer_space_len(s_audio_rb) >= cap_size) || s_audio_switch == 1) {            
+           rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_out_buffer, dsp_config->process_size);
+        }else {
+            rt_kprintf("rt_ringbuffer_get_size(s_audio_rb) =  %d", rt_ringbuffer_get_size(s_audio_rb));
+        }
+
+#if HL_GET_DEVICE_TYPE()
+        if (s_record_switch == 1) {
+           rt_ringbuffer_put(s_record_rb, dsp_config->audio_process_out_buffer_24bit_b, dsp_config->process_size_24bit);
+        }
+#endif
         //hl_mod_audio_record(dsp_config->audio_process_out_buffer_24bit_a, dsp_config->process_size_24bit);
     }
 
@@ -503,15 +542,15 @@ int hl_mod_audio_link_test(int argc, char** argv)
         return 0;
     }
 
-    s_audio_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
-    RT_ASSERT(s_audio_rb != RT_NULL);
+    s_record_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
+    RT_ASSERT(s_record_rb != RT_NULL);
 
     s_record_switch = 0;
     hl_mod_audio_codec_config();   
     hl_mod_audio_dsp_config();
     hl_drv_audio_register_stream(hl_mod_audio_stream_cb);
 
-    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
+    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, 5, 1);//
     if (audio_tid)
         rt_thread_startup(audio_tid);
 
@@ -529,7 +568,7 @@ int hl_mod_audio_record_test(int argc, char** argv)
 
     if (argc > 1) {
         if (!strcmp("start", argv[1])) {
-            rt_ringbuffer_reset(s_audio_rb);
+            rt_ringbuffer_reset(s_record_rb);
             s_record_switch = 1;
             hl_mod_audio_record_start("/mnt/sdcard/hl.wav");
             rt_kprintf("Audio mod record test start\r\n");
@@ -563,18 +602,32 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     s_audio_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
     RT_ASSERT(s_audio_rb != RT_NULL);
 
+#if HL_GET_DEVICE_TYPE()
+    s_record_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
+    RT_ASSERT(s_record_rb != RT_NULL);
+#endif
+
     s_record_switch = 0;
+    s_audio_switch = 1;
     hl_mod_audio_codec_config();   
     hl_mod_audio_dsp_config();
     hl_drv_audio_register_stream(hl_mod_audio_stream_cb);
 
+
+
     audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, 5, 1);//
     if (audio_tid)
         rt_thread_startup(audio_tid);
+    
+    audio_tid = rt_thread_create("do_hl_waudio", do_run_audio, RT_NULL, 2048, 5, 1);//
+    if (audio_tid)
+        rt_thread_startup(audio_tid);
 
+#if HL_GET_DEVICE_TYPE()
     record_tid = rt_thread_create("do_hl_record", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
     if (record_tid)
         rt_thread_startup(record_tid);
+#endif
 
     return 0;
 }
@@ -592,11 +645,132 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
 #include <finsh.h>
 MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
+#if HL_GET_DEVICE_TYPE()
 MSH_CMD_EXPORT(hl_mod_audio_record_test, audio record test cmd);
+#endif
 #endif
 
 INIT_APP_EXPORT(hl_mod_audio_init);
 
+
+#if 0
+#include "hal_base.h"
+struct TGPIO_INFO
+{
+    char*            desc;
+    struct GPIO_REG* gpio;
+    rt_uint32_t      mask;
+};
+
+
+static struct TGPIO_INFO gpios[] = {
+    { "gpio0", GPIO0, 0x00000000 },
+#ifdef GPIO1
+    { "gpio1", GPIO1, 0x00000000 },
+#endif
+#ifdef GPIO2
+    { "gpio2", GPIO2, 0x00000000 },
+#endif
+#ifdef GPIO3
+    { "gpio3", GPIO3, 0x00000000 },
+#endif
+};
+
+
+static void _tgpio_prepare(uint8_t bank_id, uint32_t pin_id)
+{
+    if (bank_id > 4) {
+        return;
+    }
+    gpios[bank_id].mask |= 0x01 << pin_id;
+    // rt_kprintf("%s: %s to test pins: 0x%lx\n", __func__, gpios[bank_id].desc, pin_id);
+    HAL_PINCTRL_SetIOMUX(bank_id, gpios[bank_id].mask, 0);
+}
+
+
+static void _tgpio_output(uint8_t bank_id, uint32_t pin_id, uint8_t level)
+{
+    _tgpio_prepare(bank_id, pin_id);
+    // tgpio_set_direction(GPIO_OUT);
+    HAL_GPIO_SetPinsDirection(gpios[bank_id].gpio, gpios[bank_id].mask, GPIO_OUT);
+    switch (level) {
+        case 0:
+            // tgpio_set_level(GPIO_LOW);
+            HAL_GPIO_SetPinsLevel(gpios[bank_id].gpio, gpios[bank_id].mask, GPIO_LOW);
+            // tgpio_set_param(PIN_CONFIG_DRV_LEVEL0);
+            HAL_PINCTRL_SetParam(bank_id, gpios[bank_id].mask, PIN_CONFIG_DRV_LEVEL0);
+            break;
+        case 1:
+            // tgpio_set_level(GPIO_HIGH);
+            HAL_GPIO_SetPinsLevel(gpios[bank_id].gpio, gpios[bank_id].mask, GPIO_HIGH);
+            // tgpio_set_param(PIN_CONFIG_DRV_LEVEL1);
+            HAL_PINCTRL_SetParam(bank_id, gpios[bank_id].mask, PIN_CONFIG_DRV_LEVEL1);
+            break;
+        case 2:
+            // tgpio_set_level(GPIO_HIGH);
+            HAL_GPIO_SetPinsLevel(gpios[bank_id].gpio, gpios[bank_id].mask, GPIO_HIGH);
+            // tgpio_set_param(PIN_CONFIG_DRV_LEVEL2);
+            HAL_PINCTRL_SetParam(bank_id, gpios[bank_id].mask, PIN_CONFIG_DRV_LEVEL2);
+            break;
+        case 3:
+            // tgpio_set_level(GPIO_HIGH);
+            HAL_GPIO_SetPinsLevel(gpios[bank_id].gpio, gpios[bank_id].mask, GPIO_HIGH);
+            // tgpio_set_param(PIN_CONFIG_DRV_LEVEL3);
+            HAL_PINCTRL_SetParam(bank_id, gpios[bank_id].mask, PIN_CONFIG_DRV_LEVEL3);
+            break;
+        default:
+            rt_kprintf("wrong pinbank\r\n");
+            break;
+    }
+}
+//#if HL_GET_DEVICE_TYPE()
+
+int gpio_test_init(void)
+{
+
+    //rt_kprintf("testliujie/r/n");
+    // hl_hal_gpio_init(GPIO_EMMC_RST);
+    // hl_hal_gpio_init(GPIO_LVT_EN);
+    // hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
+    // hl_hal_gpio_init(GPIO_PWR_EN);
+    // hl_hal_gpio_init(GPIO_DC3V3_EN);
+    // hl_hal_gpio_init(GPIO_2831P_EN);
+    // hl_hal_gpio_init(GPIO_RF_PWR_EN);
+    // hl_hal_gpio_init(GPIO_MIC_SW);
+    // hl_hal_gpio_init(GPIO_ATS_RESET);
+
+    // hl_hal_gpio_high(GPIO_EMMC_RST);
+    // hl_hal_gpio_high(GPIO_LVT_EN);
+    // hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
+    // hl_hal_gpio_high(GPIO_PWR_EN);
+    // hl_hal_gpio_high(GPIO_DC3V3_EN);
+    // hl_hal_gpio_high(GPIO_2831P_EN);
+    // hl_hal_gpio_high(GPIO_RF_PWR_EN);
+    // hl_hal_gpio_low(GPIO_MIC_SW);
+    // hl_hal_gpio_low(GPIO_ATS_RESET);
+#if 1
+    _tgpio_output(0, GPIO0_A3, 3);          // hl_hal_gpio_high(GPIO_EMMC_RST);
+    // _tgpio_output(0, GPIO0_D3, 3);       // hl_hal_gpio_high(GPIO_LVT_EN);
+    _tgpio_output(1, GPIO0_A5, 3);          // hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
+    _tgpio_output(0, GPIO0_C6, 3);          // hl_hal_gpio_high(GPIO_PWR_EN);
+    _tgpio_output(1, GPIO0_A2, 3);          // hl_hal_gpio_high(GPIO_DC3V3_EN);
+    _tgpio_output(1, GPIO0_A7, 3);          // hl_hal_gpio_high(GPIO_2831P_EN);
+    _tgpio_output(1, GPIO0_C4, 3);          // hl_hal_gpio_high(GPIO_RF_PWR_EN);
+    _tgpio_output(1, GPIO0_C6, 3);          // hl_hal_gpio_low(GPIO_MIC_SW);
+    _tgpio_output(1, GPIO0_C7, 3);          // hl_hal_gpio_low(GPIO_ATS_RESET);
+    // hl_hal_gpio_init(GPIO_TEST);
+    // hl_hal_gpio_high(GPIO_TEST);
+#else
+    _tgpio_output(0, GPIO0_B0, 3);          // hl_hal_gpio_high(GPIO_DC3V3_EN);
+    _tgpio_output(1, GPIO0_A7, 3);          // hl_hal_gpio_high(GPIO_2831P_EN);
+    _tgpio_output(1, GPIO0_C2, 3);          // hl_hal_gpio_high(GPIO_RF_PWR_EN);
+    _tgpio_output(1, GPIO0_A6, 3);          // hl_hal_gpio_low(GPIO_MIC_SW);
+#endif
+    return RT_EOK;
+}
+
+INIT_BOARD_EXPORT(gpio_test_init);
+#endif
 
 
 #endif /* __HL_MOD_AUDIO_C__ */

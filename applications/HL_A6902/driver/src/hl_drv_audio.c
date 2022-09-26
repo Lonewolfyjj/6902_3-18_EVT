@@ -653,7 +653,7 @@ void rk_audio_stream_update(struct audio_stream* as)
         avail = audio_pcm_capture_avail(pcm);
 
     if (avail >= pcm->abuf.buf_size) {
-        rt_kprintf("hw_ptr:0x%x, buf_size:%d, appl_ptr:0x%x", pcm->status.hw_ptr, pcm->abuf.buf_size, pcm->status.appl_ptr);
+        //rt_kprintf("hw_ptr:0x%x, buf_size:%d, appl_ptr:0x%x", pcm->status.hw_ptr, pcm->abuf.buf_size, pcm->status.appl_ptr);
         rt_kprintf("[0x%08x] stream %d: xrun, avail: %lu!\n", HAL_GetTick(), as->stream, avail);
         rk_audio_xrun(pcm->as);
     } else if (pcm->waiting) {
@@ -717,7 +717,7 @@ rt_size_t rk_audio_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t s
     appl_ofs = appl_ptr % pcm->abuf.buf_size;
 
     hwbuf = pcm->abuf.buf + frames_to_bytes(pcm, appl_ofs);
-#if 1
+#if 0
     if (hl_audio_stream_read_func != NULL) {
         hl_audio_stream_read_func(buffer, hwbuf, frames_to_bytes(pcm, size));
     }
