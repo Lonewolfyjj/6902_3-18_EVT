@@ -23,6 +23,8 @@
 #include "rk_audio.h"
 #include "drv_heap.h"
 
+#define HL_AUDIO_BITS_24 1 //< ��ԭ����16λ���ĳ�24λ��  @lixiang
+
 #define F_AUDIO_NUM_INTERFACES      2 /* Number of streaming interfaces */
 #define USB_OUT_IT_ID               1
 #define USB_OUT_IT_FU_ID            2
@@ -50,20 +52,34 @@
 #define P_BUFFER_BOTTOM_NUM         3
 #define P_DEFAULT_SAMPLE_RATE       48000
 #define P_AUDIO_PERIOD_COUNT        2
-#define P_AUDIO_SAMPLE_BITS         16
+
+#ifdef HL_AUDIO_BITS_24  
+#define P_AUDIO_SAMPLE_BITS         32 //24     
+#else
+#define P_AUDIO_SAMPLE_BITS         16    
+#endif
+//#define P_AUDIO_PERIOD_SIZE         2048  
 #define P_AUDIO_PERIOD_SIZE         1024
+
 #define P_MB_POOL_SIZE              (P_BUFFER_NUM + 8)
-#define P_TOTAL_SIZE                (P_AUDIO_PERIOD_SIZE * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3))
+#define P_TOTAL_SIZE                (P_AUDIO_PERIOD_SIZE * P_NR_CHANNEL * 3)//(P_AUDIO_SAMPLE_BITS >> 3))
 #define P_PERIOD_SIZE_MS            10
 
 #define C_NR_CHANNEL                2 /*Number of capture channels */
 #define C_BUFFER_NUM                32
 #define C_DEFAULT_SAMPLE_RATE       48000
 #define C_AUDIO_PERIOD_COUNT        4
-#define C_AUDIO_SAMPLE_BITS         16
+
+#ifdef HL_AUDIO_BITS_24  
+#define C_AUDIO_SAMPLE_BITS         32 //24     
+#else
+#define C_AUDIO_SAMPLE_BITS         16    
+#endif
+
+//#define C_AUDIO_PERIOD_SIZE         2048
 #define C_AUDIO_PERIOD_SIZE         1024
 #define C_MB_POOL_SIZE              (C_BUFFER_NUM + 8)
-#define C_TOTAL_SIZE                (C_AUDIO_PERIOD_SIZE * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3))
+#define C_TOTAL_SIZE                (C_AUDIO_PERIOD_SIZE * C_NR_CHANNEL * 3)//(C_AUDIO_SAMPLE_BITS >> 3))
 
 #define FREQ(f) { ((f) & 0xFF), ((f) >> 8 & 0xFF), ((f) >> 16 & 0xFF) }
 #define UAC_DT_AC_HEADER_LENGTH UAC_DT_AC_HEADER_SIZE(F_AUDIO_NUM_INTERFACES)
@@ -340,14 +356,22 @@ static struct uac1_interface_alt _as_out_intf_alt1_desc =
         0x01,
         UAC_FORMAT_TYPE_I_PCM,
     },
+#if 1
     {
         UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(6),
         USB_DT_CS_INTERFACE,
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         P_NR_CHANNEL,
+
+#ifdef HL_AUDIO_BITS_24  
+        0x03,
+        0x18,   
+#else
         0x02,
-        0x10,
+        0x10,  
+#endif
+        
         0x06,
         {
             FREQ(96000),
@@ -358,6 +382,22 @@ static struct uac1_interface_alt _as_out_intf_alt1_desc =
             FREQ(8000),
         },
     },
+#else
+	{
+        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
+        USB_DT_CS_INTERFACE,
+        UAC_FORMAT_TYPE,
+        UAC_FORMAT_TYPE_I,
+        P_NR_CHANNEL,
+        0x02,
+        0x10,
+        0x01,
+        {
+            FREQ(48000),
+        },
+    },
+
+#endif
     {
         USB_DESC_LENGTH_AUDIO_ENDPOINT,
         USB_DESC_TYPE_ENDPOINT,
@@ -414,14 +454,22 @@ static struct uac1_interface_alt _as_in_intf_alt1_desc =
         0x01,
         UAC_FORMAT_TYPE_I_PCM,
     },
+#if 1
     {
         UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(6),
         USB_DT_CS_INTERFACE,
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         C_NR_CHANNEL,
+
+#ifdef HL_AUDIO_BITS_24  
+        0x03,
+        0x18,   
+#else
         0x02,
-        0x10,
+        0x10,  
+#endif
+
         0x06,
         {
             FREQ(96000),
@@ -432,6 +480,21 @@ static struct uac1_interface_alt _as_in_intf_alt1_desc =
             FREQ(8000),
         },
     },
+#else
+	{
+        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
+        USB_DT_CS_INTERFACE,
+        UAC_FORMAT_TYPE,
+        UAC_FORMAT_TYPE_I,
+        C_NR_CHANNEL,
+        0x02,
+        0x10,
+        0x01,
+        {
+            FREQ(48000),
+        },
+    },
+#endif
     {
         USB_DESC_LENGTH_AUDIO_ENDPOINT,
         USB_DESC_TYPE_ENDPOINT,
@@ -586,7 +649,7 @@ static rt_err_t _audio_playback_card_enable(struct audio_play *p)
         rt_kprintf("play period_size %d greater than %d\n", p->period_size, P_AUDIO_PERIOD_SIZE);
         return -RT_ERROR;
     }
-    p->total_size = p->period_size * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3);
+    p->total_size = p->period_size * P_NR_CHANNEL * 3;//(P_AUDIO_SAMPLE_BITS >> 3);
     p->abuf.period_size = p->period_size;
     p->abuf.buf_size = p->period_size * P_AUDIO_PERIOD_COUNT;
     ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_PCM_PREPARE, &g_uac1->p.abuf);
@@ -918,7 +981,7 @@ static void _audio_start_capture(ufunction_t func)
     rt_memset(ep_in->buffer, 0, IN_EP_MAX_PACKET_SIZE);
     factor = (func->device->dcd->device_is_hs) ? 8000 : 1000;
     interval = factor / (1 << (_as_in_intf_alt1_desc.endpoint_desc.bInterval - 1));
-    framesize = C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3);
+    framesize = C_NR_CHANNEL * 3;//(C_AUDIO_SAMPLE_BITS >> 3); //lixiang
     ep_in->request.buffer = ep_in->buffer;
     ep_in->request.size = g_uac1->c.sample_rate * framesize / interval;
     ep_in->request.req_type = UIO_REQUEST_WRITE;
@@ -1608,7 +1671,7 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
 
     factor = (func->device->dcd->device_is_hs) ? 8000 : 1000;
     interval = factor / (1 << (_as_in_intf_alt1_desc.endpoint_desc.bInterval - 1));
-    framesize = C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3);
+    framesize = C_NR_CHANNEL * 3;//(C_AUDIO_SAMPLE_BITS >> 3); //lixiang
     size = c->sample_rate * framesize / interval;
     if (c->sample_rate == 44100 && ++c->frame_cnt % 10 == 0)
     {
@@ -2056,7 +2119,7 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     g_uac1 = (struct uac1 *)rt_malloc(sizeof(struct uac1));
     rt_memset(g_uac1, 0, sizeof(struct uac1));
     func->user_data = (void *)g_uac1;
-    g_uac1->ep0_buffer = rt_dma_malloc(64);
+    g_uac1->ep0_buffer = rt_dma_malloc(384*4);//(384*2);//(384);//rt_dma_malloc(64); // lixiang default:24bit-48KHZ
     g_uac1->p.sample_rate = P_DEFAULT_SAMPLE_RATE;
     g_uac1->c.sample_rate = C_DEFAULT_SAMPLE_RATE;
 
