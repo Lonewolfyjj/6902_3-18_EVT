@@ -293,7 +293,8 @@ static void usb_vbus_pin_isr(void *args)
 static rt_err_t usb_vbus_irq_init(struct PCD_HANDLE *pcd)
 {
 #if defined(USB_VBUS_PIN)
-    rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT);
+    // rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT);
+    rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT_PULLDOWN);
     rt_pin_attach_irq(USB_VBUS_PIN, PIN_IRQ_MODE_RISING_FALLING, usb_vbus_pin_isr, (void *)pcd);
     rt_pin_irq_enable(USB_VBUS_PIN, RT_TRUE);
 
