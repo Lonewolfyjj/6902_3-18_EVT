@@ -568,7 +568,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     hl_mod_audio_dsp_config();
     hl_drv_audio_register_stream(hl_mod_audio_stream_cb);
 
-    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
+    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, 5, 1);//
     if (audio_tid)
         rt_thread_startup(audio_tid);
 
