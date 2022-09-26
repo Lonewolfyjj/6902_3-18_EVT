@@ -217,7 +217,7 @@ static struct audio_dai *rk_i2stdm_init_dai(struct HAL_I2STDM_DEV *hI2sTdm)
 
 int rt_hw_i2stdm_init(void)
 {
-#if defined(RT_USING_I2STDM0)
+#if defined(RT_USING_I2STDM)
     rk_audio_register_dai(rk_i2stdm_init_dai(&g_i2sTdm0Dev));
 #endif
 #if defined(RT_USING_I2STDM1)

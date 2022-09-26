@@ -91,7 +91,7 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     abuf.buf = rt_malloc_uncache(size);
     if (!abuf.buf)
     {
-        rt_kprintf("Buffer alloc failed!\n");
+        rt_kprintf("Buffer alloc failed (%d)!\n", size);
         return 0;
     }
 
@@ -120,7 +120,7 @@ static uint32_t capture_sample(FILE *file, struct rt_device *card,
     ret = rt_device_control(card, RK_AUDIO_CTL_HW_PARAMS, &param);
     RT_ASSERT(ret == RT_EOK);
 
-    size = abuf.period_size * channels * (bits >> 3);
+    size = abuf.period_size * channels * 3;//(bits >> 3); 
     buffer = rt_malloc(size);
     if (!buffer)
     {
@@ -177,7 +177,7 @@ static void do_tinycap(void *arg)
     header.num_channels = config->channels;
     header.sample_rate = config->rate;
 
-    header.bits_per_sample = config->bits;
+    header.bits_per_sample = 24;//config->bits;
     header.byte_rate = (header.bits_per_sample / 8) * config->channels * config->rate;
     header.block_align = config->channels * (header.bits_per_sample / 8);
     header.data_id = ID_DATA;
