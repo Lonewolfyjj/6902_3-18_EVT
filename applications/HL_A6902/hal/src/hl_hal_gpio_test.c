@@ -87,6 +87,7 @@ MSH_CMD_EXPORT(hl_hal_gpio_test, gpio test cmd);
 
 void hl_hal_gpio_pwr_on(void)
 {
+
 #if HL_GET_DEVICE_TYPE()
     hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
     hl_hal_gpio_init(GPIO_PWR_EN);
@@ -99,7 +100,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_high(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
-    rt_kprintf("A6902 Tx Device enable power!\r\n");
+    rt_kprintf("A6902 Tx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #else
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_USB_SW);
@@ -112,7 +113,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_ATS_PWR_EN);
     hl_hal_gpio_low(GPIO_AMP_EN);
-    rt_kprintf("A6902 Rx Device enable power!\r\n");
+    rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #endif
     rt_thread_mdelay(10);
 }
