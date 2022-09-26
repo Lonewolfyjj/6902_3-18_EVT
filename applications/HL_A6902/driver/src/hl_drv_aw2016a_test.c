@@ -30,15 +30,15 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-int hl_drv_aw2016a_test_init(int argc, char *argv[])
+int hl_drv_aw2016a_test_init(int argc, char* argv[])
 {
-    int     ret;
-    uint8_t chip_id;
-    uint8_t work_mode;
-    uint8_t led_chan;
-    hl_drv_aw2016a_pattern_param_st pattern_param;
-    hl_drv_aw2016a_output_current_st output_param;
-    hl_drv_aw2016a_pwm_level_st pwm_param;
+    int                             ret;
+    bool                            flag;
+    uint8_t                         chip_id;
+    uint8_t                         work_mode;
+    uint8_t                         led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+    hl_drv_aw2016a_light_st         light;
 
     rt_kprintf("\naw2016a test\n");
 
@@ -60,6 +60,15 @@ int hl_drv_aw2016a_test_init(int argc, char *argv[])
 
     rt_kprintf("set work mode\n");
 
+    flag = true;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_SYNC_CONTROL_MODE, &flag, sizeof(flag));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    rt_kprintf("set sync control mode \n");
+
     work_mode = HL_DRV_AW2016A_IMAX_5MA;
 
     ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT, &work_mode,
@@ -79,7 +88,7 @@ int hl_drv_aw2016a_test_init(int argc, char *argv[])
 
     rt_kprintf("open led \n");
 
-    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
 
     ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE, &led_chan, sizeof(led_chan));
     if (ret == AW2016A_FUNC_RET_ERR) {
@@ -88,55 +97,32 @@ int hl_drv_aw2016a_test_init(int argc, char *argv[])
 
     rt_kprintf("set pattern mode \n");
 
-    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
-    pattern_param.repeat = 0;
-    pattern_param.t0 = 0;
-    pattern_param.t1 = 9;
-    pattern_param.t2 = 3;
-    pattern_param.t3 = 9;
-    pattern_param.t4 = 0;
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM, &pattern_param, sizeof(pattern_param));
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 0;
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_BREATH_PARAM, &pattern_param,
+                              sizeof(pattern_param));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return AW2016A_FUNC_RET_ERR;
     }
 
     rt_kprintf("set pattern mode param \n");
 
-    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
-    output_param.current = atoi(argv[1]);
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param, sizeof(output_param));
+    light.r          = atoi(argv[1]);
+    light.g          = atoi(argv[2]);
+    light.b          = atoi(argv[3]);
+    light.brightness = atoi(argv[4]);
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_LIGHT_EFFECT, &light, sizeof(light));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return AW2016A_FUNC_RET_ERR;
     }
 
-    rt_kprintf("set output current \n");
-
-    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
-    output_param.current = atoi(argv[2]);
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param, sizeof(output_param));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("set output current \n");
-
-    output_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
-    output_param.current = atoi(argv[3]);
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT, &output_param, sizeof(output_param));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("set output current \n");
-
-    pwm_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
-    pwm_param.pwm_level = atoi(argv[4]);
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL, &pwm_param, sizeof(pwm_param));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("set brightness \n");
+    rt_kprintf("set led light \n");
 
     return 0;
 }

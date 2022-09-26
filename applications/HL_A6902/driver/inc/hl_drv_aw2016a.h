@@ -23,6 +23,7 @@
 
 #include "rtthread.h"
 #include "rtdevice.h"
+#include "stdbool.h"
 #include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
@@ -41,12 +42,59 @@ typedef enum _hl_drv_aw2016a_op
     HL_DRV_AW2016A_CLOSE_LED_CHANNEL,
     ///set aw2016a pattern mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_PATTERN_MODE,
-    ///set aw2016a pattern mode param, type of parameter is <hl_drv_aw2016a_pattern_param_st> pointer
-    HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM,
+    ///set aw2016a breath param, type of parameter is <hl_drv_aw2016a_breath_param_st> pointer
+    HL_DRV_AW2016A_SET_BREATH_PARAM,
     ///set aw2016a manual mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_MANUAL_MODE,
+    /**
+     * 
+     * @brief 设置淡出功能使能, 需要<hl_drv_aw2016a_set_fade_in_out_st>类型的指针作为参数
+     * @date 2022-09-26
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 淡出的时间由<hl_drv_aw2016a_breath_param_st>中的T3决定，且只在manual模式有效
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-26      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW2016A_SET_FADE_OUT_ENABLE,
+    /**
+     * 
+     * @brief 设置淡入功能使能, 需要<hl_drv_aw2016a_set_fade_in_out_st>类型的指针作为参数
+     * @date 2022-09-26
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 淡入的时间由<hl_drv_aw2016a_breath_param_st>中的T1决定，且只在manual模式有效
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-26      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW2016A_SET_FADE_IN_ENABLE,
+    /**
+     * 
+     * @brief set aw2016a sync control mode, type of parameter is <bool> pointer
+     * @date 2022-09-26
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 设置为同步控制模式，所有led的亮度、manual/pattern模式都由led1同步设置
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-26      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW2016A_SET_SYNC_CONTROL_MODE,
     ///set aw2016a led channel output current, type of parameter is <hl_drv_aw2016a_output_current_st> pointer
     HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT,
+    ///set aw2016a led light effect, type of parameter is <hl_drv_aw2016a_light_st> pointer
+    HL_DRV_AW2016A_SET_LED_LIGHT_EFFECT,
     ///set aw2016a led channel pwm level, type of parameter is <hl_drv_aw2016a_pwm_level_st> pointer
     HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL,
     ///dump aw2016a register value, type of parameter is <uint8_t> pointer
@@ -182,7 +230,7 @@ typedef enum _hl_drv_aw2016a_pattern_time
  * <tr><td>2022-09-19      <td>lilin     <td>新建
  * </table>
  */
-typedef struct _hl_drv_aw2016a_pattern_param
+typedef struct _hl_drv_aw2016a_breath_param
 {
     ///led通道：r/g/b
     hl_drv_aw2016a_led_channel_e led_chan;
@@ -198,7 +246,7 @@ typedef struct _hl_drv_aw2016a_pattern_param
     hl_drv_aw2016a_pattern_time_e t4;
     ///循环次数，[0 - 15]，其中0表示一直循环
     uint8_t repeat;
-} hl_drv_aw2016a_pattern_param_st;
+} hl_drv_aw2016a_breath_param_st;
 
 /**
  * 
@@ -224,6 +272,28 @@ typedef struct _hl_drv_aw2016a_output_current
 
 /**
  * 
+ * @brief led灯光效果结构体
+ * @date 2022-09-26
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details r/g/b 的范围为 [0 - 15]，brightness 的范围为 [0 - 255]
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-26      <td>lilin     <td>新建
+ * </table>
+ */
+typedef struct _hl_drv_aw2016a_light
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t brightness;
+} hl_drv_aw2016a_light_st;
+
+/**
+ * 
  * @brief 设置亮度等级结构体
  * @date 2022-09-19
  * @author lilin (lin.li@hollyland-tech.com)
@@ -243,6 +313,13 @@ typedef struct _hl_drv_aw2016a_pwm_level
     ///pwm等级，最大255
     uint8_t pwm_level;
 } hl_drv_aw2016a_pwm_level_st;
+
+typedef struct _hl_drv_aw2016a_set_fade_in_out
+{
+    ///led通道：r/g/b
+    hl_drv_aw2016a_led_channel_e led_chan;
+    bool                         enable;
+} hl_drv_aw2016a_set_fade_in_out_st;
 
 /* define --------------------------------------------------------------------*/
 
