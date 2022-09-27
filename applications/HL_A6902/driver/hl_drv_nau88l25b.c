@@ -36,7 +36,6 @@
 #define nau_printf(...)
 #endif
 
-static uint8_t IIC_ADDR = 0;
 typedef uint8_t (*hl_reg_ctl_fun)(uint16_t cmd, uint8_t cmd_typ, void* param);
 static hl_reg_ctl_fun            fun_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
 static uint16_t                  reg_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
@@ -98,7 +97,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
     buf[2] = (data[0] >> 8);    // data
     buf[3] = (data[0] & 0xFF);  //
 
-    msgs[0].addr  = IIC_ADDR;
+    msgs[0].addr  = NAU88L25B_DEVICE_ADDRESS;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = buf;
     msgs[0].len   = 4;
@@ -145,12 +144,12 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, 
     buf[0] = (reg >> 8);      // reg
     buf[1] = (reg & 0x00FF);  //
 
-    msgs[0].addr  = IIC_ADDR;
+    msgs[0].addr  = NAU88L25B_DEVICE_ADDRESS;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = buf;
     msgs[0].len   = 2;
 
-    msgs[1].addr  = IIC_ADDR;
+    msgs[1].addr  = NAU88L25B_DEVICE_ADDRESS;
     msgs[1].flags = RT_I2C_RD;
     msgs[1].buf   = &buf[2];
     msgs[1].len   = 2;
@@ -160,7 +159,8 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, 
     /* 调用I2C设备接口传输数据 */
     if (ret == 2) {
         rbuf[0] = ((buf[2] << 8) + buf[3]);
-        nau_printf("%s : buf[0] = %X buf[1] = %X buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[0], buf[1], buf[2], buf[3]);
+        nau_printf("%s : buf[0] = %X buf[1] = %X buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[0], buf[1], buf[2],
+                   buf[3]);
         return HL_SUCCESS;
     } else
         return HL_FAILED;
@@ -253,14 +253,17 @@ static uint8_t hl_reg33_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
                 tmp[0] = reg33.DAC_CH_SEL0;
                 break;
             case OPT_DACL_CTRL_DGAINL_DAC:
-                tmp[0] = (reg33.DGAINL_DAC / 2) - 207;
+                tmp[0] = (reg33.DGAINL_DAC - 207) / 2;
+                if (reg33.DGAINL_DAC == 0) {
+                    tmp[0] = 0;
+                }
                 break;
             default:
                 nau_printf("%s cmd_typ read fail !\n", __FUNCTION__);
                 goto CTL_ERR;
                 break;
         }
-        nau_printf("%s read success : %X!\n", __FUNCTION__, tmp[0]);
+        nau_printf("%s read success : tmp[0] = %d  reg33.DGAINL_DAC = %d!\n", __FUNCTION__, tmp[0], reg33.DGAINL_DAC);
         return HL_SUCCESS;
     } else {
         switch (cmd) {
@@ -274,7 +277,7 @@ static uint8_t hl_reg33_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
                 reg33.DGAINL_DAC = set_gain_tran(tmp[0]);
                 break;
             default:
-                nau_printf("%s cmd_typ read fail !\n", __FUNCTION__);
+                nau_printf("%s cmd_typ write fail !\n", __FUNCTION__);
                 goto CTL_ERR;
                 break;
         }
@@ -283,7 +286,7 @@ static uint8_t hl_reg33_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
         nau_printf("%s write fail !\n", __FUNCTION__);
         goto CTL_ERR;
     }
-    nau_printf("%s write success :%X!\n", __FUNCTION__, tmp[0]);
+    nau_printf("%s write success : tmp[0] = %d reg33.DGAINL_DAC = %X!\n", __FUNCTION__, tmp[0], reg33.DGAINL_DAC);
     return HL_SUCCESS;
 CTL_ERR:
     nau_printf("%s fail !\n", __FUNCTION__);
@@ -322,14 +325,17 @@ static uint8_t hl_reg34_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
                 tmp[0] = reg34.DAC_CH_SEL1;
                 break;
             case OPT_DACR_CTRL_DGAINR_DAC:
-                tmp[0] = (reg34.DGAINR_DAC / 2) - 207;
+                tmp[0] = (reg34.DGAINR_DAC - 207) / 2;
+                if (reg34.DGAINR_DAC == 0) {
+                    tmp[0] = 0;
+                }
                 break;
             default:
                 nau_printf("%s cmd_typ read fail !\n", __FUNCTION__);
                 goto CTL_ERR;
                 break;
         }
-        nau_printf("%s read success : %X!\n", __FUNCTION__, tmp[0]);
+        nau_printf("%s read success : tmp[0] = %d  reg34.DGAINR_DAC = %d!\n", __FUNCTION__, tmp[0], reg34.DGAINR_DAC);
         return HL_SUCCESS;
     } else {
         switch (cmd) {
@@ -340,7 +346,7 @@ static uint8_t hl_reg34_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
                 reg34.DGAINR_DAC = set_gain_tran(tmp[0]);
                 break;
             default:
-                nau_printf("%s cmd_typ read fail !\n", __FUNCTION__);
+                nau_printf("%s cmd_typ write fail !\n", __FUNCTION__);
                 goto CTL_ERR;
                 break;
         }
@@ -349,7 +355,7 @@ static uint8_t hl_reg34_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
         nau_printf("%s write fail !\n", __FUNCTION__);
         goto CTL_ERR;
     }
-    nau_printf("%s write success :%X!\n", __FUNCTION__, tmp[0]);
+    nau_printf("%s write success : tmp[0] = %d reg34.DGAINR_DAC = %X!\n", __FUNCTION__, tmp[0], reg34.DGAINR_DAC);
     return HL_SUCCESS;
 CTL_ERR:
     nau_printf("%s fail !\n", __FUNCTION__);
@@ -379,21 +385,19 @@ static uint8_t hl_gain_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
     int  gainl = 0, gainr = 0;
     int* gain = (int*)param;
-    switch (cmd) {
-        case NAU_GET_GAIN:
-            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_READ_REG_CMD, &gainl))
+    switch (cmd_typ) {
+        case NAU_READ_REG_CMD:
+            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, cmd_typ, &gainl))
                 goto CTL_ERR;
-            if (hl_reg34_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_READ_REG_CMD, &gainr))
+            if (hl_reg34_ctl(OPT_DACR_CTRL_DGAINR_DAC, cmd_typ, &gainr))
                 goto CTL_ERR;
             gain[0] = (gainl + gainr) / 2;
             break;
-        case NAU_SET_GAIN:
-            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_WRITE_REG_CMD, param))
-                ;
-            goto CTL_ERR;
-            if (hl_reg34_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_WRITE_REG_CMD, param))
-                ;
-            goto CTL_ERR;
+        case NAU_WRITE_REG_CMD:
+            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, cmd_typ, param))
+                goto CTL_ERR;
+            if (hl_reg34_ctl(OPT_DACR_CTRL_DGAINR_DAC, cmd_typ, param))
+                goto CTL_ERR;
             break;
         default:
             goto CTL_ERR;
@@ -401,7 +405,7 @@ static uint8_t hl_gain_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
     }
     return HL_SUCCESS;
 CTL_ERR:
-    nau_printf("%s fail !\n", __FUNCTION__);
+    nau_printf("%s fail ! cmd = %X cmd_typ = %X gain[0] = %d\n", __FUNCTION__, cmd, cmd_typ, gain[0]);
     return HL_FAILED;
 }
 
@@ -425,23 +429,21 @@ CTL_ERR:
  */
 static uint8_t hl_mute_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
 {
-    int  mutel = 0, muter = 0, mutea = 0;
+    int  mutel = 0, muter = 0, mutea = -104;
     int* mute = (int*)param;
-    switch (cmd) {
-        case NAU_GET_MUTE:
-            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_READ_REG_CMD, &mutel))
+    switch (cmd_typ) {
+        case NAU_READ_REG_CMD:
+            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, cmd_typ, &mutel))
                 goto CTL_ERR;
-            if (hl_reg34_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_READ_REG_CMD, &muter))
+            if (hl_reg34_ctl(OPT_DACR_CTRL_DGAINR_DAC, cmd_typ, &muter))
                 goto CTL_ERR;
             mute[0] = (mutel + muter) / 2;
             break;
-        case NAU_SET_MUTE:
-            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_WRITE_REG_CMD, &mutea))
-                ;
-            goto CTL_ERR;
-            if (hl_reg34_ctl(OPT_DACL_CTRL_DGAINL_DAC, NAU_WRITE_REG_CMD, &mutea))
-                ;
-            goto CTL_ERR;
+        case NAU_WRITE_REG_CMD:
+            if (hl_reg33_ctl(OPT_DACL_CTRL_DGAINL_DAC, cmd_typ, &mutea))
+                goto CTL_ERR;
+            if (hl_reg34_ctl(OPT_DACR_CTRL_DGAINR_DAC, cmd_typ, &mutea))
+                goto CTL_ERR;
             break;
         default:
             goto CTL_ERR;
@@ -449,7 +451,7 @@ static uint8_t hl_mute_ctl(uint16_t cmd, uint8_t cmd_typ, void* param)
     }
     return HL_SUCCESS;
 CTL_ERR:
-    nau_printf("%s fail !\n", __FUNCTION__);
+    nau_printf("%s fail ! cmd = %X cmd_typ = %X mute[0] = %d\n", __FUNCTION__, cmd, cmd_typ, mute[0]);
     return HL_FAILED;
 }
 /**
@@ -511,12 +513,12 @@ static void hl_reg_ctl_fun_deinit(void)
  */
 static void hl_reg_arr_init(void)
 {
-    uint8_t i, j;
+    uint8_t i;
     for (i = 0; i < NAU_REG_NUM; i++)
         reg_arr[i] = NAU_REG33_ADDR + i;
 
     for (i = NAU_REG_NUM; i < NAU_REG_NUM + NAU_SPEREG_NUM; i++)
-        reg_arr[i] = NAU_REGMUTE_ADDR + i;
+        reg_arr[i] = NAU_REGGAIN_ADDR + i - NAU_REG_NUM;
 }
 
 /**
@@ -702,85 +704,34 @@ INIT_ERR:
     return HL_FAILED;
 }
 
-/*
-static rt_err_t es_rd_reg(struct rt_i2c_bus_device *bus,
-                          uint16_t reg16, uint16_t *data16)
-{
-#if HL_CODEC_SET
-    return RT_EOK;  // LX
-#else
-    struct rt_i2c_msg msgs[2];
-    uint8_t data_buf_send[2];
-    uint8_t data_buf_rev[2];
-    rt_err_t ret;
-
-    data_buf_send[0] = (reg16>>8) & 0xff;
-    data_buf_send[1] = reg16 & 0xff;
-
-    msgs[0].addr = NAU88L25B_DEVICE_ADDRESS;
-    msgs[0].flags = RT_I2C_WR;
-    msgs[0].buf = data_buf_send;
-    msgs[0].len = 2;
-
-    msgs[1].addr = NAU88L25B_DEVICE_ADDRESS;
-    msgs[1].flags = RT_I2C_RD;
-    msgs[1].buf = data_buf_rev;
-    msgs[1].len = 2;
-
-    ret = rt_i2c_transfer(bus, msgs, 2);
-    if (ret != 2)
-    {
-        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
-        return ret;
-    }
-    *data16 = ((uint16_t)data_buf_rev[0]<<8) | ((uint16_t)data_buf_rev[1]);
-
-    return RT_EOK;
-#endif
-}
-*/
-
 void tt25(int argc, char** argv)
 {
-    uint16_t buf = 0;
-
-    if (argc != 5) {
+    if (argc != 4) {
         nau_printf("argc param err : %d \n", argc);
         return;
     }
-    
-    uint16_t rw      = atoi(argv[2]);
-    uint16_t cfg_opt = atoi(argv[3]);
-    uint16_t data    = atoi(argv[4]);
 
-    IIC_ADDR = atoi(argv[1]); 
+    uint16_t rw      = atoi(argv[1]);
+    uint16_t cfg_opt = atoi(argv[2]);
+    int      data    = atoi(argv[3]);
 
-    nau_printf("ADDRESS = %X,rw = %d,cfg_opt = %d,data = %d\n",IIC_ADDR, rw, cfg_opt, data);
+    HL_NAU_INPUT_PARAM_T par;
+    par.cfg_opt = cfg_opt;
+    par.param   = data;
 
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
+
+    hl_reg_arr_init();
+    hl_reg_ctl_fun_init();
+    // hl_reg00_ctl();
 
     if (i2c_bus == RT_NULL) {
         nau_printf("can't find %s device!\n", NAU88L25B_IIC_NAME);
     }
-    //    es_rd_reg(i2c_bus,cfg_opt,buf);
-    if (rw == 0) {
-        nau_printf("read !\n");
-        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
-            nau_printf("cfg_opt %d read err !\n", cfg_opt);
-        }
+    if (hl_drv_nau88l25b_io_ctrl(rw, &par, 1) == HL_FAILED) {
+        nau_printf("hl_drv_nau88l25b_io_ctrl fail!\n");
     }
-
-    if (rw == 1) {
-        nau_printf("write !\n");
-        if (hl_i2c_write_reg(i2c_bus, cfg_opt, &data)) {
-            nau_printf("cfg_opt %d write err !\n", cfg_opt);
-        }
-        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
-            nau_printf("cfg_opt %d read err !\n", cfg_opt);
-        }
-    }
-
-    nau_printf("buf = 0x%04X \n", buf);
+    nau_printf("param = %d \n", par.param);
 }
 
 MSH_CMD_EXPORT(tt25, run tt25);

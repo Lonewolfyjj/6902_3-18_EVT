@@ -1706,7 +1706,6 @@ void tt1518(int argc, char** argv)
 
 void test1518(int argc, char** argv)
 {
-    uint8_t              buf = 0;
     HL_SGM_INPUT_PARAM_T par;
     if (argc != 4) {
         smg_printf("argc param err : %d \n", argc);

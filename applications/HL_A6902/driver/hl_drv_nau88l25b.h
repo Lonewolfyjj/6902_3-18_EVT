@@ -39,7 +39,7 @@
 
 /* 使用I2C */
 #define NAU88L25B_IIC_NAME "i2c2"
-#define NAU88L25B_DEVICE_ADDRESS 0x1C
+#define NAU88L25B_DEVICE_ADDRESS 0x1A
 
 /* 寄存器地址 */
 #define NAU88L25B_RESET_REG00 0x00 /*reset digital,csm,clock manager etc.*/
