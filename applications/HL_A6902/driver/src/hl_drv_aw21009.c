@@ -500,7 +500,7 @@ static void aw210xx_rgbmd_set(uint8_t dev_addr, bool flag)
     }
 }
 
-static int32_t aw210xx_br_pwm_set(uint8_t dev_addr, br_pwm_e br_pwm)
+static int32_t aw210xx_br_pwm_set(uint8_t dev_addr, hl_drv_aw21009_pwm_resolution_e br_pwm)
 {
 
     switch (br_pwm) {
@@ -554,7 +554,7 @@ static void aw210xx_led_init(uint8_t base_addr)
     /* sbmd enable */
     aw210xx_sbmd_set(base_addr, true);
     /* rgbmd enable */
-    aw210xx_rgbmd_set(base_addr, true);
+    aw210xx_rgbmd_set(base_addr, false);
     /* clk_pwm selsect */
     aw210xx_clk_pwm_set(base_addr, CLK_FRQ_16M);
     /* br_pwm select */
@@ -826,11 +826,11 @@ static int set_led_light(uint8_t dev_addr, hl_drv_aw21009_led_light_st* arg)
 
 static int set_led_group_light(uint8_t dev_addr, hl_drv_aw21009_led_light_st* arg)
 {
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRL, AW210XX_REG_GBRL_BRT_MASK,
-                       AW210XX_REG_GBRL_BRT_VAL(arg->brightness));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRL, AW210XX_REG_GBRL_ABM_MASK,
+                       AW210XX_REG_GBRL_ABM_VAL(arg->brightness));
 
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRH, AW210XX_REG_GBRH_BRT_MASK,
-                       AW210XX_REG_GBRH_BRT_VAL((arg->brightness) >> 8));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRH, AW210XX_REG_GBRH_ABM_MASK,
+                       AW210XX_REG_GBRH_ABM_VAL((arg->brightness) >> 8));
 
     aw210xx_write_bits(dev_addr, AW210XX_REG_GSLR, AW210XX_REG_GSLR_MASK, AW210XX_REG_GSLR_VAL(arg->r));
     aw210xx_write_bits(dev_addr, AW210XX_REG_GSLG, AW210XX_REG_GSLG_MASK, AW210XX_REG_GSLG_VAL(arg->g));
@@ -1077,6 +1077,13 @@ static int manual_set_switch(uint8_t dev_addr, bool* arg)
 static int manual_set_ramp(uint8_t dev_addr, bool* arg)
 {
     aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_RAMP_MASK, AW210XX_REG_ABMCFG_RAMP_VAL(*arg));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_pwm_resolution(uint8_t dev_addr, hl_drv_aw21009_pwm_resolution_e* arg)
+{
+    aw210xx_br_pwm_set(dev_addr, *arg);
 
     return AW21009_FUNC_RET_OK;
 }
@@ -1337,6 +1344,17 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = manual_set_ramp(dev_addr, (bool*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_PWM_RESOLUTION: {
+            if (arg_size != sizeof(hl_drv_aw21009_pwm_resolution_e)) {
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_pwm_resolution_e> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_pwm_resolution(dev_addr, (hl_drv_aw21009_pwm_resolution_e*)arg);
             if (ret == AW21009_FUNC_RET_ERR) {
                 return AW21009_FUNC_RET_ERR;
             }

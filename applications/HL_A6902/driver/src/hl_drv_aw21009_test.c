@@ -30,7 +30,7 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-int hl_drv_aw21009_test_open(int argc, char* argv[])
+int hl_drv_aw21009_test_open(int argc, char* argv[])  //自动呼吸模式
 {
     bool                                flag;
     hl_drv_aw21009_led_group_e          led_group;
@@ -48,10 +48,10 @@ int hl_drv_aw21009_test_open(int argc, char* argv[])
 
     hl_drv_aw21009_ctrl(atoi(argv[6]), HL_DRV_AW21009_SET_LED_GROUP_MODE, &led_group, sizeof(led_group));
 
-    auto_breath.rise_time    = 9;
-    auto_breath.on_time      = 3;
-    auto_breath.fall_time    = 9;
-    auto_breath.off_time     = 0;
+    auto_breath.rise_time    = HL_DRV_AW21009_PAT_TIME_2S60;
+    auto_breath.on_time      = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.fall_time    = HL_DRV_AW21009_PAT_TIME_2S60;
+    auto_breath.off_time     = HL_DRV_AW21009_PAT_TIME_0S00;
     auto_breath.repeat_times = 0;
     auto_breath.start_point  = HL_DRV_AW21009_START_POINT_T0;
     auto_breath.stop_point   = HL_DRV_AW21009_STOP_POINT_T1;
@@ -73,14 +73,19 @@ int hl_drv_aw21009_test_open(int argc, char* argv[])
     return 0;
 }
 
-int hl_drv_aw21009_test_group(int argc, char* argv[])
+int hl_drv_aw21009_test_group(int argc, char* argv[])  //组控制模式
 {
-    bool                          flag;
-    hl_drv_aw21009_led_group_e    led_group;
-    hl_drv_aw21009_led_light_st   light;
-    hl_drv_aw21009_pattern_mode_e pat_mode;
+    bool                            flag;
+    hl_drv_aw21009_led_group_e      led_group;
+    hl_drv_aw21009_led_light_st     light;
+    hl_drv_aw21009_pattern_mode_e   pat_mode;
+    hl_drv_aw21009_pwm_resolution_e br_pwm;
 
     hl_drv_aw21009_init();
+
+    br_pwm = BR_RESOLUTION_12BIT;
+
+    hl_drv_aw21009_ctrl(atoi(argv[5]), HL_DRV_AW21009_SET_PWM_RESOLUTION, &br_pwm, sizeof(br_pwm));
 
     flag = false;
 
@@ -108,15 +113,20 @@ int hl_drv_aw21009_test_group(int argc, char* argv[])
     return 0;
 }
 
-int hl_drv_aw21009_test_single(int argc, char* argv[])
+int hl_drv_aw21009_test_single(int argc, char* argv[])  //独立控制模式
 {
     bool                                  flag;
     hl_drv_aw21009_led_group_e            led_group;
     hl_drv_aw21009_led_chan_brightness_st led_chan_brightness;
     hl_drv_aw21009_led_chan_color_st      led_chan_color;
     hl_drv_aw21009_pattern_mode_e         pat_mode;
+    hl_drv_aw21009_pwm_resolution_e       br_pwm;
 
     hl_drv_aw21009_init();
+
+    br_pwm = BR_RESOLUTION_8BIT;
+
+    hl_drv_aw21009_ctrl(atoi(argv[5]), HL_DRV_AW21009_SET_PWM_RESOLUTION, &br_pwm, sizeof(br_pwm));
 
     flag = true;
 
@@ -152,25 +162,53 @@ int hl_drv_aw21009_test_single(int argc, char* argv[])
     return 0;
 }
 
-int hl_drv_aw21009_test_manual(int argc, char* argv[])
+int hl_drv_aw21009_test_manual(int argc, char* argv[])  //manual模式
 {
-    bool flag;
-    hl_drv_aw21009_pattern_mode_e pat_mode;
+    bool                                flag;
+    hl_drv_aw21009_pattern_mode_e       pat_mode;
+    hl_drv_aw21009_auto_breath_param_st auto_breath;
+    hl_drv_aw21009_led_light_st         light;
+    hl_drv_aw21009_led_group_e          led_group;
 
     hl_drv_aw21009_init();
+
+    flag = false;
+
+    hl_drv_aw21009_ctrl(atoi(argv[6]), HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE, &flag, sizeof(flag));
+
+    led_group = HL_DRV_AW21009_LED_GROUP_1 | HL_DRV_AW21009_LED_GROUP_2 | HL_DRV_AW21009_LED_GROUP_3;
+
+    hl_drv_aw21009_ctrl(atoi(argv[6]), HL_DRV_AW21009_SET_LED_GROUP_MODE, &led_group, sizeof(led_group));
+
+    auto_breath.rise_time    = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.on_time      = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.fall_time    = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.off_time     = HL_DRV_AW21009_PAT_TIME_0S00;
+    auto_breath.repeat_times = 0;
+    auto_breath.start_point  = HL_DRV_AW21009_START_POINT_T0;
+    auto_breath.stop_point   = HL_DRV_AW21009_STOP_POINT_T1;
+
+    hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_SET_AUTO_BREATH_PARAM, &auto_breath, sizeof(auto_breath));
+
+    light.r          = 100;
+    light.g          = 100;
+    light.b          = 100;
+    light.brightness = 0xFF00;
+
+    hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_SET_LED_GROUP_LIGHT_EFFECT, &light, sizeof(light));
 
     pat_mode = HL_DRV_AW21009_PAT_MANUAL_MODE;
 
     hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_SET_PATTERN_MODE, &pat_mode, sizeof(pat_mode));
 
-    flag = atoi(argv[2]);;
+    flag = atoi(argv[2]);
 
     hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_MANUAL_SET_RAMP, &flag, sizeof(flag));
 
     flag = atoi(argv[1]);
 
     hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_MANUAL_SET_SWITCH, &flag, sizeof(flag));
-    
+
     return 0;
 }
 

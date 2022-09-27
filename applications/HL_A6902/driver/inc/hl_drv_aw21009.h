@@ -42,11 +42,26 @@ typedef enum _hl_drv_aw21009_op
     HL_DRV_AW21009_CHECK_POR_STATU,
     /**
      * 
+     * @brief 设置pwm精度，需要<hl_drv_aw21009_pwm_resolution_e>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details pattern 模式下固定8位精度
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_PWM_RESOLUTION,
+    /**
+     * 
      * @brief 设置自动呼吸参数，需要<hl_drv_aw21009_auto_breath_param_st>类型的指针作为参数
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details 需要开启自动呼吸模式，且设置组模式
+     * @details 需要开启自动呼吸模式，且设置组模式；在manual模式下，可以通过该op设置淡入淡出的时间，由rise_time和fall_time决定。
      * @note 
      * @par 修改日志:
      * <table>
@@ -91,8 +106,10 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details pattern控制模式下，分为自动呼吸模式和manual模式
-     * @note 
+     * @details pattern控制模式下，分为自动呼吸模式和manual模式；需要设置组模式。
+     * 自动呼吸模式下：brightness的高8位表示呼吸的最大亮度，低8位表示呼吸的最小亮度
+     * manual模式下：brightness的高8位表示led switch on时的亮度，低8位表示led switch off时的亮度
+     * @note
      * @par 修改日志:
      * <table>
      * <tr><th>Date             <th>Author         <th>Description
@@ -106,7 +123,9 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details <hl_drv_aw21009_led_light_st>中brightness的高八位表示最大亮度，低八位表示最小亮度，颜色每个led组独立；需要设置组模式，且失能组控制模式，开启自动呼吸模式或者manual模式。
+     * @details <hl_drv_aw21009_led_light_st>中brightness的高八位表示呼吸的最大亮度，
+     * 低八位表示呼吸的最小亮度，颜色每个led组独立；需要设置组模式，且失能组控制模式，开
+     * 启自动呼吸模式或者manual模式。
      * @note 
      * @par 修改日志:
      * <table>
@@ -121,7 +140,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details led_group参数被忽略，所有led组共享同一个灯光参数，brightness的精度为8位; 需要设置组模式，且开启组控制模式，关闭pattern模式。
+     * @details led_group参数被忽略，所有led组共享同一个r/g/b参数; 需要设置组模式，且开启组控制模式。
      * @note 
      * @par 修改日志:
      * <table>
@@ -151,7 +170,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-27
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details 设置单字节模式后，亮度精度变为8位，默认12位。**建议开启8位精度，12位精度并未测试成功。
+     * @details 设置单字节模式后，亮度精度变为8位，默认12位，使用12位精度时，建议同步设置pwm的精度为12位。pattern 模式下固定8位精度
      * @note 
      * @par 修改日志:
      * <table>
@@ -241,6 +260,20 @@ typedef enum _hl_drv_aw21009_pattern_time
 {
     HL_DRV_AW21009_PAT_TIME_0S00 = 0,
     HL_DRV_AW21009_PAT_TIME_0S13,
+    HL_DRV_AW21009_PAT_TIME_0S26,
+    HL_DRV_AW21009_PAT_TIME_0S38,
+    HL_DRV_AW21009_PAT_TIME_0S51,
+    HL_DRV_AW21009_PAT_TIME_0S77,
+    HL_DRV_AW21009_PAT_TIME_1S04,
+    HL_DRV_AW21009_PAT_TIME_1S60,
+    HL_DRV_AW21009_PAT_TIME_2S10,
+    HL_DRV_AW21009_PAT_TIME_2S60,
+    HL_DRV_AW21009_PAT_TIME_3S10,
+    HL_DRV_AW21009_PAT_TIME_4S20,
+    HL_DRV_AW21009_PAT_TIME_5S20,
+    HL_DRV_AW21009_PAT_TIME_6S20,
+    HL_DRV_AW21009_PAT_TIME_7S30,
+    HL_DRV_AW21009_PAT_TIME_8S30,
 } hl_drv_aw21009_pattern_time_e;
 
 typedef enum _hl_drv_aw21009_loop_stop_point
@@ -350,7 +383,7 @@ typedef enum
     BR_RESOLUTION_9BIT,
     BR_RESOLUTION_12BIT,
     BR_RESOLUTION_9_AND_3_BIT,
-} br_pwm_e;
+} hl_drv_aw21009_pwm_resolution_e;
 
 typedef enum
 {
