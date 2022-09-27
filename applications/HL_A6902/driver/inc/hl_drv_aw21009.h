@@ -46,7 +46,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details 需要在自动呼吸模式下用
+     * @details 需要开启自动呼吸模式，且设置组模式
      * @note 
      * @par 修改日志:
      * <table>
@@ -76,7 +76,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details led通道分组：[1-3]、[4-6]、[7-9]
+     * @details led通道分组：[1-3]、[4-6]、[7-9]，取消组模式后，led通道亮度变为单独控制，否则组内led亮度统一控制
      * @note 
      * @par 修改日志:
      * <table>
@@ -106,7 +106,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details 注意：亮度参数是所有led组共用的，改变亮度会改变所有led组的亮度，而颜色每个led组独立。
+     * @details <hl_drv_aw21009_led_light_st>中brightness的高八位表示最大亮度，低八位表示最小亮度，颜色每个led组独立；需要设置组模式，且失能组控制模式，开启自动呼吸模式或者manual模式。
      * @note 
      * @par 修改日志:
      * <table>
@@ -121,7 +121,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details led_group参数被忽略，所有led组共享同一个灯光参数
+     * @details led_group参数被忽略，所有led组共享同一个灯光参数，brightness的精度为8位; 需要设置组模式，且开启组控制模式，关闭pattern模式。
      * @note 
      * @par 修改日志:
      * <table>
@@ -130,8 +130,111 @@ typedef enum _hl_drv_aw21009_op
      * </table>
      */
     HL_DRV_AW21009_SET_LED_GROUP_LIGHT_EFFECT,
-    HL_DRV_AW21009_TEMP_LED_OPEN,
-    HL_DRV_AW21009_TEMP_LED_CLOSE,
+    /**
+     * 
+     * @brief 单独设置led通道的亮度，需要<hl_drv_aw21009_led_chan_brightness_st>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 需要退出组模式
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_LED_CHAN_BRIGHTNESS,
+    /**
+     * 
+     * @brief 设置亮度单字节模式，需要<bool>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 设置单字节模式后，亮度精度变为8位，默认12位。**建议开启8位精度，12位精度并未测试成功。
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_SINGLE_BYTE_MODE,
+    /**
+     * 
+     * @brief 设置rgb模式，需要<bool>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 设置rgb模式后，所有led通道亮度都由通道[1 - 3]控制，需要退出组模式。**建议关闭该模式，rgb模式并未测试成功。
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_RGB_MODE,
+    /**
+     * 
+     * @brief 单独设置led通道的颜色深浅，需要<hl_drv_aw21009_led_chan_color_st>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 需要退出组模式，或者失能组控制模式
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_LED_CHAN_COLOR,
+    /**
+     * 
+     * @brief 设置led开关，需要<bool>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 切换亮度输出值，由<_hl_drv_aw21009_led_light_param>的brightness高8位决定最大值，低8位决定最小值。
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_MANUAL_SET_SWITCH,
+    /**
+     * 
+     * @brief 设置淡入淡出效果，需要<bool>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_MANUAL_SET_RAMP,
+    /**
+     * 
+     * @brief 进入省电模式，需要<bool>类型的指针作为参数
+     * @date 2022-09-27
+     * @author lilin (lin.li@hollyland-tech.com)
+     * 
+     * @details true：进入，false：退出
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-09-27      <td>lilin     <td>新建
+     * </table>
+     */
+    HL_DRV_AW21009_SET_POWER_SAVE_MODE,
 } hl_drv_aw21009_op_e;
 
 typedef enum _hl_drv_aw21009_pattern_time
@@ -166,7 +269,36 @@ typedef enum _hl_drv_aw21009_pattern_mode
 {
     HL_DRV_AW21009_PAT_MANUAL_MODE      = 0,
     HL_DRV_AW21009_PAT_AUTO_BREATH_MODE = 1,
+    HL_DRV_AW21009_PAT_MODE_DISABLE     = 2,
 } hl_drv_aw21009_pattern_mode_e;
+
+typedef enum _hl_drv_aw21009_led_dev_num
+{
+    HL_DRV_AW21009_LED_DEV_0,
+    HL_DRV_AW21009_LED_DEV_1,
+} hl_drv_aw21009_led_dev_num_e;
+
+typedef enum _hl_drv_aw21009_led_channel
+{
+    ///red color channel
+    HL_DRV_AW21009_LED_CHANNEL1 = 0x01,
+    ///green color channel
+    HL_DRV_AW21009_LED_CHANNEL2 = 0x02,
+    ///blue color channel
+    HL_DRV_AW21009_LED_CHANNEL3 = 0x04,
+    ///red color channel
+    HL_DRV_AW21009_LED_CHANNEL4 = 0x08,
+    ///green color channel
+    HL_DRV_AW21009_LED_CHANNEL5 = 0x10,
+    ///blue color channel
+    HL_DRV_AW21009_LED_CHANNEL6 = 0x20,
+    ///red color channel
+    HL_DRV_AW21009_LED_CHANNEL7 = 0x40,
+    ///green color channel
+    HL_DRV_AW21009_LED_CHANNEL8 = 0x80,
+    ///blue color channel
+    HL_DRV_AW21009_LED_CHANNEL9 = 0x100,
+} hl_drv_aw21009_led_channel_e;
 
 typedef struct _hl_drv_aw21009_led_light_param
 {
@@ -188,11 +320,17 @@ typedef struct _hl_drv_aw21009_auto_breath_param
     uint16_t                          repeat_times;
 } hl_drv_aw21009_auto_breath_param_st;
 
-typedef enum _hl_drv_aw21009_led_dev_num
+typedef struct _hl_drv_aw21009_led_chan_brightness
 {
-    HL_DRV_AW21009_LED_DEV_0,
-    HL_DRV_AW21009_LED_DEV_1,
-} hl_drv_aw21009_led_dev_num_e;
+    hl_drv_aw21009_led_channel_e led_chan;
+    uint16_t                     brightness;
+} hl_drv_aw21009_led_chan_brightness_st;
+
+typedef struct _hl_drv_aw21009_led_chan_color
+{
+    hl_drv_aw21009_led_channel_e led_chan;
+    uint8_t                      color;
+} hl_drv_aw21009_led_chan_color_st;
 
 typedef enum
 {

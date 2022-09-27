@@ -758,7 +758,7 @@ int hl_drv_aw2016a_init(void)
         return AW2016A_FUNC_RET_ERR;
     }
 
-    DBG_LOG("\nLED init success!\n");
+    DBG_LOG("LED init success!\n");
 
     _init_flag = 1;
 
@@ -767,10 +767,27 @@ int hl_drv_aw2016a_init(void)
 
 int hl_drv_aw2016a_deinit(void)
 {
+    int     ret;
+    uint8_t work_mode;
+
     if (_init_flag == 0) {
         DBG_LOG("LED is not inited!\n");
         return AW2016A_FUNC_RET_ERR;
     }
+
+    work_mode = HL_DRV_AW2016A_STANDBY_MODE;
+
+    ret = set_work_mode(_p_i2c_bus_0, &work_mode);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_work_mode(_p_i2c_bus_1, &work_mode);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    DBG_LOG("LED deinit success!\n");
 
     _init_flag = 0;
 

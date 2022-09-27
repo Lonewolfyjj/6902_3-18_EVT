@@ -775,6 +775,12 @@ static inline int set_led_group_mode(uint8_t dev_addr, hl_drv_aw21009_led_group_
 
 static inline int set_pattern_mode(uint8_t dev_addr, hl_drv_aw21009_pattern_mode_e* arg)
 {
+    if (*arg == HL_DRV_AW21009_PAT_MODE_DISABLE) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_PATE_MASK, AW210XX_REG_ABMCFG_PATE_VAL(0));
+
+        return AW21009_FUNC_RET_OK;
+    }
+
     aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_PATE_MASK & AW210XX_REG_ABMCFG_PATMD_MASK,
                        AW210XX_REG_ABMCFG_PATE_VAL(1) | AW210XX_REG_ABMCFG_PATMD_VAL(*arg));
 
@@ -789,31 +795,25 @@ static inline int set_pattern_mode(uint8_t dev_addr, hl_drv_aw21009_pattern_mode
 
 static int set_led_light(uint8_t dev_addr, hl_drv_aw21009_led_light_st* arg)
 {
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRL, AW210XX_REG_GBRL_BRT_MASK,
-                       AW210XX_REG_GBRL_BRT_VAL(arg->brightness));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRL, AW210XX_REG_GBRL_ABM_MASK,
+                       AW210XX_REG_GBRL_ABM_VAL(arg->brightness));
 
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRH, AW210XX_REG_GBRH_BRT_MASK,
-                       AW210XX_REG_GBRH_BRT_VAL((arg->brightness) >> 8));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_GBRH, AW210XX_REG_GBRH_ABM_MASK,
+                       AW210XX_REG_GBRH_ABM_VAL((arg->brightness) >> 8));
 
     if (arg->led_group & HL_DRV_AW21009_LED_GROUP_1) {
-        // aw210xx_write_bits(dev_addr, AW210XX_REG_BR00L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
-
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL00, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->r));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL01, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->g));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL02, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->b));
     }
 
     if (arg->led_group & HL_DRV_AW21009_LED_GROUP_2) {
-        // aw210xx_write_bits(dev_addr, AW210XX_REG_BR01L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
-
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL03, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->r));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL04, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->g));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL05, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->b));
     }
 
     if (arg->led_group & HL_DRV_AW21009_LED_GROUP_3) {
-        // aw210xx_write_bits(dev_addr, AW210XX_REG_BR02L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
-
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL06, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->r));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL07, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->g));
         aw210xx_write_bits(dev_addr, AW210XX_REG_SL08, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->b));
@@ -837,6 +837,246 @@ static int set_led_group_light(uint8_t dev_addr, hl_drv_aw21009_led_light_st* ar
     aw210xx_write_bits(dev_addr, AW210XX_REG_GSLB, AW210XX_REG_GSLB_MASK, AW210XX_REG_GSLB_VAL(arg->b));
 
     aw210xx_write_bits(dev_addr, AW210XX_REG_UPDATE, AW210XX_REG_UPDATE_MASK, AW210XX_REG_UPDATE_VAL(0));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_led_chan_brightness(uint8_t dev_addr, hl_drv_aw21009_led_chan_brightness_st* arg)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = aw_read(dev_addr, AW210XX_REG_GCR2, &reg_val);
+    if (ret == AW21009_FUNC_RET_ERR) {
+        return AW21009_FUNC_RET_ERR;
+    }
+
+    if (reg_val & AW210XX_REG_GCR2_SBMD_VAL(1)) {  //单字节亮度模式
+        DBG_LOG("single mode\n");
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL1) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR00L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL2) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR00H, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL3) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR01L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL4) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR01H, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL5) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR02L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL6) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR02H, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL7) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR03L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL8) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR03H, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL9) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR04L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+        }
+    } else {
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL1) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR00L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR00H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL2) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR01L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR01H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL3) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR02L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR02H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL4) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR03L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR03H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL5) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR04L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR04H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL6) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR05L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR05H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL7) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR06L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR06H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL8) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR07L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR07H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+
+        if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL9) {
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR08L, AW210XX_REG_BR0XL_BRL_MASK,
+                               AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
+            aw210xx_write_bits(dev_addr, AW210XX_REG_BR08H, AW210XX_REG_BR0XH_BRH_MASK,
+                               AW210XX_REG_BR0XH_BRH_VAL((arg->brightness) >> 8));
+        }
+    }
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_UPDATE, AW210XX_REG_UPDATE_MASK, AW210XX_REG_UPDATE_VAL(0));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_single_byte_mode(uint8_t dev_addr, bool* arg)
+{
+    aw210xx_sbmd_set(dev_addr, *arg);
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_led_chan_color(uint8_t dev_addr, hl_drv_aw21009_led_chan_color_st* arg)
+{
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL1) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL00, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL2) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL01, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL3) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL02, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL4) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL03, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL5) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL04, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL6) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL05, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL7) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL06, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL8) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL07, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL9) {
+        aw210xx_write_bits(dev_addr, AW210XX_REG_SL08, AW210XX_REG_SL0X_MASK, AW210XX_REG_SL0X_VAL(arg->color));
+    }
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_UPDATE, AW210XX_REG_UPDATE_MASK, AW210XX_REG_UPDATE_VAL(0));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_power_save_mode(uint8_t dev_addr, bool* arg)
+{
+    hl_drv_aw21009_led_chan_brightness_st led_chan_brightness;
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_GCR, AW210XX_REG_GCR_APSE_MASK, AW210XX_REG_GCR_APSE_VAL(1));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_SWITCH_MASK, AW210XX_REG_ABMCFG_SWITCH_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR00L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR00H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR01L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR01H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR02L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR02H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR03L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR03H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR04L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR04H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR05L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR05H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR06L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR06H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR07L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR07H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR08L, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+    aw210xx_write_bits(dev_addr, AW210XX_REG_BR08H, AW210XX_REG_BR0XL_BRL_MASK, AW210XX_REG_BR0XL_BRL_VAL(0));
+
+    aw210xx_write_bits(dev_addr, AW210XX_REG_UPDATE, AW210XX_REG_UPDATE_MASK, AW210XX_REG_UPDATE_VAL(0));
+
+    rt_thread_mdelay(33);
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_rgb_mode(uint8_t dev_addr, bool* arg)
+{
+    aw210xx_rgbmd_set(dev_addr, *arg);
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int manual_set_switch(uint8_t dev_addr, bool* arg)
+{
+    aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_SWITCH_MASK,
+                       AW210XX_REG_ABMCFG_SWITCH_VAL(*arg));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int manual_set_ramp(uint8_t dev_addr, bool* arg)
+{
+    aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_RAMP_MASK, AW210XX_REG_ABMCFG_RAMP_VAL(*arg));
 
     return AW21009_FUNC_RET_OK;
 }
@@ -890,7 +1130,7 @@ int hl_drv_aw21009_init(void)
     DBG_LOG("LED init success: i2c addr:%02x\n", HL_DRV_AW21009_OTHER_DEV_ADDR);
 #endif
 
-    DBG_LOG("\naw21009 init success!\n");
+    DBG_LOG("aw21009 init success!\n");
 
     _init_flag = 1;
 
@@ -904,6 +1144,12 @@ int hl_drv_aw21009_deinit(void)
         DBG_LOG("aw21009 is not inited!\n");
         return AW21009_FUNC_RET_ERR;
     }
+
+    aw210xx_chipen_set(AW210XX_I2C_ADDR, false);
+
+#if HL_GET_DEVICE_TYPE() == 0
+    aw210xx_chipen_set(HL_DRV_AW21009_OTHER_DEV_ADDR, false);
+#endif
 
     _init_flag = 0;
 
@@ -1014,6 +1260,83 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
             }
 
             ret = set_led_group_light(dev_addr, (hl_drv_aw21009_led_light_st*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_LED_CHAN_BRIGHTNESS: {
+            if (arg_size != sizeof(hl_drv_aw21009_led_chan_brightness_st)) {
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_chan_brightness_st> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_led_chan_brightness(dev_addr, (hl_drv_aw21009_led_chan_brightness_st*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_SINGLE_BYTE_MODE: {
+            if (arg_size != sizeof(bool)) {
+                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_single_byte_mode(dev_addr, (bool*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_LED_CHAN_COLOR: {
+            if (arg_size != sizeof(hl_drv_aw21009_led_chan_color_st)) {
+                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_chan_color_st> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_led_chan_color(dev_addr, (hl_drv_aw21009_led_chan_color_st*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_POWER_SAVE_MODE: {
+            if (arg_size != sizeof(bool)) {
+                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_power_save_mode(dev_addr, (bool*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_SET_RGB_MODE: {
+            if (arg_size != sizeof(bool)) {
+                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = set_rgb_mode(dev_addr, (bool*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_MANUAL_SET_SWITCH: {
+            if (arg_size != sizeof(bool)) {
+                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = manual_set_switch(dev_addr, (bool*)arg);
+            if (ret == AW21009_FUNC_RET_ERR) {
+                return AW21009_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW21009_MANUAL_SET_RAMP: {
+            if (arg_size != sizeof(bool)) {
+                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                return AW21009_FUNC_RET_ERR;
+            }
+
+            ret = manual_set_ramp(dev_addr, (bool*)arg);
             if (ret == AW21009_FUNC_RET_ERR) {
                 return AW21009_FUNC_RET_ERR;
             }
