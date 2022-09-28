@@ -367,43 +367,11 @@ typedef struct _hl_drv_aw21009_led_chan_color
 
 typedef enum
 {
-    CLK_FRQ_16M = 1,
-    CLK_FRQ_8M,
-    CLK_FRQ_4M,
-    CLK_FRQ_2M,
-    CLK_FRQ_1M,
-    CLK_FRQ_512K,
-    CLK_FRQ_256K,
-    CLK_FRQ_125K,
-} clk_pwm_e;
-
-typedef enum
-{
     BR_RESOLUTION_8BIT = 1,
     BR_RESOLUTION_9BIT,
     BR_RESOLUTION_12BIT,
     BR_RESOLUTION_9_AND_3_BIT,
 } hl_drv_aw21009_pwm_resolution_e;
-
-typedef enum
-{
-    GROUP_ALL_LED_OFF = 0,
-    AW21018_GROUP_ALL_LEDS_ON,
-    AW21018_GROUP_RED_LEDS_ON,
-    AW21018_GROUP_GREEN_LEDS_ON,
-    AW21018_GROUP_BLUE_LEDS_ON,
-    AW21018_GROUP_BREATH_LEDS_ON,
-    AW21012_GROUP_ALL_LEDS_ON,
-    AW21012_GROUP_RED_LEDS_ON,
-    AW21012_GROUP_GREEN_LEDS_ON,
-    AW21012_GROUP_BLUE_LEDS_ON,
-    AW21012_GROUP_BREATH_LEDS_ON,
-    AW21009_GROUP_ALL_LEDS_ON,
-    AW21009_GROUP_RED_LEDS_ON,
-    AW21009_GROUP_GREEN_LEDS_ON,
-    AW21009_GROUP_BLUE_LEDS_ON,
-    AW21009_GROUP_BREATH_LEDS_ON,
-} effect_select_e;
 
 /* define --------------------------------------------------------------------*/
 

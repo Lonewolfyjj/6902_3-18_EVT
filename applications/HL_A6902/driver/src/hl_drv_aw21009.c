@@ -26,6 +26,19 @@
 #include "hl_drv_aw21009.h"
 
 /* typedef -------------------------------------------------------------------*/
+
+typedef enum
+{
+    CLK_FRQ_16M = 1,
+    CLK_FRQ_8M,
+    CLK_FRQ_4M,
+    CLK_FRQ_2M,
+    CLK_FRQ_1M,
+    CLK_FRQ_512K,
+    CLK_FRQ_256K,
+    CLK_FRQ_125K,
+} clk_pwm_e;
+
 /* define --------------------------------------------------------------------*/
 
 /*****************************************************
@@ -134,7 +147,13 @@
 #define AW210XX_REG_SL16 (0x56)
 #define AW210XX_REG_SL17 (0x57)
 #define AW210XX_REG_GCCR (0x58)
+
 #define AW210XX_REG_PHCR (0x59)
+#define AW210XX_REG_PHCR_PINVTE_MASK AW210XX_REG_MASK(0x07, 0)
+#define AW210XX_REG_PHCR_PINVTE_VAL(x) AW210XX_REG_SET_VAL(0x07, 0, x)
+#define AW210XX_REG_PHCR_PDE_MASK AW210XX_REG_MASK(0x01, 7)
+#define AW210XX_REG_PHCR_PDE_VAL(x) AW210XX_REG_SET_VAL(0x01, 7, x)
+
 #define AW210XX_REG_OSDCR (0x5A)
 #define AW210XX_REG_OSST0 (0x5B)
 #define AW210XX_REG_OSST1 (0x5C)
@@ -547,13 +566,30 @@ static void aw210xx_uvlo_set(uint8_t dev_addr, bool flag)
     }
 }
 
+static int set_pwm_phase_delay(uint8_t dev_addr, bool* flag)
+{
+    aw210xx_write_bits(dev_addr, AW210XX_REG_PHCR, AW210XX_REG_PHCR_PDE_MASK, AW210XX_REG_PHCR_PDE_VAL(*flag));
+
+    return AW21009_FUNC_RET_OK;
+}
+
+static int set_pwm_invert_enable(uint8_t dev_addr, hl_drv_aw21009_led_group_e* arg)
+{
+    aw210xx_write_bits(dev_addr, AW210XX_REG_PHCR, AW210XX_REG_PHCR_PINVTE_MASK, AW210XX_REG_PHCR_PINVTE_VAL(*arg));
+
+    return AW21009_FUNC_RET_OK;
+}
+
 static void aw210xx_led_init(uint8_t base_addr)
 {
+    hl_drv_aw21009_led_group_e group;
+    bool flag;
+
     /* chip enable */
     aw210xx_chipen_set(base_addr, true);
     /* sbmd enable */
     aw210xx_sbmd_set(base_addr, true);
-    /* rgbmd enable */
+    /* rgbmd disable */
     aw210xx_rgbmd_set(base_addr, false);
     /* clk_pwm selsect */
     aw210xx_clk_pwm_set(base_addr, CLK_FRQ_16M);
@@ -565,6 +601,14 @@ static void aw210xx_led_init(uint8_t base_addr)
     aw210xx_uvlo_set(base_addr, true);
     /* apse enable */
     aw210xx_apse_set(base_addr, true);
+
+    flag = true;
+
+    set_pwm_phase_delay(base_addr, &flag);
+
+    group = HL_DRV_AW21009_LED_GROUP_1 | HL_DRV_AW21009_LED_GROUP_2 | HL_DRV_AW21009_LED_GROUP_3;
+
+    set_pwm_invert_enable(base_addr, &group);
 }
 
 /*****************************************************
@@ -611,133 +655,6 @@ static int check_por_statu(uint8_t dev_addr, uint8_t* arg)
     }
 
     return AW21009_FUNC_RET_OK;
-}
-
-/**
- * 
- * @brief 设置组SL失能
- * @param [in] dev_addr 
- * @param [in] disable false：使能组SL，所有在组模式的led通道都由GSLR/G/B控制SL；true：失能，所有led通道SL都由自己独立的SL寄存器控制
- * @return int 
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_gsldis(uint8_t dev_addr, bool disable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GCFG, (~(1 << 6)), (disable << 6));
-}
-
-/**
- * 
- * @brief 设置pattern模式使能，使能后才能设置自动呼吸模式或者manual模式
- * @param [in] dev_addr 
- * @param [in] enable 
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_pate(uint8_t dev_addr, bool enable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, (~(1 << 0)), (enable << 0));
-}
-
-/**
- * 
- * @brief 设置组模式使能，如果pate = 1，led1 ~ 3工作在自动呼吸模式，如果pate = 0，led1 ~ 3工作在组模式
- * @param [in] dev_addr 
- * @param [in] enable true：进入模式，false：退出模式
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_ge0(uint8_t dev_addr, bool enable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GCFG, (~(1 << 0)), (enable << 0));
-}
-
-/**
- * 
- * @brief 设置组模式使能，如果pate = 1，led4 ~ 6工作在自动呼吸模式，如果pate = 0，led4 ~ 6工作在组模式
- * @param [in] dev_addr 
- * @param [in] enable true：进入模式，false：退出模式
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_ge1(uint8_t dev_addr, bool enable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GCFG, (~(1 << 1)), (enable << 1));
-}
-
-/**
- * 
- * @brief 设置组模式使能，如果pate = 1，led7 ~ 9工作在自动呼吸模式，如果pate = 0，led7 ~ 9工作在组模式
- * @param [in] dev_addr 
- * @param [in] enable true：进入模式，false：退出模式
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_ge2(uint8_t dev_addr, bool enable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_GCFG, (~(1 << 2)), (enable << 2));
-}
-
-/**
- * 
- * @brief 设置pattern控制器的模式
- * @param [in] dev_addr 
- * @param [in] enable true：自动呼吸模式，false：manual模式
- * @date 2022-09-24
- * @author lilin (lin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-24      <td>lilin     <td>新建
- * </table>
- */
-static inline void set_patmd(uint8_t dev_addr, bool enable)
-{
-    aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, (~(1 << 1)), (enable << 1));
 }
 
 static int set_auto_breath_param(uint8_t dev_addr, hl_drv_aw21009_auto_breath_param_st* arg)
@@ -1019,8 +936,6 @@ static int set_led_chan_color(uint8_t dev_addr, hl_drv_aw21009_led_chan_color_st
 
 static int set_power_save_mode(uint8_t dev_addr, bool* arg)
 {
-    hl_drv_aw21009_led_chan_brightness_st led_chan_brightness;
-
     aw210xx_write_bits(dev_addr, AW210XX_REG_GCR, AW210XX_REG_GCR_APSE_MASK, AW210XX_REG_GCR_APSE_VAL(1));
 
     aw210xx_write_bits(dev_addr, AW210XX_REG_ABMCFG, AW210XX_REG_ABMCFG_SWITCH_MASK, AW210XX_REG_ABMCFG_SWITCH_VAL(0));
@@ -1146,7 +1061,6 @@ int hl_drv_aw21009_init(void)
 
 int hl_drv_aw21009_deinit(void)
 {
-    int ret;
     if (_init_flag != 1) {
         DBG_LOG("aw21009 is not inited!\n");
         return AW21009_FUNC_RET_ERR;
