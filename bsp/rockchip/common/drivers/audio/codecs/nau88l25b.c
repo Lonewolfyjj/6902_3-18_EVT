@@ -376,9 +376,9 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     {0x0080, 0x0420},
     {0x0081, 0x002C},
     {0x0082, 0x0060},*/
-#if  0//HL_GET_DEVICE_TYPE()
-    {0x0000, 0x0000},/// +mclk
-    {0x0001, 0x07FF},
+#if  1//HL_GET_DEVICE_TYPE()
+    {0x0000, 0x0000},/// gainau88l25B配置--内置时钟模式-最大声压级-hl-mclk-20220927
+    {0x0001, 0x07FC},
     {0x0002, 0x0000},
     {0x0003, 0x0050},
     {0x0004, 0x0081},
@@ -386,7 +386,7 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     {0x0006, 0x0408},
     {0x0007, 0x0010},
     {0x0008, 0x1000},
-    {0x0009, 0x0000},
+    {0x0009, 0x6000},
     {0x000A, 0xF13C},
     {0x000C, 0x0048},
     {0x000D, 0x0000},
@@ -418,12 +418,12 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     {0x0028, 0x0000},
     {0x0029, 0x0000},
     {0x002A, 0x0000},
-    {0x002B, 0x0012},
+    {0x002B, 0x00D2},
     {0x002C, 0x0080},
     {0x002D, 0x0000},
     {0x002F, 0x0000},
     {0x0030, 0x00CF},
-    {0x0031, 0x1000},
+    {0x0031, 0x1004},
     {0x0032, 0x0000},
     {0x0033, 0x00CF},
     {0x0034, 0x02CF},
@@ -446,12 +446,12 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     {0x0069, 0x0000},
     {0x006A, 0x0083},
     {0x0071, 0x0011},
-    {0x0072, 0x0260},
+    {0x0072, 0x0160},
     {0x0073, 0x332C},
     {0x0074, 0x4107},
     {0x0076, 0x3140},
     {0x0077, 0x0000},
-    {0x007F, 0x403F},
+    {0x007F, 0x413F},
     {0x0080, 0x0420},
     {0x0081, 0x0008},
     {0x0082, 0x0C60},
@@ -689,27 +689,54 @@ static rt_err_t nau88l25b_get_gain(struct audio_codec *codec,
 }
 
 
-static rt_err_t nau88l25b_reg_init(struct nau88l25b_priv *nau88l25b)
+static rt_err_t nau88l25b_reg_init(struct nau88l25b_priv* nau88l25b)
 {
     rt_err_t ret = RT_EOK;
-
-    /* config codec */
-    uint8_t i;
-	uint8_t data;
-	NAU88L25B_REG_T *nau88l25b_param = NULL; 
-	nau88l25b_param = &s_nau88l25b_param[0]; 
-
-	rt_kprintf("NAU88L25B start init config (%d)\r\n", (sizeof(s_nau88l25b_param)/2));
-	for(i = 0; i < (sizeof(s_nau88l25b_param)/4); i++) {
-        ret |= es_wr_reg(nau88l25b->i2c_client, nau88l25b_param->reg_addr, nau88l25b_param->reg_value);
-		if (ret != RT_EOK) {
-			rt_kprintf("NAU88L25B error\r\n");
-			return ret;
-		}
-		nau88l25b_param++;
-	}
-	rt_kprintf("NAU88L25B end init config\r\n");
     
+    /* config codec */
+    uint8_t          i;
+    uint8_t          data;
+    uint16_t         array_size;
+    uint16_t         reg_value = 0;
+    NAU88L25B_REG_T* nau88l25b_param = NULL;
+    nau88l25b_param                  = &s_nau88l25b_param[0];
+
+
+    array_size = sizeof(s_nau88l25b_param) / sizeof(s_nau88l25b_param[0]);
+    rt_kprintf("NAU88L25B start init config (%d)\r\n", array_size);
+    for (i = 0; i < array_size; i++) {
+        ret |= es_wr_reg(nau88l25b->i2c_client, nau88l25b_param->reg_addr, nau88l25b_param->reg_value);
+        if (ret != RT_EOK) {
+            rt_kprintf("NAU88L25B error\r\n");
+            return ret;
+        }
+        nau88l25b_param++;
+    }
+
+#if 1
+    nau88l25b_param = &s_nau88l25b_param[0];
+    rt_kprintf("NAU88L25B read:");
+    for (i = 0; i < array_size; i++) {
+        if ((i % 8) == 0) {
+            rt_kprintf("\r\n");
+        }
+
+
+        ret = es_rd_reg(nau88l25b->i2c_client, nau88l25b_param->reg_addr, &reg_value);
+        if (ret == RT_EOK) {
+            rt_kprintf("0x%04x:0x%04x ", nau88l25b_param->reg_addr, reg_value);
+        } else {
+            rt_kprintf("NAU88L25B read error\r\n");
+        }
+
+
+        nau88l25b_param++;
+    }
+
+#endif
+    rt_kprintf("NAU88L25B end init config\r\n");
+
+
     return ret;
 }
 

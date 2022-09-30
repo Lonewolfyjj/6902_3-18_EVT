@@ -461,8 +461,8 @@ static void do_start_audio(void* arg)
 
         hl_drv_rk_xtensa_dsp_transfer();
         
-        if ( (rt_ringbuffer_space_len(s_audio_rb) >= cap_size) || s_audio_switch == 1) {            
-           rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_out_buffer, dsp_config->process_size);
+        if ( (rt_ringbuffer_space_len(s_audio_rb) >= cap_size) && (s_audio_switch == 1)) {            
+           rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_in_buffer, dsp_config->process_size);
         }else {
             rt_kprintf("rt_ringbuffer_get_size(s_audio_rb) =  %d", rt_ringbuffer_get_size(s_audio_rb));
         }
