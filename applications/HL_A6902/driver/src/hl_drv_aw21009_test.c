@@ -212,7 +212,7 @@ int hl_drv_aw21009_test_manual(int argc, char* argv[])  //manual模式
     return 0;
 }
 
-MSH_CMD_EXPORT(hl_drv_aw21009_test_open, open aw21009 test : r g b l ch num);
+MSH_CMD_EXPORT(hl_drv_aw21009_test_open, open aw21009 test : r g b l group num);
 
 MSH_CMD_EXPORT(hl_drv_aw21009_test_group, group ctrol test : r g b l num);
 
