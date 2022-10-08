@@ -43,7 +43,7 @@ typedef struct _hl_mod_pm
 {
     bool                  init_flag;
     bool                  start_flag;
-    bool                  update_flag;
+    bool                  soc_update_flag;
     void*                 msg_hd;
     rt_thread_t           pm_thread;
     int                   thread_exit_flag;
@@ -58,7 +58,7 @@ typedef struct _hl_mod_pm
 
 static hl_mod_pm_st _pm_mod = { .init_flag        = false,
                                 .start_flag       = false,
-                                .update_flag      = false,
+                                .soc_update_flag  = false,
                                 .msg_hd           = NULL,
                                 .pm_thread        = NULL,
                                 .thread_exit_flag = 0,
@@ -77,7 +77,7 @@ static hl_mod_pm_st _pm_mod = { .init_flag        = false,
 
 static void _soc_gpio_irq_handle(void* args)
 {
-    _pm_mod.update_flag = true;
+    _pm_mod.soc_update_flag = true;
 }
 
 static inline void _guage_soc_gpio_irq_init()
@@ -125,29 +125,34 @@ static void _pm_update_bat_info(void)
     DBG_LOG("cycle:%d\n", p_bat_info->cycle);
 }
 
-static void _pm_thread_entry(void* arg)
+static void _pm_update_bat_info_when_irq(void)
 {
     hl_drv_guage_check_it_flag_st it_flag;
     uint8_t                       flag;
 
+    it_flag.it_flag = HL_DRV_GUAGE_IT_FLAG_SOC;
+    it_flag.ret     = 0;
+
+    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IT_FLAG, &it_flag, sizeof(it_flag));
+
+    if (it_flag.ret == 1) {
+        flag = HL_DRV_GUAGE_IT_FLAG_SOC;
+
+        hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &flag, sizeof(flag));
+
+        _pm_update_bat_info();
+    }
+}
+
+static void _pm_thread_entry(void* arg)
+{
     _pm_update_bat_info();
 
     while (_pm_mod.thread_exit_flag == 0) {
-        if (_pm_mod.update_flag == true) {
-            it_flag.it_flag = HL_DRV_GUAGE_IT_FLAG_SOC;
-            it_flag.ret     = 0;
+        if (_pm_mod.soc_update_flag == true) {
+            _pm_update_bat_info_when_irq();
 
-            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IT_FLAG, &it_flag, sizeof(it_flag));
-
-            if (it_flag.ret == 1) {
-                flag = HL_DRV_GUAGE_IT_FLAG_SOC;
-
-                hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &flag, sizeof(flag));
-
-                _pm_update_bat_info();
-            }
-
-            _pm_mod.update_flag = false;
+            _pm_mod.soc_update_flag = false;
         }
 
         rt_thread_mdelay(10);
@@ -233,7 +238,7 @@ int hl_mod_pm_start(void)
         }
     }
 
-    _pm_mod.update_flag      = false;
+    _pm_mod.soc_update_flag  = false;
     _pm_mod.thread_exit_flag = 0;
 
     _guage_soc_gpio_irq_enable(true);
