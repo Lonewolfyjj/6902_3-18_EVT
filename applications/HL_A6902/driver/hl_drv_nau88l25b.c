@@ -1,19 +1,25 @@
 /**
  * @file hl_drv_nau88l25b.c
  * @author dujunjie (junjie.du@hollyland-tech.com)
- * @brief nau88l25b驱动文件
+ * @brief nau88l25b驱动文件.c文件
  * @version 1.0
- * @date 2022-09-08
+ * @date 2022-09-27
  * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
  * @copyright Copyright (c) 2022 hollyland
  * 
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-09-08     <td>v1.0     <td>dujunjie     <td>内容
+ * <tr><td>2022-09-27     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */
+ */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -41,13 +47,7 @@ static hl_reg_ctl_fun            fun_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
 static uint16_t                  reg_arr[NAU_REG_NUM + NAU_SPEREG_NUM];
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 
-/* NAU88L25B init the register value */
-typedef struct _NAU88L25B_REG_T
-{
-    uint16_t reg_addr;
-    uint16_t reg_value;
-} NAU88L25B_REG_T;
-
+/*
 static NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0000, 0x0000 }, { 0x0001, 0x07D4 }, { 0x0002, 0x0000 }, { 0x0003, 0x0050 }, { 0x0004, 0x0081 },
     { 0x0005, 0x624D }, { 0x0006, 0x0008 }, { 0x0007, 0x0410 }, { 0x0008, 0x1000 }, { 0x0009, 0x6000 },
@@ -67,6 +67,7 @@ static NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0074, 0x4002 }, { 0x0076, 0x3140 }, { 0x0077, 0x0000 }, { 0x007F, 0x553F }, { 0x0080, 0x0420 },
     { 0x0081, 0x002C }, { 0x0082, 0x0060 },
 };
+*/
 
 /**
  * 
@@ -674,10 +675,11 @@ CTL_ERR:
  * <tr><td>2022-09-08      <td>dujunjie     <td>新建
  * </table>
  */
-uint8_t hl_drv_nau88l25b_init(void)
+uint8_t hl_drv_nau88l25b_init(NAU88L25B_REG_T *data,uint16_t datalen)
 {
-    uint16_t i, j = sizeof(s_nau88l25b_param) / 4;
-    nau_printf("nau cfg_opt num : %d \n", j);
+    // uint16_t i, j = sizeof(s_nau88l25b_param) / 4;
+    uint16_t i;
+    nau_printf("nau cfg_opt num : %d \n", datalen);
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
 
@@ -688,8 +690,8 @@ uint8_t hl_drv_nau88l25b_init(void)
     hl_reg_arr_init();
     hl_reg_ctl_fun_init();
     hl_reg00_ctl();
-    for (i = 0; i < j; i++) {
-        if (hl_i2c_write_reg(i2c_bus, s_nau88l25b_param[i].reg_addr, &s_nau88l25b_param[i].reg_value)) {
+    for (i = 0; i < datalen; i++) {
+        if (hl_i2c_write_reg(i2c_bus, data[i].reg_addr, &data[i].reg_value)) {
             nau_printf("nau cfg_opt init fail !\n");
             goto INIT_ERR;
         }

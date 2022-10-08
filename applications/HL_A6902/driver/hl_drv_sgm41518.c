@@ -3,17 +3,23 @@
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * @brief sgm41518芯片驱动.c文件
  * @version 1.0
- * @date 2022-09-05
+ * @date 2022-09-27
  * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
  * @copyright Copyright (c) 2022 hollyland
  * 
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-09-05     <td>v1.0     <td>dujunjie     <td>内容
+ * <tr><td>2022-09-27     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */
+ */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -225,16 +231,16 @@ static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
                 param[0] = reg_all.reg01.WD_RST;
                 break;
             case RW_EN_OTG:
-                param[0] = reg_all.reg01.PFM_DIS;
+                param[0] = reg_all.reg01.OTG_CONFIG;
                 break;
             case RW_EN_BAT_CHARGING:
-                param[0] = reg_all.reg01.PFM_DIS;
+                param[0] = reg_all.reg01.CHG_CONFIG;
                 break;
             case RW_SYS_MIN:
-                param[0] = reg_all.reg01.PFM_DIS;
+                param[0] = reg_all.reg01.SYS_MIN;
                 break;
             case RW_MIN_BAT_SEL:
-                param[0] = reg_all.reg01.PFM_DIS;
+                param[0] = reg_all.reg01.MIN_BAT_SEL;
                 break;
             default:
                 goto CTL_ERR;
@@ -250,16 +256,16 @@ static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             reg_all.reg01.WD_RST = param[0];
             break;
         case RW_EN_OTG:
-            reg_all.reg01.PFM_DIS = param[0];
+            reg_all.reg01.OTG_CONFIG = param[0];
             break;
         case RW_EN_BAT_CHARGING:
-            reg_all.reg01.PFM_DIS = param[0];
+            reg_all.reg01.CHG_CONFIG = param[0];
             break;
         case RW_SYS_MIN:
-            reg_all.reg01.PFM_DIS = param[0];
+            reg_all.reg01.SYS_MIN = param[0];
             break;
         case RW_MIN_BAT_SEL:
-            reg_all.reg01.PFM_DIS = param[0];
+            reg_all.reg01.MIN_BAT_SEL = param[0];
             break;
         default:
             goto CTL_ERR;
@@ -492,7 +498,7 @@ static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
                 param[0] = reg_all.reg05.EN_TERM;
                 break;
             case RW_WDOG_TIMER_CHG:
-                param[0] = reg_all.reg05.CHG_TIMER;
+                param[0] = reg_all.reg05.WATCHDOG;
                 break;
             case RW_CHARGE_SAFETY_TIMER_ENABLE:
                 param[0] = reg_all.reg05.EN_TIMER;
@@ -517,7 +523,7 @@ static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             reg_all.reg05.EN_TERM = param[0];
             break;
         case RW_WDOG_TIMER_CHG:
-            reg_all.reg05.CHG_TIMER = param[0];
+            reg_all.reg05.WATCHDOG = param[0];
             break;
         case RW_CHARGE_SAFETY_TIMER_ENABLE:
             reg_all.reg05.EN_TIMER = param[0];
@@ -1662,49 +1668,23 @@ INIT_ERR:
     return HL_FAILED;
 }
 
+/**
+ * 
+ * @brief 
+ * @param [in] argc 
+ * @param [in] argv 按顺序为：读写  配置选项  选项参数值（参考功能选项参数宏）
+ * @date 2022-10-08
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-08      <td>dujunjie     <td>新建
+ * </table>
+ */
 void tt1518(int argc, char** argv)
-{
-    uint8_t buf = 0;
-
-    if (argc != 4) {
-        smg_printf("argc param err : %d \n", argc);
-        return;
-    }
-
-    uint8_t rw      = atoi(argv[1]);
-    uint8_t cfg_opt = atoi(argv[2]);
-    uint8_t data    = atoi(argv[3]);
-
-    if (cfg_opt > 0x0F) {
-        smg_printf("cfg_opt param err : %X \n", cfg_opt);
-        return;
-    }
-
-    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
-
-    if (i2c_bus == RT_NULL) {
-        smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
-    }
-
-    if (rw == 0) {
-        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
-            smg_printf("cfg_opt %d read err !\n", cfg_opt);
-        }
-    }
-
-    if (rw == 1) {
-        if (hl_i2c_write_reg(i2c_bus, cfg_opt, &data)) {
-            smg_printf("cfg_opt %d write err !\n", cfg_opt);
-        }
-        if (hl_i2c_read_reg(i2c_bus, cfg_opt, &buf)) {
-            smg_printf("cfg_opt %d read err !\n", cfg_opt);
-        }
-    }
-
-    smg_printf("buf = 0x%02X \n", buf);
-}
-
-void test1518(int argc, char** argv)
 {
     HL_SGM_INPUT_PARAM_T par;
     if (argc != 4) {
@@ -1736,4 +1716,4 @@ void test1518(int argc, char** argv)
 }
 
 MSH_CMD_EXPORT(tt1518, run tt1518);
-MSH_CMD_EXPORT(test1518, run test1518);
+MSH_CMD_EXPORT(hl_drv_sgm41518_init, run hl_drv_sgm41518_init);
