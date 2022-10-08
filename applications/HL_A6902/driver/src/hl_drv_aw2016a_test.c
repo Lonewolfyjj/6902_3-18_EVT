@@ -30,15 +30,16 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+#if HL_GET_DEVICE_TYPE()  //tx
 int hl_drv_aw2016a_test_init(int argc, char* argv[])
 {
-    int                             ret;
-    bool                            flag;
-    uint8_t                         chip_id;
-    uint8_t                         work_mode;
-    uint8_t                         led_chan;
+    int                            ret;
+    bool                           flag;
+    uint8_t                        chip_id;
+    uint8_t                        work_mode;
+    uint8_t                        led_chan;
     hl_drv_aw2016a_breath_param_st pattern_param;
-    hl_drv_aw2016a_light_st         light;
+    hl_drv_aw2016a_light_st        light;
 
     rt_kprintf("\naw2016a test\n");
 
@@ -104,6 +105,7 @@ int hl_drv_aw2016a_test_init(int argc, char* argv[])
     pattern_param.t2       = 3;
     pattern_param.t3       = 9;
     pattern_param.t4       = 0;
+
     ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_BREATH_PARAM, &pattern_param,
                               sizeof(pattern_param));
     if (ret == AW2016A_FUNC_RET_ERR) {
@@ -128,6 +130,7 @@ int hl_drv_aw2016a_test_init(int argc, char* argv[])
 }
 
 MSH_CMD_EXPORT(hl_drv_aw2016a_test_init, init aw2016a test : r g b l);
+#endif
 /*
  * EOF
  */
