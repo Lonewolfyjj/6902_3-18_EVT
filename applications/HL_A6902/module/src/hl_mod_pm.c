@@ -90,7 +90,6 @@ static inline void _guage_soc_gpio_irq_init()
 static inline void _guage_soc_gpio_irq_deinit()
 {
     hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_DISABLE);
-    hl_hal_gpio_attach_irq(GPIO_GAUGE_INT, PIN_IRQ_MODE_FALLING, NULL, NULL);
     hl_hal_gpio_deinit(GPIO_GAUGE_INT);
 }
 
@@ -179,12 +178,6 @@ int hl_mod_pm_init(void* msg_hd)
 
     _guage_soc_gpio_irq_init();
 
-    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
-    if (_pm_mod.pm_thread == RT_NULL) {
-        DBG_LOG("pm thread create failed\n");
-        return HL_MOD_PM_FUNC_RET_ERR;
-    }
-
     _pm_mod.msg_hd = msg_hd;
 
     DBG_LOG("pm init success!\n");
@@ -238,10 +231,17 @@ int hl_mod_pm_start(void)
         }
     }
 
-    _pm_mod.soc_update_flag  = false;
-    _pm_mod.thread_exit_flag = 0;
+    _pm_mod.soc_update_flag = false;
 
     _guage_soc_gpio_irq_enable(true);
+
+    _pm_mod.thread_exit_flag = 0;
+
+    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
+    if (_pm_mod.pm_thread == RT_NULL) {
+        DBG_LOG("pm thread create failed\n");
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
 
     rt_thread_startup(_pm_mod.pm_thread);
 
