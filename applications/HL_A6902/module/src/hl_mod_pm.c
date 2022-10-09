@@ -29,7 +29,7 @@
 
 /* typedef -------------------------------------------------------------------*/
 
-typedef struct _hl_mod_pm_bat_info
+typedef struct _hl_mod_pm_bat_info_st
 {
     hl_st_drv_guage_soc_t  soc;
     uint16_t               voltage;
@@ -39,16 +39,27 @@ typedef struct _hl_mod_pm_bat_info
     uint32_t               cycle;
 } hl_mod_pm_bat_info_st;
 
-typedef struct _hl_mod_pm
+typedef struct _hl_mod_pm_st
 {
     bool                  init_flag;
     bool                  start_flag;
+    bool                  update_flag;
     bool                  soc_update_flag;
     void*                 msg_hd;
     rt_thread_t           pm_thread;
     int                   thread_exit_flag;
     hl_mod_pm_bat_info_st bat_info;
 } hl_mod_pm_st;
+
+typedef enum _hl_mod_pm_bat_info_e
+{
+    HL_MOD_PM_BAT_INFO_SOC = 0,
+    HL_MOD_PM_BAT_INFO_VOL,
+    HL_MOD_PM_BAT_INFO_CUR,
+    HL_MOD_PM_BAT_INFO_TEMP,
+    HL_MOD_PM_BAT_INFO_SOH,
+    HL_MOD_PM_BAT_INFO_CYCLE,
+} hl_mod_pm_bat_info_e;
 
 /* define --------------------------------------------------------------------*/
 
@@ -58,6 +69,7 @@ typedef struct _hl_mod_pm
 
 static hl_mod_pm_st _pm_mod = { .init_flag        = false,
                                 .start_flag       = false,
+                                .update_flag      = false,
                                 .soc_update_flag  = false,
                                 .msg_hd           = NULL,
                                 .pm_thread        = NULL,
@@ -102,57 +114,82 @@ static inline void _guage_soc_gpio_irq_enable(bool flag)
     }
 }
 
-static void _pm_update_bat_info(void)
+static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
 {
     hl_mod_pm_bat_info_st* p_bat_info;
 
     p_bat_info = &(_pm_mod.bat_info);
 
-    DBG_LOG("update bat info\n");
-
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOC, &(p_bat_info->soc), sizeof(p_bat_info->soc));
-    DBG_LOG("soc:%d . %d\n", p_bat_info->soc.soc, p_bat_info->soc.soc_d);
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_VOLTAGE, &(p_bat_info->voltage), sizeof(p_bat_info->voltage));
-    DBG_LOG("voltage:%d\n", p_bat_info->voltage);
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CURRENT, &(p_bat_info->current), sizeof(p_bat_info->current));
-    DBG_LOG("current:%d\n", p_bat_info->current);
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_TEMP, &(p_bat_info->temp), sizeof(p_bat_info->temp));
-    DBG_LOG("temp:%d . %d\n", p_bat_info->temp.temp, p_bat_info->temp.temp_d);
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOH, &(p_bat_info->soh), sizeof(p_bat_info->soh));
-    DBG_LOG("soh:%d\n", p_bat_info->soh);
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CYCLE_COUNT, &(p_bat_info->cycle), sizeof(p_bat_info->cycle));
-    DBG_LOG("cycle:%d\n", p_bat_info->cycle);
+    switch (type) {
+        case HL_MOD_PM_BAT_INFO_SOC: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOC, &(p_bat_info->soc), sizeof(p_bat_info->soc));
+            DBG_LOG("soc:%d . %d\n", p_bat_info->soc.soc, p_bat_info->soc.soc_d);
+        } break;
+        case HL_MOD_PM_BAT_INFO_VOL: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_VOLTAGE, &(p_bat_info->voltage), sizeof(p_bat_info->voltage));
+            DBG_LOG("voltage:%d\n", p_bat_info->voltage);
+        } break;
+        case HL_MOD_PM_BAT_INFO_CUR: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CURRENT, &(p_bat_info->current), sizeof(p_bat_info->current));
+            DBG_LOG("current:%d\n", p_bat_info->current);
+        } break;
+        case HL_MOD_PM_BAT_INFO_TEMP: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_TEMP, &(p_bat_info->temp), sizeof(p_bat_info->temp));
+            DBG_LOG("temp:%d . %d\n", p_bat_info->temp.temp, p_bat_info->temp.temp_d);
+        } break;
+        case HL_MOD_PM_BAT_INFO_SOH: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOH, &(p_bat_info->soh), sizeof(p_bat_info->soh));
+            DBG_LOG("soh:%d\n", p_bat_info->soh);
+        } break;
+        case HL_MOD_PM_BAT_INFO_CYCLE: {
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CYCLE_COUNT, &(p_bat_info->cycle), sizeof(p_bat_info->cycle));
+            DBG_LOG("cycle:%d\n", p_bat_info->cycle);
+        } break;
+        default:
+            break;
+    }
 }
 
-static void _pm_update_bat_info_when_irq(void)
+static inline void _pm_update_bat_info_check(void)
 {
     hl_drv_guage_check_it_flag_st it_flag;
     uint8_t                       flag;
+    bool                          update_flag = false;
 
-    it_flag.it_flag = HL_DRV_GUAGE_IT_FLAG_SOC;
-    it_flag.ret     = 0;
+    if (_pm_mod.soc_update_flag == true) {
+        it_flag.it_flag = HL_DRV_GUAGE_IT_FLAG_SOC;
+        it_flag.ret     = 0;
 
-    hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IT_FLAG, &it_flag, sizeof(it_flag));
+        hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IT_FLAG, &it_flag, sizeof(it_flag));
 
-    if (it_flag.ret == 1) {
-        flag = HL_DRV_GUAGE_IT_FLAG_SOC;
+        if (it_flag.ret == 1) {
+            flag = HL_DRV_GUAGE_IT_FLAG_SOC;
 
-        hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &flag, sizeof(flag));
+            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &flag, sizeof(flag));
 
-        _pm_update_bat_info();
+            update_flag = true;
+        }
+
+        _pm_mod.soc_update_flag = false;
+    }
+
+    if (_pm_mod.update_flag == true) {
+        update_flag         = true;
+        _pm_mod.update_flag = false;
+    }
+
+    if (update_flag == true) {
+        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
+        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_VOL);
+        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
+        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
     }
 }
 
 static void _pm_thread_entry(void* arg)
 {
-    _pm_update_bat_info();
-
     while (_pm_mod.thread_exit_flag == 0) {
-        if (_pm_mod.soc_update_flag == true) {
-            _pm_update_bat_info_when_irq();
-
-            _pm_mod.soc_update_flag = false;
-        }
+        _pm_update_bat_info_check();
 
         rt_thread_mdelay(10);
     }
@@ -232,6 +269,7 @@ int hl_mod_pm_start(void)
     }
 
     _pm_mod.soc_update_flag = false;
+    _pm_mod.update_flag     = true;
 
     _guage_soc_gpio_irq_enable(true);
 
