@@ -360,7 +360,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
+#define RT_BOARD_NAME "audio_hollyland_a6902_rx"
 #define RK_SRAM_END 0x20100000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
