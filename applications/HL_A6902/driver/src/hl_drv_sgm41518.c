@@ -19,7 +19,7 @@
  * <tr><td>2022-09-27     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -46,7 +46,7 @@ typedef uint8_t (*hl_reg_ctl_fun)(uint8_t cmd, uint8_t cmd_typ, uint8_t* param);
 static hl_reg_ctl_fun            fun_arr[SGM_REG_NUM];
 static uint8_t                   reg_arr[SGM_REG_NUM];
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
-
+extern int                       gpio_test_init(void);
 /**
  * 
  * @brief i2c总线写数据
@@ -1507,6 +1507,76 @@ uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 
 /**
  * 
+ * @brief 初始化结果检测函数
+ * @param [in] data 配置参数
+ * @return uint8_t 
+ * @date 2022-10-12
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-12      <td>dujunjie     <td>新建
+ * </table>
+ */
+static uint8_t hl_drv_sgm41518_init_test(uint8_t* data)
+{
+    uint8_t reg_config_bak[16] = { 0 }, i = 0;
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG00_ADDR, &reg_config_bak[0])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG00_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG01_ADDR, &reg_config_bak[1])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG01_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG02_ADDR, &reg_config_bak[2])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG02_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG03_ADDR, &reg_config_bak[3])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG03_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG04_ADDR, &reg_config_bak[4])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG04_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG05_ADDR, &reg_config_bak[5])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG05_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG06_ADDR, &reg_config_bak[6])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG06_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG07_ADDR, &reg_config_bak[7])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG07_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0C_ADDR, &reg_config_bak[0x0C])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG0C_ADDR);
+        goto INIT_ERR;
+    }
+
+    for (i = 0; i < 16; i++) {
+        if (reg_config_bak[i] != data[i]) {
+            smg_printf("smg41518 reg %X init fail!\n", i);
+            smg_printf("reg_config_bak[%d] = %X data[%d] = %X!\n", i, reg_config_bak[i], i, data[i]);
+            goto INIT_ERR;
+        }
+    }
+    smg_printf("smg41518 reg init success!\n");
+    return HL_SUCCESS;
+INIT_ERR:
+    smg_printf("smg41518 reg init fail!\n");
+    return HL_FAILED;
+}
+
+/**
+ * 
  * @brief sgm41518初始化函数
  * @return uint8_t 0成功，1失败
  * @date 2022-09-05
@@ -1522,11 +1592,11 @@ uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
  */
 uint8_t hl_drv_sgm41518_init(void)
 {
+    uint8_t              reg_config[16] = { 0 };
     HL_SGM41518_REGALL_T reg_all;
-
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SGM41518_IIC_NAME);
-
+    smg_printf("smg41518 init !\n");
     hl_reg_arr_init();
     hl_reg_ctl_fun_init();
 
@@ -1575,6 +1645,7 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg00.IINDPM      = IINDPM_SET(31);            // 3200mA
     reg_all.reg00.EN_ICHG_MON = FOLLOE_CHARG_STAT_ENABLE;  //STAT引脚状态由充电状态决定
     reg_all.reg00.EN_HIZ      = HIZ_DISABLE;               //HIZ模式禁用
+    reg_config[0]             = *(uint8_t*)&reg_all.reg00;
 
     reg_all.reg01.MIN_BAT_SEL = MIN_BOOST_VOLTAGE_2v95;  //升压模式最小系统电压2.95V
     reg_all.reg01.SYS_MIN     = SYS_MIN_3V5;             //默认最小系统电压3.5V
@@ -1582,16 +1653,20 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg01.OTG_CONFIG  = OTG_DISABLE;             //关闭OTG充电功能
     reg_all.reg01.WD_RST      = WDG_TIMEOUT;             //看门狗初始化复位
     reg_all.reg01.PFM_DIS     = PFM_DISABLE;             //禁用PFM模式
+    reg_config[1]             = *(uint8_t*)&reg_all.reg01;
 
     reg_all.reg02.ICHG = FAST_CHARGE_CURRENT_SET(63);  // 1280mA
     reg_all.reg02.Q1_FULLON = Q1_USE_HIGHER_RDSON;  //控制开关阻抗，输入电流<700ma时建议设置成 0，通用设置为1
+    reg_config[2] = *(uint8_t*)&reg_all.reg02;
 
     reg_all.reg03.ITERM   = TER_CURRENT_SET(0);  // 设置终止电流20mA
     reg_all.reg03.IPRECHG = PRE_CHARGE_SET(12);  // 设置预充电电流260mA
+    reg_config[3]         = *(uint8_t*)&reg_all.reg03;
 
     reg_all.reg04.VRECHG       = RECHARGE_THRESHOLD_100;    //充电开始阈值：VREG - 100mv
     reg_all.reg04.TOPOFF_TIMER = TOP_TIMER_DISABLE;         //关闭充电延长时间
     reg_all.reg04.VREG         = CHARGE_VOLTAGE_LIMIT(12);  // 充电电压限制4.24V
+    reg_config[4]              = *(uint8_t*)&reg_all.reg04;
 
     reg_all.reg05.JEITA_ISET = JEITA_CURRENT_SET_L_50;      //低温时（0℃ - 10 ℃）充电电流 I = 50% * ICHG
     reg_all.reg05.TREG       = THERNAL_REGT_THRESHOLD_120;  //设置热调节阈值 120℃
@@ -1599,10 +1674,12 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg05.EN_TIMER   = CHARGE_SAFET_TIMER_ENABLE;   //使能充电安全计数器
     reg_all.reg05.WATCHDOG   = WDG_TIMER_DISABLE;           //禁用看门狗
     reg_all.reg05.EN_TERM    = CHARGE_TER_ENABLE;           //充电终止使能
+    reg_config[5]            = *(uint8_t*)&reg_all.reg05;
 
     reg_all.reg06.VINDPM = VINDPM_THRESHOLD(6);       //VINDPM电压阈值 : 4.5V
     reg_all.reg06.BOOSTV = BOOST_VOL_THRESHOLD_5V15;  //boost模式调压设置5.15V
     reg_all.reg06.OVP    = VAC_OVP_THRESHOLD_6V5;     //设置VAC检测输入电压阈值 6.5V（5V输入时）
+    reg_config[6]        = *(uint8_t*)&reg_all.reg06;
 
     reg_all.reg07.VDPM_BAT_TRACK = VDPM_BAT_TRACK_DISABLE;  //关闭动态VUNDPM跟踪功能
     reg_all.reg07.BATFET_RST_EN  = BATFET_RST_ENABLE;       //启用BATFET重置功能
@@ -1610,14 +1687,20 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg07.JEITA_VSET     = JEITA_VSET_H_SET_VREG;   //设置充电电压为VREG（45℃ - 60℃）
     reg_all.reg07.BATFET_DIS     = BATFET_ENABLE;           //允许BATFET打开
     reg_all.reg07.TMR2X_EN       = TMR2X_ENABLE;            //开启安全计数器减速计数模式
-    reg_all.reg07.IINDET_EN      = IINDET_ENABLE;           //使能输入电流限制检测
+    reg_all.reg07.IINDET_EN      = IINDET_DISABLE;           //使能输入电流限制检测
+    reg_config[7]                = *(uint8_t*)&reg_all.reg07;
 
     reg_all.reg0C.JEITA_VT3       = JEITA_WARM_VT3_44C5;    //温暖阈值T3设置为 44.5℃
     reg_all.reg0C.JEITA_VT2       = JEITA_COOL_VT2_10C;     //寒冷阈值T2设置为 10℃
     reg_all.reg0C.JEITA_ISET_H    = JEITA_WARM_ISET_100;    //温暖温度设置充电电流 100% * ICHG
     reg_all.reg0C.JEITA_ISET_L_EN = JEITA_ISET_L_ENABLE;    //开启低温充电
     reg_all.reg0C.JEITA_VSET_L    = JEITA_VSET_L_SET_VREG;  //设置低温区间（0℃ - 10℃）充电电压等于VREG
+    reg_config[0x0C]              = *(uint8_t*)&reg_all.reg0C;
 
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("cfg_opt %d write err !\n", SGM_REG07_ADDR);
+        goto INIT_ERR;
+    }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
@@ -1645,18 +1728,14 @@ uint8_t hl_drv_sgm41518_init(void)
     if (hl_i2c_write_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
-    }
-    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("cfg_opt %d write err !\n", SGM_REG07_ADDR);
-        goto INIT_ERR;
-    }
+    }    
     if (hl_i2c_write_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
     }
-    rt_thread_mdelay(50);
-    if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
-        smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
+
+    if (hl_drv_sgm41518_init_test(reg_config) == HL_FAILED) {
+        smg_printf("smg41518 reg init fail!\n");
         goto INIT_ERR;
     }
     smg_printf("smg41518 init success !\n");
@@ -1714,6 +1793,6 @@ void tt1518(int argc, char** argv)
 
     smg_printf("par.param = 0x%02X \n", par.param);
 }
-
+// INIT_ENV_EXPORT(hl_drv_sgm41518_init);
 MSH_CMD_EXPORT(tt1518, run tt1518);
 MSH_CMD_EXPORT(hl_drv_sgm41518_init, run hl_drv_sgm41518_init);
