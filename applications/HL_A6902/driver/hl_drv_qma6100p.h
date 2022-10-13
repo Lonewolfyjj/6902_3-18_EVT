@@ -22,12 +22,12 @@
 #ifndef uint32_t
 #define		uint32_t				unsigned int
 #endif
-#ifndef int64_t
-#define		int64_t					long long
-#endif
-#ifndef uint64_t
-#define		uint64_t				unsigned long long
-#endif
+// #ifndef int64_t
+// #define		int64_t					long long
+// #endif
+// #ifndef uint64_t
+// #define		uint64_t				unsigned long long
+// #endif
 #ifndef float32_t
 #define		float32_t				float
 #endif
@@ -67,6 +67,7 @@
 #define HL_QMA6100_FAIL					1
 #define HL_QMA6100_SUCCESS				0
 
+///重力加速度单位mm/s2
 #define GRAVITY_EARTH_1000          	9807	// about (9.80665f)*1000   mm/s2
 #define HL_QMA6100_ABS(X) 				((X) < 0 ? (-1 * (X)) : (X))
 
@@ -141,8 +142,12 @@
 #define TAP_AXIS_XYZ					(1<<7)|(1<<6)
 #define TAP_SHOCK_TH					0x05//0x08////0x0e  //0x14*31.25mg = 625mg
 
+///弧度--角度转换精度
+#define R2D        						57.2957795131f
+
 enum QMA6100_CTRL_CMD
 {
+    /// @brief 枚举 获取姿态角
     QMA6100_GET_EULWER_ANGLE,
 };
 
@@ -260,7 +265,7 @@ typedef struct
 typedef struct {
     int32_t pitch;
     int32_t roll;
-    int z
+    int32_t z
 }euler_angle_t;
 
 typedef struct
@@ -315,14 +320,58 @@ typedef struct
 
 // extern void HL_QMA6100_irq_hdlr(void);
 
+/**
+ * 
+ * @brief 外部调用接口 初始化
+ * @return uint8_t 
+ * @date 2022-09-26
+ * @author libo (rd46@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-26      <td>libo     <td>新建
+ * </table>
+ */
 uint8_t hl_drv_qma6100p_init(void);
 
+/**
+ * 
+ * @brief 外部调用接口：去初始化
+ * @return uint8_t 
+ * @date 2022-09-26
+ * @author libo (rd46@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-26      <td>libo     <td>新建
+ * </table>
+ */
 uint8_t hl_drv_qma6100p_deinit(void);
 
+/**
+ * 
+ * @brief 外部调用接口 ：控制
+ * @param [in] cmd 
+ * @param [in] ptr 
+ * @param [in] len 
+ * @return uint8_t 
+ * @date 2022-09-26
+ * @author libo (rd46@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-26      <td>libo     <td>新建
+ * </table>
+ */
 uint8_t hl_drv_qma6100p_io_ctrl(uint8_t cmd, void * ptr, uint16_t len);
-
-uint8_t HL_QMA6100P_get_Euler_Angle(int32_t * ptr);
-
-uint8_t HL_QMA6100P_get();
 
 #endif

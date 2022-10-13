@@ -29,7 +29,7 @@
 
 
 #define HL_QMA6100P_I2C_BUS_NAME "i2c1"                    /* 传感器连接的I2C总线设备名称 */
-static struct rt_i2c_bus_device* i2c_handle = RT_NULL;  /* I2C总线设备句柄 */
+static struct rt_i2c_bus_device* i2c_handle = RT_NULL;     /* I2C总线设备句柄 */
 
 static const qst_convert_t qst_map[] = { { { 1, 1, 1 }, { 0, 1, 2 } }, { { -1, 1, 1 }, { 1, 0, 2 } },
                                        { { -1, -1, 1 }, { 0, 1, 2 } }, { { 1, -1, 1 }, { 1, 0, 2 } },
@@ -109,6 +109,11 @@ static uint8_t HL_drv_get_i2c_handle_init(void)
 static rt_err_t HL_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t addr, rt_uint8_t reg, rt_uint8_t* data,
                           rt_uint8_t len)
 {
+    if(RT_NULL == bus){
+        rt_kprintf("QMA6100P  HL_i2c_write_reg  bus is null\n");
+        return -2;
+    }
+
     rt_uint8_t        buf[20];
     struct rt_i2c_msg msgs;
     rt_uint32_t       buf_size = len + 1;
@@ -126,7 +131,7 @@ static rt_err_t HL_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t addr,
     if (rt_i2c_transfer(bus, &msgs, 1) == 1) {
         return RT_EOK;
     } else {
-        rt_kprintf("HL_i2c_write_reg  error\n");
+        rt_kprintf("HL_i2c_write_reg  error \n");
         return -RT_ERROR;
     }
 }
@@ -177,6 +182,10 @@ static int32_t HL_I2C_ByteWrite(uint8_t addr, uint8_t reg, uint8_t data)
  */
 static rt_err_t HL_i2c_read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t addr, rt_uint8_t* buf, rt_uint8_t len)
 {
+    if(RT_NULL == bus){
+        rt_kprintf("QMA6100P HL_i2c_read_regs  bus is null\n");
+        return -2;
+    }    
     struct rt_i2c_msg msgs;
 
     msgs.addr  = addr;
@@ -410,7 +419,6 @@ static int32_t HL_QMA6100_set_range(uint8_t range)
  * <tr><td>2022-09-26      <td>libo     <td>新建
  * </table>
  */
-
 static int32_t HL_QMA6100_set_mode_odr(int32_t mode, int32_t mclk, int32_t div, int32_t lpf)
 {
     int32_t ret      = 0;
@@ -1695,45 +1703,15 @@ static int32_t HL_QMA6100_init(void)
     return ret;
 }
 
-/**
- * 
- * @brief 外部调用接口 初始化
- * @return uint8_t 
- * @date 2022-09-26
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-26      <td>libo     <td>新建
- * </table>
- */
+
 uint8_t hl_drv_qma6100p_init(void)
 {
     uint8_t ret = 0;
     ret = HL_QMA6100_init();
     return ret;
 }
-MSH_CMD_EXPORT(hl_drv_qma6100p_init, 111111);
 
 
-/**
- * 
- * @brief 外部调用接口：去初始化
- * @return uint8_t 
- * @date 2022-09-26
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-26      <td>libo     <td>新建
- * </table>
- */
 uint8_t hl_drv_qma6100p_deinit(void)
 {
     if(HL_QMA6100_write_reg(0x36, 0xb6)){ //软复位所有寄存器 默认启动为待机模式
@@ -1759,53 +1737,37 @@ uint8_t hl_drv_qma6100p_deinit(void)
  * <tr><td>2022-09-29      <td>libo     <td>新建
  * </table>
  */
-uint8_t HL_QMA6100P_get_Euler_Angle(int32_t * ptr)
+static uint8_t HL_QMA6100P_get_Euler_Angle(void* ptr)
 {
     if(ptr == NULL){
         rt_kprintf(" hl_drv_qma6100p_io_ctrl  param  error\n");
         return 1;
     }
 
-    euler_angle_t param = *(euler_angle_t*)ptr;
+    euler_angle_t* param = (euler_angle_t*)ptr;
     int32_t acc_data[3];
     
     if(HL_QMA6100_read_acc_xyz(acc_data)){
         return 1;
     }
     
-    if(HL_QMA6100_ABS(acc_data)+HL_QMA6100_ABS(acc_data)+HL_QMA6100_ABS(acc_data) > 18000){  //加速度之和超过18000 被认为在非静止条件下 后续可根据需求更改
+    if(HL_QMA6100_ABS(acc_data[0])+HL_QMA6100_ABS(acc_data[1])+HL_QMA6100_ABS(acc_data[2]) > 18000){  //加速度之和超过18000 被认为在非静止条件下 后续可根据需求更改
         rt_kprintf(" HL_QMA6100P_get_Euler_Angle  no static status!\n");
         return 2;
     }
+
     float64_t av = sqrtf(acc_data[0]*acc_data[0]+acc_data[1]*acc_data[1]+acc_data[2]*acc_data[2]);
     float64_t pitch = asinf(-acc_data[1]/av)*R2D;
     float64_t roll = asinf(acc_data[0]/av)*R2D;
 
-    param.pitch = (int32_t)pitch;
-    param.roll = (int32_t)roll;
-    param.z = acc_data[3];
+    param->pitch = (int32_t)pitch;
+    param->roll = (int32_t)roll;
+    param->z = acc_data[2];
 
     return 0;
 }
 
-/**
- * 
- * @brief 外部调用接口 ：控制
- * @param [in] cmd 
- * @param [in] ptr 
- * @param [in] len 
- * @return uint8_t 
- * @date 2022-09-26
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-26      <td>libo     <td>新建
- * </table>
- */
+
 uint8_t hl_drv_qma6100p_io_ctrl(uint8_t cmd, void * ptr, uint16_t len)
 {
     if(ptr == NULL){
@@ -1815,7 +1777,7 @@ uint8_t hl_drv_qma6100p_io_ctrl(uint8_t cmd, void * ptr, uint16_t len)
     
     switch (cmd) {
         case QMA6100_GET_EULWER_ANGLE:
-            if (HL_QMA6100P_get_Euler_Angle((int*)ptr)) {
+            if (HL_QMA6100P_get_Euler_Angle(ptr)) {
                 rt_kprintf("QMA6100  get Euler Angle  fail\n");
                 return -1;
             }
@@ -1824,8 +1786,8 @@ uint8_t hl_drv_qma6100p_io_ctrl(uint8_t cmd, void * ptr, uint16_t len)
             break;
     }    
     return 0;
-
 }
+
 
 
 

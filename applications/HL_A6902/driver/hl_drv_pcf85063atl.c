@@ -32,7 +32,6 @@
 static struct rt_i2c_bus_device* i2c_handle = RT_NULL; /* I2C总线设备句柄 */
 
 
-
 /**
  * 
  * @brief 写寄存器 
@@ -49,6 +48,10 @@ static struct rt_i2c_bus_device* i2c_handle = RT_NULL; /* I2C总线设备句柄 
  */
 static rt_err_t write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* data, rt_uint8_t len)
 {
+    if(RT_NULL == bus){
+        rt_kprintf("RTC_PCF85063ATL  write_reg  bus is null\n");
+        return -2;
+    }
     rt_uint8_t        buf[20];
     struct rt_i2c_msg msgs;
     rt_uint32_t       buf_size = len+1;
@@ -57,9 +60,6 @@ static rt_err_t write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint
 
     rt_memcpy(&buf[1], data, len);
 
-    // for(int i = 0; i<10;i++){
-    //     rt_kprintf("data :%d\n", buf[i]);
-    // }
     msgs.addr  = RTC_PCF85063_ADDR;
     msgs.flags = RT_I2C_WR;
     msgs.buf   = buf;
@@ -70,7 +70,7 @@ static rt_err_t write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint
         rt_kprintf("RTC_PCF85063ATL  write_reg  ok\n");
         return RT_EOK;
     } else {
-        rt_kprintf("RTC_PCF85063ATL  write_reg  error\n");
+        rt_kprintf("RTC_PCF85063ATL  write_reg  error %d\n", rt_i2c_transfer(bus, &msgs, 1));
         return -RT_ERROR;
     }
 }
@@ -91,6 +91,10 @@ static rt_err_t write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint
  */
 static rt_err_t read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t* buf, rt_uint8_t len)
 {
+    if(RT_NULL == bus){
+        rt_kprintf("RTC_PCF85063ATL  read_regs  bus is null\n");
+        return -2;
+    }
     struct rt_i2c_msg msgs;
 
     msgs.addr  = RTC_PCF85063_ADDR;
@@ -108,21 +112,7 @@ static rt_err_t read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t* buf, rt_uin
     }
 }
 
-/**
- * 
- * @brief 初始化
- * @return uint8_t 
- * @date 2022-09-06
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-06      <td>libo     <td>新建
- * </table>
- */
+
 uint8_t hl_drv_rtc_pcf85063_init()
 {
     rt_uint8_t buf[10];
@@ -142,21 +132,7 @@ uint8_t hl_drv_rtc_pcf85063_init()
     return 0;
 }
 
-/**
- * 
- * @brief 去初始化
- * @return uint8_t 
- * @date 2022-09-06
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-06      <td>libo     <td>新建
- * </table>
- */
+
 uint8_t hl_drv_rtc_pcf85063_deinit()
 {
     return 0;
@@ -178,7 +154,7 @@ uint8_t hl_drv_rtc_pcf85063_deinit()
  * <tr><td>2022-09-07      <td>libo     <td>新建
  * </table>
  */
-uint8_t hl_get_rtc_time(void* ptr)
+static uint8_t hl_get_rtc_time(void* ptr)
 {
     if (write_reg(i2c_handle, RTC_PCF85063_Seconds, NULL, 0)) {
         rt_kprintf("RTC_PCF85063ATL  write_reg   fail\n");
@@ -191,6 +167,81 @@ uint8_t hl_get_rtc_time(void* ptr)
         rt_kprintf("RTC_PCF85063ATL  read_regs   fail\n");
         return -1;
     }
+    return 0;
+}
+
+/**
+ * 
+ * @brief 锁住内部计时时钟
+ * @return uint8_t 
+ * @date 2022-10-11
+ * @author libo (rd46@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-11      <td>libo     <td>新建
+ * </table>
+ */
+static uint8_t hl_lock_rtc_clock(void)
+{
+    rt_uint8_t reg0x0;
+    if (write_reg(i2c_handle, RTC_PCF85063_Control_1, NULL, 0)) {
+        rt_kprintf("RTC_PCF85063ATL  write_reg  RTC_PCF85063_Control_1 fail\n");
+        return -1;
+    }
+
+    if (read_regs(i2c_handle, &reg0x0, 1)) {
+        rt_kprintf("RTC_PCF85063ATL  read_regs  RTC_PCF85063_Control_1 fail\n");
+        return -1;
+    }
+
+    reg0x0 |=0x20;
+    if (write_reg(i2c_handle, RTC_PCF85063_Control_1, &reg0x0, 1)) {
+        rt_kprintf("RTC_PCF85063ATL  write_reg RTC_PCF85063_Control_1  fail\n");
+        return -1;
+    }
+
+    return 0;
+
+}
+
+/**
+ * 
+ * @brief 
+ * @return uint8_t 
+ * @date 2022-10-11
+ * @author libo (rd46@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-11      <td>libo     <td>新建
+ * </table>
+ */
+static uint8_t hl_unlock_rtc_clock(void)
+{
+    rt_uint8_t reg0x0;
+    if (write_reg(i2c_handle, RTC_PCF85063_Control_1, NULL, 0)) {
+        rt_kprintf("RTC_PCF85063ATL  write_reg RTC_PCF85063_Control_1  fail\n");
+        return -1;
+    }
+
+    if (read_regs(i2c_handle, &reg0x0, 1)) {
+        rt_kprintf("RTC_PCF85063ATL  read_regs  RTC_PCF85063_Control_1 fail\n");
+        return -1;
+    }
+
+    reg0x0 &= 0xDF;
+    if (write_reg(i2c_handle, RTC_PCF85063_Control_1, &reg0x0, 1)) {
+        rt_kprintf("RTC_PCF85063ATL  write_reg RTC_PCF85063_Control_1  fail\n");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -210,39 +261,32 @@ uint8_t hl_get_rtc_time(void* ptr)
  * <tr><td>2022-09-19      <td>libo     <td>新建
  * </table>
  */
-uint8_t hl_set_rtc_time(void* ptr)
+static uint8_t hl_set_rtc_time(void* ptr)
 {
     if(ptr == NULL){
         rt_kprintf(" hl_set_rtc_time  param  error\n");
         return 1;
     }
 
+    if(hl_lock_rtc_clock()){
+        rt_kprintf("RTC_PCF85063ATL  hl_lock_rtc_clock  fail\n");
+        return -1;
+    }
+    
     if (write_reg(i2c_handle, RTC_PCF85063_Seconds, (rt_uint8_t*)ptr, 7)) {
-        rt_kprintf("RTC_PCF85063ATL  write_reg   fail\n");
+        rt_kprintf("RTC_PCF85063ATL  write_reg RTC_PCF85063_Seconds  fail\n");
+        return -1;
+    }
+
+    if(hl_unlock_rtc_clock()){
+        rt_kprintf("RTC_PCF85063ATL  hl_lock_rtc_clock  fail\n");
         return -1;
     }
 
     return 0;
 }
 
-/**
- * 
- * @brief 控制函数
- * @param [in] cmd 
- * @param [in] ptr 
- * @param [in] len 
- * @return uint8_t 
- * @date 2022-09-06
- * @author libo (rd46@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-06       <td>libo           <td>新建
- * </table>
- */
+
 uint8_t hl_drv_rtc_pcf85063_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     if(ptr == NULL){
