@@ -89,7 +89,6 @@ static NAU88L25B_REG_T s_nau88l25b_param[] = {
  */
 static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint16_t* data)
 {
-    rt_err_t          ret;
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
@@ -108,11 +107,8 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
     msgs[1].buf   = &buf[2];
     msgs[1].len   = 2;
     */
-    /* 调用I2C设备接口传输数据 */
-    nau_printf("%s : buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[2], buf[3]);
-    ret = rt_i2c_transfer(bus, msgs, 1);
-    nau_printf("write ret = %d \n", ret);
-    if (ret == 1)
+    // 调用I2C设备接口传输数据 
+    if (rt_i2c_transfer(bus, msgs, 1) == 1)
         return HL_SUCCESS;
     else
         return HL_FAILED;
@@ -155,13 +151,9 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, 
     msgs[1].buf   = &buf[2];
     msgs[1].len   = 2;
 
-    ret = rt_i2c_transfer(bus, msgs, 2);
-    nau_printf("read ret = %d \n", ret);
-    /* 调用I2C设备接口传输数据 */
-    if (ret == 2) {
+    // 调用I2C设备接口传输数据 
+    if (rt_i2c_transfer(bus, msgs, 2) == 2) {
         rbuf[0] = ((buf[2] << 8) + buf[3]);
-        nau_printf("%s : buf[0] = %X buf[1] = %X buf[2] = %X buf[3] = %X \n", __FUNCTION__, buf[0], buf[1], buf[2],
-                   buf[3]);
         return HL_SUCCESS;
     } else
         return HL_FAILED;

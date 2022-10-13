@@ -83,7 +83,7 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_o
     msgs[1].buf   = &buf[1];
     msgs[1].len   = 1;
     */
-    /* 调用I2C设备接口传输数据 */
+    // 调用I2C设备接口传输数据
     if (rt_i2c_transfer(bus, msgs, 1) == 1)
         return HL_SUCCESS;
     else
@@ -123,7 +123,7 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_op
     msgs[1].buf   = buf;
     msgs[1].len   = 1;
 
-    /* 调用I2C设备接口传输数据 */
+    // 调用I2C设备接口传输数据
     if (rt_i2c_transfer(bus, msgs, 2) == 2) {
         rbuf[0] = buf[0];
         return HL_SUCCESS;
@@ -627,7 +627,7 @@ CTL_ERR:
  * @date 2022-09-05
  * @author dujunjie (junjie.du@hollyland-tech.com)
  * 
- * @details 
+ * @details 注意：启用一次输入电流检测，检测结束后所有寄存器将会复位！！！
  * @note 
  * @par 修改日志:
  * <table>
@@ -1696,11 +1696,7 @@ uint8_t hl_drv_sgm41518_init(void)
     reg_all.reg0C.JEITA_ISET_L_EN = JEITA_ISET_L_ENABLE;    //开启低温充电
     reg_all.reg0C.JEITA_VSET_L    = JEITA_VSET_L_SET_VREG;  //设置低温区间（0℃ - 10℃）充电电压等于VREG
     reg_config[0x0C]              = *(uint8_t*)&reg_all.reg0C;
-
-    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
-        smg_printf("cfg_opt %d write err !\n", SGM_REG07_ADDR);
-        goto INIT_ERR;
-    }
+    
     if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
         goto INIT_ERR;
@@ -1729,6 +1725,10 @@ uint8_t hl_drv_sgm41518_init(void)
         smg_printf("cfg_opt %d write err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }    
+    if (hl_i2c_write_reg(i2c_bus, SGM_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        smg_printf("cfg_opt %d write err !\n", SGM_REG07_ADDR);
+        goto INIT_ERR;
+    }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG0C_ADDR);
         goto INIT_ERR;
