@@ -670,7 +670,7 @@ CTL_ERR:
 uint8_t hl_drv_nau88l25b_init(NAU88L25B_REG_T *data,uint16_t datalen)
 {
     // uint16_t i, j = sizeof(s_nau88l25b_param) / 4;
-    uint16_t i;
+    uint16_t i, data_bak;
     nau_printf("nau cfg_opt num : %d \n", datalen);
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(NAU88L25B_IIC_NAME);
@@ -688,6 +688,18 @@ uint8_t hl_drv_nau88l25b_init(NAU88L25B_REG_T *data,uint16_t datalen)
             goto INIT_ERR;
         }
     }
+
+    for (i = 0; i < datalen; i++) {
+        if (hl_i2c_read_reg(i2c_bus, data[i].reg_addr, &data_bak)){
+            nau_printf("nau cfg_opt init fail !\n");
+            goto INIT_ERR;
+        }
+        if(data_bak != data[i].reg_value){
+            nau_printf("nau cfg_opt init fail ! reg = %X\n",data[i].reg_addr);
+            goto INIT_ERR;
+        }
+    }
+
     nau_printf("hl_drv_nau88l25b_init success !\n");
     return HL_SUCCESS;
 INIT_ERR:
