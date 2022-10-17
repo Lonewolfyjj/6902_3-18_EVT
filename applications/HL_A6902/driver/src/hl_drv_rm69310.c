@@ -31,7 +31,7 @@
 #include "hl_hal_gpio.h"
 #include "rtdef.h"
 
-//#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_GET_DEVICE_TYPE())
 
 #define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
 #define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
@@ -88,8 +88,8 @@
 #define RM69310_CMD_PTLAR 0x30
 #define RM69310_CMD_VPTLAR 0x31
 
-#define RM69310_CMD_TEOFF 0x34
-#define RM69310_CMD_TEON 0x35
+#define RM69310_CMD_TEOFF 0x34  // 垂直同步信号（TE）关闭
+#define RM69310_CMD_TEON 0x35   // 垂直同步信号（TE）打开
 #define RM69310_CMD_MADCTR 0x36
 
 #define RM69310_CMD_IDMOFF 0x38
@@ -123,8 +123,8 @@
 #define RM69310_CMD_SetPage 0xFE
 
 /* RM69310_CMD_TEON = 0x35 */
-#define TE_OUT_CONSISTS_VBlanking 0x00
-#define TE_OUT_CONSISTS_VHBlanking 0x01
+#define TE_OUT_CONSISTS_VBlanking 0x00  // 只打开帧同步
+#define TE_OUT_CONSISTS_VHBlanking 0x01 // 打开行同步和帧同步
 
 /* RM69310_CMD_MADCTR = 0x36 */
 #define ROW_ADDR_INCREMENT 0x00
@@ -178,10 +178,6 @@
 
 #define DAUL_SPI_MODE_DISABLE 0x00
 #define DAUL_SPI_MODE_ENABLE 0x01
-
-#define RGB565_RED 0xf800
-#define RGB565_GREEN 0x07e0
-#define RGB565_BLUE 0x001f
 
 typedef struct _RM69310_PARAM_T
 {
@@ -342,13 +338,13 @@ RM69310_PARAM_T rm69310_init_param[] = {
     { 0x8B, 0x01 },
 
     { RM69310_CMD_SetPage, 0x00 },  // 切换到0页（客户命令页）
-    { RM69310_CMD_TEON, TE_OUT_CONSISTS_VHBlanking },
+    { RM69310_CMD_TEON, TE_OUT_CONSISTS_VHBlanking },    // 打开帧同步信号（TE），默认每帧有一个上升沿产生
     { RM69310_CMD_MADCTR, ROW_COLUMN_NORMAL | HORIZONTAL_FLIPPED },
     //{RM69310_CMD_MADCTR, ROW_COLUMN_NORMAL},
     //{RM69310_CMD_MADCTR, ROW_COLUMN_NORMAL | VERTICAL_DIR_REVERSE |
     // REFRESH_BOTTOM_TO_TOP}, {RM69310_CMD_COLMOD, COLOR_FORMAT_24BIT},
     { RM69310_CMD_COLMOD, COLOR_FORMAT_16BIT },
-    { RM69310_CMD_WRCTRLD, BRIGHNESS_ENABLE },
+    { RM69310_CMD_WRCTRLD, BRIGHNESS_ENABLE | DIMMING_ENABLE },
     { RM69310_CMD_SetSPIMode, SPI_WRITE_SRAM_ENABLE },
     { RM69310_CMD_WRDISBV, BRIGHTNESS_DEFAULT_VALUE },
 };
@@ -363,6 +359,8 @@ static uint8_t hl_drv_rm69310_sleep_set(rt_bool_t state);
 static uint8_t hl_drv_rm69310_display_set(rt_bool_t state);
 static uint8_t hl_drv_rm69310_config(void);
 static uint8_t hl_drv_rm69310_read_data(uint8_t data);
+static uint8_t hl_drv_rm69310_te_set(rt_bool_t state, uint8_t param);
+static uint8_t hl_drv_rm69310_display_color(uint16_t color);
 /*******************************************************************************
  *                            全局函数实现 *
  *******************************************************************************/
@@ -448,10 +446,8 @@ uint8_t hl_drv_rm69310_set_brightness(uint8_t value)
  */
 static uint8_t hl_drv_rm69310_set_area(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end)
 {
-    //uint8_t column, row;
-    //column         = x_end - x_start + 1;
-    //row            = y_end - y_start + 1;
     uint8_t result = HL_SUCCESS;
+
     if ((x_end <= x_start) || (x_end >= OLED_WIDTH)) {
         HL_PRINTF("err: picture width err\r\n");
         return HL_FAILED;
@@ -666,14 +662,16 @@ static void hl_drv_rm69310_gpio_init(void)
 
     hl_hal_gpio_init(GPIO_OLED_RST);
 
-    hl_hal_gpio_init(GPIO_OLED_SWIRE);
+    //hl_hal_gpio_init(GPIO_OLED_SWIRE);
 
-    // hl_hal_gpio_init(GPIO_OLED_TE);
+    hl_hal_gpio_init(GPIO_OLED_TE);
+
+    // hl_hal_gpio_attach_irq(GPIO_OLED_TE, PIN_IRQ_MODE_RISING, hl_hal_gpio_test_irq_process, "te");
+    // hl_hal_gpio_irq_enable(GPIO_OLED_TE, PIN_IRQ_ENABLE);
 
     OLED_DCX_DATA();
-    OLED_PWR_ON();
-
-    // OLED_PWR_OFF();
+    hl_util_delay_sys_ms(10);
+    OLED_PWR_ON(); // 延时不要去，1线去掉延时容易被识别成脉冲
 
     hl_util_delay_sys_ms(10);
 
@@ -684,7 +682,7 @@ static void hl_drv_rm69310_gpio_init(void)
     hl_util_delay_sys_ms(10);  // 10ms
 
     OLED_RST_H();
-    hl_util_delay_sys_ms(1200);  // 1200ms
+    hl_util_delay_sys_ms(500);  // 400ms
 }
 /**
  * 
@@ -702,10 +700,14 @@ static void hl_drv_rm69310_gpio_init(void)
  */
 static void hl_drv_rm69310_gpio_deinit(void)
 {
-    // hl_hal_gpio_deinit(HL_GPIO_OLED_RST);
-    // hl_hal_gpio_deinit(HL_GPIO_OLED_POWER);
-    // hl_hal_gpio_deinit(HL_GPIO_SPI_CS);
-    // hl_hal_gpio_deinit(HL_GPIO_OLED_DCX);
+    hl_util_delay_sys_ms(20);
+    hl_hal_gpio_low(GPIO_OLED_SWIRE);
+    hl_util_delay_sys_ms(50);
+
+    hl_hal_gpio_deinit(GPIO_OLED_DCX);
+    hl_hal_gpio_deinit(GPIO_OLED_RST);
+    hl_hal_gpio_deinit(GPIO_OLED_TE);
+    
 }
 
 /**
@@ -762,7 +764,7 @@ static uint8_t hl_drv_rm69310_spi_init(void)
 
 static uint8_t hl_drv_rm69310_spi_deinit(void)
 {
-    // if (HL_FALSE == hl_hal_spi_deinit(SPI_DEV)) {
+    // if () {
     //     HL_PRINTF("rm69310 spi1 deinit!!!\r\n");
     //     return HL_FAILED;
     // }
@@ -821,6 +823,38 @@ static uint8_t hl_drv_rm69310_display_set(rt_bool_t state)
 }
 
 /**
+ * @brief 设置TE垂直同步功能
+ * @param [in] state RT_TRUE 开启  RT_FALSE 关闭
+ * @param [in] param TE_OUT_CONSISTS_VHBlanking 开启帧同步和行同步
+ *                   TE_OUT_CONSISTS_VBlanking 只开帧同步
+ * @return uint8_t 
+ * @date 2022-09-24
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-09-24      <td>luzhanghao     <td>新建
+ * </table>
+ */
+static uint8_t hl_drv_rm69310_te_set(rt_bool_t state, uint8_t param)
+{
+    uint8_t res = HL_FAILED;
+
+    if (RT_TRUE == state) {
+        res = hl_drv_rm69310_write_cmd(RM69310_CMD_TEON);
+        if (param > TE_OUT_CONSISTS_VHBlanking) {
+            return res;
+        }
+        res |= hl_drv_rm69310_write_data(param);
+        return res;
+    } else {
+        res = hl_drv_rm69310_write_cmd(RM69310_CMD_TEOFF);
+        return res;
+    }
+}
+/**
  * 
  * @brief 上电配置rm69310
  * @return uint8_t 
@@ -848,11 +882,18 @@ static uint8_t hl_drv_rm69310_config(void)
     }
 
     result |= hl_drv_rm69310_set_brightness(DEFAULT_BACKLIGHT);
+
+    result |= hl_drv_rm69310_te_set(RT_TRUE, TE_OUT_CONSISTS_VBlanking); // 默认开启帧同步
+
     result |= hl_drv_rm69310_sleep_set(RT_FALSE);
 
-    hl_util_delay_sys_ms(1200);
+    hl_util_delay_sys_ms(500);
 
     result |= hl_drv_rm69310_display_set(RT_TRUE);
+
+    //result |= hl_drv_rm69310_display_color(RGB565_BLACK);
+    //hl_util_delay_sys_ms(30);
+
 
     return result = (result != HL_SUCCESS) ? HL_FAILED : HL_SUCCESS;
 }
@@ -900,62 +941,64 @@ uint8_t hl_drv_rm69310_display_write(uint8_t x_start, uint8_t x_end, uint8_t y_s
 
     return result;
 }
+
 /**
- * 
- * @brief 清屏
- * @return uint8_t 
- * @date 2022-08-30
+ * @brief 设置屏幕单一颜色
+ * @param [in] color 
+ * @return uint8_t 颜色：
+ *              RGB565_BLUE
+ *              RGB565_GREEN
+ *              RGB565_RED
+ * @date 2022-09-24
  * @author liujie (jie.liu@hollyland-tech.com)
- * 
  * @details 
  * @note 
  * @par 修改日志:
  * <table>
  * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-08-30      <td>liujie     <td>新建
+ * <tr><td>2022-09-24      <td>liujie     <td>新建
  * </table>
  */
-uint8_t hl_drv_rm69310_clear(void)
+static uint8_t hl_drv_rm69310_display_color(uint16_t color)
 {
     uint8_t i, j;
     uint8_t res     = HL_SUCCESS;
-    uint8_t buff[2] = { 0x00, 0x00 };
-
     struct rt_spi_message msg1;
 
+    if (oled_spi_device == RT_NULL) {
+        return HL_FAILED;
+    }
     res = hl_drv_rm69310_set_area(0, OLED_WIDTH - 1, 0, OLED_HEIGHT - 1);
 
     res |= hl_drv_rm69310_write_cmd(0x2C);
+
+    if (RT_EOK != rt_spi_take_bus(oled_spi_device)) {
+        return HL_FAILED;
+    }
+
+    rt_spi_take(oled_spi_device);
+
 
     OLED_DCX_DATA();
 
     for (i = 0; i < OLED_HEIGHT; i++) {
         for (j = 0; j < OLED_WIDTH; j++) {
 
-            msg1.send_buf = &buff;
+            msg1.send_buf = &color;
             msg1.recv_buf = RT_NULL;
+            msg1.cs_take    = 0;
+            msg1.cs_release = 0;
             msg1.length   = 2;
-
-            if (i == 0 && j == 0) {
-                msg1.cs_take    = 1;
-                msg1.cs_release = 0;
-                msg1.next       = RT_NULL;
-                rt_spi_transfer_message(oled_spi_device, &msg1);
-            } else if (i == (OLED_HEIGHT - 1) && j == (OLED_WIDTH - 1)) {
-                msg1.cs_take    = 0;
-                msg1.cs_release = 1;
-                msg1.next       = RT_NULL;
-                rt_spi_transfer_message(oled_spi_device, &msg1);
-            } else {
-                msg1.cs_take    = 0;
-                msg1.cs_release = 1;
-                msg1.next       = RT_NULL;
-                rt_spi_transfer_message(oled_spi_device, &msg1);
-            }
+            msg1.next   = RT_NULL;
+            if (RT_EOK != rt_spi_transfer_message(oled_spi_device, &msg1))
+                res |= HL_FAILED;
         }
     }
 
-    return HL_SUCCESS;
+    rt_spi_release(oled_spi_device);
+    rt_spi_release_bus(oled_spi_device);
+
+    return res;
 }
 
 /**
@@ -983,7 +1026,12 @@ uint8_t hl_drv_rm69310_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     switch (cmd) {
         case SET_BACKLIGHT: {
             uint8_t val = *(uint8_t*)ptr;
-            result      = hl_drv_rm69310_set_brightness(val);
+            if (val > 255) {
+               result = HL_FAILED; 
+            } else {
+                result = hl_drv_rm69310_set_brightness(val);
+            }
+            
         } break;
         case READ_STATE: {
 
@@ -991,16 +1039,30 @@ uint8_t hl_drv_rm69310_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case CTRL_POWER: {
             uint8_t val = *(uint8_t*)ptr;
             if (val == 1) {
+                hl_util_delay_sys_ms(20);
                 OLED_PWR_ON();
+                hl_util_delay_sys_ms(20);
             } else {
+                hl_util_delay_sys_ms(20);
                 OLED_PWR_OFF();
+                hl_util_delay_sys_ms(20);
             }
         } break;
         case READ_OLED_ID: {
             result = hl_drv_rm69310_read_id();
         } break;
-        default:
-            break;
+        // case SET_COLOR: {
+        //     if (len != 2) {
+        //         HL_PRINTF("color format rgb565!\r\n");
+        //         result = HL_FAILED;
+        //     } else {
+        //         uint16_t color = *(uint16_t*)ptr;
+        //         result = hl_drv_rm69310_display_color(color);
+        //     }
+        // } break;
+        default:{
+
+        } break;
     }
 
     return result;
@@ -1065,3 +1127,4 @@ uint8_t hl_drv_rm69310_deinit(void)
     HL_PRINTF("rm69310 deinit successful!\r\n");
     return HL_SUCCESS;
 }
+#endif
