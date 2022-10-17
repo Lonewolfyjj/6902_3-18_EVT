@@ -154,4 +154,7 @@ typedef struct _ts_zinitix_point_info_t
     ts_zinitix_coord_t coord[MAX_SUPPORTED_FINGER_NUM];
 } ts_zinitix_point_info_t;
 
+rt_size_t hl_drv_get_touch_info(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size);
+rt_err_t hl_drv_msm8909_init(rt_device_t dev);
+
 #endif

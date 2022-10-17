@@ -46,6 +46,50 @@
 
 static ts_zinitix_point_info_t   touch_info;//
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
+static rt_device_t touch_dev = RT_NULL;
+
+const static struct rt_device_ops touch_ops =
+{
+    hl_drv_msm8909_init,
+    RT_NULL,
+    RT_NULL,
+    hl_drv_get_touch_info,
+    RT_NULL,
+    RT_NULL,
+};
+
+/**
+ * 
+ * @brief 初始化注册触屏设备
+ * @return int 
+ * @date 2022-10-14
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-14      <td>dujunjie     <td>新建
+ * </table>
+ */
+static int touch_device_msm8909_init(void)
+{
+    rt_err_t ret;
+    touch_dev = rt_device_create(RT_Device_Class_Touch, RT_NULL);
+    if(touch_dev == RT_NULL){
+        msm_printf("Touch device msm8909 create fail !\n");
+        return HL_FAILED;
+    }
+    touch_dev->ops = &touch_ops;
+    ret = rt_device_register(touch_dev, "MSM8909", RT_DEVICE_FLAG_RDONLY);
+    if(ret != RT_EOK){
+        msm_printf("Touch device msm8909 register fail !\n");
+        return HL_FAILED;
+    }
+    return HL_SUCCESS;
+}
+
 
 /**
  * 
@@ -198,7 +242,7 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, 
  * <tr><td>2022-10-13      <td>dujunjie     <td>新建
  * </table>
  */
-void hl_drv_get_touch_info(void)
+rt_size_t hl_drv_get_touch_info(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size)
 {
     uint8_t  i;
     uint16_t x, y;
@@ -236,8 +280,10 @@ void hl_drv_get_touch_info(void)
             memset(&touch_info.coord[i], 0, sizeof(ts_zinitix_coord_t));
         }
     }
+    memcpy((uint8_t *)buffer,(uint8_t *)touch_info.coord,(sizeof(ts_zinitix_coord_t) * MAX_SUPPORTED_FINGER_NUM));
     //clear 中断，clear 后中断IO会被拉高
     hl_i2c_write_cmd(i2c_bus, ZINITIX_CLEAR_INT_STATUS_CMD);
+    return (sizeof(ts_zinitix_coord_t) * MAX_SUPPORTED_FINGER_NUM);
 }
 
 /**
@@ -255,7 +301,7 @@ void hl_drv_get_touch_info(void)
  * <tr><td>2022-10-13      <td>dujunjie     <td>新建
  * </table>
  */
-int hl_drv_msm8909_init(void)
+rt_err_t hl_drv_msm8909_init(rt_device_t dev)
 {
     uint8_t  i;
     uint16_t firmware_version = 0, minor_firmware_version = 0;
@@ -268,6 +314,11 @@ int hl_drv_msm8909_init(void)
         if (hl_i2c_write_cmd(i2c_bus, ZINITIX_SWRESET_CMD) == HL_SUCCESS)
             break; /*return 0 mean write success then break*/
         rt_thread_mdelay(10);
+    }
+
+    if(i == 10){
+        msm_printf("touch init fail !\n");
+        return HL_FAILED;
     }
     //固件主版本号u16 firmware_version;
     hl_i2c_read_reg(i2c_bus, ZINITIX_FIRMWARE_VERSION, (uint8_t *)&firmware_version, 2);
@@ -289,3 +340,5 @@ int hl_drv_msm8909_init(void)
     }
     return HL_SUCCESS;
 }
+
+INIT_DEVICE_EXPORT(touch_device_msm8909_init);

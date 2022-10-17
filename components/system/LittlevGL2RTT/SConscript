@@ -12,7 +12,7 @@ inc = []
 inc = inc + [cwd]
 
 # add LittlevGL2RTT basic code
-src = src + ['./littlevgl2rtt.c']
+# src = src + ['./littlevgl2rtt.c']
 
 # add group to IDE project
 objs = DefineGroup('LittlevGL2RTT', src, depend = ['RT_USING_LITTLEVGL2RTT'], CPPPATH = inc)
