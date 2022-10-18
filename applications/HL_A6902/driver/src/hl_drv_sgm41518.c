@@ -46,7 +46,7 @@ typedef uint8_t (*hl_reg_ctl_fun)(uint8_t cmd, uint8_t cmd_typ, uint8_t* param);
 static hl_reg_ctl_fun            fun_arr[SGM_REG_NUM];
 static uint8_t                   reg_arr[SGM_REG_NUM];
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
-extern int                       gpio_test_init(void);
+
 /**
  * 
  * @brief i2c总线写数据

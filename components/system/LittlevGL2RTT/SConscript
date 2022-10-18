@@ -9,7 +9,7 @@ src = []
 inc = []
 
 # add LittlevGL2RTT common include
-inc = inc + [cwd]
+inc = inc + [cwd] + ['./lvgl']
 
 # add LittlevGL2RTT basic code
 # src = src + ['./littlevgl2rtt.c']

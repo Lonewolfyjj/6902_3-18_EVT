@@ -197,7 +197,10 @@ static rt_err_t rt_touch_control(rt_device_t dev, int cmd, void *args)
         rt_touch_irq_enable(touch);
         break;
     default:
-        return -RT_ERROR;
+        result = touch->ops->touch_control(touch, cmd, args);
+        result = -result;
+        // return -RT_ERROR;
+        break;
     }
 
     return result;

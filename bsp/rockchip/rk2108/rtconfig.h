@@ -172,7 +172,7 @@
 /* RT_USING_WDT is not set */
 #define RT_USING_AUDIO
 /* RT_USING_SENSOR is not set */
-/* RT_USING_TOUCH is not set */
+#define RT_USING_TOUCH
 
 /* Using WiFi */
 
@@ -284,7 +284,7 @@
 
 /* LVGL configuration */
 
-#define LV_CONF_SKIP
+/* LV_CONF_SKIP is not set */
 /* LV_CONF_MINIMAL is not set */
 
 /* Color settings */
@@ -693,6 +693,7 @@
 /* RT-Thread rockchip buffer_manage driver */
 
 /* RT_USING_BUFFER_MANAGE is not set */
+/* RT_USING_TOUCH_DRIVERS is not set */
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_QPIPSRAM is not set */
 

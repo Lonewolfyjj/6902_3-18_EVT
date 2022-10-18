@@ -87,7 +87,7 @@
 //控制函数参数
 enum hl_ft3169_cfg
 {
-    SYS_RESET = 0,
+    SYS_RESET = RT_TOUCH_CTRL_ENABLE_INT + 1,
     SYS_SUSPENDS,
     SYS_RESUME,
     SYS_ESD_CHECK,

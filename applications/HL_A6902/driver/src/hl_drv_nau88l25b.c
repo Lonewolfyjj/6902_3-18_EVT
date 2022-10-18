@@ -134,7 +134,6 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
  */
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint16_t* rbuf)
 {
-    rt_err_t          ret    = 0;
     rt_uint8_t        buf[4] = { 0, 0, 0, 0 };
     struct rt_i2c_msg msgs[2];
 
