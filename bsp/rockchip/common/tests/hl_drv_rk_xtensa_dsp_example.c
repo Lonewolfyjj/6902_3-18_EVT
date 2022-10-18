@@ -63,9 +63,9 @@ struct playback_config
 
 /* define --------------------------------------------------------------------*/
 
-#define AUDIO_FRAME_PERIOD 96
+#define AUDIO_FRAME_PERIOD 120
 #define AUDIO_FRAME_SIZE_OF_LA_TEST (AUDIO_FRAME_PERIOD * 2 * 4)
-#define RING_BUFFER_SIZE_OF_LA_TEST ((AUDIO_FRAME_SIZE_OF_LA_TEST * 1) + 5)
+#define RING_BUFFER_SIZE_OF_LA_TEST ((AUDIO_FRAME_SIZE_OF_LA_TEST * 2) + 5)
 
 #define RECOVERY_KEY BANK_PIN(1, 14)
 #define PWM_LED BANK_PIN(1, 4)
@@ -220,24 +220,24 @@ static void do_cap(void* arg)
 
     // -------------------cap-------------------
 
-    hl_drv_rk_xtensa_dsp_config_t_p dsp_config =
-        (hl_drv_rk_xtensa_dsp_config_t_p)malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
+    hl_drv_rk_xtensa_dsp_config_t_p dsp_config = 
+        (hl_drv_rk_xtensa_dsp_config_t_p)rkdsp_malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
     dsp_config->bits                = 32;
     dsp_config->channels            = 2;
     dsp_config->period_size         = AUDIO_FRAME_PERIOD;
     dsp_config->rate                = 48000;
     dsp_config->process_size        = dsp_config->period_size * dsp_config->channels * (dsp_config->bits >> 3);
     dsp_config->buffer_size_b32_2ch = dsp_config->process_size;
-    dsp_config->audio_process_in_buffer_b32_2ch         = malloc(dsp_config->buffer_size_b32_2ch + 2);
-    dsp_config->audio_process_out_buffer_b32_2ch        = malloc(dsp_config->buffer_size_b32_2ch + 2);
+    dsp_config->audio_process_in_buffer_b32_2ch         = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
+    dsp_config->audio_process_out_buffer_b32_2ch        = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
 #if HL_GET_DEVICE_TYPE()
     dsp_config->buffer_size_b24_1ch = dsp_config->period_size * 1 * 3;
-    dsp_config->audio_after_process_out_buffer_b24_1ch  = malloc(dsp_config->buffer_size_b24_1ch + 2);
-    dsp_config->audio_before_process_out_buffer_b24_1ch = malloc(dsp_config->buffer_size_b24_1ch + 2);
+    dsp_config->audio_after_process_out_buffer_b24_1ch  = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
+    dsp_config->audio_before_process_out_buffer_b24_1ch = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
 #else
     dsp_config->buffer_size_b24_2ch = dsp_config->period_size * 2 * 3;
-    dsp_config->audio_after_process_out_buffer_b24_2ch  = malloc(dsp_config->buffer_size_b24_2ch + 2);
-    dsp_config->audio_before_process_out_buffer_b24_2ch = malloc(dsp_config->buffer_size_b24_2ch + 2);
+    dsp_config->audio_after_process_out_buffer_b24_2ch  = rkdsp_malloc(dsp_config->buffer_size_b24_2ch + 2);
+    dsp_config->audio_before_process_out_buffer_b24_2ch = rkdsp_malloc(dsp_config->buffer_size_b24_2ch + 2);
 #endif
     hl_drv_rk_xtensa_dsp_init();
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
@@ -272,9 +272,10 @@ static void do_cap(void* arg)
                 ret = hl_drv_rk_xtensa_dsp_transfer();
                 now = rt_tick_get();
                 // rt_kprintf("hl_drv_rk_xtensa_dsp_transfer ret = %d , tick start : %d , finish at %d\r\n", ret, past , now);
-                rt_kprintf("%ld %ld\n",past , now);
+                // rt_kprintf("%ld %ld\n",past , now);
 
                 rt_ringbuffer_put(rb, dsp_config->audio_process_out_buffer_b32_2ch, dsp_config->buffer_size_b32_2ch);
+
             } else {
                 rt_ringbuffer_put(rb, dsp_config->audio_process_in_buffer_b32_2ch, dsp_config->buffer_size_b32_2ch);
             }
@@ -287,9 +288,16 @@ static void do_cap(void* arg)
     // -------------------finish dsp-------------------
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_STOP_DSP, NULL, 0);
     hl_drv_rk_xtensa_dsp_deinit();
-    free(dsp_config->audio_process_in_buffer_b32_2ch);
-    free(dsp_config->audio_process_out_buffer_b32_2ch);
-    free(dsp_config);
+    rkdsp_free(dsp_config->audio_process_in_buffer_b32_2ch);
+    rkdsp_free(dsp_config->audio_process_out_buffer_b32_2ch);
+#if HL_GET_DEVICE_TYPE()
+    rkdsp_free(dsp_config->audio_after_process_out_buffer_b24_1ch);
+    rkdsp_free(dsp_config->audio_before_process_out_buffer_b24_1ch);
+#else
+    rkdsp_free(dsp_config->audio_after_process_out_buffer_b24_2ch);
+    rkdsp_free(dsp_config->audio_before_process_out_buffer_b24_2ch);
+#endif
+    rkdsp_free(dsp_config);
 
     // -------------------free cap src-------------------
     free(cap_buffer);
@@ -509,7 +517,7 @@ uint8_t hl_dsp_test(int argc, char** argv)
         // rt_kprintf("wrong parameter, please type: dsp_alango_loopback_test [start/stop]\r\n");
         // return 0;
     }
-    dsp_alango_loopback_test_alive = 1;
+    dsp_alango_loopback_test_alive = 1; 
 
     rb = rt_ringbuffer_create(RING_BUFFER_SIZE_OF_LA_TEST);
     RT_ASSERT(rb != RT_NULL);

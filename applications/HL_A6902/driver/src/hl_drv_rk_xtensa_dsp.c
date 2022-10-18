@@ -36,11 +36,12 @@
 
 typedef struct _lib_bypass_param_
 {
-    uint8_t* in_buf;
-    uint8_t* out_buf;
-    uint8_t* out_24bit_buf;
-    uint16_t buff_len;
-    uint16_t buff_len_24bit;
+    uint8_t *in_buf;
+    uint8_t *out_buf;
+    uint8_t *out_24bit_buf_after_process;
+    uint8_t *out_24bit_buf_before_process;
+    uint16_t process_buff_len;
+    uint16_t out_buff_len_24bit;
 } lib_bypass_param_type_t, *lib_bypass_param_type_t_p;
 
 /**
@@ -61,12 +62,16 @@ typedef struct _lib_alango_srp_param_
 {
     /// role = 0:RX role = 1:TX
     uint16_t role;
+    /// 0:get 1:set
+    uint16_t io_ctrl_op;
+    int16_t  io_ctrl_value;
     uint16_t channel;
     uint16_t b24_2ch_len;
     uint16_t b24_1ch_len;
-    uint32_t b32_2ch_len;
     uint16_t sample_size;
     uint16_t srp_profile_length;
+    uint32_t io_ctrl_param;
+    uint32_t b32_2ch_len;
     uint32_t frame_length;
     long*    in_buf_b32_2ch;
     long*    out_buf_b32_2ch;
@@ -75,7 +80,7 @@ typedef struct _lib_alango_srp_param_
     long*    out_buf_b24_2ch_after_process;
     long*    out_buf_b24_2ch_before_process;
     char*    srp_profile;
-} lib_alango_srp_param_type_t, *lib_alango_srp_param_type_t_p;
+} __attribute__((packed, aligned(1))) lib_alango_srp_param_type_t, *lib_alango_srp_param_type_t_p;
 
 /* define --------------------------------------------------------------------*/
 
@@ -115,6 +120,8 @@ typedef struct _lib_alango_srp_param_
 #define DSP_ALGO_ALANGO_SRP_PROCESS 0x4000000d
 /// tx alango srp算法功能的去初始化枚举
 #define DSP_ALGO_ALANGO_SRP_DEINIT 0x4000000e
+
+#define HL_DEVICE_RX_USE_BYPSS_TEST 1
 //-----------------------------------------------------------------------------
 
 /* variables -----------------------------------------------------------------*/
@@ -136,6 +143,9 @@ static lib_alango_srp_param_type_t_p sg_tx_dsp_param = NULL;
 #else
 // rx = 0
 static lib_alango_srp_param_type_t_p sg_rx_dsp_param = NULL;
+#if HL_DEVICE_RX_USE_BYPSS_TEST
+static lib_bypass_param_type_t_p sg_rx_bypass_dsp_param = NULL;
+#endif
 #endif
 
 extern const unsigned char srp_profile[356];
@@ -205,7 +215,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
-    HL_DRV_DSP_LOG("dsp create config work OK\n");s
+    HL_DRV_DSP_LOG("dsp create config work OK\n");
 
     // HL_DRV_DSP_LOG("dsp create config work srp OK,addr = 0x%08x, size is %ld\n", sg_tx_dsp_param->srp_profile, sg_tx_dsp_param->srp_profile_length);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->srp_profile, sg_tx_dsp_param->srp_profile_length + 1);
@@ -218,6 +228,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     sg_dsp_work->algo_type = DSP_ALGO_ALANGO_SRP_PROCESS;
 #else
     // todo rx dsp init
+#if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     RT_ASSERT(sg_rx_dsp_param != NULL);
     sg_dsp_work =
         _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_rx_dsp_param, sizeof(lib_bypass_param_type_t));
@@ -232,6 +243,22 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     RT_ASSERT(!ret);
 
     sg_dsp_work->algo_type = DSP_ALGO_ALANGO_SRP_PROCESS;
+#else
+    RT_ASSERT(sg_rx_bypass_dsp_param != NULL);
+    sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_BYPASS_INIT, (uint32_t)sg_rx_bypass_dsp_param,
+                                  sizeof(lib_alango_srp_param_type_t));
+    if (!sg_dsp_work) {
+        HL_DRV_DSP_LOG("dsp create config work fail\n");
+    }
+    HL_DRV_DSP_LOG("dsp create config work OK\n");
+
+    ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
+    RT_ASSERT(!ret);
+    ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_DEQUEUE_WORK, sg_dsp_work);
+    RT_ASSERT(!ret);
+
+    sg_dsp_work->algo_type = DSP_ALGO_BYPASS_PROCESS;
+#endif
 #endif
     sg_dsp_drv_handle->enable = 1;
     return 0;
@@ -270,6 +297,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
     sg_dsp_work = NULL;
 #else
     // todo rx dsp deinit
+#if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     sg_dsp_work->algo_type = DSP_ALGO_BYPASS_DEINIT;
     ret                    = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
     RT_ASSERT(!ret);
@@ -278,6 +306,16 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
 
     rk_dsp_work_destroy(sg_dsp_work);
     sg_dsp_work = NULL;
+#else
+    sg_dsp_work->algo_type = DSP_ALGO_BYPASS_DEINIT;
+    ret                    = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
+    RT_ASSERT(!ret);
+    ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_DEQUEUE_WORK, sg_dsp_work);
+    RT_ASSERT(!ret);
+
+    rk_dsp_work_destroy(sg_dsp_work);
+    sg_dsp_work = NULL;
+#endif
 #endif
 
     return 0;
@@ -331,6 +369,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
 
 #else
     // rx = 0
+#if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     if (!sg_rx_dsp_param) {
         // not init
         return 1;
@@ -355,6 +394,20 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
     HL_DRV_DSP_LOG("sg_rx_dsp_param->channel = %d\r\n", sg_rx_dsp_param->channel);
     HL_DRV_DSP_LOG("sg_rx_dsp_param->sample_size = %d\r\n", sg_rx_dsp_param->sample_size);
     HL_DRV_DSP_LOG("sg_rx_dsp_param->frame_length = %d\r\n", sg_rx_dsp_param->frame_length);
+#else
+    if (!sg_rx_bypass_dsp_param) {
+        HL_DRV_DSP_LOG("not init\r\n");
+        return 1;
+    }
+    sg_rx_bypass_dsp_param->in_buf                 = config->audio_process_in_buffer_b32_2ch;
+    sg_rx_bypass_dsp_param->out_buf                = config->audio_process_out_buffer_b32_2ch;
+    sg_rx_bypass_dsp_param->out_24bit_buf_after_process = config->audio_after_process_out_buffer_b24_2ch;
+    sg_rx_bypass_dsp_param->out_24bit_buf_before_process  = config->audio_before_process_out_buffer_b24_2ch;
+    sg_rx_bypass_dsp_param->process_buff_len                        = config->buffer_size_b32_2ch;
+    sg_rx_bypass_dsp_param->out_buff_len_24bit                    = config->buffer_size_b24_2ch;
+    sg_dsp_frame_bytes = sg_rx_bypass_dsp_param->process_buff_len;
+    RT_ASSERT(sg_dsp_frame_bytes != 0);
+#endif
 #endif
 
     return 0;
@@ -402,8 +455,13 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
     sg_tx_dsp_param                = rkdsp_malloc(sizeof(lib_alango_srp_param_type_t));
 #else
     // rx = 0
+#if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_RX;
     sg_rx_dsp_param                = malloc(sizeof(lib_alango_srp_param_type_t));
+#else
+    sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_TX;
+    sg_rx_bypass_dsp_param                = rkdsp_malloc(sizeof(lib_bypass_param_type_t));
+#endif
 #endif
 
     ret = _hl_drv_rk_stensa_dsp_init_frame(sg_dsp_drv_handle);
@@ -480,6 +538,7 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     }
 #else
     // do rx dsp process
+#if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_dsp_param->in_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b24_2ch_after_process,
@@ -498,6 +557,26 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         HL_DRV_DSP_LOG("dsp pop work error\r\n");
         return ret;
     }
+#else
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_bypass_dsp_param->in_buf, sg_rx_bypass_dsp_param->process_buff_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_buf, sg_rx_bypass_dsp_param->process_buff_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_24bit_buf_after_process,
+                         sg_rx_bypass_dsp_param->out_buff_len_24bit);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_24bit_buf_before_process,
+                         sg_rx_bypass_dsp_param->out_buff_len_24bit);
+
+    ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
+    if (ret) {
+        HL_DRV_DSP_LOG("dsp push work error\r\n");
+        return ret;
+    }
+
+    ret = rt_device_control(sg_dsp_dev, RKDSP_CTL_DEQUEUE_WORK, sg_dsp_work);
+    if (ret) {
+        HL_DRV_DSP_LOG("dsp pop work error\r\n");
+        return ret;
+    }
+#endif
 #endif
     return 0;
 }
