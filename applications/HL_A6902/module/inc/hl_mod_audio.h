@@ -25,7 +25,17 @@
 
 
 /* typedef -------------------------------------------------------------------*/
-
+typedef enum _hl_mod_audio_ctrl_cmd
+{
+    HL_MOD_AUDIO_GET_INFO_CMD = 0x00,
+    HL_MOD_AUDIO_SET_TIME_CMD,
+    HL_MOD_AUDIO_GET_TIME_CMD,
+    HL_MOD_AUDIO_SET_NOISE_CMD,
+    HL_MOD_AUDIO_SET_GAIN_CMD,
+    HL_MOD_AUDIO_SET_MUTE_CMD,
+    HL_MOD_AUDIO_SET_EQ_CMD,
+    HL_MOD_AUDIO_RECORD_CMD,
+} hl_mod_audio_ctrl_cmd;
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

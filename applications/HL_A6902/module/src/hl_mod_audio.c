@@ -29,12 +29,15 @@
 #include "stdlib.h"
 #include "dma.h"
 #include "drv_heap.h"
+#include "dfs_posix.h"
 
 #include "hl_mod_audio.h"
 #include "hl_drv_audio.h"
 #include "hl_drv_rk_xtensa_dsp.h"
 #include "hl_config.h"
 
+#include "hl_drv_aw21009.h"
+#include "hl_hal_gpio.h"
 /* typedef -------------------------------------------------------------------*/
 
 struct wav_header
@@ -56,7 +59,8 @@ struct wav_header
 
 struct capture_config
 {
-    FILE *file;
+    int  *file_audio_after; //FILE
+    int  *file_audio_bypass;
     struct rt_device *card;
     uint32_t rate;
     uint32_t channels;
@@ -111,81 +115,99 @@ static hl_drv_rk_xtensa_dsp_config_t_p dsp_config                = NULL;
 static char                            card_play[RT_NAME_MAX]    = { 0 };
 static char                            card_capture[RT_NAME_MAX] = { 0 };
 struct wav_header                      s_audio_header            = { 0 };
-static char                            s_cap_file_name[255]      = { 0 };
-static struct rt_ringbuffer*           s_record_rb               = RT_NULL;
+static struct rt_ringbuffer*           s_record_after_rb         = RT_NULL;
+static struct rt_ringbuffer*           s_record_bypass_rb        = RT_NULL;
 static struct rt_ringbuffer*           s_audio_rb                = RT_NULL;
 static char                            s_record_switch           = 0;
 static char                            s_audio_switch            = 0;
+static uint32_t                        s_record_after_size       = 0;
+static uint32_t                        s_record_bypass_size      = 0;
 /* Private function(only *.c)  -----------------------------------------------*/
 
-static void hl_mod_audio_record(uint8_t *buffer, uint32_t size);
-static void hl_mod_audio_record_save(void);
-static void hl_mod_audio_record_stop(void);
-static void hl_mod_audio_record_start(char* p_file_name);
+static void hl_mod_audio_record(int p_file_audio, uint8_t *buffer, uint32_t size, uint32_t *s_record_size);
+static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t *s_record_size);
+static void hl_mod_audio_record_stop(int p_file_audio, uint32_t *s_record_size);
+static void hl_mod_audio_record_start(int p_file_audio, uint32_t *s_record_size);
 static void hl_mod_audio_codec_config(void);
 static void hl_mod_audio_dsp_config(void);
-static void do_start_audio(void* arg);
+static void do_read_audio(void* arg);
 static void do_record_audio(void* arg);
+static int hl_mod_audio_record_switch(uint8_t record_switch);
+
+static uint8_t s_record_key_flag = 0;
+#if HL_GET_DEVICE_TYPE()
 
 
-static void hl_mod_audio_record(uint8_t *buffer, uint32_t size)
+
+static void hl_hal_gpio_audio_record_irq_process(void* args)
 {
-    if (cap_config->file == NULL) {
+    s_record_key_flag = 1;
+}
+
+
+static void _hl_drv_key_init(void)
+{
+    static hl_gpio_pin_e hl_audio_record_key = 0;
+
+    hl_audio_record_key = GPIO_REC_KEY;
+    hl_hal_gpio_init(GPIO_REC_KEY);
+    hl_hal_gpio_attach_irq(GPIO_REC_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_audio_record_irq_process, &hl_audio_record_key);
+    hl_hal_gpio_irq_enable(GPIO_REC_KEY, PIN_IRQ_ENABLE);
+}
+
+#endif /* __HL_HAL_LED_C__ */
+
+
+static void hl_mod_audio_record(int p_file_audio, uint8_t *buffer, uint32_t size, uint32_t *s_record_size)
+{
+    if (p_file_audio == NULL) {
         rt_kprintf("Error record file no open\n");
         return;
     }
-    //fseek(cap_config->file, (sizeof(struct wav_header) + s_audio_header.data_sz), SEEK_SET);
 
-    if (fwrite(buffer, 1, size, cap_config->file) != size) {
-        rt_kprintf("Error capturing sample\n");
+    if (write(p_file_audio, buffer, size) != size) {//if (fwrite(buffer, 1, size, p_file_audio) != size) {
+        rt_kprintf("Error capturing sample (write)\n");
         return;
     }
-
-    //fseek(cap_config->file, 0, SEEK_SET);
-    /* write header now all information is known */
-    s_audio_header.data_sz = (size / dsp_config->channels / (3)) + s_audio_header.data_sz;    
-    //fwrite(&s_audio_header, sizeof(struct wav_header), 1, cap_config->file);
-    //hl_mod_audio_record_save();
+    *s_record_size = (size / dsp_config->channels / (3)) + *s_record_size;    
 }
 
-static void hl_mod_audio_record_stop(void)
+static void hl_mod_audio_record_stop(int p_file_audio, uint32_t *s_record_size)
 {    
-    s_audio_header.data_sz = s_audio_header.data_sz * s_audio_header.block_align;
+    s_audio_header.data_sz = (*s_record_size) * s_audio_header.block_align;
     s_audio_header.riff_sz = s_audio_header.data_sz + sizeof(s_audio_header) - 8;
 
-    fseek(cap_config->file, 0, SEEK_SET);
-    fwrite(&s_audio_header, sizeof(struct wav_header), 1, cap_config->file);
-    fclose(cap_config->file);
+    lseek(p_file_audio, 0, SEEK_SET);
+    write(p_file_audio, &s_audio_header, sizeof(struct wav_header));
+    close(p_file_audio);
 
     rt_kprintf("Auaio recoord stop (data_sz:(0x%08x),riff_sz:(0x%08x)) \n", s_audio_header.data_sz, s_audio_header.riff_sz);
 }
 
-static void hl_mod_audio_record_save(void)
+static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t *s_record_size)
 {
-    fclose(cap_config->file);
+    close(p_file_audio);
 
-    cap_config->file = fopen(s_cap_file_name, "a");
-    if (!cap_config->file) {
-        rt_kprintf("%s:Unable to create file '%s'\n", __func__, s_cap_file_name);
-        hl_mod_audio_record_stop();
+    p_file_audio = open(file_name, O_WRONLY|O_CREAT);
+    if (!p_file_audio) {
+        rt_kprintf("%s:Unable to create file '%s'\n", __func__, file_name);
+        hl_mod_audio_record_stop(p_file_audio, s_record_size);
         return;
     } 
 }
 
-static void hl_mod_audio_record_start(char* p_file_name)
-{
-    if (p_file_name == NULL) {
-        rt_kprintf("%s: NULL or error '%s'\n", __func__, p_file_name);
-    }
-    
-    rt_memcpy(s_cap_file_name, p_file_name, 18);//sizeof(p_file_name));
 
-    cap_config->file = fopen(s_cap_file_name, "wb");
-    if (!cap_config->file) {
-        rt_kprintf("%s:Unable to create file '%s'\n", __func__, s_cap_file_name);
-        hl_mod_audio_record_stop();
+static void hl_mod_audio_record_start(int p_file_audio, uint32_t *s_record_size)
+{
+    if (p_file_audio == -1) {
+        rt_kprintf("%s:Unable to create file \n", __func__);
+        hl_mod_audio_record_stop(p_file_audio, s_record_size);
         return;
     }
+
+    *s_record_size = 0;
+
+    *s_record_size = 0;
 
     rt_memset(&s_audio_header, 0x00, sizeof(struct wav_header));
 
@@ -203,11 +225,11 @@ static void hl_mod_audio_record_start(char* p_file_name)
     s_audio_header.block_align     = cap_config->channels * (s_audio_header.bits_per_sample / 8);
     s_audio_header.data_id         = ID_DATA;
 
-    fseek(cap_config->file, 0, SEEK_SET);
-    fwrite(&s_audio_header, sizeof(struct wav_header), 1, cap_config->file);
+    lseek(p_file_audio, 0, SEEK_SET);
+    write(p_file_audio, &s_audio_header, sizeof(struct wav_header));
 
     /* leave enough room for header */
-    fseek(cap_config->file, sizeof(struct wav_header), SEEK_SET);
+    lseek(p_file_audio, sizeof(struct wav_header), SEEK_SET);
 
     //hl_mod_audio_record_save();
 }
@@ -326,21 +348,50 @@ static void do_record_audio(void* arg)
 {
     char*    record_buffer;
     uint32_t record_size;
+    uint8_t  ter = 0;
 
-    record_size = dsp_config->process_size_24bit*10;
+    char*    record_buffer1;
+    uint32_t record_size1;
+
+    record_size = dsp_config->process_size_24bit*10;//dsp_config->process_size*10;//
     record_buffer = rt_malloc(record_size);
 
+    record_size1 = dsp_config->process_size_24bit*10;//dsp_config->process_size*10;//
+    record_buffer1 = rt_malloc(record_size);
+
     while (1) {
-        if ((rt_ringbuffer_data_len(s_record_rb) >= record_size)&&(s_record_switch == 1)) {
-            rt_ringbuffer_get(s_record_rb, record_buffer, record_size);
-            hl_mod_audio_record(record_buffer, record_size);
-        } else {
+        if ((rt_ringbuffer_data_len(s_record_after_rb) < record_size)||(s_record_switch != 1)||(rt_ringbuffer_data_len(s_record_bypass_rb) < record_size)) {
             rt_thread_delay(1);
+        } else {            
+            if (rt_ringbuffer_data_len(s_record_after_rb) >= record_size) {
+                rt_ringbuffer_get(s_record_after_rb, record_buffer, record_size);
+                hl_mod_audio_record(cap_config->file_audio_after, record_buffer, record_size, &s_record_after_size);
+            }
+
+            if (rt_ringbuffer_data_len(s_record_bypass_rb) >= record_size1) {
+                rt_ringbuffer_get(s_record_bypass_rb, record_buffer1, record_size1);
+                hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_after_size);
+            }
         }
+
+        if(s_record_key_flag == 1) {
+            s_record_key_flag = 0;
+            if(s_record_switch == 0) {
+                ter = hl_mod_audio_record_switch(1);//hl_mod_audio_io_ctrl(HL_MOD_AUDIO_RECORD_CMD, &data, 1);
+                if(ter == 0) {
+                    hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
+                }            
+            } else {
+                ter = hl_mod_audio_record_switch(0);//hl_mod_audio_io_ctrl(HL_MOD_AUDIO_RECORD_CMD, &data, 1);
+                if(ter == 0) {
+                    hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
+                }        
+            }  
+        }  
     }
 }
 
-static void do_run_audio(void* arg)
+static void do_write_audio(void* arg)
 {
     char*    audio_buffer;
     uint32_t audio_size;
@@ -361,7 +412,7 @@ static void do_run_audio(void* arg)
     }
 }
 
-static void do_start_audio(void* arg)
+static void do_read_audio(void* arg)
 {
     // -------------------cap init-------------------
 
@@ -469,10 +520,13 @@ static void do_start_audio(void* arg)
 
 #if HL_GET_DEVICE_TYPE()
         if (s_record_switch == 1) {
-           rt_ringbuffer_put(s_record_rb, dsp_config->audio_process_out_buffer_24bit_b, dsp_config->process_size_24bit);
+           rt_ringbuffer_put(s_record_after_rb, dsp_config->audio_process_out_buffer_24bit_a, dsp_config->process_size_24bit);
+        }
+
+        if (s_record_switch == 1) {
+           rt_ringbuffer_put(s_record_bypass_rb, dsp_config->audio_process_out_buffer_24bit_b, dsp_config->process_size_24bit);
         }
 #endif
-        //hl_mod_audio_record(dsp_config->audio_process_out_buffer_24bit_a, dsp_config->process_size_24bit);
     }
 
     cap_ret = rt_device_control(cap_config->card, RK_AUDIO_CTL_STOP, NULL);
@@ -488,10 +542,9 @@ static void do_start_audio(void* arg)
 /**
  * 
  * @brief 
- * @param [in] argc 
- * @param [in] argv 
+ * @param [in] record_switch 
  * @return int 
- * @date 2022-09-13
+ * @date 2022-10-17
  * @author lixiang (rd37@hollyland-tech.com)
  * 
  * @details 
@@ -499,84 +552,63 @@ static void do_start_audio(void* arg)
  * @par 修改日志:
  * <table>
  * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-13      <td>lixiang     <td>新建
+ * <tr><td>2022-10-17      <td>lixiang     <td>新建
  * </table>
  */
-int hl_mod_audio_link_test(int argc, char** argv)
+static int hl_mod_audio_record_switch(uint8_t record_switch)
 {
-    rt_thread_t audio_tid = RT_NULL;
-    rt_thread_t record_tid = RT_NULL;
-
-    if (argc > 1) {
-        if (!strcmp("start", argv[1])) {
-            /* parse command line arguments */
-            argv += 2;
-            argc -= 2;
-            while (argc) {
-                if (strcmp(*argv, "-p") == 0) {
-                    argv++;
-                    argc--;
-                    if (*argv)
-                        rt_strncpy(card_play, *argv, RT_NAME_MAX);
-                }
-                if (strcmp(*argv, "-c") == 0) {
-                    argv++;
-                    argc--;
-                    if (*argv)
-                        rt_strncpy(card_capture, *argv, RT_NAME_MAX);
-                }
-
-                argv++;
-                argc--;
-            }
-            rt_kprintf("Audio mod test start\r\n");
-        } else if (!strcmp("stop", argv[1])) {
-            rt_kprintf("Audio mod test stop\r\n");
-            return 0;
-        } else {
-            rt_kprintf("wrong parameter, please type: hl_mod_audio_link_test [start/stop] [-p play] [-c capture]\r\n");
-            return 0;
-        }
-    } else {
-        rt_kprintf("wrong parameter, please type: hl_mod_audio_link_test [start/stop] [-p play] [-c capture]\r\n");
-        return 0;
+    if(s_record_switch == record_switch){
+        return -1;
     }
 
-    s_record_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
-    RT_ASSERT(s_record_rb != RT_NULL);
-
-    s_record_switch = 0;
-    hl_mod_audio_codec_config();   
-    hl_mod_audio_dsp_config();
-    hl_drv_audio_register_stream(hl_mod_audio_stream_cb);
-
-    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, 5, 1);//
-    if (audio_tid)
-        rt_thread_startup(audio_tid);
-
-    record_tid = rt_thread_create("do_hl_record", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
-    if (record_tid)
-        rt_thread_startup(record_tid);
-
+    if (record_switch) {
+        rt_ringbuffer_reset(s_record_after_rb);
+        rt_ringbuffer_reset(s_record_bypass_rb);
+        
+        cap_config->file_audio_after = open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY|O_CREAT|O_TRUNC);                    
+        cap_config->file_audio_bypass = open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY|O_CREAT|O_TRUNC);  
+        
+        hl_mod_audio_record_start(cap_config->file_audio_after, &s_record_after_size);      
+        hl_mod_audio_record_start(cap_config->file_audio_bypass, &s_record_bypass_size);          
+        s_record_switch = 1;
+        rt_kprintf("Audio mod record start\r\n");
+    } else {
+        s_record_switch = 0;
+        hl_mod_audio_record_stop(cap_config->file_audio_after, &s_record_after_size);
+        hl_mod_audio_record_stop(cap_config->file_audio_bypass, &s_record_bypass_size);
+        rt_kprintf("Audio mod record stop\r\n");        
+    }
     return 0;
 }
 
+
+/**
+ * 
+ * @brief 
+ * @param [in] argc 
+ * @param [in] argv 
+ * @return int 
+ * @date 2022-10-13
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-13      <td>lixiang     <td>新建
+ * </table>
+ */
 int hl_mod_audio_record_test(int argc, char** argv)
 {
-    rt_thread_t cap_tid = RT_NULL;
-    rt_thread_t ply_tid = RT_NULL;
-
+    char data = 0;
     if (argc > 1) {
         if (!strcmp("start", argv[1])) {
-            rt_ringbuffer_reset(s_record_rb);
-            s_record_switch = 1;
-            hl_mod_audio_record_start("/mnt/sdcard/hl.wav");
-            rt_kprintf("Audio mod record test start\r\n");
+            data = 1;
+            hl_mod_audio_record_switch(data);
         } else if (!strcmp("stop", argv[1])) {
-            s_record_switch = 0;
-            hl_mod_audio_record_stop();
-            rt_kprintf("Audio mod record test stop\r\n");
-            return 0;
+            data = 0;
+            hl_mod_audio_record_switch(data);
         } else {
             rt_kprintf("wrong parameter, please type: hl_mod_audio_record_test [start/stop]\r\n");
             return 0;
@@ -594,17 +626,29 @@ int hl_mod_audio_record_test(int argc, char** argv)
 uint8_t hl_mod_audio_init(void* p_msg_handle)
 {
     rt_thread_t audio_tid = RT_NULL;
-    rt_thread_t record_tid = RT_NULL;    
+    rt_thread_t record_tid = RT_NULL;   
+    rt_thread_t record1_tid = RT_NULL;    
     
     card_play[0] = NULL;
-    card_capture[0] = NULL;              
+    card_capture[0] = NULL;        
+
+#if HL_GET_DEVICE_TYPE()
+    hl_drv_aw21009_init();
+    _hl_drv_key_init();
+#else
+    hl_hal_gpio_init(GPIO_AMP_EN);
+    hl_hal_gpio_high(GPIO_AMP_EN);
+#endif
 
     s_audio_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
     RT_ASSERT(s_audio_rb != RT_NULL);
 
 #if HL_GET_DEVICE_TYPE()
-    s_record_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
-    RT_ASSERT(s_record_rb != RT_NULL);
+    s_record_after_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
+    RT_ASSERT(s_record_after_rb != RT_NULL);
+
+    s_record_bypass_rb = rt_ringbuffer_create(HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE);
+    RT_ASSERT(s_record_bypass_rb != RT_NULL);
 #endif
 
     s_record_switch = 0;
@@ -615,16 +659,16 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
 
 
 
-    audio_tid = rt_thread_create("do_hl_audio", do_start_audio, RT_NULL, 2048, 5, 1);//
+    audio_tid = rt_thread_create("audio_read", do_read_audio, RT_NULL, 2048, 5, 1);//
     if (audio_tid)
         rt_thread_startup(audio_tid);
     
-    audio_tid = rt_thread_create("do_hl_waudio", do_run_audio, RT_NULL, 2048, 5, 1);//
+    audio_tid = rt_thread_create("audio_write", do_write_audio, RT_NULL, 2048, 5, 1);//
     if (audio_tid)
         rt_thread_startup(audio_tid);
 
 #if HL_GET_DEVICE_TYPE()
-    record_tid = rt_thread_create("do_hl_record", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
+    record_tid = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);//
     if (record_tid)
         rt_thread_startup(record_tid);
 #endif
@@ -638,20 +682,48 @@ uint8_t hl_mod_audio_deinit()
 }
 uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
+    switch(cmd) {
+        case HL_MOD_AUDIO_GET_INFO_CMD:
+        break;
+        case HL_MOD_AUDIO_SET_TIME_CMD:
+        break;
+        case HL_MOD_AUDIO_GET_TIME_CMD:
+        break;
+        case HL_MOD_AUDIO_SET_NOISE_CMD:
+        break;
+        case HL_MOD_AUDIO_SET_GAIN_CMD:
+        break;
+        case HL_MOD_AUDIO_SET_MUTE_CMD:
+        break;
+        case HL_MOD_AUDIO_SET_EQ_CMD:
+        break;
+        case HL_MOD_AUDIO_RECORD_CMD:
+            if(ptr == NULL){
+                rt_kprintf("HL_MOD_AUDIO_RECORD_CMD parem error");
+                return -1;
+            }
+            return hl_mod_audio_record_switch(((char *)ptr)[0]);
+        break;
+        default:
+        rt_kprintf("Audio io ctrl param error \r\n");
+        break;
+    } 
+
     return 0;
+    
 }
 
 #ifdef RT_USING_FINSH
 
 #include <finsh.h>
-MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
+//MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
 #if HL_GET_DEVICE_TYPE()
 MSH_CMD_EXPORT(hl_mod_audio_record_test, audio record test cmd);
 #endif
+
 #endif
 
 INIT_APP_EXPORT(hl_mod_audio_init);
-
 
 #if 0
 #include "hal_base.h"
@@ -772,8 +844,7 @@ int gpio_test_init(void)
 INIT_BOARD_EXPORT(gpio_test_init);
 #endif
 
-
-#endif /* __HL_MOD_AUDIO_C__ */
-       /*
+#endif // HL_MOD_AUDIO_C
+/*
  * EOF
  */
