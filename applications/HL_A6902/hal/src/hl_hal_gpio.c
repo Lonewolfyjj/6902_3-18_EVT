@@ -23,11 +23,14 @@
 
 /* typedef -------------------------------------------------------------------*/
 // gpio config struct
-typedef struct _HL_GPIO_CONFIG_T
+typedef struct _hl_gpio_config_t
 {
+    /// @brief 引脚号
     rt_base_t    pin;
+
+    /// @brief  引脚模式
     rt_base_t    mode;
-}HL_GPIO_CONFIG_T;
+} hl_gpio_config_t;
 
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -35,7 +38,7 @@ typedef struct _HL_GPIO_CONFIG_T
 
 #if HL_GET_DEVICE_TYPE()
 // Tx
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
     {GPIO1_A3,  PIN_MODE_INPUT},            // GPIO_PAIR_KEY
@@ -56,7 +59,7 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
 };
 #else
 // RX
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
     {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_PWR_KEY
