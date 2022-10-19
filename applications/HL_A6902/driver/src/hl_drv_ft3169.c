@@ -69,7 +69,7 @@
 #define MAX_LEN_GESTURE_INFO (MAX_POINTS_GESTURE_TRACE * 4 + 2)
 
 /*Max point numbers of touch trace*/
-#define MAX_POINTS_TOUCH_TRACE 2
+#define MAX_POINTS_TOUCH_TRACE 1//2
 /*Length of touch information*/
 #define MAX_LEN_TOUCH_INFO (MAX_POINTS_TOUCH_TRACE * 6 + 2)
 
@@ -83,15 +83,20 @@
 #define CURRENT_TOUCH_IRQ_PIN 1
 #define CURRENT_TOUCH_IRQ_MODE PIN_MODE_INPUT_PULLUP
 
-static rt_device_t touch_dev  = RT_NULL;
-static rt_touch_t  touch_hand = RT_NULL;
+#define CURRENT_TOUCH_RESET_PIN GPIO1_C5
+#define CURRENT_TOUCH_RESET_MODE PIN_MODE_OUTPUT
+#define CURRENT_TOUCH_RESET_PIN_H PIN_HIGH
+#define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
+
+// static rt_device_t touch_dev  = RT_NULL;
+static rt_touch_t touch_hand = RT_NULL;
 
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 static int                       fts_ts_suspend(void);
-static rt_err_t                  fts_ts_init(rt_device_t dev);
-static rt_err_t                  fts_touch_irq_callback(rt_touch_t touch);
-static rt_err_t                  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
-static rt_size_t                 fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
+// static rt_err_t                  fts_ts_init(rt_device_t dev);
+static rt_err_t  fts_touch_irq_callback(rt_touch_t touch);
+static rt_err_t  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
+static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
 
 /*****************************************************************************
 * Private variables/functions
@@ -734,16 +739,16 @@ static void log_touch_info(struct fts_ts_event* events, uint8_t event_nums)
  */
 static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num)
 {
-    int                 ret     = 0;
-    uint8_t             i       = 0;
-    uint8_t             base    = 0;
-    uint8_t             regaddr = 0x01;
-    uint8_t             rbuf[MAX_LEN_TOUCH_INFO]; /*A maximum of two points are supported*/
-    uint8_t             point_num        = 0;
-    uint8_t             touch_event_nums = 0;
-    uint8_t             point_id         = 0;
-    struct fts_ts_event events[FTS_MAX_POINTS_SUPPORT]; /* multi-touch */
-
+    int                  ret     = 0;
+    uint8_t              i       = 0;
+    uint8_t              base    = 0;
+    uint8_t              regaddr = 0x01;
+    uint8_t              rbuf[MAX_LEN_TOUCH_INFO]; /*A maximum of two points are supported*/
+    uint8_t              point_num        = 0;
+    uint8_t              touch_event_nums = 0;
+    uint8_t              point_id         = 0;
+    struct fts_ts_event  events[MAX_POINTS_TOUCH_TRACE]; /* multi-touch */
+    struct fts_ts_event* ptr = (struct fts_ts_event*)buf;
     /*read touch information from reg0x01*/
     ret = fts_read(regaddr, rbuf, MAX_LEN_TOUCH_INFO);
     if (ret == HL_FAILED) {
@@ -752,7 +757,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     }
 
     /*print touch buffer, for debug usage*/
-    log_touch_buf(rbuf, MAX_LEN_TOUCH_INFO);
+    // log_touch_buf(rbuf, MAX_LEN_TOUCH_INFO);
 
     if ((rbuf[1] == 0xFF) && (rbuf[2] == 0xFF) && (rbuf[3] == 0xFF)) {
         FTS_INFO("FW initialization, need recovery");
@@ -761,7 +766,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     }
 
     /*parse touch information based on register map*/
-    memset(events, 0xFF, sizeof(struct fts_ts_event) * FTS_MAX_POINTS_SUPPORT);
+    // memset(events, 0xFF, sizeof(struct fts_ts_event) * FTS_MAX_POINTS_SUPPORT);
     point_num = rbuf[1] & 0x0F;
     if (point_num > FTS_MAX_POINTS_SUPPORT) {
         FTS_DEBUG("invalid point_num(%d)", point_num);
@@ -795,7 +800,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     }
 
     /*print touch information*/
-    log_touch_info(events, touch_event_nums);
+    // log_touch_info(events, touch_event_nums);
 
     /*Now you have get the touch information, you can report anything(X/Y coordinates...) you want to system*/
     /*TODO...(report touch information to system)*/
@@ -805,34 +810,38 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
             /* The event of point(point id is events[i].id) is down event, the finger of this id stands for is
              * pressing on the screen.*/
             /*TODO...(down event)*/
+            memcpy(ptr, &events[i], sizeof(struct fts_ts_event));
         } else {
             /*TODO...(up event)*/
+            memcpy(ptr, &events[i], sizeof(struct fts_ts_event));
         }
     }
 
     return HL_SUCCESS;
 }
 
-static rt_err_t fts_touch_irq_callback(rt_touch_t touch)
-{
-    return 0;
-}
+// static rt_err_t fts_touch_irq_callback(rt_touch_t touch)
+// {
+//     ft_printf("%s \n", __FUNCTION__);
+//     return 0;
+// }
 
-static rt_err_t fts_touch_rx_indicate_callback(rt_device_t dev, rt_size_t size)
-{
-    // if (fts_data->gesture_support && fts_data->suspended) {
-    //     /*if gesture is enabled, interrupt handler should process gesture at first*/
-    //     ret = fts_gesture_process();
-    //     if (ret == 0) {
-    //         FTS_DEBUG("success to process gesture.");
-    //         return HL_SUCCESS;
-    //     }
-    // }
+// static rt_err_t fts_touch_rx_indicate_callback(rt_device_t dev, rt_size_t size)
+// {
+// if (fts_data->gesture_support && fts_data->suspended) {
+//     /*if gesture is enabled, interrupt handler should process gesture at first*/
+//     ret = fts_gesture_process();
+//     if (ret == 0) {
+//         FTS_DEBUG("success to process gesture.");
+//         return HL_SUCCESS;
+//     }
+// }
 
-    /*if gesture isn't enabled, the handler should process touch points*/
-    // ret = fts_touch_process(dev, pos, buffer, size);
-    return 0;
-}
+/*if gesture isn't enabled, the handler should process touch points*/
+// ret = fts_touch_process(dev, pos, buffer, size);
+//     ft_printf("%s \n", __FUNCTION__);
+//     return 0;
+// }
 
 /**
  * 
@@ -1040,15 +1049,16 @@ static int touch_device_ft3169_init(void)
         ft_printf("Touch device ft3169 create fail !\n");
         return HL_FAILED;
     }
-    touch_dev->ops         = &touch_ops;
-    touch_dev->rx_indicate = fts_touch_rx_indicate_callback;
-    touch_hand->parent     = *touch_dev;
-    touch_hand->config     = touch_config;
-    touch_hand->info       = touch_info;
-    touch_hand->ops        = &touch_ops_top;
-    touch_hand->irq_handle = fts_touch_irq_callback;
+    // touch_dev->ops         = &touch_ops;
+    // touch_dev->rx_indicate = fts_touch_rx_indicate_callback;
+    // touch_hand->parent     = *touch_dev;
+    touch_hand->config = touch_config;
+    touch_hand->info   = touch_info;
+    touch_hand->ops    = &touch_ops_top;
+    // touch_hand->irq_handle = fts_touch_irq_callback;
 
-    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_RDONLY, RT_NULL);
+    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_RDONLY,
+                               RT_NULL);
     if (ret != RT_EOK) {
         ft_printf("Touch device ft3169 register fail !\n");
         return HL_FAILED;
