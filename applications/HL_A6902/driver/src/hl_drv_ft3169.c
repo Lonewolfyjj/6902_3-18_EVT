@@ -38,6 +38,7 @@
 #include <rtdevice.h>
 #include <touch.h>
 #include "hl_drv_ft3169.h"
+#include "hal_pinctrl.h"
 
 /*****************************************************************************
 * Private constant and macro definitions using #define
@@ -89,9 +90,9 @@
 #define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
 
 // #define CURRENT_TOUCH_RESET_PIN GPIO1_C5
-#define CURRENT_TOUCH_RESET_MODE PIN_MODE_OUTPUT
-#define CURRENT_TOUCH_RESET_PIN_H PIN_HIGH
-#define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
+// #define CURRENT_TOUCH_RESET_MODE PIN_MODE_OUTPUT
+// #define CURRENT_TOUCH_RESET_PIN_H PIN_HIGH
+// #define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
 
 // static rt_device_t touch_dev  = RT_NULL;
 static rt_touch_t touch_hand = RT_NULL;
