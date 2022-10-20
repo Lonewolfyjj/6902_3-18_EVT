@@ -74,12 +74,12 @@ static void _hl_drv_key_init(void)
 
 static void _hl_drv_led_init(void)
 {
-    int                             ret;
-    uint8_t                         chip_id;
-    uint8_t                         work_mode;
-    uint8_t                         led_chan;
-    hl_drv_aw2016a_pwm_level_st     pwm_param;
-    hl_drv_aw2016a_pattern_param_st pattern_param;
+    int                            ret;
+    uint8_t                        chip_id;
+    uint8_t                        work_mode;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_pwm_level_st    pwm_param;
+    hl_drv_aw2016a_breath_param_st pattern_param;
 
     // aw2016a init
     hl_drv_aw2016a_init();
@@ -121,7 +121,7 @@ static void _hl_drv_led_init(void)
     pattern_param.t2       = 3;
     pattern_param.t3       = 9;
     pattern_param.t4       = 0;
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM, &pattern_param,
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_BREATH_PARAM, &pattern_param,
                               sizeof(pattern_param));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return AW2016A_FUNC_RET_ERR;
@@ -213,10 +213,10 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
 
         case TELINK_CMD_GET_RSSI:
 #if HL_GET_DEVICE_TYPE()
-            rt_kprintf("Telink RX RSSI = %d", s_uart_recv_buf[2]);
+            rt_kprintf("\nTelink RX RSSI = %d\n", s_uart_recv_buf[2]);
 #else
-            rt_kprintf("Telink TX_L RSSI = %d", s_uart_recv_buf[1]);
-            rt_kprintf("Telink TX_R RSSI = %d", s_uart_recv_buf[2]);
+            rt_kprintf("\nTelink TX_L RSSI = %d\n", s_uart_recv_buf[1]);
+            rt_kprintf("Telink TX_R RSSI = %d\n", s_uart_recv_buf[2]);
 #endif
             break;
 
@@ -426,7 +426,7 @@ void hl_telink_ioctrl(int argc, char** argv)
             break;
 
         case '2':
-            data = argv[2][0] - '0';
+            data = (uint8_t)atoi(argv[2]);
             hl_mod_telink_ioctl(TELINK_CMD_SET_RF_POWER, &data, 1);
             break;
 
