@@ -472,13 +472,13 @@ void hl_telink_ioctrl(int argc, char** argv)
 #if HL_GET_DEVICE_TYPE()
                 hl_hal_gpio_high(GPIO_RF_PWR_EN);
 #else
-                hl_hal_gpio_high(GPIO_ATS_PWR_EN);
+                hl_hal_gpio_high(GPIO_RF_PWR_EN);
 #endif
             } else if (!rt_strncmp(argv[2], "off", 3)) {
 #if HL_GET_DEVICE_TYPE()
                 hl_hal_gpio_low(GPIO_RF_PWR_EN);
 #else
-                hl_hal_gpio_low(GPIO_ATS_PWR_EN);
+                hl_hal_gpio_low(GPIO_RF_PWR_EN);
 #endif
             } else {
             }
