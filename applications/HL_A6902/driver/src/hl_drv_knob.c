@@ -15,9 +15,12 @@
  * 
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
+#include "hl_drv_knob.h"
+#if HL_GET_DEVICE_TYPE()
+#else
+// RX旋钮配置
 /* Includes ------------------------------------------------------------------*/
 #include "hl_hal_gpio.h"
-#include "hl_drv_knob.h"
 #include <rtthread.h>
 #include <rtdevice.h>
 /* typedef -------------------------------------------------------------------*/
@@ -136,8 +139,5 @@ uint8_t hl_drv_knob_read(uint8_t knob_num, int8_t * val)
 }
 
 
+#endif
 
-
-/*
- * EOF
- */

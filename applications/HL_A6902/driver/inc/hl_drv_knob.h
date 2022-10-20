@@ -17,9 +17,16 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __HL_DRV_KNOB_H__
 #define __HL_DRV_KNOB_H__
+
+#include "hl_config.h"
+#if HL_GET_DEVICE_TYPE()
+#else
+
 /* Includes ------------------------------------------------------------------*/
 #include "stdbool.h"
+#include "stdint.h"
 /* typedef -------------------------------------------------------------------*/
+
 typedef enum _hl_drv_knob_e
 {
     /// 左旋钮编号
@@ -91,7 +98,7 @@ uint8_t hl_drv_knob_deinit(void);
  */
 uint8_t hl_drv_knob_read(uint8_t knob_num, int8_t * val);
 
-
+#endif 
 
 #endif
 /*
