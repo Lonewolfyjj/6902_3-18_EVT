@@ -80,10 +80,15 @@
 #define CURRENT_TOUCH_X_RANGE 10
 #define CURRENT_TOUCH_Y_RANGE 10
 #define CURRENT_TOUCH_DEVICE_NAME "FT3169"
-#define CURRENT_TOUCH_IRQ_PIN 1
+#define CURRENT_TOUCH_IRQ_PIN GPIO1_C7
 #define CURRENT_TOUCH_IRQ_MODE PIN_MODE_INPUT_PULLUP
 
 #define CURRENT_TOUCH_RESET_PIN GPIO1_C5
+#define CURRENT_TOUCH_RESET_MODE PIN_MODE_OUTPUT
+#define CURRENT_TOUCH_RESET_PIN_H PIN_HIGH
+#define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
+
+// #define CURRENT_TOUCH_RESET_PIN GPIO1_C5
 #define CURRENT_TOUCH_RESET_MODE PIN_MODE_OUTPUT
 #define CURRENT_TOUCH_RESET_PIN_H PIN_HIGH
 #define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
@@ -94,9 +99,9 @@ static rt_touch_t touch_hand = RT_NULL;
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 static int                       fts_ts_suspend(void);
 // static rt_err_t                  fts_ts_init(rt_device_t dev);
-static rt_err_t  fts_touch_irq_callback(rt_touch_t touch);
-static rt_err_t  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
-static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
+static rt_err_t                  fts_touch_irq_callback(rt_touch_t touch);
+static rt_err_t                  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
+static rt_size_t                 fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
 
 /*****************************************************************************
 * Private variables/functions
@@ -107,12 +112,14 @@ static struct fts_ts_data _fts_data = {
     .esd_support     = 1,
 };
 
-const static struct rt_device_ops touch_ops = {
-    fts_ts_init, RT_NULL, RT_NULL, RT_NULL,
-    // fts_touch_event_handler,
-    RT_NULL, RT_NULL,
-    // hl_drv_ft3169_io_ctrl,
-};
+// const static struct rt_device_ops touch_ops = {
+//     .init = fts_ts_init,
+//     .close = RT_NULL,
+//     .control = RT_NULL,
+//     .open = RT_NULL,
+//     .read = RT_NULL,
+//     .write = RT_NULL,
+// };
 
 const static struct rt_touch_ops touch_ops_top = {
     .touch_control   = hl_drv_ft3169_io_ctrl,
@@ -244,7 +251,12 @@ static int fts_hw_reset(uint32_t msec)
 {
     /*firsty. set reset_pin low, and then delay 10ms*/
     /*secondly. set reset_pin high, and then delay 200ms*/
-
+    rt_pin_mode(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_MODE);
+    rt_pin_write(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_PIN_L);
+    fts_msleep(10);
+    rt_pin_mode(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_MODE);
+    rt_pin_write(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_PIN_H);
+    fts_msleep(msec);
     return HL_SUCCESS;
 }
 
@@ -297,7 +309,7 @@ static int platform_reset_pin_cfg(void)
 
     /*firstly,set the reset_pin to output mode*/
     /*secondly,set the reset_pin to low */
-
+    fts_hw_reset(200);
     return HL_SUCCESS;
 }
 
@@ -407,14 +419,16 @@ static int fts_write(uint8_t addr, uint8_t* data, uint16_t datalen)
     for (i = 0; i < 3; i++) {
         ret = hl_i2c_write_reg(i2c_bus, addr, data, datalen);
         if (ret == HL_FAILED) {
-            FTS_ERROR("hl_i2c_write_reg(%d) fails,ret:%d,retry:%d", addr, ret, i);
+            // FTS_ERROR("hl_i2c_write_reg(%d) fails,ret:%d,retry:%d", addr, ret, i);
             continue;
         } else {
             ret = HL_SUCCESS;
             break;
         }
     }
-
+    // if (ret == HL_FAILED) {
+    //     FTS_ERROR("hl_i2c_write_reg(%d) fails,ret:%d,retry:%d", addr, ret, i);
+    // }
     return ret;
 }
 
@@ -450,13 +464,17 @@ static int fts_read(uint8_t addr, uint8_t* data, uint16_t datalen)
     for (i = 0; i < 3; i++) {
         ret = hl_i2c_read_reg(i2c_bus, addr, data, datalen);
         if (ret == HL_FAILED) {
-            FTS_ERROR("hl_i2c_read_reg fails,ret:%d,retry:%d,i:%d,data[0]:%x", addr, ret, i, data[0]);
+            // FTS_ERROR("hl_i2c_read_reg fails,ret:%d,retry:%d,i:%d,data[0]:%x", addr, ret, i, data[0]);
             continue;
         } else {
             ret = HL_SUCCESS;
             break;
         }
     }
+
+    // if (ret == HL_FAILED) {
+    //     FTS_ERROR("hl_i2c_read_reg fails,ret:%d,retry:%d,i:%d,data[0]:%x", addr, ret, i, data[0]);
+    // }
 
     return ret;
 }
@@ -578,7 +596,7 @@ static void fts_esdcheck_process(void)
     uint8_t        reg_value          = 0;
     static uint8_t flow_work_hold_cnt = 0;
     static uint8_t flow_work_cnt_last = 0;
-
+    FTS_DEBUG("Check esd \n");
     /* 1. check power state, if suspend, no need check esd */
     if (fts_data->suspended == 1) {
         FTS_DEBUG("In suspend, not check esd");
@@ -994,7 +1012,7 @@ static rt_err_t hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, vo
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t fts_ts_init(rt_device_t dev)
+static rt_err_t fts_ts_init(void)
 {
     int ret = 0;
 
@@ -1043,9 +1061,10 @@ static rt_err_t fts_ts_init(rt_device_t dev)
 static int touch_device_ft3169_init(void)
 {
     rt_err_t ret;
-    touch_dev  = rt_device_create(RT_Device_Class_Touch, RT_NULL);
+    fts_ts_init();
+    // touch_dev  = rt_device_create(RT_Device_Class_Touch, RT_NULL);
     touch_hand = (struct rt_touch_device*)rt_malloc(sizeof(struct rt_touch_device));
-    if (touch_dev == RT_NULL) {
+    if (touch_hand == RT_NULL) {
         ft_printf("Touch device ft3169 create fail !\n");
         return HL_FAILED;
     }
@@ -1066,4 +1085,23 @@ static int touch_device_ft3169_init(void)
     return HL_SUCCESS;
 }
 
+int tt3169(int argc, char** argv)
+{
+    uint8_t cmd = atoi(argv[1]);
+    if (cmd == 0) {
+        fts_ts_init();
+    }
+    if (cmd == 1) {
+        fts_touch_process(RT_NULL, RT_NULL, 0);
+    }
+    if (cmd == 2) {
+        fts_check_id();
+    }
+    if (cmd == 3) {
+        fts_esdcheck_process();
+    }
+    return RT_EOK;
+}
+
+MSH_CMD_EXPORT(tt3169, run tt3169);
 INIT_DEVICE_EXPORT(touch_device_ft3169_init);
