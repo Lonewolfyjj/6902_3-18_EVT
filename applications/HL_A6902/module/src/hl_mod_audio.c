@@ -542,7 +542,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
 {
     rt_thread_t audio_tid   = RT_NULL;
     rt_thread_t record_tid  = RT_NULL;
-    rt_thread_t record1_tid = RT_NULL;
+    uint8_t temp = 0;
 
     card_play[0]    = NULL;
     card_capture[0] = NULL;
@@ -551,6 +551,11 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     hl_drv_aw21009_init();
     _hl_drv_key_init();
     s_record_switch = 0;
+    ///
+    hl_hal_gpio_init(GPIO_MIC_SW);
+    hl_hal_gpio_low(GPIO_MIC_SW);
+    temp = 0;
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &temp, 1);
 #else
     hl_hal_gpio_init(GPIO_AMP_EN);
     hl_hal_gpio_high(GPIO_AMP_EN);
