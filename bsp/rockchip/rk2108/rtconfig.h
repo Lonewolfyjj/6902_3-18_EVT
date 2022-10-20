@@ -182,6 +182,13 @@
 
 /* RT_USING_USB_HOST is not set */
 /* RT_USING_USB_DEVICE is not set */
+/* _RT_USB_DEVICE_NONE is not set */
+/* _RT_USB_DEVICE_CDC is not set */
+/* _RT_USB_DEVICE_MSTORAGE is not set */
+/* _RT_USB_DEVICE_HID is not set */
+/* _RT_USB_DEVICE_WINUSB is not set */
+/* _RT_USB_DEVICE_UAC1 is not set */
+/* _RT_USB_DEVICE_UVC is not set */
 
 /* POSIX layer and C standard library */
 

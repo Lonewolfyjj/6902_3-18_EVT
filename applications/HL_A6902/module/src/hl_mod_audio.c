@@ -601,7 +601,12 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
         case HL_MOD_AUDIO_GET_TIME_CMD:
             break;
-        case HL_MOD_AUDIO_SET_NOISE_CMD:
+        case HL_MOD_AUDIO_SET_DENOISE_CMD:
+            if (ptr == NULL) {
+                rt_kprintf("HL_MOD_AUDIO_SET_DENOISE_CMD parem error");
+                return -1;
+            }
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, ptr, 1);
             break;
         case HL_MOD_AUDIO_SET_GAIN_CMD:
             break;
@@ -616,6 +621,21 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             }
             return hl_mod_audio_record_switch(((char*)ptr)[0]);
             break;
+#if HL_GET_DEVICE_TYPE()
+        case HL_MOD_AUDIO_MIC_SWITCH_CMD:
+            if (ptr == NULL) {
+                rt_kprintf("HL_MOD_AUDIO_RECORD_CMD parem error");
+                return -1;
+            }
+            if(((char*)ptr)[0] != 0) {
+                hl_hal_gpio_init(GPIO_MIC_SW);
+                hl_hal_gpio_high(GPIO_MIC_SW);
+            } else {
+                hl_hal_gpio_init(GPIO_MIC_SW);
+                hl_hal_gpio_low(GPIO_MIC_SW);
+            }                
+            break;
+#endif
         default:
             rt_kprintf("Audio io ctrl param error \r\n");
             break;
@@ -641,24 +661,48 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
  * <tr><td>2022-10-13      <td>lixiang     <td>新建
  * </table>
  */
-int hl_mod_audio_record_test(int argc, char** argv)
+int hl_mod_audio_test(int argc, char** argv)
 {
-    char data = 0;
-    if (argc > 1) {
-        if (!strcmp("start", argv[1])) {
-            data = 1;
-            hl_mod_audio_record_switch(data);
-        } else if (!strcmp("stop", argv[1])) {
-            data = 0;
-            hl_mod_audio_record_switch(data);
-        } else {
-            rt_kprintf("wrong parameter, please type: hl_mod_audio_record_test [start/stop]\r\n");
+    uint8_t audio_param = 0; 
+
+    if (argc <= 1) {
+#if HL_GET_DEVICE_TYPE()
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | time | denoise | gain | mute | record | eq | micswitch] [param] \r\n");
+#else
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | denoise | gain | mute | eq ] [param] \r\n");
+#endif
+        return 0;
+    }    
+    
+    if (!strcmp("record", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test record [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=off,1=no)\r\n");
             return 0;
         }
+        audio_param = (uint8_t) atoi(argv[2]);
+        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_RECORD_CMD, &audio_param, 1);
+    } else if (!strcmp("denoise", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test denoise [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=off,1=no)\r\n");
+            return 0;
+        }
+        audio_param = (uint8_t) atoi(argv[2]);
+        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &audio_param, 1);
+    } else  if (!strcmp("micswitch", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test micswitch [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=External Mic, 1=Internal Mic)\r\n");
+            return 0;
+        }
+        audio_param = (uint8_t) atoi(argv[2]);
+        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_MIC_SWITCH_CMD, &audio_param, 1);
     } else {
-        rt_kprintf("wrong parameter, please type: hl_mod_audio_record_test [start/stop]\r\n");
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test cmd error\r\n");
         return 0;
     }
+
     return 0;
 }
 
@@ -666,9 +710,9 @@ int hl_mod_audio_record_test(int argc, char** argv)
 #ifdef RT_USING_FINSH
 
 #include <finsh.h>
-//MSH_CMD_EXPORT(hl_mod_audio_link_test, audio mod test cmd);
+
 #if HL_GET_DEVICE_TYPE()
-MSH_CMD_EXPORT(hl_mod_audio_record_test, audio io ctrl cmd);
+MSH_CMD_EXPORT(hl_mod_audio_test, audio io ctrl cmd);
 #endif
 
 #endif
