@@ -342,7 +342,7 @@ static void do_record_audio(void* arg)
     char*    record_buffer;
     uint32_t record_size;
     uint8_t  ter = 0;
-
+    static uint8_t  s_denoise_switch = 0;
     char*    record_buffer1;
     uint32_t record_size1;
 
@@ -367,7 +367,8 @@ static void do_record_audio(void* arg)
                 hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_after_size);
             }
         }
-
+        
+#if 1
         if (s_record_key_flag == 1) {
             s_record_key_flag = 0;
             if (s_record_switch == 0) {
@@ -382,6 +383,22 @@ static void do_record_audio(void* arg)
                 }
             }
         }
+        #else
+        if (s_record_key_flag == 1) {
+            s_record_key_flag = 0;
+            if (s_denoise_switch == 0) {
+                s_denoise_switch = 1;
+                hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &s_denoise_switch, 1);
+                hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
+            } else {
+                s_denoise_switch = 0;
+                hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &s_denoise_switch, 1);
+                hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
+               
+            }
+        }
+        
+        #endif
     }
 }
 #endif
@@ -453,10 +470,16 @@ static void do_read_audio(void* arg)
     cap_param.sampleBits = cap_config->bits;
 
     cap_ret = rt_device_control(cap_config->card, RK_AUDIO_CTL_PCM_PREPARE, &cap_abuf);
-    RT_ASSERT(cap_ret == RT_EOK);
+    if(cap_ret != RT_EOK) {
+        rt_kprintf("[%d]: PCM error !\n", __LINE__);
+        return 0;
+    }
 
     cap_ret = rt_device_control(cap_config->card, RK_AUDIO_CTL_HW_PARAMS, &cap_param);
-    RT_ASSERT(cap_ret == RT_EOK);
+    if(cap_ret != RT_EOK) {
+        rt_kprintf("[%d]: codec error !\n", __LINE__);
+        return 0;
+    }
 
     rt_kprintf("[%d]: Capturing sample: %lu ch, %lu hz, %lu bits\n", __LINE__, cap_config->channels, cap_config->rate,
                cap_config->bits);
@@ -553,7 +576,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     s_record_switch = 0;
     ///
     hl_hal_gpio_init(GPIO_MIC_SW);
-    hl_hal_gpio_low(GPIO_MIC_SW);
+    hl_hal_gpio_high(GPIO_MIC_SW);
     temp = 0;
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &temp, 1);
 #else
