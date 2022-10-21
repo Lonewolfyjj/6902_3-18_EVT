@@ -443,6 +443,7 @@ static uint8_t _hl_drv_rk_stensa_dsp_init_frame(hl_drv_rk_xtensa_dsp_t_p handle)
 uint8_t hl_drv_rk_xtensa_dsp_init()
 {
     int ret = 0;
+    
 
     // 1. 资源创建
     if (!sg_dsp_drv_handle) {
@@ -463,6 +464,12 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
     sg_rx_bypass_dsp_param                = rkdsp_malloc(sizeof(lib_bypass_param_type_t));
 #endif
 #endif
+
+#if HL_GET_DEVICE_TYPE()
+    sg_tx_dsp_param->io_ctrl_op = 3;
+#else
+    sg_rx_dsp_param->io_ctrl_op = 3;
+#endif //<
 
     ret = _hl_drv_rk_stensa_dsp_init_frame(sg_dsp_drv_handle);
     if (ret) {
@@ -598,6 +605,22 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case HL_EM_DRV_RK_DSP_CMD_STOP_DSP:
             _hl_drv_rk_xtensa_dsp_disable_dsp();
             break;
+        case HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP:
+            if(((uint8_t *)ptr)[0] != 0) {
+#if HL_GET_DEVICE_TYPE()
+                sg_tx_dsp_param->io_ctrl_op = 0;
+#else
+                sg_rx_dsp_param->io_ctrl_op = 0;
+#endif
+                }else {
+#if HL_GET_DEVICE_TYPE()
+                sg_tx_dsp_param->io_ctrl_op = 3;
+#else
+                sg_rx_dsp_param->io_ctrl_op = 3;
+#endif
+            }
+            
+            break;
 
         default:
             HL_DRV_DSP_LOG("dsp error ctrl msg = 0x%02x\r\n", cmd);
@@ -606,6 +629,34 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     return 0;
 }
 
+int denoise_set(int argc, char** argv)
+{
+    if (argc < 2) {
+        return 1;
+    }
+
+    if (atoi(argv[1])) {
+#if HL_GET_DEVICE_TYPE()
+        // tx = 1
+        sg_tx_dsp_param->io_ctrl_op = 0;
+#else
+        // rx = 0
+        sg_rx_dsp_param->io_ctrl_op = 0;
+#endif
+    }else {
+#if HL_GET_DEVICE_TYPE()
+        // tx = 1
+        sg_tx_dsp_param->io_ctrl_op = 3;
+#else
+        // rx = 0
+        sg_rx_dsp_param->io_ctrl_op = 3;
+#endif
+    }
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(denoise_set, audio record test cmd);
 /*
  * EOF
  */
