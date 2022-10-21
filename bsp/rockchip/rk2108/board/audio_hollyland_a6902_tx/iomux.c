@@ -120,7 +120,7 @@ void rt_hw_iomux_config(void)
 
     sfc0_iomux_config();
 
-    sdio_iomux_config();
+//    sdio_iomux_config();
 
     uart2_iomux_config();
 

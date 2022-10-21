@@ -179,7 +179,7 @@
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
-/* RT_USING_TOUCH is not set */
+#define RT_USING_TOUCH
 
 /* Using WiFi */
 
@@ -220,7 +220,262 @@
 
 /* System */
 
-/* RT_USING_LITTLEVGL2RTT is not set */
+#define RT_USING_LITTLEVGL2RTT
+
+/* LVGL configuration */
+
+/* LV_CONF_SKIP is not set */
+/* LV_CONF_MINIMAL is not set */
+
+/* Color settings */
+
+/* LV_COLOR_DEPTH_32 is not set */
+#define LV_COLOR_DEPTH_16
+/* LV_COLOR_DEPTH_8 is not set */
+/* LV_COLOR_DEPTH_1 is not set */
+#define LV_COLOR_DEPTH 16
+/* LV_COLOR_16_SWAP is not set */
+/* LV_COLOR_SCREEN_TRANSP is not set */
+#define LV_COLOR_MIX_ROUND_OFS 128
+#define LV_COLOR_CHROMA_KEY_HEX 0x00FF00
+
+/* Memory settings */
+
+/* LV_MEM_CUSTOM is not set */
+#define LV_MEM_SIZE_KILOBYTES 32
+#define LV_MEM_ADDR 0x0
+#define LV_MEM_BUF_MAX_NUM 16
+/* LV_MEMCPY_MEMSET_STD is not set */
+
+/* HAL Settings */
+
+#define LV_DISP_DEF_REFR_PERIOD 30
+#define LV_INDEV_DEF_READ_PERIOD 30
+/* LV_TICK_CUSTOM is not set */
+#define LV_DPI_DEF 130
+
+/* Feature configuration */
+
+/* Drawing */
+
+#define LV_DRAW_COMPLEX
+#define LV_SHADOW_CACHE_SIZE 0
+#define LV_CIRCLE_CACHE_SIZE 4
+#define LV_LAYER_SIMPLE_BUF_SIZE 24576
+#define LV_IMG_CACHE_DEF_SIZE 0
+#define LV_GRADIENT_MAX_STOPS 2
+#define LV_GRAD_CACHE_DEF_SIZE 0
+/* LV_DITHER_GRADIENT is not set */
+#define LV_DISP_ROT_MAX_BUF 10240
+
+/* GPU */
+
+/* LV_USE_GPU_ARM2D is not set */
+/* LV_USE_GPU_STM32_DMA2D is not set */
+/* LV_USE_GPU_SWM341_DMA2D is not set */
+/* LV_USE_GPU_NXP_PXP is not set */
+/* LV_USE_GPU_NXP_VG_LITE is not set */
+/* LV_USE_GPU_SDL is not set */
+
+/* Logging */
+
+/* LV_USE_LOG is not set */
+
+/* Asserts */
+
+#define LV_USE_ASSERT_NULL
+#define LV_USE_ASSERT_MALLOC
+/* LV_USE_ASSERT_STYLE is not set */
+/* LV_USE_ASSERT_MEM_INTEGRITY is not set */
+/* LV_USE_ASSERT_OBJ is not set */
+#define LV_ASSERT_HANDLER_INCLUDE "assert.h"
+
+/* Others */
+
+/* LV_USE_PERF_MONITOR is not set */
+/* LV_USE_MEM_MONITOR is not set */
+/* LV_USE_REFR_DEBUG is not set */
+/* LV_SPRINTF_CUSTOM is not set */
+/* LV_SPRINTF_USE_FLOAT is not set */
+#define LV_USE_USER_DATA
+/* LV_ENABLE_GC is not set */
+
+/* Compiler settings */
+
+/* LV_BIG_ENDIAN_SYSTEM is not set */
+#define LV_ATTRIBUTE_MEM_ALIGN_SIZE 1
+/* LV_ATTRIBUTE_FAST_MEM_USE_IRAM is not set */
+/* LV_USE_LARGE_COORD is not set */
+
+/* Font usage */
+
+/* Enable built-in fonts */
+
+/* LV_FONT_MONTSERRAT_8 is not set */
+/* LV_FONT_MONTSERRAT_10 is not set */
+/* LV_FONT_MONTSERRAT_12 is not set */
+#define LV_FONT_MONTSERRAT_14
+/* LV_FONT_MONTSERRAT_16 is not set */
+/* LV_FONT_MONTSERRAT_18 is not set */
+/* LV_FONT_MONTSERRAT_20 is not set */
+/* LV_FONT_MONTSERRAT_22 is not set */
+/* LV_FONT_MONTSERRAT_24 is not set */
+/* LV_FONT_MONTSERRAT_26 is not set */
+/* LV_FONT_MONTSERRAT_28 is not set */
+/* LV_FONT_MONTSERRAT_30 is not set */
+/* LV_FONT_MONTSERRAT_32 is not set */
+/* LV_FONT_MONTSERRAT_34 is not set */
+/* LV_FONT_MONTSERRAT_36 is not set */
+/* LV_FONT_MONTSERRAT_38 is not set */
+/* LV_FONT_MONTSERRAT_40 is not set */
+/* LV_FONT_MONTSERRAT_42 is not set */
+/* LV_FONT_MONTSERRAT_44 is not set */
+/* LV_FONT_MONTSERRAT_46 is not set */
+/* LV_FONT_MONTSERRAT_48 is not set */
+/* LV_FONT_MONTSERRAT_12_SUBPX is not set */
+/* LV_FONT_MONTSERRAT_28_COMPRESSED is not set */
+/* LV_FONT_DEJAVU_16_PERSIAN_HEBREW is not set */
+/* LV_FONT_SIMSUN_16_CJK is not set */
+/* LV_FONT_UNSCII_8 is not set */
+/* LV_FONT_UNSCII_16 is not set */
+/* LV_FONT_CUSTOM is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_8 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_12 is not set */
+#define LV_FONT_DEFAULT_MONTSERRAT_14
+/* LV_FONT_DEFAULT_MONTSERRAT_16 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_18 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_20 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_22 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_24 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_26 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_28 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_30 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_32 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_34 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_36 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_38 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_40 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_42 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_44 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_46 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_48 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_12_SUBPX is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_28_COMPRESSED is not set */
+/* LV_FONT_DEFAULT_DEJAVU_16_PERSIAN_HEBREW is not set */
+/* LV_FONT_DEFAULT_SIMSUN_16_CJK is not set */
+/* LV_FONT_DEFAULT_UNSCII_8 is not set */
+/* LV_FONT_DEFAULT_UNSCII_16 is not set */
+/* LV_FONT_FMT_TXT_LARGE is not set */
+/* LV_USE_FONT_COMPRESSED is not set */
+/* LV_USE_FONT_SUBPX is not set */
+#define LV_USE_FONT_PLACEHOLDER
+
+/* Text Settings */
+
+#define LV_TXT_ENC_UTF8
+/* LV_TXT_ENC_ASCII is not set */
+#define LV_TXT_BREAK_CHARS " ,.;:-_"
+#define LV_TXT_LINE_BREAK_LONG_LEN 0
+#define LV_TXT_COLOR_CMD "#"
+/* LV_USE_BIDI is not set */
+/* LV_USE_ARABIC_PERSIAN_CHARS is not set */
+
+/* Widget usage */
+
+#define LV_USE_ARC
+#define LV_USE_BAR
+#define LV_USE_BTN
+#define LV_USE_BTNMATRIX
+#define LV_USE_CANVAS
+#define LV_USE_CHECKBOX
+#define LV_USE_DROPDOWN
+#define LV_USE_IMG
+#define LV_USE_LABEL
+#define LV_LABEL_TEXT_SELECTION
+#define LV_LABEL_LONG_TXT_HINT
+#define LV_USE_LINE
+#define LV_USE_ROLLER
+#define LV_ROLLER_INF_PAGES 7
+#define LV_USE_SLIDER
+#define LV_USE_SWITCH
+#define LV_USE_TEXTAREA
+#define LV_TEXTAREA_DEF_PWD_SHOW_TIME 1500
+#define LV_USE_TABLE
+
+/* Extra Widgets */
+
+#define LV_USE_ANIMIMG
+#define LV_USE_CALENDAR
+/* LV_CALENDAR_WEEK_STARTS_MONDAY is not set */
+#define LV_USE_CALENDAR_HEADER_ARROW
+#define LV_USE_CALENDAR_HEADER_DROPDOWN
+#define LV_USE_CHART
+#define LV_USE_COLORWHEEL
+#define LV_USE_IMGBTN
+#define LV_USE_KEYBOARD
+#define LV_USE_LED
+#define LV_USE_LIST
+#define LV_USE_MENU
+#define LV_USE_METER
+#define LV_USE_MSGBOX
+#define LV_USE_SPAN
+#define LV_SPAN_SNIPPET_STACK_SIZE 64
+#define LV_USE_SPINBOX
+#define LV_USE_SPINNER
+#define LV_USE_TABVIEW
+#define LV_USE_TILEVIEW
+#define LV_USE_WIN
+
+/* Themes */
+
+#define LV_USE_THEME_DEFAULT
+/* LV_THEME_DEFAULT_DARK is not set */
+#define LV_THEME_DEFAULT_GROW
+#define LV_THEME_DEFAULT_TRANSITION_TIME 80
+#define LV_USE_THEME_BASIC
+/* LV_USE_THEME_MONO is not set */
+
+/* Layouts */
+
+#define LV_USE_FLEX
+#define LV_USE_GRID
+
+/* 3rd Party Libraries */
+
+/* LV_USE_FS_STDIO is not set */
+/* LV_USE_FS_POSIX is not set */
+/* LV_USE_FS_WIN32 is not set */
+/* LV_USE_FS_FATFS is not set */
+/* LV_USE_PNG is not set */
+/* LV_USE_BMP is not set */
+/* LV_USE_SJPG is not set */
+/* LV_USE_GIF is not set */
+/* LV_USE_QRCODE is not set */
+/* LV_USE_FREETYPE is not set */
+/* LV_USE_RLOTTIE is not set */
+/* LV_USE_FFMPEG is not set */
+
+/* Others */
+
+#define LV_USE_SNAPSHOT
+/* LV_USE_MONKEY is not set */
+/* LV_USE_GRIDNAV is not set */
+/* LV_USE_FRAGMENT is not set */
+/* LV_USE_IMGFONT is not set */
+/* LV_USE_MSG is not set */
+/* LV_USE_IME_PINYIN is not set */
+
+/* Examples */
+
+#define LV_BUILD_EXAMPLES
+
+/* Demos */
+
+/* LV_USE_DEMO_WIDGETS is not set */
+/* LV_USE_DEMO_KEYPAD_AND_ENCODER is not set */
+/* LV_USE_DEMO_BENCHMARK is not set */
+/* LV_USE_DEMO_STRESS is not set */
+/* LV_USE_DEMO_MUSIC is not set */
 
 /* VBUS(Virtual Software BUS) */
 
@@ -324,6 +579,17 @@
 #define RT_LARGE_HEAP_SIZE 524288
 /* RT_USING_DTCM_HEAP is not set */
 /* RT_USING_PSRAM_HEAP is not set */
+#define RT_USING_PANEL_FPGA_LVDS
+/* RT_USING_PANEL_SS is not set */
+/* RT_USING_PANEL_S6E3FC2X01 is not set */
+/* RT_USING_PANEL_S6E3HC2_X1 is not set */
+/* RT_USING_PANEL_S6E3HC2_X4 is not set */
+/* RT_USING_PANEL_ST7703_DS is not set */
+/* RT_USING_PANEL_ST7796H2 is not set */
+/* RT_USING_PANEL_AM018RT90211 is not set */
+/* RT_USING_PANEL_AM014RT90327V0 is not set */
+/* RT_USING_PANEL_H245QBN02 is not set */
+/* RT_USING_BACKLIGHT is not set */
 
 /* Enable Fault Dump Hook */
 
@@ -379,6 +645,7 @@
 /* RT-Thread rockchip buffer_manage driver */
 
 /* RT_USING_BUFFER_MANAGE is not set */
+/* RT_USING_TOUCH_DRIVERS is not set */
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_QPIPSRAM is not set */
 
@@ -426,7 +693,11 @@
 #define RT_USING_DMA
 #define RT_USING_DMA_PL330
 #define RT_USING_PMU
-/* RT_USING_DISPLAY is not set */
+#define RT_USING_DISPLAY
+#define RT_USING_VOP
+/* RT_USING_SPI_SCREEN is not set */
+/* RT_USING_VOP_MCU is not set */
+#define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
 #define RT_USING_PWM0
 
@@ -444,7 +715,7 @@
 
 #define RT_USING_UART
 #define RT_USING_UART0
-/* RT_USING_UART1 is not set */
+#define RT_USING_UART1
 #define RT_USING_UART2
 
 /* Enable I2C */
