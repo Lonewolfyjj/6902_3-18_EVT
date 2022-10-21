@@ -185,6 +185,11 @@ static void rk_mmc_set_iocfg(struct rt_mmcsd_host *host, struct rt_mmcsd_io_cfg 
         HAL_MMC_SetCardWidth(hal_host, MMC_CARD_WIDTH_4BIT);
         hal_host->cachedBw = MMC_CARD_WIDTH_4BIT;
         PRINT_MMC_DBG("set to 4-bit mode\n", mmc_drv->host->freq_max, clkdiv);
+#ifdef RT_EMMC_USE_DDR_MOD
+        HAL_MMC_SetCardDDRMode(hal_host);
+        rt_kprintf("set 4 bit ddr mode ok");
+#endif
+        
     }
     else if (io_cfg->bus_width == MMCSD_BUS_WIDTH_8)
     {
@@ -219,8 +224,16 @@ static void rk_mmc_set_iocfg(struct rt_mmcsd_host *host, struct rt_mmcsd_io_cfg 
         rt_kprintf("ERROR: %s, unknown power_mode %d\n", __func__, io_cfg->power_mode);
         break;
     }
+    // 设置rk2108的ddr模式
+    
+
+
     PRINT_MMC_DBG("%s end\n", __func__);
 }
+
+
+
+
 
 static void rk_mmc_enable_sdio_irq(struct rt_mmcsd_host *host, rt_int32_t enable)
 {

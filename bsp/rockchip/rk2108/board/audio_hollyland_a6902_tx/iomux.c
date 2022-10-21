@@ -124,7 +124,7 @@ void rt_hw_iomux_config(void)
 
     uart2_iomux_config();
 
-    key_ctrl_iomux_config();
+    
 
     uart0_iomux_config();
 
