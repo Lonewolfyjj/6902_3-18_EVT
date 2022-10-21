@@ -200,12 +200,6 @@ static void uart_deinit()
 
     uart_dev = _pl_mod.uart_dev;
 
-    rt_err = rt_device_set_rx_indicate(uart_dev, NULL);
-    if (rt_err != RT_EOK) {
-        DBG_LOG("can not set rx indicate dev:%s", HL_MOD_PL_UART_NAME);
-        return;
-    }
-
     rt_err = rt_device_close(uart_dev);
     if (rt_err != RT_EOK) {
         DBG_LOG("can not close dev:%s", HL_MOD_PL_UART_NAME);
