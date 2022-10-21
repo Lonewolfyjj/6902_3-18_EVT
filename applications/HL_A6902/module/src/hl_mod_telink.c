@@ -18,8 +18,8 @@ static uint8_t* s_telink_fifo_buf;
 
 static struct rt_thread led_thread;
 static char             led_thread_stack[1024];
-hl_gpio_pin_e           key_left_gpio;
-hl_gpio_pin_e           key_right_gpio;
+hl_gpio_pin_e           tx_key_pairleft_gpio;
+hl_gpio_pin_e           tx_key_pairright_gpio;
 hl_gpio_pin_e           rx_key_pair_gpio;
 uint8_t                 telink_pair_state;
 uint8_t                 get_pair_count = 1;
@@ -52,31 +52,34 @@ static void hl_hal_gpio_telink_pairall_irq_process(void* args)
 static void _hl_drv_key_init(void)
 {
 #if HL_GET_DEVICE_TYPE()
-    key_left_gpio = GPIO_PAIR_KEY;
+    tx_key_pairleft_gpio = GPIO_PAIR_KEY;
     hl_hal_gpio_init(GPIO_PAIR_KEY);
-    hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairleft_irq_process, &key_left_gpio);
+    hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairleft_irq_process,
+                           &tx_key_pairleft_gpio);
     hl_hal_gpio_irq_enable(GPIO_PAIR_KEY, PIN_IRQ_ENABLE);
 
-    key_right_gpio = GPIO_REC_KEY;
-    hl_hal_gpio_init(GPIO_REC_KEY);
-    hl_hal_gpio_attach_irq(GPIO_REC_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairright_irq_process, &key_right_gpio);
-    hl_hal_gpio_irq_enable(GPIO_REC_KEY, PIN_IRQ_ENABLE);
+    tx_key_pairright_gpio = GPIO_PWR_KEY;
+    hl_hal_gpio_init(GPIO_PWR_KEY);
+    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairright_irq_process,
+                           &tx_key_pairright_gpio);
+    hl_hal_gpio_irq_enable(GPIO_PWR_KEY, PIN_IRQ_ENABLE);
 #else
     rx_key_pair_gpio = GPIO_PWR_KEY;
     hl_hal_gpio_init(GPIO_PWR_KEY);
-    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairall_irq_process, &rx_key_pair_gpio);
+    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairall_irq_process,
+                           &rx_key_pair_gpio);
     hl_hal_gpio_irq_enable(GPIO_PWR_KEY, PIN_IRQ_ENABLE);
 #endif
 }
 
 static void _hl_drv_led_init(void)
 {
-    int                             ret;
-    uint8_t                         chip_id;
-    uint8_t                         work_mode;
-    uint8_t                         led_chan;
-    hl_drv_aw2016a_pwm_level_st     pwm_param;
-    hl_drv_aw2016a_pattern_param_st pattern_param;
+    int                            ret;
+    uint8_t                        chip_id;
+    uint8_t                        work_mode;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_pwm_level_st    pwm_param;
+    hl_drv_aw2016a_breath_param_st pattern_param;
 
     // aw2016a init
     hl_drv_aw2016a_init();
@@ -118,7 +121,7 @@ static void _hl_drv_led_init(void)
     pattern_param.t2       = 3;
     pattern_param.t3       = 9;
     pattern_param.t4       = 0;
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_PATTERN_MODE_PARAM, &pattern_param,
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_BREATH_PARAM, &pattern_param,
                               sizeof(pattern_param));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return AW2016A_FUNC_RET_ERR;
@@ -163,7 +166,6 @@ static void _hl_drv_led_ctrl(uint8_t red, uint8_t green, uint8_t blue)
     }
 }
 
-
 static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 {
     rt_err_t ret;
@@ -207,6 +209,15 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
         case TELINK_CMD_WIRELESS_PAIR_LEFT:
         case TELINK_CMD_WIRELESS_PAIR_RIGHT:
             telink_pair_state = TELINK_PAIR_START;
+            break;
+
+        case TELINK_CMD_GET_RSSI:
+#if HL_GET_DEVICE_TYPE()
+            rt_kprintf("\nTelink RX RSSI = %d\n", s_uart_recv_buf[2]);
+#else
+            rt_kprintf("\nTelink TX_L RSSI = %d\n", s_uart_recv_buf[1]);
+            rt_kprintf("Telink TX_R RSSI = %d\n", s_uart_recv_buf[2]);
+#endif
             break;
 
         default:
@@ -373,31 +384,111 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 
     frame_len = rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
     // rt_kprintf("[ Telink Write Len = %d] [", frame_len);
-    for (uint8_t i = 0; i < frame_len; i++) {
-        // rt_kprintf(" %02x ", frame_buf[i]);
-    }
+    // for (uint8_t i = 0; i < frame_len; i++) {
+    //     // rt_kprintf(" %02x ", frame_buf[i]);
+    // }
     // rt_kprintf("]\n");
 
     return 0;
 }
 
-void hl_telink_get_state(void)
+void hl_telink_ioctrl(int argc, char** argv)
 {
+    if (argc < 2) {
+        rt_kprintf("\n******************************************");
+        rt_kprintf("\n**              Telink CMD              **");
+        rt_kprintf("\n******************************************");
+        rt_kprintf("\n*  [1]Switch Antenna                     *");
+        rt_kprintf("\n*      -->arg = 0 antenna1/2 double      *");
+        rt_kprintf("\n*      -->arg = 1 antenna1 single        *");
+        rt_kprintf("\n*      -->arg = 2 antenna2 single        *");
+        rt_kprintf("\n*  [2]Set RF Power                       *");
+        rt_kprintf("\n*      -->arg = 0~23                     *");
+        rt_kprintf("\n*  [3]Get RSSI value                     *");
+        rt_kprintf("\n*  [4]Custom Send Uart Data              *");
+        rt_kprintf("\n*      -->arg = string                   *");
+        rt_kprintf("\n*  [5]Start Pair                         *");
+        rt_kprintf("\n*      -->arg = 0 RX pair                *");
+        rt_kprintf("\n*      -->arg = 1 TX pair Left Channel   *");
+        rt_kprintf("\n*      -->arg = 2 TX pair Right Channel  *");
+        rt_kprintf("\n*  [6]ON/OFF Telink                      *");
+        rt_kprintf("\n*  [7]ON/OFF PA                          *");
+        rt_kprintf("\n******************************************\n");
+        return;
+    }
+
     uint8_t data = 0;
 
-    // 通过串口给Telink发送获取配对信息命令(0x02)
-    hl_mod_telink_ioctl(TELINK_CMD_GET_PAIR_INFO, &data, 1);
-}
-MSH_CMD_EXPORT(hl_telink_get_state, telink get pair state cmd);
+    switch (argv[1][0]) {
+        case '1':
+            data = argv[2][0] - '0';
+            hl_mod_telink_ioctl(TELINK_CMD_SWITCH_ANTENNA, &data, 1);
+            break;
 
-void hl_telink_start_pairleft(void)
-{
-    uint8_t data = 0;
+        case '2':
+            data = (uint8_t)atoi(argv[2]);
+            hl_mod_telink_ioctl(TELINK_CMD_SET_RF_POWER, &data, 1);
+            break;
 
-    // 通过串口给Telink发送配对命令(0x03)
-    hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_LEFT, &data, 1);
+        case '3':
+            hl_mod_telink_ioctl(TELINK_CMD_GET_RSSI, &data, 1);
+            break;
+
+        case '4':
+            hl_mod_telink_ioctl(argv[1], &argv[2], rt_strlen(argv[2]));
+            break;
+
+        case '5':
+            data = argv[2][0] - '0';
+            if (0 == data) {
+                hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_ALL, &data, 1);
+            } else if (1 == data) {
+                hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_LEFT, &data, 1);
+            } else if (2 == data) {
+                hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_RIGHT, &data, 1);
+            } else {
+            }
+            break;
+
+        case '6':
+            if (!rt_strncmp(argv[2], "on", 2)) {
+#if HL_GET_DEVICE_TYPE()
+                hl_hal_gpio_high(GPIO_2831P_EN);
+#else
+                hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#endif
+            } else if (!rt_strncmp(argv[2], "off", 3)) {
+#if HL_GET_DEVICE_TYPE()
+                hl_hal_gpio_low(GPIO_2831P_EN);
+#else
+                hl_hal_gpio_low(GPIO_RF_PWR_EN);
+#endif
+            } else {
+            }
+            break;
+
+        case '7':
+            if (!rt_strncmp(argv[2], "on", 2)) {
+#if HL_GET_DEVICE_TYPE()
+                hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#else
+                hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#endif
+            } else if (!rt_strncmp(argv[2], "off", 3)) {
+#if HL_GET_DEVICE_TYPE()
+                hl_hal_gpio_low(GPIO_RF_PWR_EN);
+#else
+                hl_hal_gpio_low(GPIO_RF_PWR_EN);
+#endif
+            } else {
+            }
+            break;
+
+        default:
+            break;
+    }
 }
-MSH_CMD_EXPORT(hl_telink_start_pairleft, telink start pairleft cmd);
+MSH_CMD_EXPORT(hl_telink_ioctrl, telink control cmd);
 
 void telink_pair_test(void)
 {
@@ -433,7 +524,6 @@ void telink_pair_test(void)
     hl_mod_telink_init(&mq);
     // telink_thread start
     hl_mod_telink_start();
-
 
 #if HL_GET_DEVICE_TYPE()
     // led_thread init
