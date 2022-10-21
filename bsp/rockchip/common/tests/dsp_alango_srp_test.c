@@ -25,7 +25,7 @@
 //#include "dsp_alango_srp_test.h"  // LIXIANG
 
 // #ifdef RT_USING_COMMON_TEST_AUDIO
-#if 1
+#if 0
 
 #include "rk_audio.h"
 #include "drv_heap.h"
