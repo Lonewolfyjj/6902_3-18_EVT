@@ -59,7 +59,8 @@ static void touch_thread_fun(void* parameter)
 {
     struct fts_ts_event touch_pos;
     while (1) {
-        rt_sem_take(&touch_sem, (1 << 31));
+        // rt_sem_take(&touch_sem, (1 << 31));
+        rt_thread_mdelay(500);
         rt_device_read(touch_dev, 0, &touch_pos, 1);
         rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
     }
@@ -163,10 +164,10 @@ static void touch_dev_init(void)
         rt_kprintf("open touch device failed!");
         return;
     }
-    if (rt_device_set_rx_indicate(touch_dev, touch_rx_int_callback) != RT_EOK) {
-        rt_kprintf("Touch device int failed!");
-        return;
-    }
+    // if (rt_device_set_rx_indicate(touch_dev, touch_rx_int_callback) != RT_EOK) {
+    //     rt_kprintf("Touch device int failed!");
+    //     return;
+    // }
 }
 
 /**

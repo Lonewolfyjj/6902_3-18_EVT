@@ -41,7 +41,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-
+#include <touch.h>
 /**************************************************************************
  *                                基本宏                                     *
  **************************************************************************/
@@ -129,7 +129,7 @@ struct fts_ts_data {
 * Global variable or extern global variabls/functions
 *****************************************************************************/
 // extern struct fts_ts_data *fts_data;
-
+rt_err_t touch_info_fun(struct fts_ts_event *touch_pos);
 // void fts_msleep(unsigned long msec);
 
 /* communication interface */

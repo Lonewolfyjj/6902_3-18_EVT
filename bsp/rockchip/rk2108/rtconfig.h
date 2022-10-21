@@ -638,6 +638,17 @@
 #define RT_LARGE_HEAP_SIZE 524288
 /* RT_USING_DTCM_HEAP is not set */
 /* RT_USING_PSRAM_HEAP is not set */
+#define RT_USING_PANEL_FPGA_LVDS
+/* RT_USING_PANEL_SS is not set */
+/* RT_USING_PANEL_S6E3FC2X01 is not set */
+/* RT_USING_PANEL_S6E3HC2_X1 is not set */
+/* RT_USING_PANEL_S6E3HC2_X4 is not set */
+/* RT_USING_PANEL_ST7703_DS is not set */
+/* RT_USING_PANEL_ST7796H2 is not set */
+/* RT_USING_PANEL_AM018RT90211 is not set */
+/* RT_USING_PANEL_AM014RT90327V0 is not set */
+/* RT_USING_PANEL_H245QBN02 is not set */
+/* RT_USING_BACKLIGHT is not set */
 
 /* Enable Fault Dump Hook */
 
@@ -742,7 +753,11 @@
 #define RT_USING_DMA
 #define RT_USING_DMA_PL330
 #define RT_USING_PMU
-/* RT_USING_DISPLAY is not set */
+#define RT_USING_DISPLAY
+#define RT_USING_VOP
+/* RT_USING_SPI_SCREEN is not set */
+/* RT_USING_VOP_MCU is not set */
+#define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
 #define RT_USING_PWM0
 

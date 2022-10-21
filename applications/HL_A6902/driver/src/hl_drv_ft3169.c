@@ -70,7 +70,7 @@
 #define MAX_LEN_GESTURE_INFO (MAX_POINTS_GESTURE_TRACE * 4 + 2)
 
 /*Max point numbers of touch trace*/
-#define MAX_POINTS_TOUCH_TRACE 1//2
+#define MAX_POINTS_TOUCH_TRACE 2
 /*Length of touch information*/
 #define MAX_LEN_TOUCH_INFO (MAX_POINTS_TOUCH_TRACE * 6 + 2)
 
@@ -96,7 +96,7 @@
 
 // static rt_device_t touch_dev  = RT_NULL;
 static rt_touch_t touch_hand = RT_NULL;
-
+static rt_device_t         touch_dev = RT_NULL;
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 static int                       fts_ts_suspend(void);
 // static rt_err_t                  fts_ts_init(rt_device_t dev);
@@ -819,7 +819,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     }
 
     /*print touch information*/
-    // log_touch_info(events, touch_event_nums);
+    log_touch_info(events, touch_event_nums);
 
     /*Now you have get the touch information, you can report anything(X/Y coordinates...) you want to system*/
     /*TODO...(report touch information to system)*/
@@ -1044,6 +1044,25 @@ static rt_err_t fts_ts_init(void)
     return ret;
 }
 
+static int touch_dev_init(void)
+{
+    touch_dev = rt_device_find("FT3169");
+
+    if (touch_dev == RT_NULL) {
+        rt_kprintf("Can't find touch device FT3169\n");
+        return HL_FAILED;
+    }
+    if (rt_device_init(touch_dev) != RT_EOK) {
+        rt_kprintf("open touch device init failed!");
+        return HL_FAILED;
+    }
+    if (rt_device_open(touch_dev, RT_DEVICE_FLAG_INT_RX) != RT_EOK) {
+        rt_kprintf("open touch device failed!");
+        return HL_FAILED;
+    }
+    return HL_SUCCESS;
+}
+
 /**
  * 
  * @brief 初始化注册触屏设备
@@ -1077,13 +1096,24 @@ static int touch_device_ft3169_init(void)
     touch_hand->ops    = &touch_ops_top;
     // touch_hand->irq_handle = fts_touch_irq_callback;
 
-    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_RDONLY,
+    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_RDONLY,
                                RT_NULL);
     if (ret != RT_EOK) {
         ft_printf("Touch device ft3169 register fail !\n");
         return HL_FAILED;
     }
+
+    if(touch_dev_init() == HL_FAILED){
+        return HL_FAILED;
+    }
     return HL_SUCCESS;
+}
+
+rt_err_t touch_info_fun(struct fts_ts_event *touch_pos)
+{
+    rt_device_read(touch_dev, 0, touch_pos, 1);
+    // rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
+    return 0;
 }
 
 int tt3169(int argc, char** argv)
