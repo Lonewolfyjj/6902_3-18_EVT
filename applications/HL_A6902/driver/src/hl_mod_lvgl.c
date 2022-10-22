@@ -1,5 +1,9 @@
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
+
 #include <rtthread.h>
 #include <rtdevice.h>
+#include "lv_conf.h"
 #include "lvgl.h"
 #include "hl_mod_lvgl.h"
 #include "lv_port_indev.h"
@@ -25,3 +29,5 @@ static int lvgl_mod_init(void)
 }
 
 MSH_CMD_EXPORT(lvgl_mod_init, run lvgl_mod_init);
+
+#endif

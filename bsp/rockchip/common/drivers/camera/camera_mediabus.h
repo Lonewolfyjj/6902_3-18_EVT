@@ -16,7 +16,7 @@
 #ifndef __CAMERA_MEDIABUS_H__
 #define __CAMERA_MEDIABUS_H__
 #if defined(__RT_THREAD__)
-#include "adapter_type.h"
+#include "adapter/adapter_type.h"
 #elif defined(__RK_OS__)
 #include "driver/adapter_type.h"
 #endif
@@ -139,16 +139,104 @@
 #define MEDIA_BUS_FLAGS_HSYNC_POLA_HIGHT        (0x1 << MEDIA_BUS_FLAGS_HSYNC_POLA_SHIFT)
 #define MEDIA_BUS_FLAGS_HSYNC_MASK              (0x1 << MEDIA_BUS_FLAGS_HSYNC_POLA_SHIFT)
 
-#define MEDIA_STD_ID_PAL_SHIFT                  (0x0)
-#define MEDIA_STD_ID_PAL_MASK                   (0x1 << MEDIA_STD_ID_PAL_SHIFT)
-#define MEDIA_STD_ID_NTSC_SHIFT                 (0x1)
-#define MEDIA_STD_ID_NTSC_MASK                  (0x1 << MEDIA_STD_ID_NTSC_SHIFT)
+/************************************PARALLEL***********************************************************/
+/* 1BIT */
+#define MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_SHIFT                (0x0)
+#define MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_LOW                  (0x0 << MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_HIGHT                (0x1 << MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_MASK                 (0x1 << MEDIA_BUS_FLAGS_PARALL_VSYNC_POLA_SHIFT)
+
+/* 1BIT */
+#define MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_SHIFT                (0x1)
+#define MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_LOW                  (0x0 << MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_HIGHT                (0x1 << MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_MASK                 (0x1 << MEDIA_BUS_FLAGS_PARALL_HSYNC_POLA_SHIFT)
+
+/* 1BIT */
+#define MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_SHIFT               (0x2)
+#define MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_RISING              (0x0 << MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_TRAILING            (0x1 << MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_SHIFT)
+#define MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_MASK                (0x1 << MEDIA_BUS_FLAGS_PARALL_SAMPLE_EDGE_SHIFT)
+
+/************************************MIPI_LVDS***********************************************************/
+/* Flag function:
+ * Bit[0-1]:the lane num of sensor,4 at most;
+ * Bit[2-5]:the main lane for sensor
+ *          Bit2 for lane0, Bit3 for lane1,
+ *          Bit4 for lane2, Bit5 for lane3.
+ * Bit[6]:clock type, 1 for continue, 0 for non-conti.
+ * Bit[7-8]:bits mode
+ * Bit[9]:lvds sync mode
+ */
+/* 2BITS */
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT           (0x0)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_1               (0x0 << MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_2               (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_3               (0x2 << MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_4               (0x3 << MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_MASK            (0x3 << MEDIA_BUS_FLAGS_CSI2_LVDS_LANES_SHIFT)
+
+/* 4BITS */
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT       (0x2)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_0           (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_1           (0x2 << MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_2           (0x4 << MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_3           (0x8 << MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_MASK        (0xf << MEDIA_BUS_FLAGS_CSI2_LVDS_MAIN_LANE_SHIFT)
+
+/* 1BIT */
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_SHIFT      (0x6)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_CONTIN     (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_NONCON     (0x0 << MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_MASK       (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_CLOCK_MODE_SHIFT)
+
+/* 2BITS */
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_SHIFT       (0x7)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_8BITS       (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_10BITS      (0x2 << MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_12BITS      (0x3 << MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_MASK        (0x3 << MEDIA_BUS_FLAGS_CSI2_LVDS_BITS_MODE_SHIFT)
+
+/* 1BITS */
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_SHIFT              (0x9)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_SAV_EAV_INTERVAL   (0x0 << MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_FS_LE_LS_FE        (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_SHIFT)
+#define MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_MASK               (0x1 << MEDIA_BUS_FLAGS_CSI2_LVDS_SYNC_CODE_MODE_SHIFT)
+
+/* 2BIT2 */
+#define MEDIA_STD_ID_PAL_SHIFT                          (0x0)
+#define MEDIA_STD_ID_PAL_MASK                           (0x1 << MEDIA_STD_ID_PAL_SHIFT)
+#define MEDIA_STD_ID_NTSC_SHIFT                         (0x1)
+#define MEDIA_STD_ID_NTSC_MASK                          (0x1 << MEDIA_STD_ID_NTSC_SHIFT)
 
 /* Four-character-code:copy from linux:videodev2.h ----------------------------------------*/
 /* Four-character-code (FOURCC) */
 #define v4l2_fourcc(a, b, c, d)\
     ((uint32_t)(a) | ((uint32_t)(b) << 8) | ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
 #define v4l2_fourcc_be(a, b, c, d)  (v4l2_fourcc(a, b, c, d) | (1 << 31))
+
+enum v4l2_field
+{
+    V4L2_FIELD_ANY           = 0, /* driver can choose from none,
+                                     top, bottom, interlaced
+                                     depending on whatever it thinks
+                                     is approximate ... */
+    V4L2_FIELD_NONE          = 1, /* this device has no fields ... */
+    V4L2_FIELD_TOP           = 2, /* top field only */
+    V4L2_FIELD_BOTTOM        = 3, /* bottom field only */
+    V4L2_FIELD_INTERLACED    = 4, /* both fields interlaced */
+    V4L2_FIELD_SEQ_TB        = 5, /* both fields sequential into one
+                                     buffer, top-bottom order */
+    V4L2_FIELD_SEQ_BT        = 6, /* same as above + bottom-top order */
+    V4L2_FIELD_ALTERNATE     = 7, /* both fields alternating into
+                                     separate buffers */
+    V4L2_FIELD_INTERLACED_TB = 8, /* both fields interlaced, top field
+                                     first and the top field is
+                                     transmitted first */
+    V4L2_FIELD_INTERLACED_BT = 9, /* both fields interlaced, top field
+                                     first and the bottom field is
+                                     transmitted first */
+};
 
 /*      Pixel format         FOURCC                          depth  Description  */
 /* RGB formats */
@@ -347,6 +435,7 @@ typedef enum camera_mbus_type
     CAMERA_MBUS_BT656,
     CAMERA_MBUS_BT1120,
     CAMERA_MBUS_CSI2_DPHY,
+    CAMERA_MBUS_LVDS_DPHY
 } eCAMERA_Mbustype;
 
 /**
@@ -378,11 +467,20 @@ struct rk_camera_mbus_framefmt
     */
 };
 
+struct rk_camera_mbus_lvds
+{
+    uint16_t sync_code_eav_blk;
+    uint16_t sync_code_sav_blk;
+    uint16_t sync_code_eav_act;
+    uint16_t sync_code_sav_act;
+};
 struct rk_camera_mbus_config
 {
-    eCAMERA_Mbustype mbus_type;
     uint32_t flags;/* depends on mbus_type */
     uint32_t std_id;
+    uint32_t linked_freq; /* mipi data rate (hz) */
+    eCAMERA_Mbustype mbus_type;
+    struct rk_camera_mbus_lvds lvds_config;
 };
 
 /**

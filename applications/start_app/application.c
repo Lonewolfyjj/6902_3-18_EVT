@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 
-#include <board.h>
 #include <rtthread.h>
+#include <board.h>
 
 #ifdef  RT_USING_FINSH
 #include <finsh.h>

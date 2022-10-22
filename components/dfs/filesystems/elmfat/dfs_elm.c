@@ -874,7 +874,12 @@ DRESULT disk_read (BYTE drv, BYTE* buff, DWORD sector, UINT count)
     rt_device_t device = disk[drv];
 
 #ifdef FF_MAX_DISK_BUFFER
-    UINT len = FF_MAX_DISK_BUFFER / dsk_buf.fs->ssize;
+#if FF_MAX_SS != FF_MIN_SS
+    UINT ssize = dsk_buf.fs->ssize;
+#else
+    UINT ssize = FF_MIN_SS;
+#endif
+    UINT len = FF_MAX_DISK_BUFFER / ssize;
 
     if (dsk_buf.id == device && dsk_buf.start != 0
         && dsk_buf.end != 0 && dsk_buf.sector != 0)
@@ -884,8 +889,8 @@ DRESULT disk_read (BYTE drv, BYTE* buff, DWORD sector, UINT count)
         {
             UINT offset;
 
-            offset = (sector - dsk_buf.sector) * dsk_buf.fs->ssize;
-            memcpy(buff, &(dsk_buf.data[offset]), count * dsk_buf.fs->ssize);
+            offset = (sector - dsk_buf.sector) * ssize;
+            memcpy(buff, &(dsk_buf.data[offset]), count * ssize);
             return RES_OK;
         }
     }
@@ -910,7 +915,7 @@ DRESULT disk_read (BYTE drv, BYTE* buff, DWORD sector, UINT count)
         {
             dsk_buf.sector = sector;
             dsk_buf.count = len;
-            memcpy(buff, dsk_buf.data, count * dsk_buf.fs->ssize);
+            memcpy(buff, dsk_buf.data, count * ssize);
             return RES_OK;
         }
     }
@@ -932,6 +937,12 @@ DRESULT disk_write (BYTE drv, const BYTE* buff, DWORD sector, UINT count)
     rt_device_t device = disk[drv];
 
 #ifdef FF_MAX_DISK_BUFFER
+#if FF_MAX_SS != FF_MIN_SS
+    UINT ssize = dsk_buf.fs->ssize;
+#else
+    UINT ssize = FF_MIN_SS;
+#endif
+
     if (dsk_buf.id == device && dsk_buf.start != 0
         && dsk_buf.end != 0 && dsk_buf.sector != 0)
     {
@@ -942,8 +953,8 @@ DRESULT disk_write (BYTE drv, const BYTE* buff, DWORD sector, UINT count)
 
             len = dsk_buf.sector + dsk_buf.count - sector;
             len = len < count ? len : count;
-            offset = (sector - dsk_buf.sector) * dsk_buf.fs->ssize;
-            memcpy(&(dsk_buf.data[offset]), buff, len * dsk_buf.fs->ssize);
+            offset = (sector - dsk_buf.sector) * ssize;
+            memcpy(&(dsk_buf.data[offset]), buff, len * ssize);
         }
     }
 #endif

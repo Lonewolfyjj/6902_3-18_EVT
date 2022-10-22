@@ -27,16 +27,15 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-/*
- * EOF
- */
 
 /*****************************************************************************
 * Included header files
 *****************************************************************************/
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
 #include <rtthread.h>
 #include <rtdevice.h>
-#include <touch.h>
+#include "touch.h"
 #include "hl_drv_ft3169.h"
 #include "hal_pinctrl.h"
 
@@ -1136,3 +1135,8 @@ int tt3169(int argc, char** argv)
 
 MSH_CMD_EXPORT(tt3169, run tt3169);
 INIT_DEVICE_EXPORT(touch_device_ft3169_init);
+
+#endif
+/*
+ * EOF
+ */

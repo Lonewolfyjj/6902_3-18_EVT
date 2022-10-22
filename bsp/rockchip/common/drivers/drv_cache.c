@@ -51,7 +51,7 @@ The Cache driver use to keeping data coherent between cpu and device, it can be 
 #include "drv_cache.h"
 #include "hal_base.h"
 
-#if defined(ARCH_ARM_CORTEX_M)
+#if (defined(HAL_DCACHE_MODULE_ENABLED) || defined(HAL_ICACHE_MODULE_ENABLED)) && !defined(__CORTEX_A)
 
 #ifdef RT_USING_CMBACKTRACE
 #include "cm_backtrace.h"
@@ -218,6 +218,8 @@ void cache_dump_ahb_error(uint32_t fault_handler_lr, uint32_t fault_handler_sp)
 #ifdef RT_USING_CMBACKTRACE
     cm_backtrace_fault(fault_handler_lr, fault_handler_sp);
 #endif
+
+    while (1);
 }
 
 extern void CACHE_IRQHandler(void);
@@ -231,8 +233,11 @@ int rt_hw_cpu_cache_init(void)
 #if defined(ICACHE) || defined(DCACHE)
     HAL_ICACHE_EnableInt();
     HAL_DCACHE_EnableInt();
-#if defined(RKMCU_PISCES) || defined(RKMCU_RK2108)
+#if defined(RKMCU_PISCES) || defined(RKMCU_RK2108) || defined(RKMCU_RK3588_PMU) || defined(RKMCU_RK3588_NPU)
     rt_hw_interrupt_install(CACHE_IRQn, (rt_isr_handler_t)CACHE_IRQHandler, RT_NULL, RT_NULL);
+    rt_hw_interrupt_umask(CACHE_IRQn);
+#elif defined(SOC_RV1106)
+    rt_hw_interrupt_install(CACHE_IRQn, (rt_isr_handler_t)cache_dump_ahb_error, RT_NULL, RT_NULL);
     rt_hw_interrupt_umask(CACHE_IRQn);
 #elif defined(RKMCU_RK2206)
     rt_hw_interrupt_install(CACHE0_I_IRQn, (rt_isr_handler_t)CACHE_IRQHandler, RT_NULL, RT_NULL);
@@ -280,6 +285,11 @@ RT_WEAK rt_base_t rt_hw_cpu_dcache_status(void)
 
 RT_WEAK void rt_hw_cpu_dcache_ops(int ops, void *addr, int size)
 {
+}
+
+RT_WEAK int rt_hw_cpu_cache_init(void)
+{
+    return 0;
 }
 
 #endif

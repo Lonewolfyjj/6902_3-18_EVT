@@ -24,7 +24,7 @@ config RT_USING_COMMON_TEST
         default n
     config RT_USING_COMMON_TEST_AUDIO
         bool "Enable BSP Common AUDIO TEST"
-        depends on RT_USING_AUDIO
+        depends on RT_USING_AUDIO && RT_USING_LARGE_HEAP && RT_USING_UNCACHE_HEAP
         default n
     config RT_USING_COMMON_TEST_CODEC_ES8388
         bool "Enable BSP Common CODEC ES8388 TEST"
@@ -179,6 +179,11 @@ config RT_USING_COMMON_TEST
 
     config RT_USING_COMMON_TEST_TIMER
         bool "Enable BSP Common TIMER TEST"
+        default n
+
+    config RT_USING_COMMON_TEST_RPMSG_LITE
+        bool "Enable rpmsg lite test"
+        depends on RT_USING_RPMSG_LITE
         default n
     endif
 

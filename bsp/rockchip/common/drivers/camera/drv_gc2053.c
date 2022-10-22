@@ -29,7 +29,6 @@
 
 #if defined(__RT_THREAD__)
 #include "board.h"
-#include "board_cam.h"
 #elif defined(__RK_OS__)
 #include "driver/drv_clock.h"
 #endif

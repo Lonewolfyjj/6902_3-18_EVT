@@ -374,12 +374,12 @@ static void do_record_audio(void* arg)
             if (s_record_switch == 0) {
                 ter = hl_mod_audio_record_switch(1); 
                 if (ter == 0) {
-                    hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
+                    // hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
                 }
             } else {
                 ter = hl_mod_audio_record_switch(0);  
                 if (ter == 0) {
-                    hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
+                    // hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
                 }
             }
         }
@@ -449,11 +449,14 @@ static void do_read_audio(void* arg)
 #if 1
 
     //-------------------start prepare cap a frame-------------------
+    if (cap_config->card == RT_NULL) {
+        return;
+    }
     cap_ret = rt_device_open(cap_config->card, RT_DEVICE_OFLAG_RDONLY);
     if (cap_ret < 0) {
         rt_kprintf("dev:%s \n", cap_config->card);
         rt_kprintf("[%d]: Failed to open %s, err: %d\n", __LINE__, cap_config->card->parent.name, cap_ret);
-        return 0;
+        return;
     }
 
     cap_abuf.period_size = cap_config->period_size;
@@ -486,6 +489,9 @@ static void do_read_audio(void* arg)
 
     //-------------------start prepare ply a frame-------------------
     // start prepare play card
+    if (ply_config->card == RT_NULL) {
+        return;
+    }
     ply_ret = rt_device_open(ply_config->card, RT_DEVICE_OFLAG_WRONLY);
     if (ply_ret < 0) {
         rt_kprintf("[%d]: Failed to open %s, err: %d\n", __LINE__, ply_config->card->parent.name, ply_ret);

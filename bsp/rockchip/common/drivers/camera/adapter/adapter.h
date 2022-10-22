@@ -30,6 +30,12 @@
 #undef VICAP_MODULE_COMPILED
 #endif
 
+#ifdef RT_USING_ISP3
+#define ISP_MODULE_COMPILED
+#else
+#undef ISP_MODULE_COMPILED
+#endif
+
 #if defined(VICAP_MODULE_COMPILED)
 
 #if defined(RT_USING_VICAP_WORKMODE_FRAME_ONEFRAME)
@@ -45,6 +51,18 @@
 #include "drv_heap.h"
 #include "drv_clock.h"
 
+#endif
+
+#if defined(ISP_MODULE_COMPILED)
+#include "dma.h"
+#include "drv_heap.h"
+#include "drv_clock.h"
+#endif
+
+#if defined(VICAP_MODULE_COMPILED) || defined(ISP_MODULE_COMPILED)
+#define ADAPTER_MODULE_COMPILED
+#else
+#undef  ADAPTER_MODULE_COMPILED
 #endif
 
 #elif defined(__RK_OS__)
@@ -64,12 +82,18 @@
 #include "kernel/rkutil.h"
 #include "kernel/TaskPlugin.h"
 #include "driver/cru.h"
-#include "driver/adapter_type.h"
+#include "adapter_type.h"
 
 #ifdef CONFIG_DRIVER_VICAP
 #define VICAP_MODULE_COMPILED
 #else
 #undef VICAP_MODULE_COMPILED
+#endif
+
+#ifdef CONFIG_DRIVER_ISP3
+#define ISP_MODULE_COMPILED
+#else
+#undef ISP_MODULE_COMPILED
 #endif
 
 #if defined(VICAP_MODULE_COMPILED)
@@ -84,6 +108,12 @@
 #define VICAP_MODULE_WORKMODE_BLOCK_PINGPONG
 #endif
 
+#endif
+
+#if defined(VICAP_MODULE_COMPILED) || defined(ISP_MODULE_COMPILED)
+#define ADAPTER_MODULE_COMPILED
+#else
+#undef  ADAPTER_MODULE_COMPILED
 #endif
 
 #endif
@@ -199,6 +229,7 @@ ret_size_t rk_strlen(const char *s);
 char *rk_strstr(const char *s1, const char *s2);
 char *rk_strncpy(char *dst, const char *src, dt_ubase_t len);
 int32_t rk_strcmp(const char *cs, const char *ct);
+int32_t rk_strncmp(const char *cs, const char *ct, dt_ubase_t len);
 
 ret_err_t rk_device_init(rk_device *dev);
 rk_device *rk_find_device(const char *dev_name);
