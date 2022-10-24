@@ -416,7 +416,14 @@ void hl_telink_ioctrl(int argc, char** argv)
         rt_kprintf("\n*      -->arg = 1 TX pair Left Channel   *");
         rt_kprintf("\n*      -->arg = 2 TX pair Right Channel  *");
         rt_kprintf("\n*  [6]ON/OFF Telink                      *");
-        rt_kprintf("\n*  [7]ON/OFF PA                          *");
+        rt_kprintf("\n*  [7]Set PA Mode                        *");
+        rt_kprintf("\n*      -->arg = 0 All Off                *");
+        rt_kprintf("\n*      -->arg = 16 Sleep Mode            *");
+        rt_kprintf("\n*      -->arg = 18 TX Low Power          *");
+        rt_kprintf("\n*      -->arg = 19 TX High Power         *");
+        rt_kprintf("\n*      -->arg = 20 RX LNA Mode           *");
+        rt_kprintf("\n*      -->arg = 26 TX By Pass Mode       *");
+        rt_kprintf("\n*      -->arg = 28 TX By Pass Mode       *");
         rt_kprintf("\n******************************************\n");
         return;
     }
@@ -472,20 +479,8 @@ void hl_telink_ioctrl(int argc, char** argv)
             break;
 
         case '7':
-            if (!rt_strncmp(argv[2], "on", 2)) {
-#if HL_GET_DEVICE_TYPE()
-                hl_hal_gpio_high(GPIO_RF_PWR_EN);
-#else
-                hl_hal_gpio_high(GPIO_RF_PWR_EN);
-#endif
-            } else if (!rt_strncmp(argv[2], "off", 3)) {
-#if HL_GET_DEVICE_TYPE()
-                hl_hal_gpio_low(GPIO_RF_PWR_EN);
-#else
-                hl_hal_gpio_low(GPIO_RF_PWR_EN);
-#endif
-            } else {
-            }
+            data = (uint8_t)atoi(argv[2]);
+            hl_mod_telink_ioctl(TELINK_CMD_SET_PA_MODE, &data, 1);
             break;
 
         default:
