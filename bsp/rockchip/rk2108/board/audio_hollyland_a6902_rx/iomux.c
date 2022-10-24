@@ -127,7 +127,7 @@ void rt_hw_iomux_config(void)
     i2c1_m0_iomux_config();//i2c0_m1_iomux_config();
     i2c0_m2_iomux_config();
 
-    i2c1_m2_iomux_config();
+    // i2c1_m2_iomux_config();
 #ifdef RT_USING_I2STDM1
     i2s1_input_iomux_config();
 #endif
