@@ -102,11 +102,11 @@ int hl_drv_emmc_gpio_init(void)
 {
     rt_kprintf("emmc init/r/n");
     hl_hal_gpio_init(GPIO_EMMC_RST);
-    hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
+    //hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
 
 
     hl_hal_gpio_low(GPIO_EMMC_RST);
-    hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
+    //hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
 
     //  _tgpio_output(0, GPIO0_A3, 3);          // hl_hal_gpio_high(GPIO_EMMC_RST);
     //  // _tgpio_output(0, GPIO0_D3, 3);       // hl_hal_gpio_high(GPIO_LVT_EN);
