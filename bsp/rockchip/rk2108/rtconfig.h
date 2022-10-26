@@ -105,7 +105,7 @@
 #define RT_USING_DFS
 #define DFS_USING_WORKDIR
 #define DFS_FILESYSTEMS_MAX 4
-#define DFS_FILESYSTEM_TYPES_MAX 2
+#define DFS_FILESYSTEM_TYPES_MAX 4
 #define DFS_FD_MAX 16
 #define RT_USING_DFS_MNTTABLE
 #define RT_USING_DFS_ELMFAT
@@ -159,7 +159,15 @@
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
 /* RT_USING_RTC is not set */
-/* RT_USING_SDIO is not set */
+#define RT_USING_SDIO
+#define RT_SDIO_STACK_SIZE 512
+#define RT_SDIO_THREAD_PRIORITY 15
+#define RT_MMCSD_STACK_SIZE 1536
+#define RT_MMCSD_THREAD_PREORITY 22
+#define RT_MMCSD_MAX_PARTITION 2
+#define RT_SDCARD_MOUNT_POINT "/mnt/sdcard"
+/* RT_SDIO_DEBUG is not set */
+/* RT_EMMC_USE_DDR_MOD is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */
@@ -181,7 +189,21 @@
 /* Using USB */
 
 /* RT_USING_USB_HOST is not set */
-/* RT_USING_USB_DEVICE is not set */
+#define RT_USING_USB_DEVICE
+#define RT_USBD_THREAD_STACK_SZ 4096
+#define USB_VENDOR_ID 0x2207
+#define USB_PRODUCT_ID 0x0007
+/* RT_USB_DEVICE_COMPOSITE is not set */
+/* _RT_USB_DEVICE_NONE is not set */
+/* _RT_USB_DEVICE_CDC is not set */
+#define _RT_USB_DEVICE_MSTORAGE
+/* _RT_USB_DEVICE_HID is not set */
+/* _RT_USB_DEVICE_WINUSB is not set */
+/* _RT_USB_DEVICE_UAC1 is not set */
+/* _RT_USB_DEVICE_UVC is not set */
+#define RT_USB_DEVICE_MSTORAGE
+#define RT_USB_MSTORAGE_DISK_NAME "sd0"
+#define RT_USB_MSTORAGE_BUFLEN 32768
 
 /* POSIX layer and C standard library */
 
@@ -1145,6 +1167,7 @@
 #define RT_USING_RESET
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
+/* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
 /* RT_USING_PWM_REGULATOR is not set */
@@ -1305,6 +1328,10 @@
 #define RT_USING_SPI2APB
 #define RT_USING_SPI1
 #define RT_USING_SPI2
+
+/* Enable SDIO/SDMMC/eMMC */
+
+#define RT_USING_SDIO0
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
