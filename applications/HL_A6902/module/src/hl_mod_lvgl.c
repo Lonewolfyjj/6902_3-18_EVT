@@ -1,8 +1,8 @@
-#include <rtthread.h>
-#include <rtdevice.h>
-#include "lvgl.h"
-#include "hl_mod_lvgl.h"
-#include "lv_port_indev.h"
+// #include <rtthread.h>
+// #include <rtdevice.h>
+// #include "lvgl.h"
+// #include "hl_mod_lvgl.h"
+// #include "lv_port_indev.h"
 
 // static int hl_mod_lvgl_init(void)
 // {

@@ -9,6 +9,9 @@
 /*********************
  *      INCLUDES
  *********************/
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
+
 #include "lv_port_indev.h"
 #include "../../lvgl.h"
 #include "hl_drv_ft3169.h"
@@ -420,4 +423,6 @@ static bool button_is_pressed(uint8_t id)
 
 /*This dummy typedef exists purely to silence -Wpedantic.*/
 typedef int keep_pedantic_happy;
+#endif
+
 #endif

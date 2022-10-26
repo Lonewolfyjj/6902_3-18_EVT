@@ -1,3 +1,6 @@
+#include "hl_config.h"
+#if (!HL_GET_DEVICE_TYPE())
+
 #include "hl_hal_gpio.h"
 #include <rtthread.h>
 #include "hl_drv_rm69310.h"
@@ -7,7 +10,6 @@
 #include <rtdevice.h>
 #include "hl_drv_rm69310.h"
 
-#if (!HL_GET_DEVICE_TYPE())
 static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
 static int hl_rx_oled_test_init(void);
 static int hl_rx_oled_test_deinit(void);

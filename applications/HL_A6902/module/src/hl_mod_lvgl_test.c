@@ -1,3 +1,5 @@
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "lvgl.h"
@@ -71,3 +73,4 @@ static int lvgl_test_thread(int argc, char** argv)
 }
 
 MSH_CMD_EXPORT(lvgl_test_thread, lvgl test thread);
+#endif
