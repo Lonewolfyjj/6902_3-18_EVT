@@ -274,6 +274,56 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
     }
     return 0;
 }
+
+static int hl_drv_aw21009_test(bool led_switch)  //manual模式
+{
+    bool                                flag;
+    hl_drv_aw21009_pattern_mode_e       pat_mode;
+    hl_drv_aw21009_auto_breath_param_st auto_breath;
+    hl_drv_aw21009_led_light_st         light;
+    hl_drv_aw21009_led_group_e          led_group;
+
+    hl_drv_aw21009_init();
+
+    flag = false;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE, &flag, sizeof(flag));
+
+    led_group = HL_DRV_AW21009_LED_GROUP_1 | HL_DRV_AW21009_LED_GROUP_2 | HL_DRV_AW21009_LED_GROUP_3;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_SET_LED_GROUP_MODE, &led_group, sizeof(led_group));
+
+    auto_breath.rise_time    = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.on_time      = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.fall_time    = HL_DRV_AW21009_PAT_TIME_0S38;
+    auto_breath.off_time     = HL_DRV_AW21009_PAT_TIME_0S00;
+    auto_breath.repeat_times = 0;
+    auto_breath.start_point  = HL_DRV_AW21009_START_POINT_T0;
+    auto_breath.stop_point   = HL_DRV_AW21009_STOP_POINT_T1;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_SET_AUTO_BREATH_PARAM, &auto_breath, sizeof(auto_breath));
+
+    light.r          = 100;
+    light.g          = 100;
+    light.b          = 100;
+    light.brightness = 0xFF00;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_SET_LED_GROUP_LIGHT_EFFECT, &light, sizeof(light));
+
+    pat_mode = HL_DRV_AW21009_PAT_MANUAL_MODE;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_SET_PATTERN_MODE, &pat_mode, sizeof(pat_mode));
+
+    flag = 1;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_MANUAL_SET_RAMP, &flag, sizeof(flag));
+
+    flag = led_switch;
+
+    hl_drv_aw21009_ctrl(1, HL_DRV_AW21009_MANUAL_SET_SWITCH, &flag, sizeof(flag));
+
+    return 0;
+}
 #endif 
 
 static void hl_mod_audio_codec_config(void)
@@ -351,7 +401,7 @@ static void do_record_audio(void* arg)
 
     record_size1   = dsp_config->buffer_size_b24_1ch * 10; 
     record_buffer1 = rt_malloc(record_size);
-
+    
     while (1) {
         if ((rt_ringbuffer_data_len(s_record_after_rb) < record_size) || (s_record_switch != 1)
             || (rt_ringbuffer_data_len(s_record_bypass_rb) < record_size)) {
@@ -368,37 +418,20 @@ static void do_record_audio(void* arg)
             }
         }
         
-#if 1
         if (s_record_key_flag == 1) {
             s_record_key_flag = 0;
             if (s_record_switch == 0) {
                 ter = hl_mod_audio_record_switch(1); 
                 if (ter == 0) {
-                    // hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
+                    hl_drv_aw21009_test(1);
                 }
             } else {
                 ter = hl_mod_audio_record_switch(0);  
                 if (ter == 0) {
-                    // hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
+                    hl_drv_aw21009_test(0);
                 }
             }
         }
-        #else
-        if (s_record_key_flag == 1) {
-            s_record_key_flag = 0;
-            if (s_denoise_switch == 0) {
-                s_denoise_switch = 1;
-                hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &s_denoise_switch, 1);
-                hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_OPEN, NULL, 0);
-            } else {
-                s_denoise_switch = 0;
-                hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &s_denoise_switch, 1);
-                hl_drv_aw21009_ctrl(HL_DRV_AW21009_LED_DEV_1, HL_DRV_AW21009_TEMP_LED_CLOSE, NULL, 0);
-               
-            }
-        }
-        
-        #endif
     }
 }
 #endif
