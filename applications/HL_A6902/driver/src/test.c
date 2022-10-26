@@ -137,7 +137,7 @@ int gpio_test_init(void)
     return RT_EOK;
 }
 
-INIT_BOARD_EXPORT(gpio_test_init);
+// INIT_BOARD_EXPORT(gpio_test_init);
 //INIT_BOARD_EXPORT(gpio_test_init);
 // int sdio_test_init(void)
 // {

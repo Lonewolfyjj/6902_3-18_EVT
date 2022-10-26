@@ -1214,7 +1214,15 @@
 /* RT-Thread rockchip buffer_manage driver */
 
 /* RT_USING_BUFFER_MANAGE is not set */
-/* RT_USING_TOUCH_DRIVERS is not set */
+#define RT_USING_TOUCH_DRIVERS
+/* RT_USING_TOUCH_GTXX is not set */
+/* RT_USING_TOUCH_S3706 is not set */
+/* RT_USING_CSTXX is not set */
+/* RT_USING_CYTTSP5 is not set */
+/* RT_USING_IT7259 is not set */
+#define RT_USING_FT3169
+#define RT_TOUCH_X_RANGE 720
+#define RT_TOUCH_Y_RANGE 1280
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_QPIPSRAM is not set */
 

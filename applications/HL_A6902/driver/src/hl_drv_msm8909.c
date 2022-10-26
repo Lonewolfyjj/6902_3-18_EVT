@@ -36,6 +36,8 @@
 #include "hl_drv_msm8909.h"
 #include "string.h"
 
+#if 0
+
 #define MSM8909_DEBUG
 
 #ifdef MSM8909_DEBUG
@@ -342,3 +344,5 @@ rt_err_t hl_drv_msm8909_init(rt_device_t dev)
 }
 
 INIT_DEVICE_EXPORT(touch_device_msm8909_init);
+
+#endif

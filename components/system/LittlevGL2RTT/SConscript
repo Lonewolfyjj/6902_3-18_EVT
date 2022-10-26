@@ -13,7 +13,7 @@ inc = []
 inc = inc + [cwd] + [cwd+'/lvgl'] + [cwd+'/lvgl/examples/porting'] + [cwd+'/lvgl/src']
 inc = inc + [cwd+'/lvgl/src/core'] + [cwd+'/lvgl/src/draw'] + [cwd+'/lvgl/src/extra']
 inc = inc + [cwd+'/lvgl/src/font'] + [cwd+'/lvgl/src/hal'] + [cwd+'/lvgl/src/misc']
-inc = inc + [cwd+'/lvgl/src/widgets']
+inc = inc + [cwd+'/lvgl/src/widgets'] + [cwd+'/lvgl/src/draw/sw']
 # add LittlevGL2RTT basic code
 # src = src + [cwd+'/lvgl/examples/porting/lv_port_indev.c'] + [cwd+'/lvgl/src/core/lv_obj.c']
 # print("\n\n===========================================================")

@@ -97,11 +97,11 @@
 static rt_touch_t touch_hand = RT_NULL;
 static rt_device_t         touch_dev = RT_NULL;
 static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
-static int                       fts_ts_suspend(void);
-// static rt_err_t                  fts_ts_init(rt_device_t dev);
+static int                       hl_drv_touch_dev_suspend(void);
+// static rt_err_t                  hl_drv_touch_dev_cfg(rt_device_t dev);
 static rt_err_t                  fts_touch_irq_callback(rt_touch_t touch);
 static rt_err_t                  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
-static rt_size_t                 fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
+static rt_size_t                 hl_drv_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
 
 /*****************************************************************************
 * Private variables/functions
@@ -113,7 +113,7 @@ static struct fts_ts_data _fts_data = {
 };
 
 // const static struct rt_device_ops touch_ops = {
-//     .init = fts_ts_init,
+//     .init = hl_drv_touch_dev_cfg,
 //     .close = RT_NULL,
 //     .control = RT_NULL,
 //     .open = RT_NULL,
@@ -123,7 +123,7 @@ static struct fts_ts_data _fts_data = {
 
 const static struct rt_touch_ops touch_ops_top = {
     .touch_control   = hl_drv_ft3169_io_ctrl,
-    .touch_readpoint = fts_touch_process,
+    .touch_readpoint = hl_drv_touch_process,
 };
 
 const static struct rt_touch_info touch_info = {
@@ -147,7 +147,7 @@ const struct rt_touch_config touch_config = {
 struct fts_ts_data* fts_data = &_fts_data;
 
 /*delay, unit: millisecond */
-static void fts_msleep(unsigned long msec)
+static void hl_drv_msleep(unsigned long msec)
 {
     rt_thread_mdelay(msec);
 }
@@ -247,16 +247,16 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, r
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_hw_reset(uint32_t msec)
+static int hl_drv_touch_reset(uint32_t msec)
 {
     /*firsty. set reset_pin low, and then delay 10ms*/
     /*secondly. set reset_pin high, and then delay 200ms*/
     rt_pin_mode(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_MODE);
     rt_pin_write(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_PIN_L);
-    fts_msleep(10);
+    hl_drv_msleep(10);
     rt_pin_mode(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_MODE);
     rt_pin_write(CURRENT_TOUCH_RESET_PIN, CURRENT_TOUCH_RESET_PIN_H);
-    fts_msleep(msec);
+    hl_drv_msleep(msec);
     return HL_SUCCESS;
 }
 
@@ -275,11 +275,10 @@ static int fts_hw_reset(uint32_t msec)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int platform_i2c_init(void)
+static int hl_drv_touch_i2c_init(void)
 {
     /*Initialize I2C bus, you should implement it based on your platform*/
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(FT3169_IIC_NAME);
-    ft_printf("ft3169 init !\n");
 
     if (i2c_bus == RT_NULL) {
         ft_printf("can't find %s device!\n", FT3169_IIC_NAME);
@@ -303,13 +302,13 @@ static int platform_i2c_init(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int platform_reset_pin_cfg(void)
+static int hl_drv_touch_reset_pin_cfg(void)
 {
     /*Initialize reset_pin,  you should implement it based on your platform*/
 
     /*firstly,set the reset_pin to output mode*/
     /*secondly,set the reset_pin to low */
-    fts_hw_reset(200);
+    hl_drv_touch_reset(200);
     return HL_SUCCESS;
 }
 
@@ -328,7 +327,7 @@ static int platform_reset_pin_cfg(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int platform_interrupt_gpio_init(void)
+static int hl_drv_touch_int_gpio_init(void)
 {
     /*Initialize gpio interrupt , and the corresponding interrupt function is fts_gpio_interrupt_handler,
     you should implement it based on your platform*/
@@ -353,7 +352,7 @@ static int platform_interrupt_gpio_init(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static void fts_power_on(void)
+static void hl_drv_touch_power_on(void)
 {
     /*refer to ic datasheet*/
 }
@@ -400,7 +399,7 @@ static void fts_power_on(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_write(uint8_t addr, uint8_t* data, uint16_t datalen)
+static int hl_drv_touch_write(uint8_t addr, uint8_t* data, uint16_t datalen)
 {
     /*TODO based your platform*/
     int ret = 0;
@@ -450,7 +449,7 @@ static int fts_write(uint8_t addr, uint8_t* data, uint16_t datalen)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_read(uint8_t addr, uint8_t* data, uint16_t datalen)
+static int hl_drv_touch_read(uint8_t addr, uint8_t* data, uint16_t datalen)
 {
     /*TODO based your platform*/
     int ret = 0;
@@ -496,9 +495,9 @@ static int fts_read(uint8_t addr, uint8_t* data, uint16_t datalen)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_write_reg(uint8_t addr, uint8_t val)
+static int hl_drv_touch_write_reg(uint8_t addr, uint8_t val)
 {
-    return fts_write(addr, &val, 1);
+    return hl_drv_touch_write(addr, &val, 1);
 }
 
 /**
@@ -518,9 +517,9 @@ static int fts_write_reg(uint8_t addr, uint8_t val)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-int fts_read_reg(uint8_t addr, uint8_t* val)
+static int hl_drv_touch_read_reg(uint8_t addr, uint8_t* val)
 {
-    return fts_read(addr, val, 1);
+    return hl_drv_touch_read(addr, val, 1);
 }
 
 /**
@@ -538,18 +537,18 @@ int fts_read_reg(uint8_t addr, uint8_t* val)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_check_id(void)
+static int hl_drv_touch_check_id(void)
 {
     int ret = 0;
     // int     cnt        = 0;
     uint8_t chip_id[2] = { 0 };
 
     /*delay 200ms,wait fw*/
-    fts_msleep(200);
+    hl_drv_msleep(200);
 
     /*get chip id*/
-    fts_read_reg(FTS_REG_CHIP_ID, &chip_id[0]);
-    fts_read_reg(FTS_REG_CHIP_ID2, &chip_id[1]);
+    hl_drv_touch_read_reg(FTS_REG_CHIP_ID, &chip_id[0]);
+    hl_drv_touch_read_reg(FTS_REG_CHIP_ID2, &chip_id[1]);
     if ((FTS_CHIP_IDH == chip_id[0]) && (FTS_CHIP_IDL == chip_id[1])) {
         FTS_INFO("get ic information, chip id = 0x%02x%02x", chip_id[0], chip_id[1]);
         return HL_SUCCESS;
@@ -557,15 +556,15 @@ static int fts_check_id(void)
 
     /*get boot id*/
     FTS_INFO("fw is invalid, need read boot id\t0x%x%x", chip_id[0], chip_id[1]);
-    //fts_hw_reset(15);
-    ret = fts_write_reg(0x55, 0xAA);
+    //hl_drv_touch_reset(15);
+    ret = hl_drv_touch_write_reg(0x55, 0xAA);
     if (ret == HL_FAILED) {
         FTS_ERROR("start cmd write fail");
         return ret;
     }
 
-    fts_msleep(FTS_CMD_START_DELAY);
-    ret = fts_read(FTS_CMD_READ_ID, chip_id, 2);
+    hl_drv_msleep(FTS_CMD_START_DELAY);
+    ret = hl_drv_touch_read(FTS_CMD_READ_ID, chip_id, 2);
     if ((ret == HL_SUCCESS) && ((FTS_CHIP_IDH == chip_id[0]) && (FTS_CHIP_IDL == chip_id[1]))) {
         FTS_INFO("get ic information, boot id = 0x%02x%02x", chip_id[0], chip_id[1]);
         ret = HL_SUCCESS;
@@ -591,7 +590,7 @@ static int fts_check_id(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static void fts_esdcheck_process(void)
+static void hl_drv_touch_esdcheck_process(void)
 {
     uint8_t        reg_value          = 0;
     static uint8_t flow_work_hold_cnt = 0;
@@ -607,14 +606,14 @@ static void fts_esdcheck_process(void)
     }
 
     /* 2. In factory mode, can't check esd */
-    fts_read_reg(FTS_REG_WORKMODE, &reg_value);
+    hl_drv_touch_read_reg(FTS_REG_WORKMODE, &reg_value);
     if ((reg_value == FTS_REG_WORKMODE_FACTORY_VALUE) || (reg_value == FTS_REG_WORKMODE_SCAN_VALUE)) {
         FTS_DEBUG("in factory mode(%x), no check esd", reg_value);
         return;
     }
 
     /* 3. get Flow work cnt: 0x91 If no change for 5 times, then ESD and reset */
-    fts_read_reg(FTS_REG_FLOW_WORK_CNT, &reg_value);
+    hl_drv_touch_read_reg(FTS_REG_FLOW_WORK_CNT, &reg_value);
     if (flow_work_cnt_last == reg_value)
         flow_work_hold_cnt++;
     else
@@ -626,7 +625,7 @@ static void fts_esdcheck_process(void)
     if (flow_work_hold_cnt >= 5) {
         FTS_DEBUG("ESD, Hardware Reset");
         flow_work_hold_cnt = 0;
-        fts_hw_reset(200);
+        hl_drv_touch_reset(200);
     }
 }
 
@@ -656,7 +655,7 @@ static void fts_esdcheck_process(void)
 //     uint8_t gesture_id                = 0;
 
 //     /*Read a byte from register 0xD0 to confirm gesture function in FW is enabled*/
-//     ret = fts_read_reg(FTS_REG_GESTURE_EN, &value);
+//     ret = hl_drv_touch_read_reg(FTS_REG_GESTURE_EN, &value);
 //     if ((ret < 0) || (value != FTS_REG_GESTURE_ENABLE)) {
 //         FTS_DEBUG("gesture isn't enable in fw, don't process gesture");
 //         return 1;
@@ -664,7 +663,7 @@ static void fts_esdcheck_process(void)
 
 //     /*Read 26 bytes from register 0xD3 to get gesture information*/
 //     regaddr = FTS_REG_GESTURE_OUTPUT_ADDRESS;
-//     ret     = fts_read(regaddr, buf, MAX_LEN_GESTURE_INFO);
+//     ret     = hl_drv_touch_read(regaddr, buf, MAX_LEN_GESTURE_INFO);
 //     if (ret < 0) {
 //         FTS_DEBUG("read gesture information from reg0xD3 fails");
 //         return ret;
@@ -700,7 +699,7 @@ static void fts_esdcheck_process(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static void log_touch_buf(uint8_t* buf, uint32_t buflen)
+static void hl_drv_touch_log_buf(uint8_t* buf, uint32_t buflen)
 {
     int  i           = 0;
     int  count       = 0;
@@ -730,7 +729,7 @@ static void log_touch_buf(uint8_t* buf, uint32_t buflen)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static void log_touch_info(struct fts_ts_event* events, uint8_t event_nums)
+static void hl_drv_touch_log_info(struct fts_ts_event* events, uint8_t event_nums)
 {
     uint8_t i = 0;
 
@@ -755,7 +754,7 @@ static void log_touch_info(struct fts_ts_event* events, uint8_t event_nums)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num)
+static rt_size_t hl_drv_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num)
 {
     int                  ret     = 0;
     uint8_t              i       = 0;
@@ -768,19 +767,19 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     struct fts_ts_event  events[MAX_POINTS_TOUCH_TRACE]; /* multi-touch */
     struct fts_ts_event* ptr = (struct fts_ts_event*)buf;
     /*read touch information from reg0x01*/
-    ret = fts_read(regaddr, rbuf, MAX_LEN_TOUCH_INFO);
+    ret = hl_drv_touch_read(regaddr, rbuf, MAX_LEN_TOUCH_INFO);
     if (ret == HL_FAILED) {
         FTS_DEBUG("Read touch information from reg0x01 fails");
         return ret;
     }
 
     /*print touch buffer, for debug usage*/
-    // log_touch_buf(rbuf, MAX_LEN_TOUCH_INFO);
+    // hl_drv_touch_log_buf(rbuf, MAX_LEN_TOUCH_INFO);
 
     if ((rbuf[1] == 0xFF) && (rbuf[2] == 0xFF) && (rbuf[3] == 0xFF)) {
         FTS_INFO("FW initialization, need recovery");
         if (fts_data->gesture_support && fts_data->suspended)
-            fts_write_reg(FTS_REG_GESTURE_EN, FTS_REG_GESTURE_ENABLE);
+            hl_drv_touch_write_reg(FTS_REG_GESTURE_EN, FTS_REG_GESTURE_ENABLE);
     }
 
     /*parse touch information based on register map*/
@@ -805,7 +804,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
         events[i].p    = rbuf[base + 4];
         events[i].area = rbuf[base + 5];
         if (((events[i].type == 0) || (events[i].type == 2)) && (point_num == 0)) {
-            FTS_DEBUG("abnormal touch data from fw");
+            // FTS_DEBUG("abnormal touch data from fw");
             return HL_FAILED;
         }
 
@@ -818,7 +817,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
     }
 
     /*print touch information*/
-    log_touch_info(events, touch_event_nums);
+    // hl_drv_touch_log_info(events, touch_event_nums);
 
     /*Now you have get the touch information, you can report anything(X/Y coordinates...) you want to system*/
     /*TODO...(report touch information to system)*/
@@ -856,7 +855,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
 // }
 
 /*if gesture isn't enabled, the handler should process touch points*/
-// ret = fts_touch_process(dev, pos, buffer, size);
+// ret = hl_drv_touch_process(dev, pos, buffer, size);
 //     ft_printf("%s \n", __FUNCTION__);
 //     return 0;
 // }
@@ -878,7 +877,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
 // void fts_timer_interrupt_handler(void)
 // {
 //     /* esd check */
-//     fts_esdcheck_process();
+//     hl_drv_touch_esdcheck_process();
 // }
 
 /**
@@ -896,7 +895,7 @@ static rt_size_t fts_touch_process(struct rt_touch_device* touch, void* buf, rt_
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_ts_suspend(void)
+static int hl_drv_touch_dev_suspend(void)
 {
     int ret = 0;
 
@@ -907,14 +906,14 @@ static int fts_ts_suspend(void)
 
     if (fts_data->gesture_support) {
         /*Host writes 0x01 to register address 0xD0 to enable gesture function while system suspends.*/
-        ret = fts_write_reg(FTS_REG_GESTURE_EN, FTS_REG_GESTURE_ENABLE);
+        ret = hl_drv_touch_write_reg(FTS_REG_GESTURE_EN, FTS_REG_GESTURE_ENABLE);
         if (ret == HL_FAILED)
             FTS_ERROR("enable gesture fails.ret:%d", ret);
         else
             FTS_INFO("enable gesture success.");
     } else {
         /*Host writes 0x03 to register address 0xA5 to enter into sleep mode.*/
-        ret = fts_write_reg(FTS_REG_POWER_MODE, 0x03);
+        ret = hl_drv_touch_write_reg(FTS_REG_POWER_MODE, 0x03);
         if (ret == HL_FAILED)
             FTS_ERROR("system enter sleep mode fails.ret:%d", ret);
         else
@@ -940,7 +939,7 @@ static int fts_ts_suspend(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int fts_ts_resume(void)
+static int hl_drv_touch_dev_resume(void)
 {
     if (!fts_data->suspended) {
         FTS_INFO("Already in resume state");
@@ -948,7 +947,7 @@ static int fts_ts_resume(void)
     }
 
     fts_data->suspended = 0;
-    fts_hw_reset(200);
+    hl_drv_touch_reset(200);
 
     return HL_SUCCESS;
 }
@@ -977,19 +976,19 @@ static rt_err_t hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, vo
     rt_err_t ret = HL_FAILED;
     switch (cmd) {
         case SYS_RESET:
-            ret = fts_ts_resume();
+            ret = hl_drv_touch_dev_resume();
             break;
         case SYS_SUSPENDS:
-            ret = fts_ts_suspend();
+            ret = hl_drv_touch_dev_suspend();
             break;
         case SYS_RESUME:
-            ret = fts_ts_resume();
+            ret = hl_drv_touch_dev_resume();
             break;
         case SYS_ESD_CHECK:
-            fts_esdcheck_process();
+            hl_drv_touch_esdcheck_process();
             break;
         case CHECK_DEV_ID:
-            ret = fts_check_id();
+            ret = hl_drv_touch_check_id();
             break;
         default:
             ft_printf("param err ! \n");
@@ -1012,29 +1011,29 @@ static rt_err_t hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, vo
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static rt_err_t fts_ts_init(void)
+static rt_err_t hl_drv_touch_dev_cfg(void)
 {
     int ret = 0;
 
     /*Initialize I2C*/
-    ret = platform_i2c_init();
+    ret = hl_drv_touch_i2c_init();
     if (ret == HL_FAILED) {
         FTS_ERROR("I2C init fails.ret:%d", ret);
         return ret;
     }
 
     /*reset pin cfg*/
-    ret = platform_reset_pin_cfg();
+    ret = hl_drv_touch_reset_pin_cfg();
     if (ret == HL_FAILED) {
         FTS_ERROR("reset pin init fails.ret:%d", ret);
         return ret;
     }
 
     /*tp power on*/
-    fts_power_on();
+    hl_drv_touch_power_on();
 
     /*Register gpio interrupt handler,which for touch process or gestrue process*/
-    ret = platform_interrupt_gpio_init();
+    ret = hl_drv_touch_int_gpio_init();
     if (ret == HL_FAILED) {
         FTS_ERROR("Register gpio interrupt handler fails.ret:%d", ret);
         return ret;
@@ -1043,7 +1042,7 @@ static rt_err_t fts_ts_init(void)
     return ret;
 }
 
-static int touch_dev_init(void)
+static int hl_drv_touch_dev_init(void)
 {
     touch_dev = rt_device_find("FT3169");
 
@@ -1077,10 +1076,10 @@ static int touch_dev_init(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int touch_device_ft3169_init(void)
+static int hl_drv_touch_dev_register(void)
 {
     rt_err_t ret;
-    fts_ts_init();
+    hl_drv_touch_dev_cfg();
     // touch_dev  = rt_device_create(RT_Device_Class_Touch, RT_NULL);
     touch_hand = (struct rt_touch_device*)rt_malloc(sizeof(struct rt_touch_device));
     if (touch_hand == RT_NULL) {
@@ -1102,39 +1101,42 @@ static int touch_device_ft3169_init(void)
         return HL_FAILED;
     }
 
-    if(touch_dev_init() == HL_FAILED){
+    if(hl_drv_touch_dev_init() == HL_FAILED){
+        ft_printf("Touch device ft3169 init fail !\n");
         return HL_FAILED;
     }
+    ft_printf("Touch device ft3169 init success !\n");
     return HL_SUCCESS;
 }
 
-rt_err_t touch_info_fun(struct fts_ts_event *touch_pos)
+rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event *touch_pos)
 {
-    rt_device_read(touch_dev, 0, touch_pos, 1);
+    // rt_device_read(touch_dev, 0, touch_pos, 1);
     // rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
     return 0;
 }
 
-int tt3169(int argc, char** argv)
-{
-    uint8_t cmd = atoi(argv[1]);
-    if (cmd == 0) {
-        fts_ts_init();
-    }
-    if (cmd == 1) {
-        fts_touch_process(RT_NULL, RT_NULL, 0);
-    }
-    if (cmd == 2) {
-        fts_check_id();
-    }
-    if (cmd == 3) {
-        fts_esdcheck_process();
-    }
-    return RT_EOK;
-}
+// int tt3169(int argc, char** argv)
+// {
+//     uint8_t cmd = atoi(argv[1]);
+//     if (cmd == 0) {
+//         hl_drv_touch_dev_cfg();
+//     }
+//     if (cmd == 1) {
+//         hl_drv_touch_process(RT_NULL, RT_NULL, 0);
+//     }
+//     if (cmd == 2) {
+//         hl_drv_touch_check_id();
+//     }
+//     if (cmd == 3) {
+//         hl_drv_touch_esdcheck_process();
+//     }
+//     return RT_EOK;
+// }
 
-MSH_CMD_EXPORT(tt3169, run tt3169);
-INIT_DEVICE_EXPORT(touch_device_ft3169_init);
+// MSH_CMD_EXPORT(tt3169, run tt3169);
+// INIT_DEVICE_EXPORT(hl_drv_touch_dev_register);
+
 
 #endif
 /*
