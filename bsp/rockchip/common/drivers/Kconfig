@@ -217,6 +217,9 @@ choice
 
     config RT_USING_PANEL_H245QBN02
         bool "H245QBN02 mipi panel, resolution is 240x432"
+
+    config RT_USING_PANEL_HL_RM690A0
+        bool "RM690A0 mipi panel, resolution is 240x120"
 endchoice
 
 choice
