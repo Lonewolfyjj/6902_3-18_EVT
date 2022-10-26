@@ -326,6 +326,7 @@
 #define RT_USING_RESET
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
+/* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
 /* RT_USING_PWM_REGULATOR is not set */
@@ -472,24 +473,17 @@
 #define RT_USING_SPI2APB
 #define RT_USING_SPI1
 #define RT_USING_SPI2
+
+/* Enable SDIO/SDMMC/eMMC */
+
+#define RT_USING_SDIO0
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_RK_IOT_APP
-#define PRJCONF_SYSINFO_SAVE_TO_FLASH
-/* PRJCONF_BOOT_AUTOMATICALLY is not set */
-/* PRJCONF_NET_EN is not set */
-/* PRJCONF_USING_AISPEECH is not set */
-#define PRJCONF_AI_RK
-/* PRJCONF_AI_SPEECH is not set */
-/* PRJCONF_AI_CUSTOM is not set */
-/* PRJCONF_AI_LWAKEUP is not set */
-#define PRJCONF_PLAYBACK_SOUND_CARD "es8311p"
-#define PRJCONF_ASR_SOUND_CARD "pdmc"
-/* PRJCONF_ASR_USE_VAD is not set */
+/* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
 
 /* RT-Thread bsp test case */
