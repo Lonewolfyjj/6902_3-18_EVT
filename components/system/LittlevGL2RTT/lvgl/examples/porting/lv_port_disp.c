@@ -12,9 +12,13 @@
 #include "lv_port_disp.h"
 #include <stdbool.h>
 #include "lvgl.h"
+#include "hl_drv_rm69310.h"
 /*********************
  *      DEFINES
  *********************/
+#define MY_DISP_VER_RES 120
+#define MY_DISP_HOR_RES 240
+
 #ifndef MY_DISP_HOR_RES
     #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
     #define MY_DISP_HOR_RES    320
@@ -83,9 +87,9 @@ void lv_port_disp_init(void)
      */
 
     /* Example for 1) */
-    // static lv_disp_draw_buf_t draw_buf_dsc_1;
-    // static lv_color_t buf_1[MY_DISP_HOR_RES * 10];                          /*A buffer for 10 rows*/
-    // lv_disp_draw_buf_init(&draw_buf_dsc_1, buf_1, NULL, MY_DISP_HOR_RES * 10);   /*Initialize the display buffer*/
+    static lv_disp_draw_buf_t draw_buf_dsc_1;
+    static lv_color_t buf_1[MY_DISP_HOR_RES * 10];                          /*A buffer for 10 rows*/
+    lv_disp_draw_buf_init(&draw_buf_dsc_1, buf_1, NULL, MY_DISP_HOR_RES * 10);   /*Initialize the display buffer*/
 
     /* Example for 2) */
     // static lv_disp_draw_buf_t draw_buf_dsc_2;
@@ -94,11 +98,11 @@ void lv_port_disp_init(void)
     // lv_disp_draw_buf_init(&draw_buf_dsc_2, buf_2_1, buf_2_2, MY_DISP_HOR_RES * 10);   /*Initialize the display buffer*/
 
     /* Example for 3) also set disp_drv.full_refresh = 1 below*/
-    static lv_disp_draw_buf_t draw_buf_dsc_3;
-    static lv_color_t buf_3_1[MY_DISP_HOR_RES * MY_DISP_VER_RES];            /*A screen sized buffer*/
-    static lv_color_t buf_3_2[MY_DISP_HOR_RES * MY_DISP_VER_RES];            /*Another screen sized buffer*/
-    lv_disp_draw_buf_init(&draw_buf_dsc_3, buf_3_1, buf_3_2,
-                          MY_DISP_VER_RES * 10);   /*Initialize the display buffer LV_VER_RES_MAX*/
+    // static lv_disp_draw_buf_t draw_buf_dsc_3;
+    // static lv_color_t buf_3_1[MY_DISP_HOR_RES * MY_DISP_VER_RES];            /*A screen sized buffer*/
+    // static lv_color_t buf_3_2[MY_DISP_HOR_RES * MY_DISP_VER_RES];            /*Another screen sized buffer*/
+    // lv_disp_draw_buf_init(&draw_buf_dsc_3, buf_3_1, buf_3_2,
+    //                       MY_DISP_VER_RES * 10);   /*Initialize the display buffer LV_VER_RES_MAX*/
 
     /*-----------------------------------
      * Register the display in LVGL
@@ -117,7 +121,7 @@ void lv_port_disp_init(void)
     disp_drv.flush_cb = disp_flush;
 
     /*Set a display buffer*/
-    disp_drv.draw_buf = &draw_buf_dsc_3;
+    disp_drv.draw_buf = &draw_buf_dsc_1;
 
     /*Required for Example 3)*/
     //disp_drv.full_refresh = 1;
@@ -165,15 +169,16 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
     if(disp_flush_enabled) {
         /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
 
-        int32_t x;
-        int32_t y;
-        for(y = area->y1; y <= area->y2; y++) {
-            for(x = area->x1; x <= area->x2; x++) {
-                /*Put a pixel to the display. For example:*/
-                /*put_px(x, y, *color_p)*/
-                color_p++;
-            }
-        }
+        // int32_t x;
+        // int32_t y;
+        // for(y = area->y1; y <= area->y2; y++) {
+        //     for(x = area->x1; x <= area->x2; x++) {
+        //         /*Put a pixel to the display. For example:*/
+        //         /*put_px(x, y, *color_p)*/
+        //         color_p++;
+        //     }
+        // }
+        hl_drv_rm69310_display_write(area->x1,area->x2,area->y1,area->y2,(const uint8_t*)color_p);
     }
 
     /*IMPORTANT!!!

@@ -499,6 +499,9 @@ if RT_USING_TOUCH_DRIVERS
 
         config RT_USING_IT7259
             bool "IT7259 touch driver select"
+        
+        config RT_USING_FT3169
+            bool "FT3169 touch driver select"
 
     endchoice
 

@@ -3,8 +3,11 @@ Import('rtconfig')
 from building import *
 
 cwd     = GetCurrentDir()
+inc_path = [cwd]
+inc_path += [cwd + '/inc']
 src  = Glob('*.c')
-CPPPATH = [cwd]
+src += Glob('src/*.c')
+CPPPATH = inc_path
 
 group = DefineGroup('HL_A6902', src, depend = [''], CPPPATH = CPPPATH)
 
