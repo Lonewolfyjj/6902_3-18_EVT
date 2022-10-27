@@ -78,8 +78,18 @@ static ret_err_t rk_camera_control(rk_device *dev,
 
     MACRO_ASSERT(dev != RK_NULL);
     camera = (struct rk_camera_device *)dev;
-
-    return (camera->ops->control(camera, cmd, args));
+    if (cmd <= RK_DEVICE_CTRL_CAMERA_CTRL ||
+            cmd == RK_DEVICE_CTRL_CID_MATCH_CAM_CONFIG ||
+            cmd == RK_DEVICE_CTRL_CAMERA_STREAM_ON_LATE)
+    {
+        if (camera->ops)
+            return (camera->ops->control(camera, cmd, args));
+    }
+    else
+    {
+        if (camera->ctrl)
+            return (camera->ctrl->control(camera->ctrl->ctrl_dev, cmd, args));
+    }
 }
 
 /**
@@ -97,6 +107,24 @@ static ret_err_t rk_camera_init(rk_device *dev)
     if (camera->ops->init)
     {
         return (camera->ops->init(camera));
+    }
+
+    return RET_SYS_ENOSYS;
+}
+
+/**
+ * @brief  Init the camera ctrl device for application.
+ * @param dev : The camera ctrl device object in kernel.
+ * @return : return system status.
+ */
+ret_err_t rk_camera_ctrl_init(struct rk_camera_device *camera, struct rk_camera_ctrl *ctrl)
+{
+    MACRO_ASSERT(ctrl != RK_NULL);
+    MACRO_ASSERT(camera != RK_NULL);
+    camera->ctrl = ctrl;
+    if (camera->ctrl->init)
+    {
+        return (camera->ctrl->init(ctrl->ctrl_dev));
     }
 
     return RET_SYS_ENOSYS;

@@ -10,7 +10,7 @@ if os.getenv('RTT_CC'):
 
 if  CROSS_TOOL == 'gcc':
     PLATFORM    = 'gcc'
-    EXEC_PATH   = '../../../../prebuilts/gcc/linux-x86/riscv64/riscv64-unknown-elf-gcc-8.2.0-2019.05.3-x86_64-linux/bin'
+    EXEC_PATH   = '../../../../prebuilts/gcc/linux-x86/riscv64/xpack-riscv-none-embed-gcc-10.2.0-1.2/bin'
 
 if os.getenv('RTT_EXEC_PATH'):
     EXEC_PATH = os.getenv('RTT_EXEC_PATH')
@@ -25,7 +25,7 @@ TARGET_NAME = 'rtthread.bin'
 #------- GCC settings ----------------------------------------------------------
 if PLATFORM == 'gcc':
     # toolchains
-    PREFIX = 'riscv64-unknown-elf-'
+    PREFIX = 'riscv-none-embed-'
     CC = PREFIX + 'gcc'
     AS = PREFIX + 'gcc'
     AR = PREFIX + 'ar'
@@ -35,13 +35,14 @@ if PLATFORM == 'gcc':
     OBJDUMP = PREFIX + 'objdump'
     OBJCPY = PREFIX + 'objcopy'
 
-    DEVICE = ' -march=rv32imc -mabi=ilp32 -DUSE_PLIC -DUSE_M_TIME -DNO_INIT -mcmodel=medany -msmall-data-limit=8 -L.  -nostartfiles  -lc '
-    CFLAGS = DEVICE
-    CFLAGS += ' -save-temps=obj -D__RT_THREAD__'
-    AFLAGS = '-c'+ DEVICE + ' -x assembler-with-cpp'
-    AFLAGS += ' -Iplatform -Ifreedom-e-sdk/bsp/include -Ifreedom-e-sdk/bsp/env'
-    LFLAGS = DEVICE
-    LFLAGS += ' -Wl,--gc-sections,-cref,-Map=' + MAP_FILE
+    DEVICE = ' -march=rv32imc -mabi=ilp32 -DUSE_PLIC -DUSE_M_TIME -DNO_INIT -mcmodel=medany -msmall-data-limit=8 -L. -nostartfiles  -lc '
+    CFLAGS = DEVICE  + ' -std=gnu99 -g'
+    CFLAGS += ' -ffunction-sections -fdata-sections -save-temps=obj -D__RT_THREAD__'
+    CFLAGS += ' -Wformat=2 -Wall'
+    CFLAGS += ' -Wno-unused-parameter -Wno-unused-function -Wno-unused-value'
+    CFLAGS += ' -Wno-implicit-fallthrough -Wno-missing-field-initializers -Wno-old-style-declaration'
+    AFLAGS = DEVICE + ' -c -x assembler-with-cpp -D__ASSEMBLY__'
+    LFLAGS = DEVICE + ' -Wl,--gc-sections,-cref,-Map=' + MAP_FILE
     LFLAGS += ' -T ' + LINK_FILE
 
     CPATH = ''

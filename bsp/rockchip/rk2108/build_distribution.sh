@@ -127,8 +127,12 @@ if [ -f "Image/rtthread.img" -a -f "Image/Firmware.img" -a -f "Image/rk2108_load
     mkdir Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION} -p
     cp Image/rtthread.img Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}/
     cp Image/Firmware.img Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}/
-    cp Image/rk2108_loader.bin Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}/
-    tar -czvf Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}.tar.gz Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}
+    cp Image/rk2108_db_loader.bin Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}/
+    cd Image/dist
+    echo "in dir: " `pwd`
+    tar -czvf ${DEVICE_MODEL}"_"${MAIN_VERSION}.tar.gz ${DEVICE_MODEL}"_"${MAIN_VERSION}
+    cd -
+    echo "in dir: " `pwd`
     rm -rvf Image/dist/${DEVICE_MODEL}"_"${MAIN_VERSION}
 else
     echo "error of build, no output file"

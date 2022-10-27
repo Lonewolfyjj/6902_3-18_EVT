@@ -13,6 +13,7 @@
 #include <rtdevice.h>
 #include <drivers/usb_device.h>
 #include "winusb.h"
+#include "soc.h"
 struct winusb_device
 {
     struct rt_device parent;
@@ -51,7 +52,7 @@ static struct usb_qualifier_descriptor dev_qualifier =
     USB_DESC_TYPE_DEVICEQUALIFIER,  //bDescriptorType
     0x0200,                         //bcdUSB
     0xFF,                           //bDeviceClass
-    0x00,                           //bDeviceSubClass
+    0xF0,                           //bDeviceSubClass
     0x00,                           //bDeviceProtocol
     64,                             //bMaxPacketSize0
     0x01,                           //bNumConfigurations
@@ -69,9 +70,9 @@ struct winusb_descriptor _winusb_desc =
         USB_DYNAMIC,
         0x01,
         0xFF,
+        0xF0,
         0x00,
-        0x00,
-        0x00,
+        0x06,
     },
 #endif
     /*interface descriptor*/
@@ -82,9 +83,9 @@ struct winusb_descriptor _winusb_desc =
         0x00,                       //bAlternateSetting;
         0x02,                       //bNumEndpoints
         0xFF,                       //bInterfaceClass;
-        0x00,                       //bInterfaceSubClass;
+        0xF0,                       //bInterfaceSubClass;
         0x00,                       //bInterfaceProtocol;
-        0x00,                       //iInterface;
+        0x06,                       //iInterface;
     },
     /*endpoint descriptor*/
     {
@@ -110,11 +111,12 @@ ALIGN(4)
 const static char* _ustring[] =
 {
     "Language",
-    "RT-Thread Team.",
-    "RTT Win USB",
+    "Shenzhen Hollyland technology Co.,LTD",
+    "Wireless Microphone",
     "32021919830108",
     "Configuration",
     "Interface",
+    "iAP Interface",
     USB_STRING_OS//must be
 };
 
@@ -185,7 +187,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         switch(setup->wIndex)
         {
         case 0x05:
-            usbd_os_proerty_descriptor_send(func,setup,winusb_proerty,sizeof(winusb_proerty)/sizeof(winusb_proerty[0]));
+            // usbd_os_proerty_descriptor_send(func,setup,winusb_proerty,sizeof(winusb_proerty)/sizeof(winusb_proerty[0]));
             break;
         }
         break;
@@ -314,7 +316,7 @@ ufunction_t rt_usbd_function_winusb_create(udevice_t device)
 
     /* create a cdc function */
     func = rt_usbd_function_new(device, &dev_desc, &ops);
-    rt_usbd_device_set_qualifier(device, &dev_qualifier);
+    // rt_usbd_device_set_qualifier(device, &dev_qualifier);
 
     /* allocate memory for cdc vcom data */
     winusb_device = (winusb_device_t)rt_malloc(sizeof(struct winusb_device));

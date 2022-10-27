@@ -650,13 +650,13 @@ RT_WEAK RT_UNUSED void spi2_m1_iomux_config(void)
     HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
                          GPIO_PIN_C4 |  // SPI_MST2_CS0_M1
                          GPIO_PIN_C5 |  // SPI_MST2_CLK_M1
-                         GPIO_PIN_C6 |  // SPI_MST2_MOSI_M1
-                         GPIO_PIN_C7,   // SPI_MST2_MISO_M1
+                         GPIO_PIN_C6,// |  // SPI_MST2_MOSI_M1
+                        //  GPIO_PIN_C7,   // SPI_MST2_MISO_M1
                          PIN_CONFIG_MUX_FUNC1);
 
-    HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
-                         GPIO_PIN_A5,   // SPI_MST2_CS1
-                         PIN_CONFIG_MUX_FUNC3);
+    // HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
+    //                      GPIO_PIN_A5,   // SPI_MST2_CS1
+    //                      PIN_CONFIG_MUX_FUNC3);
 
     /* set SPI master 2 IOMUX selection to M1 */
     WRITE_REG_MASK_WE(GRF->SOC_CON5,

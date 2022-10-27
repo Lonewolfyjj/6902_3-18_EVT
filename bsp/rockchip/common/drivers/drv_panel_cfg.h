@@ -42,6 +42,8 @@
 #include "panel_cfg/am014rt90327v0_panel_cfg.h"
 #elif defined(RT_USING_PANEL_H245QBN02)
 #include "panel_cfg/h245qbn02_panel_cfg.h"
+#elif defined(RT_USING_PANEL_HL_RM690A0)
+#include "panel_cfg/rm69030_panel_cfg.h"
 #endif
 
 #if defined(RT_USING_PANEL_KGM281G44PVAA)
