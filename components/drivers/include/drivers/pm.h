@@ -141,6 +141,11 @@ struct rt_device_pm_ops
 
     int (*suspend)(const struct rt_device *device);
     void (*resume)(const struct rt_device *device);
+#ifdef RT_USING_PM_ULTRA
+    int (*ultra_suspend)(const struct rt_device *device);
+    void (*ultra_resume)(const struct rt_device *device);
+    void (*ultra_shutdown)(const struct rt_device *device);
+#endif
 };
 
 struct rt_device_pm
@@ -181,6 +186,11 @@ void rt_pm_release(rt_ubase_t mode);
 void rt_pm_register_device(struct rt_device *device, const struct rt_device_pm_ops *ops);
 void rt_pm_unregister_device(struct rt_device *device);
 
+#ifdef RT_USING_PM_ULTRA
+int pm_device_ultra_suspend(void);
+void pm_device_ultra_resume(void);
+void pm_device_ultra_shutdown(void);
+#endif
 void rt_system_pm_init(const struct rt_pm_ops *ops,
                        rt_uint8_t              timer_mask,
                        void                   *user_data);

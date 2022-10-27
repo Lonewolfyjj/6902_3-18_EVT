@@ -17,7 +17,7 @@
 #define __CAMERA_H__
 
 #if defined(__RT_THREAD__)
-#include "adapter.h"
+#include "adapter/adapter.h"
 #include "drv_clock.h"
 #include "camera_mediabus.h"
 
@@ -53,6 +53,17 @@
 #define RK_V4L2_CID_AUTO_FPS                        (12)
 #define RK_DEVICE_CTRL_CAMERA_GET_FRMINTVAL         (13)
 #define RK_DEVICE_CTRL_CAMERA_SET_FLIPMIRROR        (14)
+#define RK_DEVICE_CTRL_CAMERA_GET_EXP_INF           (15)
+#define RK_DEVICE_CTRL_CAMERA_SET_EXP_VAL           (16)
+#define RK_DEVICE_CTRL_CAMERA_CTRL                  (17)
+#define RK_DEVICE_CTRL_CID_STOP_IR_FILTER           (18)
+#define RK_DEVICE_CTRL_CID_OPEN_IR_LED              (19)
+#define RK_DEVICE_CTRL_CID_OPEN_WHITE_LED           (20)
+#define RK_DEVICE_CTRL_CID_OPEN_BLUE_LED            (21)
+#define RK_DEVICE_CTRL_CID_OPEN_RED_LED             (22)
+#define RK_DEVICE_CTRL_CID_GET_LIGHTS_SENSOR_VAL    (23)
+#define RK_DEVICE_CTRL_CID_MATCH_CAM_CONFIG         (24)
+#define RK_DEVICE_CTRL_CAMERA_STREAM_ON_LATE        (25)
 
 #define CSI2_DT_YUV420_8b   (0x18)
 #define CSI2_DT_YUV420_10b  (0x19)
@@ -147,14 +158,59 @@ enum v4l2_mbus_pixelcode
     /* S5C73M3 sensor specific interleaved UYVY and JPEG */
     V4L2_MBUS_FMT_S5C_UYVY_JPEG_1X8 = 0x5001,
 };
-
+#define RK_CAMERA_HDREXP_NUM                        (3)
 /* Exported types ------------------------------------------------------------*/
+struct rk_camera_ctrl
+{
+    void *ctrl_dev;
+    ret_err_t (*control)(void *ctrl_dev, int cid, void *arg);
+    ret_err_t (*init)(void *ctrl_dev);
+};
+
 struct rk_camera_info
 {
     struct rk_camera_mbus_framefmt mbus_fmt;
     struct rk_camera_mbus_config mbus_config;
+    uint32_t hdr_mode;
 };
 
+enum rk_camera_hdr_mode
+{
+    NO_HDR = 0,
+    HDR_X2 = 5,
+    HDR_X3 = 6,
+};
+
+struct rk_camera_exp_info
+{
+    uint64_t pix_clk;
+    uint32_t hts;
+    uint32_t vts;
+    uint32_t width;
+    uint32_t height;
+    uint64_t dst_pix_clk;
+    uint32_t dst_hts;
+    uint32_t dst_vts;
+    uint32_t dst_width;
+    uint32_t dst_height;
+    uint32_t time_valid_delay;
+    uint32_t gain_valid_delay;
+};
+
+struct rk_camera_dst_config
+{
+    bool is_match;
+    int32_t width;
+    int32_t height;
+    int32_t cam_fps_denominator;
+    int32_t cam_fps_numerator;
+    int32_t cam_mirror_flip;
+};
+struct rk_camera_exp_val
+{
+    uint32_t reg_time[RK_CAMERA_HDREXP_NUM];
+    uint32_t reg_gain[RK_CAMERA_HDREXP_NUM];
+};
 struct rk_camera_iq_info
 {
     void *addr;
@@ -169,6 +225,7 @@ struct rk_camera_device
     const struct rk_camera_ops *ops;
     char i2c_name[RK_CAMERA_I2C_NAME_SIZE];
     rk_i2c_bus_device *i2c_bus;
+    struct rk_camera_ctrl *ctrl;
 #if defined(__RK_OS__)
     uint8_t class_id;
     uint8_t object_id;
@@ -193,7 +250,7 @@ ret_err_t rk_camera_register(struct rk_camera_device *camera,
                              const char *name,
                              void *data);
 int pltfrm_camera_module_pix_fmt2csi2_dt(int src_pix_fmt);
-
+ret_err_t rk_camera_ctrl_init(struct rk_camera_device *camera, struct rk_camera_ctrl *ctrl);
 #endif
 
 #endif

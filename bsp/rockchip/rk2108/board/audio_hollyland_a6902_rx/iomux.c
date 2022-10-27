@@ -86,24 +86,55 @@ void audio_iomux_config(void)
                          PIN_CONFIG_MUX_FUNC3);
 }
 
+/**
+ * @brief  Config iomux for oled spi
+ */
+void spi2_m1_iomux_config(void)
+{
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
+                         GPIO_PIN_C4 |  // SPI_MST2_CS0_M1
+                         GPIO_PIN_C5 |  // SPI_MST2_CLK_M1
+                         GPIO_PIN_C6, //|  // SPI_MST2_MOSI_M1
+                         //GPIO_PIN_C7,   // SPI_MST2_MISO_M1
+                         PIN_CONFIG_MUX_FUNC1);
+
+    // HAL_PINCTRL_SetIOMUX(GPIO_BANK1,
+    //                      GPIO_PIN_A5,   // SPI_MST2_CS1
+    //                      PIN_CONFIG_MUX_FUNC3);
+
+    /* set SPI master 2 IOMUX selection to M1 */
+    WRITE_REG_MASK_WE(GRF->SOC_CON5,
+                      GRF_SOC_CON5_GRF_CON_SPI_MST2_IOMUX_SEL_MASK,
+                      (1 << GRF_SOC_CON5_GRF_CON_SPI_MST2_IOMUX_SEL_SHIFT));
+}
+
 void rt_hw_iomux_config(void)
 {
     pdm_input_iomux_config();
 
     sfc0_iomux_config();
 
-    sdio_iomux_config();
+    
 
     uart2_iomux_config();
 
     key_ctrl_iomux_config();
 
+    spi2_m1_iomux_config();
+
     uart0_iomux_config();
 
-    i2c1_m0_iomux_config();
+    i2c1_m0_iomux_config();//i2c0_m1_iomux_config();
+    i2c0_m2_iomux_config();
 
+    // i2c1_m2_iomux_config();
+
+    spi2_m1_iomux_config();
 #ifdef RT_USING_I2STDM1
-    i2s1_output_iomux_config();
+    i2s1_input_iomux_config();
+#endif
+#ifdef RT_USING_I2STDM
+    i2s0_output_iomux_config();
 #endif
 #ifdef RT_USING_AUDIOPWM
     audio_iomux_config();

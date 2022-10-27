@@ -23,11 +23,14 @@
 
 /* typedef -------------------------------------------------------------------*/
 // gpio config struct
-typedef struct _HL_GPIO_CONFIG_T
+typedef struct _hl_gpio_config_t
 {
+    /// @brief 引脚号
     rt_base_t    pin;
+
+    /// @brief  引脚模式
     rt_base_t    mode;
-}HL_GPIO_CONFIG_T;
+} hl_gpio_config_t;
 
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -35,53 +38,52 @@ typedef struct _HL_GPIO_CONFIG_T
 
 #if HL_GET_DEVICE_TYPE()
 // Tx
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
-    {GPIO1_A3,  PIN_MODE_INPUT},    // GPIO_PAIR_KEY
-    {GPIO1_B2,  PIN_MODE_INPUT},    // GPIO_PWR_KEY
-    {GPIO1_C1,  PIN_MODE_INPUT},    // GPIO_REC_KEY
-    {GPIO1_A4,  PIN_MODE_INPUT},    // GPIO_VBUS_DET
-    {GPIO1_B1,  PIN_MODE_INPUT},    // GPIO_GAUGE_INT
-    {GPIO1_C5,  PIN_MODE_INPUT},    // GPIO_MIC_DET
+    {GPIO1_A3,  PIN_MODE_INPUT},            // GPIO_PAIR_KEY
+    {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_PWR_KEY
+    {GPIO1_C1,  PIN_MODE_INPUT},            // GPIO_REC_KEY
+    {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
+    {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
+    {GPIO1_C5,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_MIC_DET
     // OUT
-    {GPIO0_A3,  PIN_MODE_OUTPUT},   // GPIO_EMMC_RST
-    {GPIO0_D3,  PIN_MODE_OUTPUT},   // GPIO_LVT_EN
-    {GPIO1_A5,  PIN_MODE_OUTPUT},   // GPIO_EMMC_PWR_EN
-    {GPIO1_C6,  PIN_MODE_OUTPUT},   // GPIO_PWR_EN
-    {GPIO1_A2,  PIN_MODE_OUTPUT},   // GPIO_DC3V3_EN
-    {GPIO1_A7,  PIN_MODE_OUTPUT},   // GPIO_2831P_EN
-    {GPIO1_C4,  PIN_MODE_OUTPUT},   // GPIO_RF_PWR_EN
-    {GPIO1_C6,  PIN_MODE_OUTPUT},   // GPIO_MIC_SW
-    {GPIO1_C7,  PIN_MODE_OUTPUT},   // GPIO_ATS_RESET
+    {GPIO0_A3,  PIN_MODE_OUTPUT},           // GPIO_EMMC_RST
+    {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_EMMC_PWR_EN
+    {GPIO0_C6,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
+    {GPIO1_A2,  PIN_MODE_OUTPUT},           // GPIO_DC3V3_EN
+    {GPIO1_A7,  PIN_MODE_OUTPUT},           // GPIO_2831P_EN
+    {GPIO1_C4,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
+    {GPIO1_C6,  PIN_MODE_OUTPUT},           // GPIO_MIC_SW
+    {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
 };
 #else
 // RX
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
-    {GPIO1_B1,  PIN_MODE_INPUT},    // GPIO_PWR_KEY
-    {GPIO0_A6,  PIN_MODE_INPUT},    // GPIO_L_VOL_A
-    {GPIO0_A5,  PIN_MODE_INPUT},    // GPIO_L_VOL_B
-    {GPIO0_A7,  PIN_MODE_INPUT},    // GPIO_L_VOL_KEY
-    {GPIO0_C0,  PIN_MODE_INPUT},    // GPIO_R_VOL_A
-    {GPIO0_C5,  PIN_MODE_INPUT},    // GPIO_R_VOL_B
-    {GPIO0_C6,  PIN_MODE_INPUT},    // GPIO_R_VOL_KEY
-    {GPIO0_A3,  PIN_MODE_INPUT},    // GPIO_GAUGE_INT
-    {GPIO1_A4,  PIN_MODE_INPUT},    // GPIO_VBUS_DET
-    {GPIO0_C1,  PIN_MODE_INPUT},    // GPIO_HP_DET
-    {GPIO1_B2,  PIN_MODE_INPUT},    // GPIO_GSENSOR_INT
+    {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_PWR_KEY
+    {GPIO0_A6,  PIN_MODE_INPUT},            // GPIO_L_VOL_A
+    {GPIO0_A5,  PIN_MODE_INPUT},            // GPIO_L_VOL_B
+    {GPIO0_A7,  PIN_MODE_INPUT},            // GPIO_L_VOL_KEY
+    {GPIO0_C0,  PIN_MODE_INPUT},            // GPIO_R_VOL_A
+    {GPIO0_C5,  PIN_MODE_INPUT},            // GPIO_R_VOL_B
+    {GPIO0_C6,  PIN_MODE_INPUT},            // GPIO_R_VOL_KEY
+    {GPIO0_A3,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
+    {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
+    {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_HP_DET
+    {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_GSENSOR_INT
+    {GPIO1_C0,  PIN_MODE_INPUT},            // GPIO_OLED_TE
     // OUT
-    {GPIO0_B0,  PIN_MODE_OUTPUT},   // GPIO_PWR_EN
-    {GPIO1_B5,  PIN_MODE_OUTPUT},   // GPIO_USB_SW
-    {GPIO0_C0,  PIN_MODE_OUTPUT},   // GPIO_OLED_RST
-    {GPIO1_A7,  PIN_MODE_OUTPUT},   // GPIO_RF_PWR_EN
-    {GPIO1_B0,  PIN_MODE_OUTPUT},   // GPIO_ATS_RESET
-    {GPIO1_C2,  PIN_MODE_OUTPUT},   // GPIO_ATS_PWR_EN
-    {GPIO1_C3,  PIN_MODE_OUTPUT},   // GPIO_AMP_EN
-
-    {GPIO1_A4,  PIN_MODE_OUTPUT},      // GPIO_LED_TEST
-    {GPIO1_B6,  PIN_MODE_INPUT},       // GPIO_KEY_TEST
+    {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
+    {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_USB_SW
+    {GPIO0_C0,  PIN_MODE_OUTPUT},           // GPIO_OLED_RST
+    {GPIO1_A7,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
+    {GPIO1_B0,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
+    {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_ATS_PWR_EN
+    {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_AMP_EN
+    {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
+    {GPIO1_C1,  PIN_MODE_OUTPUT },          // GPIO_OLED_SWIRE
 };
 #endif
 

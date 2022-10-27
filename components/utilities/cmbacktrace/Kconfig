@@ -42,7 +42,7 @@ if RT_USING_CMBACKTRACE
 
     config PKG_CMBACKTRACE_FAULT_REBOOT
         bool "force reboot after a fault occur"
-        default n$
+        default n
         depends on RT_USING_RESET
 
     config PKG_CMBACKTRACE_FAULT_DUMP_TO_FLASH

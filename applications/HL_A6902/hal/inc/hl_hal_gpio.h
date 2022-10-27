@@ -44,21 +44,19 @@ typedef enum _hl_gpio_port_e
     // OUT
     /// (EMMC复位脚，无外部上下拉，低电平有效)
     GPIO_EMMC_RST,
-    /// (电平转换使能，外部下拉，高电平有效)
-    GPIO_LVT_EN,
     /// (EMMC电源使能，无外部上下拉，高电平有效)
     GPIO_EMMC_PWR_EN,
     /// (电源使能，无外部上下拉，高电平有效)
     GPIO_PWR_EN,
     /// (3.3V使能，无外部上下拉，高电平有效)
     GPIO_DC3V3_EN,
-    /// (RF电源使能，无外部上下拉，高电平有效)
+    /// (无线模块电源使能，无外部上下拉，高电平有效)
     GPIO_2831P_EN,
     /// (RF电源使能，无外部上下拉，高电平有效)
     GPIO_RF_PWR_EN,
     /// (电池供电使能，外部下拉，低：内置mic 高：外置mic)
     GPIO_MIC_SW,
-    /// (电池供电使能，外部上下拉都有，高电平有效)
+    /// (无线模块复位脚，外部上下拉都有，高电平有效)
     GPIO_ATS_RESET,
 
     // GPIO 总数
@@ -92,6 +90,8 @@ typedef enum _hl_gpio_port_e
     GPIO_HP_DET,
     /// (加速度传感器中断脚，外部上拉，低电平有效)
     GPIO_GSENSOR_INT,
+    /// (oled帧同步输出脚，无外部上下拉，未激活输出低，激活输出高)
+    GPIO_OLED_TE,
 
     // OUT
     /// (电源使能，无外部上下拉，高电平有效)
@@ -108,11 +108,10 @@ typedef enum _hl_gpio_port_e
     GPIO_ATS_PWR_EN,
     /// (放大器使能，无外部上下拉，低电平有效)
     GPIO_AMP_EN,
-
-    /// (demo板上指示灯，)
-    GPIO_LED_TEST,
-    // (demo板按键)
-    GPIO_KEY_TEST,
+    /// (oled数据命令选择，无外部上下拉，低电平命令，高电平数据)
+    GPIO_OLED_DCX,
+    /// (Swire protocol设置脚，无外部上下拉，目前oled供电芯片使用MCU暂时没用到)(硬件用做了oled电源控制脚，后续需要更改名字)
+    GPIO_OLED_SWIRE,
 
     // GPIO 总数
     USER_GPIO_COUNT

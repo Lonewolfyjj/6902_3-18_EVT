@@ -161,7 +161,7 @@ static rt_err_t rk816_charger_set_bat_current(rt_int32_t bat_cur)
     else if (resistor_mohm > 20)
         hw_bat_cur = RES_FAC_MUX(bat_cur, resistor_fac);
 
-    rt_kprintf(">>> %d -> %d ... %d\n", bat_cur, hw_bat_cur, resistor_fac);
+    rt_kprintf("rk816 charge cur: %d, R: %d\n", bat_cur, resistor_mohm);
 
     if ((hw_bat_cur > bat_cur_level[ARRAY_SIZE(bat_cur_level) - 1]) ||
             (hw_bat_cur < bat_cur_level[0]))
@@ -193,7 +193,7 @@ static rt_err_t rk816_charger_set_finish_current(rt_int32_t fns_cur)
     else if (resistor_mohm > 20)
         hw_fns_cur = RES_FAC_MUX(fns_cur, resistor_fac);
 
-    rt_kprintf(">>> %d -> %d ... %d\n", fns_cur, hw_fns_cur, resistor_fac);
+    rt_kprintf("rk816 finish cur: %d, R: %d\n", fns_cur, resistor_mohm);
 
     if ((hw_fns_cur > fns_cur_level[ARRAY_SIZE(fns_cur_level) - 1]) ||
             (hw_fns_cur < fns_cur_level[0]))
@@ -218,6 +218,8 @@ static rt_err_t rk816_charger_set_src_current(rt_int32_t src_cur)
     struct rt_i2c_bus_device *bus = charger_i2c->bus;
     rt_uint8_t addr = charger_i2c->addr;
     rt_uint8_t i;
+
+    rt_kprintf("rk816 src cur: %d, R: %d\n", src_cur, resistor_mohm);
 
     if ((src_cur > src_cur_level[ARRAY_SIZE(bat_cur_level) - 1]) ||
             (src_cur < src_cur_level[1]))

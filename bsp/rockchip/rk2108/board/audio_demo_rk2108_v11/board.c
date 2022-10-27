@@ -33,6 +33,21 @@ const struct codec_desc codec_es8311 =
 };
 #endif
 
+#ifdef RT_USING_CODEC_NAU88L25B
+//#define RT_CODEC_NAU88L21 1
+const struct codec_desc codec_nau88l25b =
+{
+    .if_type = IF_TYPE_I2C,
+    .name = "88l25b",
+    .i2c_bus = "i2c0",//"i2c0"
+#ifdef RT_CODEC_NAU88L21
+    .i2c_addr = 0x1B,
+#else
+    .i2c_addr = 0x1A,
+#endif
+};
+#endif
+
 #ifdef RT_USING_AUDIO
 extern const struct audio_mdais_desc rk_mdais;
 const struct audio_card_desc rk_board_audio_cards[] =
@@ -119,6 +134,52 @@ const struct audio_card_desc rk_board_audio_cards[] =
         .mclkfs = 256,
         .format = AUDIO_FMT_I2S,
     },
+#endif
+
+#if 1 //def RT_USING_AUDIO_CARD_NAU88L25B
+//#if 1//HL_DEVICE_TYPE_RX //设备类型
+    {
+        .name = "codec",
+        .dai = I2STDM0,
+        .codec = (void *) &codec_nau88l25b,
+        .capture = true,
+        .playback = true,//false,
+        .mclkfs = 256,
+        .format = AUDIO_FMT_I2S,
+        .trcm_mode = TRCM_TXONLY,//,
+    },
+    {
+        .name = "wifi",
+        .dai = I2STDM1,
+        .codec = (void *) &codec_nau88l25b,
+        .capture = false,
+        .playback = true,
+        .mclkfs = 256,
+        .format = AUDIO_FMT_I2S,
+        //.trcm_mode = TRCM_TXONLY,
+    },
+//#else
+    {
+        .name = "codec",
+        .dai = I2STDM0,
+        .codec = (void *) &codec_nau88l25b,
+        .capture = false,
+        .playback = true,
+        .mclkfs = 256,
+        .format = AUDIO_FMT_I2S,
+        .trcm_mode = TRCM_TXONLY,
+    },
+    {
+        .name = "wifi",
+        .dai = I2STDM1,
+        .codec = (void *) &codec_nau88l25b,
+        .capture = true,
+        .playback = false,
+        .mclkfs = 256,
+        .format = AUDIO_FMT_I2S,
+        //.trcm_mode = TRCM_RXONLY,
+    },
+//#endif
 #endif
     { /* sentinel */ }
 };
