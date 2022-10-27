@@ -49,6 +49,16 @@ RT_WEAK const struct uart_board g_uart2_board =
 };
 #endif /* RT_USING_UART2 */
 
+#if defined(RT_USING_UART4)
+RT_WEAK const struct uart_board g_uart4_board =
+{
+    .baud_rate = UART_BR_1500000,
+    .dev_flag = ROCKCHIP_UART_SUPPORT_FLAG_DEFAULT,
+    .bufer_size = RT_SERIAL_RB_BUFSZ,
+    .name = "uart4",
+};
+#endif /* RT_USING_UART4 */
+
 extern void SysTick_Handler(void);
 RT_WEAK void tick_isr(int vector, void *param)
 {

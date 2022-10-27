@@ -281,7 +281,49 @@ out:
   rt_free(bw_ext_csd);
   return err;
 }
+/**
+ * @brief 设置四线DDR模式的speed
+ * @param [in] card 卡信息指针
+ * @param [in] ext_csd  寄存器值指针
+ * @return int 
+ * @date 2022-10-21
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-21      <td>liujie     <td>新建
+ * </table>
+ */
+#ifdef RT_EMMC_USE_DDR_MOD
 
+static int mmc_set_ddr(struct rt_mmcsd_card *card, rt_uint8_t *ext_csd)
+{
+  struct rt_mmcsd_host *host = card->host;
+  unsigned idx, bus_width = 0;
+  int err = 0;
+  
+  if (GET_BITS(card->resp_cid, 122, 4) < 4)
+     return 0;
+    
+  err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                   EXT_CSD_BUS_WIDTH,
+                   EXT_CSD_DDR_BUS_WIDTH_4);
+  if (err)
+    LOG_E("err = %d!",err);
+  
+  bus_width = MMCSD_BUS_WIDTH_4;
+  mmcsd_set_bus_width(host, bus_width);
+  mmcsd_delay_ms(20); //delay 10ms
+
+  err = mmc_compare_ext_csds(card, ext_csd, bus_width);
+
+  rt_kprintf("switch to bus width ddr speed sucess!");
+  
+  return err;
+}
+#endif
 /*
  * Select the bus width amoung 4-bit and 8-bit(SDR).
  * If the bus width is changed successfully, return the selected width value.
@@ -359,6 +401,76 @@ static int mmc_select_bus_width(struct rt_mmcsd_card *card, rt_uint8_t *ext_csd)
   
   return err;
 }
+
+/**
+ * @brief 设置EMMC卡到HS高速模式
+ * @param [in] card 
+ * @param [in] ext_csd 
+ * @return int 
+ * @date 2022-10-21
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-21      <td>liujie     <td>新建
+ * </table>
+ */
+static int mmc_select_hs_timing(struct rt_mmcsd_card *card, rt_uint8_t *ext_csd)
+{
+  rt_uint32_t ext_csd_bits = EXT_CSD_TIMING_HS;
+
+
+  int err = 0;
+  
+  if (GET_BITS(card->resp_cid, 122, 4) < 4)
+     return 0;
+
+    err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                     EXT_CSD_HS_TIMING,
+                     ext_csd_bits);
+
+    mmcsd_delay_ms(20); //delay 10ms
+    err = mmc_compare_ext_csds(card, ext_csd, ext_csd_bits);
+    if (!err) {
+      err = ext_csd_bits;
+      LOG_E("switch to hs frequency bit successful!");
+    } else {
+      LOG_E("switch to hs frequency bit failed!");
+    }
+  
+  return err;
+}
+
+#if 0
+static int mmc_select_rst_en(struct rt_mmcsd_card *card, rt_uint8_t *ext_csd)
+{
+  rt_uint32_t ext_csd_bits = EXT_CSD_RST_N_ENABLED;
+
+
+  int err = 0;
+  
+  if (GET_BITS(card->resp_cid, 122, 4) < 4)
+     return 0;
+
+    err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                     EXT_CSD_RST_N_FUNCTION,
+                     ext_csd_bits);
+
+    mmcsd_delay_ms(20); //delay 10ms
+    err = mmc_compare_ext_csds(card, ext_csd, ext_csd_bits);
+    if (!err) {
+      err = ext_csd_bits;
+      LOG_E("switch to rst en bit successful!");
+    } else {
+      LOG_E("switch to rst en bit fail!");
+    }
+  
+  return err;
+}
+#endif
+
 rt_err_t mmc_send_op_cond(struct rt_mmcsd_host *host, 
                           rt_uint32_t ocr, rt_uint32_t *rocr)
 {
@@ -518,9 +630,16 @@ static rt_int32_t mmcsd_mmc_init_card(struct rt_mmcsd_host *host,
 
     mmcsd_set_clock(host, max_data_rate);
 
-    /*switch bus width*/
+    /*switch EMMC HS SPEED MODE*/
+    mmc_select_hs_timing(card, ext_csd);
+
+   /*switch bus width*/
+#ifdef RT_EMMC_USE_DDR_MOD
+    mmc_set_ddr(card, ext_csd);
+#else
     mmc_select_bus_width(card, ext_csd);
-    
+#endif
+
     host->card = card;
 
     rt_free(ext_csd);

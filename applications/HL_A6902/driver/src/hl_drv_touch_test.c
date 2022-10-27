@@ -27,12 +27,12 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-/*
- * EOF
- */
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
+
 #include <rtthread.h>
 #include <rtdevice.h>
-#include <touch.h>
+#include "touch.h"
 #include "hl_drv_touch_test.h"
 #include "hl_drv_ft3169.h"
 
@@ -208,3 +208,8 @@ static int touch_test_thread(int argc, char** argv)
 }
 
 MSH_CMD_EXPORT(touch_test_thread, touch test thread);
+
+#endif
+/*
+ * EOF
+ */

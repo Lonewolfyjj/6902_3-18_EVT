@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <rtdevice.h>
+#include <rthw.h>
 #include "hal_base.h"
 
 #define MBOX_TEST_ARGC      5U
@@ -180,7 +181,7 @@ static int mbox_test_parse(struct mbox_tdev *mbox, int argc, char **argv)
         goto err;
 
     /* Parse MBox base address */
-    reg_addr = strtol(argv[1], NULL, 16);
+    reg_addr = (uint32_t)strtoll(argv[1], NULL, 16);
     if (!reg_addr || !IS_MBOX_INSTANCE((struct MBOX_REG *)reg_addr))
         goto err;
 
@@ -188,7 +189,7 @@ static int mbox_test_parse(struct mbox_tdev *mbox, int argc, char **argv)
 
     /* Parse MBox channel IRQ */
     irqn = strtol(argv[2], NULL, 10);
-    if (irqn < 0 || irqn > NUM_INTERRUPTS)
+    if (irqn < 0)
         goto err;
 
     single_irq = strtol(argv[3], NULL, 10);

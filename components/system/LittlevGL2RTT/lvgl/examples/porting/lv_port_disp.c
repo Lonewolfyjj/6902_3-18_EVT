@@ -2,6 +2,8 @@
  * @file lv_port_disp_templ.c
  *
  */
+#include "hl_config.h"
+#if !HL_GET_DEVICE_TYPE()
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
 #if 1
@@ -209,4 +211,6 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
 
 /*This dummy typedef exists purely to silence -Wpedantic.*/
 typedef int keep_pedantic_happy;
+#endif
+
 #endif
