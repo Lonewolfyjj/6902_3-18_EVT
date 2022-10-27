@@ -934,45 +934,74 @@ uint8_t hl_drv_rm69310_display_write(uint8_t x_start, uint8_t x_end, uint8_t y_s
 {
     uint8_t column, row,cs, ce;
     uint8_t result = HL_SUCCESS;
-    uint8_t buf[OLED_MEM_SIZE];
+    uint8_t buf[OLED_MEM_SIZE],*p = RT_NULL;    
+    p = buf;
+
+    column = x_end - x_start + 1;
+    row    = y_end - y_start + 1;
 
     cs = (x_start & 0x01); 
     ce = (x_end & 0x01); 
-    
+
     if(cs == 1 && ce == 1){//奇 奇
-        rt_kprintf("j j\n");
         x_start -= 1;
         x_end -= 2;
         hl_drv_rm69310_mem_deal(buf,p_pic,(y_end - y_start + 1),(x_end - x_start + 1));
     }
 
     if(cs == 0 && ce == 0){//偶 偶
-        rt_kprintf("o o\n");
         x_end -= 1;
         hl_drv_rm69310_mem_deal(buf,p_pic,(y_end - y_start + 1),(x_end - x_start + 1));
     }
 
     if(cs == 1 && ce == 0){//奇 偶
-        rt_kprintf("j o\n");
         x_start -= 1;
         x_end -= 1;
+        cs = (x_start & 0x01); 
+
+        x_start -= cs;
+
+        column = x_end - x_start + 1;
+
+        ce = (column & 0x01); 
+
+        x_end -= ce;
+
+        p = p_pic;
+    }
+
+    if(cs == 0 && ce == 1){//偶 奇
+
+        cs = (x_start & 0x01); 
+
+        x_start -= cs;
+
+        column = x_end - x_start + 1;
+
+        ce = (column & 0x01); 
+
+        x_end -= ce;
+
+        p = p_pic;
     }
 
     column = x_end - x_start + 1;
     row    = y_end - y_start + 1;
-    
+
     if (HL_FAILED == hl_drv_rm69310_set_area(x_start, x_end, y_start, y_end)) {
         HL_PRINTF("err: set area fail!\r\n");
+        p = RT_NULL;
         return HL_FAILED;
     }
 
     result = hl_drv_rm69310_start_write_mem();
 
-    if (HL_FAILED == hl_drv_rm69310_write_mem(p_pic, column * row * 2)) {
+    if (HL_FAILED == hl_drv_rm69310_write_mem(p, column * row * 2)) {
         HL_PRINTF("err: write memory fail!\r\n");
+        p = RT_NULL;
         return HL_FAILED;
     }
-
+    p = RT_NULL;
     return result;
 }
 
