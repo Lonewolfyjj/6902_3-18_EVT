@@ -252,19 +252,23 @@ static void hl_mod_led_thread_entry(void* parameter)
 {
     uint8_t data = 0;
 
+    uint8_t telink_pair_state_last = 0xff; 
     while (1) {
-        if (telink_pair_state == TELINK_PAIR_START) {
-            _hl_drv_led_ctrl(0, 0, 15);
-            // // rt_kprintf("[OK] start pair\n");
-        } else if (telink_pair_state == TELINK_PAIR_FAILED) {
-            _hl_drv_led_ctrl(15, 0, 0);
-            // // rt_kprintf("[OK] pair failed\n");
-        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_L) {
-            _hl_drv_led_ctrl(0, 15, 0);
-            // // rt_kprintf("[OK] pair succedd left\n");
-        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_R) {
-            _hl_drv_led_ctrl(0, 15, 15);
-            // // rt_kprintf("[OK] pair succedd right\n");
+        if (telink_pair_state_last != telink_pair_state) {
+            if (telink_pair_state == TELINK_PAIR_START) {
+                _hl_drv_led_ctrl(0, 0, 15);
+                // // rt_kprintf("[OK] start pair\n");
+            } else if (telink_pair_state == TELINK_PAIR_FAILED) {
+                _hl_drv_led_ctrl(15, 0, 0);
+                // // rt_kprintf("[OK] pair failed\n");
+            } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_L) {
+                _hl_drv_led_ctrl(0, 15, 0);
+                // // rt_kprintf("[OK] pair succedd left\n");
+            } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_R) {
+                _hl_drv_led_ctrl(0, 15, 15);
+                // // rt_kprintf("[OK] pair succedd right\n");
+            }
+            telink_pair_state_last = telink_pair_state;
         }
 
         get_pair_count %= 100;

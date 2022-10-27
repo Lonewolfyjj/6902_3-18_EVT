@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from building import * 
 
 # get current dir path
@@ -9,11 +10,23 @@ src = []
 inc = []
 
 # add LittlevGL2RTT common include
-inc = inc + [cwd]
-
+inc = inc + [cwd] + [cwd+'/lvgl'] + [cwd+'/lvgl/examples/porting'] + [cwd+'/lvgl/src']
+inc = inc + [cwd+'/lvgl/src/core'] + [cwd+'/lvgl/src/draw'] + [cwd+'/lvgl/src/extra']
+inc = inc + [cwd+'/lvgl/src/font'] + [cwd+'/lvgl/src/hal'] + [cwd+'/lvgl/src/misc']
+inc = inc + [cwd+'/lvgl/src/widgets'] + [cwd+'/lvgl/src/draw/sw']
 # add LittlevGL2RTT basic code
-src = src + ['./littlevgl2rtt.c']
-
+# src = src + [cwd+'/lvgl/examples/porting/lv_port_indev.c'] + [cwd+'/lvgl/src/core/lv_obj.c']
+# print("\n\n===========================================================")
+for d in inc:
+    list_fi = os.listdir(d)
+    # print('--------')
+    # print(d)
+    for f in list_fi:
+        if fnmatch.fnmatch(f,"*.c"):
+            src = src+[d+'/'+f]
+            # print(f)
+#     print('--------')
+# print("===========================================================\n\n")
 # add group to IDE project
 objs = DefineGroup('LittlevGL2RTT', src, depend = ['RT_USING_LITTLEVGL2RTT'], CPPPATH = inc)
 
