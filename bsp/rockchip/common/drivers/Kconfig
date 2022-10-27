@@ -217,6 +217,9 @@ choice
 
     config RT_USING_PANEL_H245QBN02
         bool "H245QBN02 mipi panel, resolution is 240x432"
+
+    config RT_USING_PANEL_HL_RM690A0
+        bool "RM690A0 mipi panel, resolution is 240x120"
 endchoice
 
 choice
@@ -275,6 +278,26 @@ if RT_USING_SNOR
     config RT_SNOR_DUAL_IO
         bool "Set SPI Host DUAL IO Lines"
         default n
+
+    config RT_ROOT_DEF_PART_OFFSET
+        bool "Enable SPI Nor flash default partition offset"
+        default n
+
+    config RT_ROOT_PART_OFFSET
+        int "Define SPI Nor flash default partition offset"
+        default 25165824
+        depends on RT_ROOT_DEF_PART_OFFSET
+        help
+            The partition offset must be keep same with rootfs offset in parameter.txt
+
+    config RT_ROOT_DEF_PART_SIZE
+        bool "Enable SPI Nor flash default partition size"
+        default n
+
+    config RT_ROOT_PART_SIZE
+        int "Define SPI Nor flash default partition size"
+        default 1048576
+        depends on RT_ROOT_DEF_PART_SIZE
 
 choice
     prompt "Choose SPI Nor Flash Adapter"
@@ -363,8 +386,9 @@ config RT_USING_MIPI_DPHY
 endmenu
 
 menu "RT-Thread rockchip isp driver"
+
 config RT_USING_ISP
-    bool "Enable ISP"
+    bool "Enable ISP1"
     default n
     select RT_USING_CAMERA
     select RT_USING_ULOG
@@ -381,9 +405,24 @@ config RT_USING_ISP
         default n
     endif
 
+config RT_USING_ISP3
+    bool "Enable ISP3"
+    default n
+        select RT_USING_CAMERA
+
+config RT_USING_ISP_DDR_ADRESS
+    hex "isp ddr phy address"
+    default 0x1e60000
+    depends on RT_USING_ISP3 || RT_USING_ISP
+
+config RT_USING_ISP_DDR_SIZE
+    hex "isp ddr size"
+    default 0x600000
+    depends on RT_USING_ISP3 || RT_USING_ISP
+
 choice
     prompt "data channel for isp input"
-    depends on RT_USING_ISP
+    depends on RT_USING_ISP || RT_USING_ISP3
     default RT_USING_CHANNEL_MIPI
 
 config RT_USING_CHANNEL_MIPI
@@ -435,25 +474,23 @@ choice
     depends on RT_USING_CAMERA
     config RT_USING_GC2145
         bool "Enable GC2145"
-        default n
     config RT_USING_OV8825
         bool "Enable OV8825"
-        default n
     config RT_USING_OV5695
         bool "Enable OV5695"
-        default n
     config RT_USING_GC5035
         bool "Enable GC5035"
-        default n
     config RT_USING_OV02k10
         bool "Enable OV02k10"
-        default n
     config RT_USING_GC2053
         bool "Enable GC2053"
-        default n
     config RT_USING_F37
         bool "Enable F37"
-        default n
+    config RT_USING_SC230AI
+        bool "Enable SC230AI"
+    config RT_USING_SC3336
+        bool "Enable SC3336"
+
 endchoice
 endmenu
 
@@ -663,6 +700,15 @@ if RT_USING_PSTORE
             hex "PSTORE ram size"
             default 0
 endif
+endmenu
+
+menu "RT-Thread rockchip AMP driver"
+
+config RT_USING_RPMSG_LITE
+    bool "Enable RPMSG LITE"
+    depends on BSP_RK3308
+    default n
+
 endmenu
 
 endmenu

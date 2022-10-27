@@ -194,6 +194,9 @@ config RT_USING_SDIO
         config RT_SDIO_DEBUG
             bool "Enable SDIO debug log output"
             default n
+        config RT_EMMC_USE_DDR_MOD
+            bool "Enable SDIO emmc ddr speed mode"
+            default n
     endif
 
 config RT_USING_SPI
@@ -257,6 +260,10 @@ config RT_USING_WDT
 
 config RT_USING_AUDIO
     bool "Using Audio device drivers"
+    default n
+
+config RT_USING_HL_AUDIO
+    bool "Using HL Audio device drivers"
     default n
 
 config RT_USING_SENSOR

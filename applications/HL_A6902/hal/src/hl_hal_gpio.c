@@ -23,11 +23,14 @@
 
 /* typedef -------------------------------------------------------------------*/
 // gpio config struct
-typedef struct _HL_GPIO_CONFIG_T
+typedef struct _hl_gpio_config_t
 {
+    /// @brief 引脚号
     rt_base_t    pin;
+
+    /// @brief  引脚模式
     rt_base_t    mode;
-}HL_GPIO_CONFIG_T;
+} hl_gpio_config_t;
 
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -35,7 +38,7 @@ typedef struct _HL_GPIO_CONFIG_T
 
 #if HL_GET_DEVICE_TYPE()
 // Tx
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
     {GPIO1_A3,  PIN_MODE_INPUT},            // GPIO_PAIR_KEY
@@ -56,7 +59,7 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
 };
 #else
 // RX
-static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
+static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
     {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_PWR_KEY
@@ -70,7 +73,7 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
     {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_HP_DET
     {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_GSENSOR_INT
-    {GPIO1_C0, PIN_MODE_INPUT},            // TE
+    {GPIO1_C0,  PIN_MODE_INPUT},            // GPIO_OLED_TE
     // OUT
     {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
     {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_USB_SW
@@ -79,11 +82,8 @@ static const HL_GPIO_CONFIG_T gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_B0,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
     {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_ATS_PWR_EN
     {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_AMP_EN
-
-    {GPIO1_C7, PIN_MODE_OUTPUT},        //GPIO_OLED_DCX
-    {GPIO1_C1, PIN_MODE_OUTPUT },        //GPIO_OLED_SWIRE
-    {GPIO1_A4,  PIN_MODE_OUTPUT},           // GPIO_LED_TEST
-    {GPIO1_B6,  PIN_MODE_INPUT},            // GPIO_KEY_TEST
+    {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
+    {GPIO1_C1,  PIN_MODE_OUTPUT },          // GPIO_OLED_SWIRE
 };
 #endif
 

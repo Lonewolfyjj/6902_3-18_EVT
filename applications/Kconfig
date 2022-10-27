@@ -115,6 +115,10 @@ if RT_USING_PCBA_TEST
     source "$RTT_DIR/applications/pcba_test/Kconfig"
 endif
 
+config RT_USING_RK_BATTERY_IPC
+    bool "rk batter ipc app"
+    default n
+
 config RT_USING_RK_IOT_APP
     bool "rk iot app"
     select RT_USING_PLAYER

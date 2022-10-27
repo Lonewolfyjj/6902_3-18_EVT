@@ -225,11 +225,26 @@ static void pin_mode(struct rt_device *dev, rt_base_t pin, rt_base_t mode)
         break;
 
     case PIN_MODE_INPUT:
+#ifdef HAL_PINCTRL_MODULE_ENABLED
+        HAL_PINCTRL_SetIOMUX(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_MUX_FUNC0);
+#endif
+        HAL_PINCTRL_SetParam(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_PUL_NORMAL);
+        HAL_GPIO_SetPinDirection(get_st_gpio(pin), get_st_pin(pin), GPIO_IN);
+        break;
+
     case PIN_MODE_INPUT_PULLUP:
+#ifdef HAL_PINCTRL_MODULE_ENABLED
+        HAL_PINCTRL_SetIOMUX(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_MUX_FUNC0);
+#endif
+        HAL_PINCTRL_SetParam(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_PUL_UP);
+        HAL_GPIO_SetPinDirection(get_st_gpio(pin), get_st_pin(pin), GPIO_IN);
+        break;
+
     case PIN_MODE_INPUT_PULLDOWN:
 #ifdef HAL_PINCTRL_MODULE_ENABLED
         HAL_PINCTRL_SetIOMUX(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_MUX_FUNC0);
 #endif
+        HAL_PINCTRL_SetParam(PIN_BANK(pin), HAL_BIT(pin), PIN_CONFIG_PUL_DOWN);
         HAL_GPIO_SetPinDirection(get_st_gpio(pin), get_st_pin(pin), GPIO_IN);
         break;
 

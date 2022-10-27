@@ -1231,7 +1231,8 @@ static void rk816_bat_calc_zero_linek(struct rk816_battery *di)
             di->shtd_drop_sec = get_boot_sec();
         if (base2sec(di->shtd_drop_sec) > WAIT_SHTD_DROP_SEC)
         {
-            BAT_INFO("voltage extreme low...soc:%d->0\n", di->dsoc);
+            BAT_INFO("voltage extreme low... soc: %d->0. v=%d, c=%d, cap=%d\n",
+                     di->dsoc, voltage_avg, current_avg, di->remain_cap);
             di->shtd_drop_sec = 0;
             di->dsoc = 0;
         }
@@ -1819,10 +1820,10 @@ static void rk816_bat_report(struct rk816_battery *di)
     old_soc = di->dsoc;
     di->last_dsoc = di->dsoc;
 
-    BAT_INFO("dl=%d rl=%d c=%d v=%d ov=%d cap=%d f=%d st=%s ht=%d\n",
+    BAT_INFO("dl=%d rl=%d c=%d v=%d ov=%d pv=%d cap=%d f=%d st=%s ht=%d\n",
              di->dsoc, di->rsoc, di->current_avg,  di->voltage_avg,
-             di->voltage_ocv, di->remain_cap, di->fcc, bat_status[status],
-             !!(thermal & HOTDIE_STS));
+             di->voltage_ocv, di->pdata->pwroff_vol, di->remain_cap,
+             di->fcc, bat_status[status], !!(thermal & HOTDIE_STS));
 }
 
 static void rk816_bat_update_info(struct rk816_battery *di)
