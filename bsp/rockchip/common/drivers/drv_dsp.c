@@ -955,6 +955,11 @@ static rt_err_t rk_dsp_close(struct rt_dsp_device *dsp)
 
     struct rk_dsp *rkdsp = (struct rk_dsp *)dsp->parent.user_data;
 
+#ifdef RT_USING_DSPFW_LOADER
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, (void *)DSP_ITCM_BASE, ITCM_SIZE);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, (void *)DSP_DTCM_BASE, DTCM_SIZE);
+#endif
+
 #ifdef RT_USING_DSP_TRACE
     rk_dsp_trace(rkdsp, rkdsp->trace_index + DSP_TRACE_SLOT_COUNT);
     if (rkdsp->trace_buffer)

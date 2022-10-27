@@ -73,7 +73,7 @@ static rt_err_t rk_get_saradc_value(struct rt_adc_device *device, rt_uint32_t ch
         return -RT_ERROR;
     }
 
-    *value = (rt_uint32_t)HAL_SARADC_GetRaw(rk_saradc->reg);
+    *value = (rt_uint32_t)HAL_SARADC_GetRaw(rk_saradc->reg, channel);
 
     HAL_SARADC_Stop(rk_saradc->reg);
 

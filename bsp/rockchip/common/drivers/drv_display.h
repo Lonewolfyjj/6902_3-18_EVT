@@ -66,6 +66,9 @@ do { \
 #define RK_DISPLAY_MAX_CRTC_WIN_NUM         3
 #define RK_DISPLAY_TIME_OUT                 50
 
+#define RT_LV_HOR_RES   400
+#define RT_LV_VER_RES   400
+
 enum rockchip_cmd_type
 {
     CMD_TYPE_DEFAULT,

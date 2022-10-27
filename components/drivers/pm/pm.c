@@ -62,6 +62,65 @@ static void _pm_device_resume(void)
     }
 }
 
+/**
+ * This function will suspend all registered devices
+ */
+#ifdef RT_USING_PM_ULTRA
+int pm_device_ultra_suspend(void)
+{
+    int index;
+    int ret = 0;
+
+    for (index = 0; index < _pm.device_pm_number; index++)
+    {
+        if (_pm.device_pm[index].ops->ultra_suspend != RT_NULL)
+        {
+            ret = _pm.device_pm[index].ops->ultra_suspend(_pm.device_pm[index].device);
+
+            if (ret != RT_EOK)
+            {
+                for (--index; index >= 0; index--)
+                {
+                    if (_pm.device_pm[index].ops->ultra_resume != RT_NULL)
+                    {
+                        _pm.device_pm[index].ops->ultra_resume(_pm.device_pm[index].device);
+                    }
+                }
+                return ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+void pm_device_ultra_resume(void)
+{
+    int index;
+
+    for (index = 0; index < _pm.device_pm_number; index++)
+    {
+        if (_pm.device_pm[index].ops->ultra_resume != RT_NULL)
+        {
+            _pm.device_pm[index].ops->ultra_resume(_pm.device_pm[index].device);
+        }
+    }
+}
+
+void pm_device_ultra_shutdown(void)
+{
+    int index;
+
+    for (index = 0; index < _pm.device_pm_number; index++)
+    {
+        if (_pm.device_pm[index].ops->ultra_shutdown != RT_NULL)
+        {
+            _pm.device_pm[index].ops->ultra_shutdown(_pm.device_pm[index].device);
+        }
+    }
+}
+#endif
+
 #if PM_RUN_MODE_COUNT > 1
 /**
  * This function will update the frequency of all registered devices

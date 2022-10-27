@@ -252,7 +252,7 @@ void TC_DCache_MaintainRange1()
 
     rt_free_align(value);
 }
-#elif defined(SOC_SWALLOW)
+#elif defined(SOC_SWALLOW) || defined(RKMCU_RK3588_NPU) || defined(RKMCU_RK3588_PMU)
 
 void TC_DCache_InvalidateAll()
 {

@@ -174,11 +174,11 @@ int hl_drv_aw21009_test_manual(int argc, char* argv[])  //manual模式
 
     flag = false;
 
-    hl_drv_aw21009_ctrl(atoi(argv[6]), HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE, &flag, sizeof(flag));
+    hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE, &flag, sizeof(flag));
 
     led_group = HL_DRV_AW21009_LED_GROUP_1 | HL_DRV_AW21009_LED_GROUP_2 | HL_DRV_AW21009_LED_GROUP_3;
 
-    hl_drv_aw21009_ctrl(atoi(argv[6]), HL_DRV_AW21009_SET_LED_GROUP_MODE, &led_group, sizeof(led_group));
+    hl_drv_aw21009_ctrl(atoi(argv[3]), HL_DRV_AW21009_SET_LED_GROUP_MODE, &led_group, sizeof(led_group));
 
     auto_breath.rise_time    = HL_DRV_AW21009_PAT_TIME_0S38;
     auto_breath.on_time      = HL_DRV_AW21009_PAT_TIME_0S38;

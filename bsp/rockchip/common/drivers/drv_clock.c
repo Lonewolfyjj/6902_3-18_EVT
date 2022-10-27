@@ -160,11 +160,13 @@ int clk_is_enabled(struct clk_gate *gate)
 struct clk_gate *get_clk_gate_from_id(int gate_id)
 {
     struct clk_gate *clk_gate;
+    rt_slist_t *pos;
 
     rt_mutex_take(&gate_lock, RT_WAITING_FOREVER);
 
-    rt_slist_for_each_entry(clk_gate, &clk_gate_list, node)
+    rt_slist_for_each(pos, &clk_gate_list)
     {
+        clk_gate = rt_slist_entry(pos, struct clk_gate, node);
         if (clk_gate->gate_id == gate_id)
         {
             goto out;
