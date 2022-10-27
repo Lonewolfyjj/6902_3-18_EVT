@@ -122,7 +122,7 @@ static void play_sample(FILE *file, struct rt_device *card, uint32_t channels,
     ret = rt_device_control(card, RK_AUDIO_CTL_HW_PARAMS, &param);
     RT_ASSERT(ret == RT_EOK);
 
-    size = abuf.period_size * channels * (bits >> 3);
+    size = abuf.period_size * channels * 3;//(bits >> 3);
     buffer = rt_malloc(size);
     if (!buffer)
     {

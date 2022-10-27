@@ -78,6 +78,34 @@
 /**
  * @brief  Config iomux for AUDIO PWM M0
  */
+
+void sdio_iomux_config(void)
+{
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
+                         GPIO_PIN_C0 |  // SDIO_CLK
+                         GPIO_PIN_C1 |  // SDIO_CMD
+                         GPIO_PIN_C2 |  // SDIO_D0
+                         GPIO_PIN_C3 |  // SDIO_D1
+                         GPIO_PIN_C4,   // SDIO_D2
+                         PIN_CONFIG_MUX_FUNC4);
+
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
+                         GPIO_PIN_C5,   // SDIO_D3
+                         PIN_CONFIG_MUX_FUNC3);
+
+    HAL_PINCTRL_SetParam(GPIO_BANK0,
+                         GPIO_PIN_C1 |  // SDIO_CMD
+                         GPIO_PIN_C2 |  // SDIO_D0
+                         GPIO_PIN_C3 |  // SDIO_D1
+                         GPIO_PIN_C4 |  // SDIO_D2
+                         GPIO_PIN_C5,   // SDIO_D3
+                         PIN_CONFIG_PUL_UP |
+                         PIN_CONFIG_DRV_LEVEL1);
+    HAL_PINCTRL_SetParam(GPIO_BANK0, GPIO_PIN_A3, PIN_CONFIG_PUL_UP); //Emmc_Reset
+    HAL_GPIO_SetPinDirection(GPIO0, GPIO_PIN_A3, GPIO_OUT);
+    HAL_GPIO_SetPinLevel(GPIO0, GPIO_PIN_A3, GPIO_HIGH);
+}
+
 void audio_iomux_config(void)
 {
     HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
@@ -96,14 +124,21 @@ void rt_hw_iomux_config(void)
 
     uart2_iomux_config();
 
-    key_ctrl_iomux_config();
+    
 
     uart0_iomux_config();
 
-    i2c0_m1_iomux_config();
+    //i2c0_m1_iomux_config();
+
+    i2c1_m1_iomux_config();
+
+    i2c2_m2_iomux_config();
 
 #ifdef RT_USING_I2STDM1
     i2s1_output_iomux_config();
+#endif
+#ifdef RT_USING_I2STDM
+    i2s0_input_iomux_config();
 #endif
 #ifdef RT_USING_AUDIOPWM
     audio_iomux_config();

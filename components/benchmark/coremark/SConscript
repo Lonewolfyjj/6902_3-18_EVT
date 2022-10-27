@@ -11,7 +11,7 @@ src     = Split('''
     barebones/ee_printf.c
     ''')
 CPPPATH = [cwd, os.path.join(cwd, 'barebones')]
-LOCAL_CCFLAGS = ' -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las -flto'
+LOCAL_CCFLAGS = ' -funroll-loops -fpeel-loops -fgcse-sm -fgcse-las'
 group   = DefineGroup('Coremark', src, depend = ['RT_USING_COREMARK'], CPPPATH = CPPPATH, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
 
 Return('group')
