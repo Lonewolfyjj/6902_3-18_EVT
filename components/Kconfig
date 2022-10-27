@@ -47,4 +47,6 @@ source "$RTT_DIR/components/http/Kconfig"
 
 source "$RTT_DIR/components/ota/Kconfig"
 
+source "$RTT_DIR/components/aupipe/Kconfig"
+
 endmenu

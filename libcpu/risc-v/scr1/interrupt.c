@@ -23,6 +23,7 @@
 #endif
 
 static struct rt_irq_desc irq_desc[MAX_HANDLERS];
+static struct rt_irq_desc soft_irq_desc;
 
 extern void trap_entry();
 
@@ -103,6 +104,11 @@ static void m_ext_irq_init()
     set_csr(mie, MIP_MEIP);
 }
 
+static void m_soft_irq_init()
+{
+    set_csr(mie, MIP_MSIP);
+}
+
 static void m_ext_irq_handle(void)
 {
     rt_isr_handler_t isr_func;
@@ -125,6 +131,25 @@ static void m_ext_irq_handle(void)
 #ifdef RT_USING_INTERRUPT_INFO
     irq_desc[irq].counter ++;
 #endif
+}
+
+static void m_soft_irq_handle(void)
+{
+    rt_isr_handler_t isr_func;
+    void *param;
+
+    clear_csr(mie, MIP_MSIP);
+    /* get interrupt service routine */
+    isr_func = soft_irq_desc.handler;
+    param = soft_irq_desc.param;
+
+    /* turn to interrupt service routine */
+    isr_func(0, param);
+
+#ifdef RT_USING_INTERRUPT_INFO
+    soft_irq_desc.counter ++;
+#endif
+    set_csr(mie, MIP_MSIP);
 }
 
 static void SysTick_Handler(void)
@@ -230,7 +255,7 @@ void handle_trap(unsigned int i_mcause, unsigned int i_mepc, unsigned int i_sp)
             rt_kprintf("h_soft irq enter\n");
             break;
         case IRQ_M_SOFT:
-            rt_kprintf("m_soft irq enter\n");
+            m_soft_irq_handle();
             break;
         case IRQ_S_TIMER:
             rt_kprintf("s_timer irq enter\n");
@@ -325,6 +350,7 @@ void rt_hw_interrupt_init(void)
 {
     write_csr(mtvec, &trap_entry);
     m_ext_irq_init();
+    m_soft_irq_init();
 }
 
 void rt_hw_interrupt_mask(int vector)
@@ -358,6 +384,25 @@ rt_isr_handler_t rt_hw_interrupt_install(int vector, rt_isr_handler_t handler,
             irq_desc[vector].counter = 0;
 #endif
         }
+    }
+
+    return old_handler;
+}
+
+rt_isr_handler_t rt_soft_interrupt_install(rt_isr_handler_t handler,
+        void *param, const char *name)
+{
+    rt_isr_handler_t old_handler = RT_NULL;
+
+    old_handler = soft_irq_desc.handler;
+    if (handler != RT_NULL)
+    {
+        soft_irq_desc.handler = (rt_isr_handler_t)handler;
+        soft_irq_desc.param = param;
+#ifdef RT_USING_INTERRUPT_INFO
+        rt_snprintf(soft_irq_desc.name, RT_NAME_MAX - 1, "%s", name);
+        soft_irq_desc.counter = 0;
+#endif
     }
 
     return old_handler;

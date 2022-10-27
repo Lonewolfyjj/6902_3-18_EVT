@@ -17,7 +17,7 @@
 #include <rthw.h>
 #include "hal_base.h"
 
-#if defined(ARCH_ARM_CORTEX_M0) || defined(ARCH_ARM_CORTEX_M3) || defined(ARCH_ARM_CORTEX_M4) || defined(ARCH_ARM_CORTEX_M7)
+#if (defined(ARCH_ARM_CORTEX_M0) || defined(ARCH_ARM_CORTEX_M3) || defined(ARCH_ARM_CORTEX_M4) || defined(ARCH_ARM_CORTEX_M7)) && !defined(HAS_CUSTOME_INTC)
 
 #if EXT_INTERRUPT
 
@@ -140,15 +140,19 @@ static void rk_intc_unmask(uint32_t vector)
 
 #ifdef RT_USING_PROF_IRQ
 
+#ifndef TOTAL_INTERRUPTS
+#define TOTAL_INTERRUPTS NUM_INTERRUPTS
+#endif
+
 #define IRQ_AVG_COUNT  200
 
 struct irq_summry
 {
-    uint32_t count;
-    uint32_t start;
-    uint32_t time_total;
-    uint32_t time_avg;
-    uint32_t time_max;
+    uint64_t count;
+    uint64_t start;
+    uint64_t time_total;
+    uint64_t time_avg;
+    uint64_t time_max;
 };
 
 static struct irq_summry g_irq_prof[TOTAL_INTERRUPTS];
@@ -164,14 +168,15 @@ static void irq_enter_hook(void)
 
 static void irq_leave_hook(void)
 {
-    uint32_t time_cur, end, irq;
+    uint64_t time_cur, end;
+    uint32_t irq;
 
     irq = __get_IPSR() - 16;
     end = HAL_TIMER_GetCount(SYS_TIMER);
     if (end < g_irq_prof[irq].start)
-        end += PLL_INPUT_OSC_RATE;
-
-    time_cur = end - g_irq_prof[irq].start;
+        time_cur = end + (uint64_t) -1 - g_irq_prof[irq].start;
+    else
+        time_cur = end - g_irq_prof[irq].start;
     g_irq_prof[irq].time_total += time_cur;
     g_irq_prof[irq].time_max =
         g_irq_prof[irq].time_max > time_cur ? g_irq_prof[irq].time_max : time_cur;
@@ -183,22 +188,23 @@ static void irq_leave_hook(void)
     }
 }
 
-static void dump_irq_summry(int argc, char **argv)
+static void dump_irq_summary(int argc, char **argv)
 {
     uint32_t i;
 
+    rt_kprintf("---IRQ SUMMARY(the unit of time is us)---\n");
     rt_kprintf("IRQ    COUNT       AVG         MAX\n");
     for (i = 0; i < NUM_INTERRUPTS; i++)
     {
         rt_kprintf("%03d    %08d    %08d    %08d\n", i, g_irq_prof[i].count,
-                   g_irq_prof[i].time_avg,
-                   g_irq_prof[i].time_max);
+                   (uint32_t)(g_irq_prof[i].time_avg * 1000000 / PLL_INPUT_OSC_RATE),
+                   (uint32_t)(g_irq_prof[i].time_max * 1000000 / PLL_INPUT_OSC_RATE));
     }
 }
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-MSH_CMD_EXPORT(dump_irq_summry, dump irq summry);
+MSH_CMD_EXPORT(dump_irq_summary, dump irq summary);
 #endif
 
 #endif    /* end of RT_USING_PROF_IRQ */

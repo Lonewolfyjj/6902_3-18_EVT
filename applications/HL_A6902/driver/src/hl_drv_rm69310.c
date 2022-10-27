@@ -52,7 +52,7 @@
 #define X_DEVIATION 0
 #define Y_DEVIATION 4
 
-#define hl_util_delay_sys_ms rt_thread_delay
+#define hl_util_delay_sys_ms rt_thread_mdelay
 #define HL_PRINTF rt_kprintf
 
 /* page0 user cmd list */
@@ -448,15 +448,15 @@ static uint8_t hl_drv_rm69310_set_area(uint8_t x_start, uint8_t x_end, uint8_t y
 {
     uint8_t result = HL_SUCCESS;
 
-    if ((x_end <= x_start) || (x_end >= OLED_WIDTH)) {
-        HL_PRINTF("err: picture width err\r\n");
-        return HL_FAILED;
-    }
+    // if ((x_end <= x_start) || (x_end >= OLED_WIDTH)) {
+    //     HL_PRINTF("err: picture width err\r\n");
+    //     return HL_FAILED;
+    // }
 
-    if ((y_end <= y_start) || (y_end >= OLED_HEIGHT)) {
-        HL_PRINTF("err: picture height err\r\n");
-        return HL_FAILED;
-    }
+    // if ((y_end <= y_start) || (y_end >= OLED_HEIGHT)) {
+    //     HL_PRINTF("err: picture height err\r\n");
+    //     return HL_FAILED;
+    // }
 
     result = hl_drv_rm69310_write_cmd(RM69310_CMD_CASET);
     result |= hl_drv_rm69310_write_data(0x00);
@@ -679,7 +679,7 @@ static void hl_drv_rm69310_gpio_init(void)
     hl_util_delay_sys_ms(10);
 
     OLED_RST_L();
-    hl_util_delay_sys_ms(10);  // 10ms
+    hl_util_delay_sys_ms(100);  // 10ms
 
     OLED_RST_H();
     hl_util_delay_sys_ms(500);  // 400ms
@@ -927,14 +927,14 @@ uint8_t hl_drv_rm69310_display_write(uint8_t x_start, uint8_t x_end, uint8_t y_s
     column = x_end - x_start + 1;
     row    = y_end - y_start + 1;
 
-    if (HL_FAILED == hl_drv_rm69310_set_area(x_start, x_end, y_start, y_end)) {
+    if (HL_FAILED == hl_drv_rm69310_set_area(x_start, x_end, y_start, y_end + 1)) {
         HL_PRINTF("err: set area fail!\r\n");
         return HL_FAILED;
     }
 
     result = hl_drv_rm69310_start_write_mem();
 
-    if (HL_FAILED == hl_drv_rm69310_write_mem(p_pic, column * row * 2)) {
+    if (HL_FAILED == hl_drv_rm69310_write_mem(p_pic, column * (row + 1) * 2)) {
         HL_PRINTF("err: write memory fail!\r\n");
         return HL_FAILED;
     }

@@ -93,6 +93,10 @@ static int rt_rk816_init(void)
     if (i2c == RT_NULL)
         return -RT_EINVAL;
 
+    rt_kprintf("rk816 source: on=0x%02x, off=0x%02x\n",
+               pmic_read(i2c->bus, i2c->addr, ON_SOURCE_REG),
+               pmic_read(i2c->bus, i2c->addr, OFF_SOURCE_REG));
+
     for (i = 0; i < ARRAY_SIZE(init_reg); i++)
     {
         val = pmic_read(i2c->bus, i2c->addr, init_reg[i].reg);
@@ -116,5 +120,97 @@ static int rt_rk816_init(void)
 }
 
 INIT_DEVICE_EXPORT(rt_rk816_init);
+
+#if defined(RT_USING_FINSH) && defined(FINSH_USING_MSH)
+#define MAX_REG(x)      ((x) > 0xf2 ? 0xf2 : (x))
+
+static void show_reg(struct pwr_i2c_desc *i2c, uint32_t start, uint32_t end)
+{
+    uint32_t reg;
+    int num = 0;
+
+    start = MAX_REG(start);
+    end = MAX_REG(end);
+    rt_kprintf("%02x:  ", start);
+
+    for (reg = start; reg <= end; reg++)
+    {
+        if (num >= 16)
+        {
+            rt_kprintf("\n%02x:  ", reg);
+            num = 0;
+        }
+        num++;
+        rt_kprintf("%02x ", pmic_read(i2c->bus, i2c->addr, reg));
+    }
+    rt_kprintf("\n");
+}
+
+static int rk816_dbg(uint8_t argc, char **argv)
+{
+    struct pwr_i2c_desc *i2c;
+    uint32_t start, end, reg;
+    uint32_t val;
+    char *cmd;
+
+    i2c = pmic_get_i2c_desc();
+    if (i2c == RT_NULL)
+        return -RT_EINVAL;
+
+    if (argc == 1)
+    {
+        rt_kprintf("Usage example: \n"
+                   "    rk816_dbg r            - dump all\n"
+                   "    rk816_dbg r 0x10       - dump 0x10 address\n"
+                   "    rk816_dbg r 0x10 0x20  - dump 0x10~0x20 address"
+                   "    rk816_dbg w 0x10 0x55  - set 0x10 address as value 0x55");
+        return RT_EOK;
+    }
+
+    cmd = argv[1];
+    if (!rt_strncmp(cmd, "r", 1))
+    {
+        argc -= 2;
+        argv += 2;
+        if (argc == 0)
+        {
+            show_reg(i2c, 0x00, 0xf2);
+        }
+        else if (argc == 1)
+        {
+            reg = strtol(argv[0], NULL, 16);
+            show_reg(i2c, reg, reg);
+        }
+        else if (argc == 2)
+        {
+            start = strtol(argv[0], NULL, 16);
+            end = strtol(argv[1], NULL, 16);
+            show_reg(i2c, start, end);
+        }
+    }
+    else if (!rt_strncmp(cmd, "w", 1))
+    {
+        reg = strtol(argv[2], NULL, 16);
+        val = strtol(argv[3], NULL, 16);
+        if (reg > 0xf2)
+        {
+            rt_kprintf("error: 0x%02x > 0xf2(max)\n", reg);
+        }
+        else
+        {
+            rt_kprintf("write: 0x%02x 0x%02x\n", reg, val);
+            pmic_write(i2c->bus, i2c->addr, reg, val);
+        }
+    }
+    else
+    {
+        rt_kprintf("UNK CMD\n");
+    }
+
+    return RT_EOK;
+}
+
+MSH_CMD_EXPORT(rk816_dbg, read or write registers);
+#endif
 
 #endif

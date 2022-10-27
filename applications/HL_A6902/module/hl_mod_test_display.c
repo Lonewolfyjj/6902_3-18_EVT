@@ -5,7 +5,8 @@
 #include "hal_base.h"
 #include "hl_one_img.h"
 #include <rtdevice.h>
-#include "hl_drv_rm69310.h"
+// #include "hl_drv_rm69310.h"
+// #include "hl_mod_display_lvgl.h"
 
 #if (!HL_GET_DEVICE_TYPE())
 static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
@@ -115,10 +116,13 @@ int oled_test(int argc, char** argv)
     } else if (!strcmp(argv[1], "pc")) {
         hl_drv_rm69310_display_write(0, 239, 0, 119, gImage_hl_one_img);
     } else if (!strcmp(argv[1], "thread")) {
+        rt_kprintf("oled_test thread\r\n");
         hl_rx_oled_test_init();
     } else if (!strcmp(argv[1], "threaddel")) {
         
         hl_rx_oled_test_deinit();
+    } else if (!strcmp(argv[1], "lvgl_init")) {
+        // hl_mod_display_lvgl_init();
     } else {
         rt_kprintf("wrong parameter, please type: oled_test \r\n");
     }
@@ -137,7 +141,19 @@ static void screem_rgb_display(void)
         databuf[i] = now_color;
     }
 
-    hl_drv_rm69310_display_write(0, OLED_WIDTH - 1, 0, OLED_HEIGHT - 1, (const uint8_t*)databuf);
+    // hl_drv_rm69310_display_write(0, OLED_WIDTH - 1, 0, OLED_HEIGHT - 1, (const uint8_t*)databuf);
+    hl_drv_rm69310_display_write(0, 10, 0, 10, (const uint8_t*)databuf);
+
+    hl_drv_rm69310_display_write(200, 230, 80, 110, (const uint8_t*)databuf);
+
+    hl_drv_rm69310_display_write(120, 130, 60, 70, (const uint8_t*)databuf);
+
+    hl_drv_rm69310_display_write(140, 145, 20, 25, (const uint8_t*)databuf);
+
+    hl_drv_rm69310_display_write(15, 30, 100, 115, (const uint8_t*)databuf);
+
+    hl_drv_rm69310_display_write(OLED_WIDTH - 10, OLED_WIDTH - 1, 0, 10, (const uint8_t*)databuf);
+
     if (now_color == RGB565_RED) {
         now_color = RGB565_GREEN;
     } else if (now_color == RGB565_GREEN) {
@@ -205,7 +221,15 @@ static int hl_rx_oled_test_deinit(void)
     }
     return RT_EOK;
 }
-//INIT_APP_EXPORT(hl_rx_oled_test_init);
 
+static int spi_cfg_init(void)
+{
+    hl_drv_rm69310_init();
+    rt_thread_mdelay(100);
+    rt_kprintf("spi_cfg_init success \n\n");
+    return 0;
+}
+
+INIT_APP_EXPORT(spi_cfg_init);
 
 #endif
