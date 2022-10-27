@@ -44,17 +44,13 @@ menu "Enable UART"
         default y
 
     if RT_USING_UART
-    config RT_USING_UART0
-        bool "Enable UART0"
-        default n
-
-    config RT_USING_UART1
-        bool "Enable UART1"
-        default n
-
     config RT_USING_UART2
         bool "Enable UART2"
         default y
+
+    config RT_USING_UART4
+        bool "Enable UART4"
+        default n
     endif
 endmenu
 

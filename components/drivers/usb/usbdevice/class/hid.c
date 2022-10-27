@@ -32,8 +32,11 @@ struct hid_s
     int status;
     ALIGN(4) rt_uint16_t protocol;
     ALIGN(4) rt_uint8_t report_buf[MAX_REPORT_SIZE];
+    ALIGN(4) rt_uint8_t idle;
     struct rt_messagequeue hid_mq;
 };
+
+ALIGN(4) static struct uhid_descriptor hid_desc_buf;
 
 /* CustomHID_ConfigDescriptor */
 ALIGN(4)
@@ -459,9 +462,6 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
 
     struct hid_s *data = (struct hid_s *) func->user_data;
 
-    if(setup->wIndex != 0)
-        return -RT_EIO;
-
     switch (setup->bRequest)
     {
     case USB_REQ_GET_DESCRIPTOR:
@@ -471,8 +471,8 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         }
         else if((setup->wValue >> 8) == USB_DESC_TYPE_HID)
         {
-
-            rt_usbd_ep0_write(func->device, (void *)(&_hid_comm_desc.hid_desc), sizeof(struct uhid_descriptor));
+            rt_memcpy((void *)&hid_desc_buf, (void*)(&_hid_comm_desc.hid_desc), sizeof(struct uhid_descriptor));
+            rt_usbd_ep0_write(func->device, (void *)&hid_desc_buf, sizeof(struct uhid_descriptor));
         }
         break;
     case USB_HID_REQ_GET_REPORT:
@@ -486,8 +486,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         rt_usbd_ep0_write(func->device, data->report_buf,setup->wLength);
         break;
     case USB_HID_REQ_GET_IDLE:
-
-        dcd_ep0_send_status(func->device->dcd);
+        rt_usbd_ep0_write(func->device, &data->idle, 1);
         break;
     case USB_HID_REQ_GET_PROTOCOL:
         rt_usbd_ep0_write(func->device, &data->protocol,2);
@@ -500,6 +499,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         rt_usbd_ep0_read(func->device, data->report_buf, setup->wLength, _hid_set_report_callback);
         break;
     case USB_HID_REQ_SET_IDLE:
+        data->idle = setup->wValue >> 8;
         dcd_ep0_send_status(func->device->dcd);
         break;
     case USB_HID_REQ_SET_PROTOCOL:
@@ -661,6 +661,7 @@ static void rt_usb_hid_init(struct ufunction *func)
     hiddev->parent.write = _hid_write;
 #endif
     hiddev->func = func;
+    hiddev->idle = 1;
 
     rt_device_register(&hiddev->parent, "hidd", RT_DEVICE_FLAG_RDWR);
     rt_mq_init(&hiddev->hid_mq, "hiddmq", hid_mq_pool, sizeof(struct hid_report),

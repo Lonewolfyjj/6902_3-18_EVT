@@ -44,7 +44,7 @@ RT_WEAK RT_UNUSED void gmac0_iomux_config(void)
                          GPIO_PIN_A4 | /* gmac0_rxd3 */
                          GPIO_PIN_A6 | /* gmac0_rxclk */
                          GPIO_PIN_A7 | /* gmac0_txclk */
-                         GPIO_PIN_A5 | /* gmac0_rxclk */
+                         GPIO_PIN_A5,  /* gmac0_rxclk */
                          PIN_CONFIG_MUX_FUNC2);
 
     HAL_PINCTRL_SetIOMUX(GPIO_BANK2,
@@ -55,7 +55,7 @@ RT_WEAK RT_UNUSED void gmac0_iomux_config(void)
 
     HAL_PINCTRL_SetIOMUX(GPIO_BANK2,
                          GPIO_PIN_A7 | /* gmac0_txd3 */
-                         GPIO_PIN_A6 | /* gmac0_txd2 */
+                         GPIO_PIN_A6,  /* gmac0_txd2 */
                          PIN_CONFIG_MUX_FUNC2 | PIN_CONFIG_DRV_LEVEL2);
     HAL_PINCTRL_SetIOMUX(GPIO_BANK2,   /* gmac0_txclk */
                          PIN_CONFIG_MUX_FUNC2 | PIN_CONFIG_DRV_LEVEL1);
@@ -111,6 +111,19 @@ RT_WEAK RT_UNUSED void uart2_m0_iomux_config(void)
                          GPIO_PIN_D0 |
                          GPIO_PIN_D1,
                          PIN_CONFIG_MUX_FUNC1);
+}
+
+/**
+ * @brief  Config iomux m1 for UART4
+ */
+RT_WEAK RT_UNUSED void uart4_m1_iomux_config(void)
+{
+    /* UART4 M1 RX-3B1 TX-3B2 */
+    HAL_PINCTRL_SetIOMUX(GPIO_BANK3,
+                         GPIO_PIN_B1 |
+                         GPIO_PIN_B2,
+                         PIN_CONFIG_MUX_FUNC4);
+    HAL_PINCTRL_IOFuncSelForUART4(IOFUNC_SEL_M1);
 }
 
 /**
