@@ -181,7 +181,33 @@
 /* Using USB */
 
 /* RT_USING_USB_HOST is not set */
-/* RT_USING_USB_DEVICE is not set */
+#define RT_USING_USB_DEVICE
+#define RT_USBD_THREAD_STACK_SZ 4096
+#define USB_VENDOR_ID 0x0FFE
+#define USB_PRODUCT_ID 0x0001
+#define RT_USB_DEVICE_COMPOSITE
+/* _RT_USB_DEVICE_NONE is not set */
+/* _RT_USB_DEVICE_CDC is not set */
+/* _RT_USB_DEVICE_MSTORAGE is not set */
+/* _RT_USB_DEVICE_HID is not set */
+/* _RT_USB_DEVICE_WINUSB is not set */
+/* _RT_USB_DEVICE_UAC1 is not set */
+/* _RT_USB_DEVICE_UVC is not set */
+/* RT_USB_DEVICE_CDC is not set */
+#define RT_USB_DEVICE_NONE
+#define RT_USB_DEVICE_MSTORAGE
+#define RT_USB_DEVICE_HID
+/* RT_USB_DEVICE_WINUSB is not set */
+/* RT_USB_DEVICE_UAC1 is not set */
+/* RT_USB_DEVICE_UVC is not set */
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
+/* RT_USB_DEVICE_HID_KEYBOARD is not set */
+/* RT_USB_DEVICE_HID_MOUSE is not set */
+#define RT_USB_DEVICE_HID_GENERAL
+#define RT_USB_DEVICE_HID_GENERAL_OUT_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_GENERAL_IN_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_MEDIA
 
 /* POSIX layer and C standard library */
 
