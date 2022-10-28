@@ -27,11 +27,6 @@
 #include "hl_config.h"
 
 /* Vendor suggest the startup delay should >100ms */
-#define PA_CTL_DELAY_MS 120
-#define NAU88L25B_PA_GPIO_BANK PA_GPIO_BANK
-#define NAU88L25B_PA_GPIO PA_GPIO
-#define NAU88L25B_PA_PIN PA_PIN
-#define NAU88L25B_PA_PIN_FUNC_GPIO PA_PIN_FUNC_GPIO
 
 #define UAN88L25B_REG_SOFT_WARE_RST (0x0000)
 #define UAN88L25B_REG_ENA_CTRL (0x0001)
@@ -127,6 +122,7 @@ typedef struct _NAU88L25B_REG_T
 } NAU88L25B_REG_T;
 
 static struct rt_mutex lock;
+struct nau88l25b_priv* nau88l25b_test = NULL;
 
 #define HL_CODEC_SET 0
 //#define RT_CODEC_NAU88L21 1
@@ -141,13 +137,13 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x001C, 0x000A }, { 0x001D, 0x1015 }, { 0x001E, 0x0000 }, { 0x001F, 0x0000 }, { 0x0020, 0x0000 },
     { 0x0021, 0x0000 }, { 0x0022, 0x0000 }, { 0x0023, 0x0000 }, { 0x0024, 0x0000 }, { 0x0025, 0x0000 },
     { 0x0026, 0x0000 }, { 0x0027, 0x0000 }, { 0x0028, 0x0000 }, { 0x0029, 0x0000 }, { 0x002A, 0x0000 },
-    { 0x002B, 0x00D2 }, { 0x002C, 0x0080 }, { 0x002D, 0x0000 }, { 0x002F, 0x0000 }, { 0x0030, 0x00C5 },//0x00CF },  //
+    { 0x002B, 0x00D2 }, { 0x002C, 0x0080 }, { 0x002D, 0x0000 }, { 0x002F, 0x0000 }, { 0x0030, 0x00CB }, //0x00C5 }, 老链路 // 0x00CB },外置mic // 0x00CF },内置mic 
     { 0x0031, 0x0004 }, { 0x0032, 0x3000 }, { 0x0033, 0x0000 }, { 0x0034, 0x0200 }, { 0x0038, 0x1486 },
     { 0x0039, 0x0F12 }, { 0x003A, 0x25FF }, { 0x003B, 0x3457 }, { 0x0045, 0x1486 }, { 0x0046, 0x0F12 },
     { 0x0047, 0x25F9 }, { 0x0048, 0x3457 }, { 0x004C, 0x0000 }, { 0x0050, 0x2007 }, { 0x0051, 0x0000 },
     { 0x0055, 0x0000 }, { 0x0058, 0x1A14 }, { 0x0059, 0x00FF }, { 0x0066, 0x0060 }, { 0x0068, 0xC300 },
     { 0x0069, 0x0000 }, { 0x006A, 0x0083 }, { 0x0071, 0x0011 }, { 0x0072, 0x0160 }, { 0x0073, 0x002C },
-    { 0x0074, 0x4107 }, { 0x0076, 0x3140 }, { 0x0077, 0x0000 }, { 0x007F, 0x413F },//0x433F },  //
+    { 0x0074, 0x4107 }, { 0x0076, 0x3140 }, { 0x0077, 0x0000 }, { 0x007F, 0x413F },  //0x413F }, 老链路 //0x413F }, 外置mic // 0x443F },内置mic 
     { 0x0080, 0x0420 }, { 0x0081, 0x0008 }, { 0x0082, 0x0460 },
 #else
     { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(RX)
@@ -160,13 +156,16 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0021, 0x0000 }, { 0x0022, 0x0000 }, { 0x0023, 0x0000 }, { 0x0024, 0x0000 }, { 0x0025, 0x0000 },
     { 0x0026, 0x0000 }, { 0x0027, 0x0000 }, { 0x0028, 0x0000 }, { 0x0029, 0x0000 }, { 0x002A, 0x0000 },
     { 0x002B, 0x00D2 }, { 0x002C, 0x0080 }, { 0x002D, 0x0000 }, { 0x002F, 0x0000 }, { 0x0030, 0x0000 },
-    { 0x0031, 0x1004 }, { 0x0032, 0x0082 }, { 0x0033, 0x00CF }, { 0x0034, 0x02CF }, { 0x0038, 0x1486 },
-    { 0x0039, 0x0F12 }, { 0x003A, 0x25FF }, { 0x003B, 0x3457 }, { 0x0045, 0x1486 }, { 0x0046, 0x0F12 },
-    { 0x0047, 0x25F9 }, { 0x0048, 0x3457 }, { 0x004C, 0x0000 }, { 0x0050, 0x2007 }, { 0x0051, 0x0000 },
-    { 0x0055, 0x0000 }, { 0x0058, 0x1A14 }, { 0x0059, 0x00FF }, { 0x0066, 0x0060 }, { 0x0068, 0xC300 },
-    { 0x0069, 0x0000 }, { 0x006A, 0x008F }, { 0x0071, 0x0011 }, { 0x0072, 0x0160 }, { 0x0073, 0x332C },
-    { 0x0074, 0x4107 }, { 0x0076, 0x3140 }, { 0x0077, 0x0002 }, { 0x007F, 0x013F }, { 0x0080, 0x0420 },
-    { 0x0081, 0x0008 }, { 0x0082, 0x0060 },
+    { 0x0031, 0x1004 }, { 0x0032, 0x0208 },// //0x0082 }, 老链路 //0x0208 }, 新链路
+    { 0x0033, 0x00CF }, //0x00BF }, 老链路 //0x00CF }, 新链路
+    { 0x0034, 0x02CF }, //0x02BF }, 老链路 //0x02CF }, 新链路
+    { 0x0038, 0x1486 }, { 0x0039, 0x0F12 }, { 0x003A, 0x25FF }, { 0x003B, 0x3457 }, { 0x0045, 0x1486 },
+    { 0x0046, 0x0F12 }, { 0x0047, 0x25F9 }, { 0x0048, 0x3457 }, { 0x004C, 0x0000 }, { 0x0050, 0x2007 },
+    { 0x0051, 0x0000 }, { 0x0055, 0x0000 }, { 0x0058, 0x1A14 }, { 0x0059, 0x00FF }, { 0x0066, 0x0060 },
+    { 0x0068, 0xC300 }, { 0x0069, 0x0000 }, { 0x006A, 0x008F }, { 0x0071, 0x0011 }, { 0x0072, 0x0160 },
+    { 0x0073, 0x332C }, { 0x0074, 0x4107 }, { 0x0076, 0x3140 }, { 0x0077, 0x0002 }, { 0x007F, 0x013F },
+    { 0x0080, 0x0420 }, { 0x0081, 0x0008 }, { 0x0082, 0x0060 },
+
 #endif
 };
 
@@ -242,13 +241,6 @@ static rt_err_t es_rd_reg(struct rt_i2c_client* i2c_client, uint16_t reg16, uint
 
 static rt_err_t es_pa_ctl(bool on)
 {
-    if (on) {
-        HAL_GPIO_SetPinLevel(NAU88L25B_PA_GPIO, NAU88L25B_PA_PIN, GPIO_HIGH);
-        rt_thread_mdelay(PA_CTL_DELAY_MS);
-    } else {
-        HAL_GPIO_SetPinLevel(NAU88L25B_PA_GPIO, NAU88L25B_PA_PIN, GPIO_LOW);
-    }
-
     return RT_EOK;
 }
 
@@ -268,26 +260,128 @@ err:
     return ret;
 }
 
-static rt_err_t nau88l25b_set_gain(struct nau88l25b_priv* nau88l25b, int gain)
+static rt_err_t nau88l25b_set_gain_pga(struct nau88l25b_priv* nau88l25b, int gain)
 {
-    uint16_t reg_gain  = 0x00;
+    rt_err_t ret = RT_EOK;
 
-    if (gain < -103) // 小于103则默认mute
+#if HL_GET_DEVICE_TYPE()
+    uint16_t reg_gain = 0x00;
+    uint16_t val = 0x00;
+
+    ret |= es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_POWER_UP_CONTROL, &val);
+    if(ret != RT_EOK) {
+        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
+        return ret;
+    }
+
+    if (gain < -1)  // 小于103则默认mute
+        reg_gain = 0x00;
+    else if (gain > 36)
+        reg_gain = 0x25;
+    else
+        reg_gain = gain + 1;
+
+    reg_gain = (val & (~0x3F00)) | ((reg_gain<<8) & 0x3F00); // 0x3F00表示Right PGA Gain Control
+    ret |= es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_POWER_UP_CONTROL, reg_gain);
+#else
+    uint16_t reg_gain = 0x00;
+    uint16_t val = 0x00;
+
+    ret |= es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_HSVOL_CTRL, &val);
+    if(ret != RT_EOK) {
+        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
+        return ret;
+    }
+
+    rt_kprintf("gain: (%d)\n", gain);
+    if (gain < -53)  // 小于103则默认mute
+        reg_gain = -53;
+    else if (gain > 0)
+        reg_gain = 0;
+    else
+        reg_gain = -gain; 
+
+    
+
+    reg_gain = (val & (~0x0FFF)) | ((reg_gain<<6) & 0x0FA0) | (reg_gain & 0x003F); // Left/Right  Channel Headphone Driver Volume Control
+    ret |= es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_HSVOL_CTRL, reg_gain);
+#endif
+    return ret;
+}
+
+static rt_err_t nau88l25b_set_gain_volume(struct nau88l25b_priv* nau88l25b, int gain)
+{
+    rt_err_t ret = RT_EOK;
+    
+#if HL_GET_DEVICE_TYPE()
+    uint16_t reg_gain = 0x00;
+    uint16_t val      = 0x00;
+
+    ret |= es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_ADC_DGAIN_CTRL, &val);
+    if(ret != RT_EOK) {
+        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
+        return ret;
+    }
+
+    if (gain < -103)  // 小于103则默认mute
         reg_gain = 0x00;
     else if (gain > 24)
         reg_gain = 0xFF;
     else
         reg_gain = (gain * 2) + 207;
 
-    es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACL_CTRL, reg_gain);
-    es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACR_CTRL, reg_gain);
+    reg_gain = (val & (~0x00FF)) | (reg_gain & 0x00FF);  //寄存器赋值
 
-    return RT_EOK;
+    ret |= es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_ADC_DGAIN_CTRL, reg_gain);
+#else
+    uint16_t reg_gain = 0x00, reg_gain_L = 0x00, reg_gain_R = 0x00;
+    uint16_t val_L = 0x00, val_R = 0x00;
+
+    ret |= es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACL_CTRL, &val_L);
+    ret |= es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACR_CTRL, &val_R);
+    if(ret != RT_EOK) {
+        rt_kprintf("ERR: %s: failed: (%d)\n", __func__, ret);
+        return ret;
+    }
+
+    if (gain < -103)  // 小于103则默认mute
+        reg_gain = 0x00;
+    else if (gain > 24)
+        reg_gain = 0xFF;
+    else
+        reg_gain = (gain * 2) + 207;
+
+    reg_gain_L = (val_L & (~0x00FF)) | (reg_gain & 0x00FF);
+    reg_gain_R = (val_R & (~0x00FF)) | (reg_gain & 0x00FF);
+    ret |= es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACL_CTRL, reg_gain_L);
+    ret |= es_wr_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACR_CTRL, reg_gain_R);
+#endif
+    return ret;
 }
 
-static rt_err_t nau88l25b_get_gain(struct nau88l25b_priv* nau88l25b, int *gain)
+static rt_err_t nau88l25b_set_gain(struct audio_codec *codec, eAUDIO_streamType stream, struct AUDIO_DB_CONFIG *dBConfig)
 {
-    unsigned short         val, volume;
+    struct nau88l25b_priv* nau88l25b = to_nau88l25b_priv(codec);
+    int                    wl;
+    rt_err_t               ret = RT_EOK;
+
+    /* Codec Driver Volume Control */
+    if(dBConfig->ch == 0) {
+        ret |= nau88l25b_set_gain_pga(nau88l25b, dBConfig->dB);
+    } else {
+        ret |= nau88l25b_set_gain_volume(nau88l25b, dBConfig->dB);
+    }        
+
+    if (ret != RT_EOK)
+        rt_kprintf("ERR: %s, something wrong: %d\n", __func__, ret);
+
+    return ret;
+}
+
+
+static rt_err_t nau88l25b_get_gain(struct nau88l25b_priv* nau88l25b, int* gain)
+{
+    unsigned short val, volume;
 
     es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACL_CTRL, &val);
     es_rd_reg(nau88l25b->i2c_client, UAN88L25B_REG_DACR_CTRL, &val);
@@ -389,8 +483,6 @@ static rt_err_t nau88l25b_config(struct audio_codec* codec, eAUDIO_streamType st
     return ret;
 }
 
-
-
 static rt_err_t nau88l25b_start(struct audio_codec* codec, eAUDIO_streamType stream)
 {
     struct nau88l25b_priv* nau88l25b = to_nau88l25b_priv(codec);
@@ -459,6 +551,8 @@ int rt_hw_codec_nau88l25b_init(void)
     nau88l25b->codec.id                = (uint32_t)codec_dev;
     nau88l25b->work_cnt                = 0;
 
+    nau88l25b_test = nau88l25b;
+
     ret |= rk_audio_register_codec(&nau88l25b->codec);
     if (ret != RT_EOK) {
         rt_kprintf("ERR: %s, something wrong: %d\n", __func__, ret);
@@ -480,5 +574,60 @@ err:
 }
 
 INIT_DEVICE_EXPORT(rt_hw_codec_nau88l25b_init);
+
+int hl_nau88l25_test(int argc, char** argv)
+{
+    uint16_t nau88l25_param[2] = {0}; 
+
+    if (argc <= 1) {
+        rt_kprintf("wrong parameter, please type: hl_nau88l25_test [ read | write ] [reg] [value] \r\n");
+        return 0;
+    }    
+    
+    if (!strcmp("read", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test read [reg] \r\n");
+            return 0;
+        }
+        nau88l25_param[0] = (uint16_t) atoi(argv[2]);
+        es_rd_reg(nau88l25b_test->i2c_client, nau88l25_param[0], &nau88l25_param[1]);
+        rt_kprintf("nau88l25  reg:[0x%04x] value[0x%04x]\r\n", nau88l25_param[0], nau88l25_param[1]);
+    } else if (!strcmp("write", argv[1])) {
+        if (argc <= 3) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test write [reg] [value] \r\n");
+            return 0;
+        }
+        nau88l25_param[0] = (uint16_t) atoi(argv[2]);
+        nau88l25_param[1] = (uint16_t) atoi(argv[3]);
+        es_wr_reg(nau88l25b_test->i2c_client, nau88l25_param[0], nau88l25_param[1]);
+    } else if (!strcmp("volume", argv[1])) {
+        if (argc <= 3) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test volume [ch] [gain] \r\n");
+            return 0;
+        }
+        nau88l25_param[0] = (uint16_t) atoi(argv[2]);
+        nau88l25_param[1] = (uint16_t) atoi(argv[3]);
+        if(nau88l25_param[0] == 0) {
+            nau88l25b_set_gain_pga(nau88l25b_test, nau88l25_param[1]);
+        } else {
+            nau88l25b_set_gain_volume(nau88l25b_test, nau88l25_param[1]);
+        }  
+    } else {        
+        rt_kprintf("wrong parameter, please type: hl_nau88l25_test cmd error\r\n");
+        return 0;
+    }
+
+    return 0;
+}
+
+
+#ifdef RT_USING_FINSH
+
+#include <finsh.h>
+
+MSH_CMD_EXPORT(hl_nau88l25_test, nau88l25 reg ctrl cmd);
+
+#endif
+
 
 #endif

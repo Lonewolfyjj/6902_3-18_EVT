@@ -92,6 +92,7 @@ struct playback_config
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
+//"pdmc" "codecc"
 #if HL_GET_DEVICE_TYPE()
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wifip"
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecc"
@@ -188,12 +189,17 @@ static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
 
 static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t* s_record_size)
 {
-    close(p_file_audio);
+    if(*s_record_size < 86400000) {
+        return;
+    }
 
+    close(p_file_audio);
+    // 文件名改变 file_name
     p_file_audio = open(file_name, O_WRONLY | O_CREAT);
     if (!p_file_audio) {
         rt_kprintf("%s:Unable to create file '%s'\n", __func__, file_name);
         hl_mod_audio_record_stop(p_file_audio, s_record_size);
+        *s_record_size = 0x00;
         return;
     }
 }
@@ -396,10 +402,10 @@ static void do_record_audio(void* arg)
     char*    record_buffer1;
     uint32_t record_size1;
 
-    record_size   = dsp_config->buffer_size_b24_1ch * 10;  
+    record_size   = dsp_config->buffer_size_b24_1ch * 57;  
     record_buffer = rt_malloc(record_size);
 
-    record_size1   = dsp_config->buffer_size_b24_1ch * 10; 
+    record_size1   = dsp_config->buffer_size_b24_1ch * 57; 
     record_buffer1 = rt_malloc(record_size);
     
     while (1) {
@@ -414,7 +420,7 @@ static void do_record_audio(void* arg)
 
             if (rt_ringbuffer_data_len(s_record_bypass_rb) >= record_size1) {
                 rt_ringbuffer_get(s_record_bypass_rb, record_buffer1, record_size1);
-                hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_after_size);
+                hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_bypass_size);
             }
         }
         
@@ -435,6 +441,7 @@ static void do_record_audio(void* arg)
     }
 }
 #endif
+
 
 static void do_write_audio(void* arg)
 {
@@ -566,11 +573,11 @@ static void do_read_audio(void* arg)
 
         hl_drv_rk_xtensa_dsp_transfer();
 
-        if ((rt_ringbuffer_space_len(s_audio_rb) >= cap_size) && (s_audio_switch == 1)) {
-            rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_out_buffer_b32_2ch, dsp_config->process_size);
-        } else {
-            rt_kprintf("rt_ringbuffer_get_size(s_audio_rb) =  %d", rt_ringbuffer_get_size(s_audio_rb));
+        if (rt_device_write(ply_config->card, 0, dsp_config->audio_process_out_buffer_b32_2ch, ply_config->period_size)
+            <= 0) {
+            rt_kprintf("Error playing sample\n");
         }
+
 
 #if HL_GET_DEVICE_TYPE()        
         if (s_record_switch == 1) {
@@ -616,8 +623,6 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     ///
     hl_hal_gpio_init(GPIO_MIC_SW);
     hl_hal_gpio_high(GPIO_MIC_SW);
-    temp = 0;
-    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &temp, 1);
 #else
     hl_hal_gpio_init(GPIO_AMP_EN);
     hl_hal_gpio_high(GPIO_AMP_EN);
@@ -631,20 +636,22 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     RT_ASSERT(s_audio_rb != RT_NULL);
 
 #if HL_GET_DEVICE_TYPE()
-    s_record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 30);
+    s_record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
     RT_ASSERT(s_record_after_rb != RT_NULL);
 
-    s_record_bypass_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 30);
+    s_record_bypass_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
     RT_ASSERT(s_record_bypass_rb != RT_NULL);
 #endif
 
-    audio_tid = rt_thread_create("audio_read", do_read_audio, RT_NULL, 2048, 5, 1);  //
+    audio_tid = rt_thread_create("audio_read", do_read_audio, RT_NULL, 2048, 0, 1);  //
     if (audio_tid)
         rt_thread_startup(audio_tid);
 
+#if 0
     audio_tid = rt_thread_create("audio_write", do_write_audio, RT_NULL, 2048, 5, 1);  //
     if (audio_tid)
         rt_thread_startup(audio_tid);
+#endif
 
 #if HL_GET_DEVICE_TYPE()
     record_tid = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);  //
