@@ -56,7 +56,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_port_disp_init(void)
+lv_disp_t * lv_port_disp_init(void)
 {
     /*-------------------------
      * Initialize your display
@@ -127,14 +127,14 @@ void lv_port_disp_init(void)
 
     /*Required for Example 3)*/
     //disp_drv.full_refresh = 1;
-
+    disp_drv.sw_rotate = 1;
     /* Fill a memory array with a color if you have GPU.
      * Note that, in lv_conf.h you can enable GPUs that has built-in support in LVGL.
      * But if you have a different GPU you can use with this callback.*/
     //disp_drv.gpu_fill_cb = gpu_fill;
 
     /*Finally register the driver*/
-    lv_disp_drv_register(&disp_drv);
+    return lv_disp_drv_register(&disp_drv);
 }
 
 /**********************

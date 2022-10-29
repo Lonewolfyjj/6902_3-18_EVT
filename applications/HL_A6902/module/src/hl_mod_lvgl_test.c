@@ -7,15 +7,17 @@
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
 
+// extern const lv_img_dsc_t test_pic;
+
 static rt_thread_t lvgl_tid1 = RT_NULL, lvgl_tid2 = RT_NULL, lvgl_tid3 = RT_NULL;
 static lv_obj_t *scr,*btn_1,*btn_label,*btn_label1;
 static lv_style_t h_style,style_2;
 static lv_fs_drv_t *test_f;
-
+static lv_disp_t * ptr = RT_NULL;
 static int hl_mod_lvgl_init(void)
 {
     lv_init();
-    lv_port_disp_init();
+    ptr = lv_port_disp_init();
     lv_port_indev_init();
     return 0;
 }
@@ -80,18 +82,24 @@ static void hl_mod_lvgl_thread_timer(void* parameter)
     }
 }
 
-static void hl_mod_lvgl_thread_file(void* parameter)
+static void hl_mod_lvgl_thread_picture(void* parameter)
 {
-    uint16_t i = 0;
-    FILE *f;
-    test_f = lv_fs_get_drv(LV_FS_STDIO_LETTER);
+    // FILE *f;
+    // test_f = lv_fs_get_drv(LV_FS_STDIO_LETTER);
     // f = fopen("/mnt/sdcard/lvgl/test.txt","w");
-    f = test_f->open_cb(RT_NULL,"test.lvgl",LV_FS_MODE_WR);
+    // f = test_f->open_cb(RT_NULL,"test.txt",LV_FS_MODE_WR);
+    LV_IMG_DECLARE(test_pic);
+    lv_obj_t *pic = lv_img_create(scr);
+    lv_img_set_src(pic,&test_pic);
+    lv_obj_align(pic,LV_ALIGN_BOTTOM_RIGHT,0,0);
     while(1)
     {
         // f = test_f.open_cb(RT_NULL,"./test.txt",LV_FS_MODE_WR | LV_FS_MODE_RD);
         // test_f.seek_cb(RT_NULL,f,0,LV_FS_SEEK_END);
-        rt_thread_mdelay(LV_INDEV_DEF_READ_PERIOD);
+        rt_thread_mdelay(3000);
+        lv_disp_set_rotation(ptr, LV_DISP_ROT_180);
+        rt_thread_mdelay(3000);
+        lv_disp_set_rotation(ptr, LV_DISP_ROT_NONE);
     }
 }
 
@@ -102,7 +110,7 @@ static int lvgl_test_thread(int argc, char** argv)
 
     lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x200, 18, 10);
 
-    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_file, RT_NULL, 0xA00, 18, 10);
+    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xA00, 18, 10);
 
     if (lvgl_tid1 != RT_NULL) {
         rt_kprintf("Lvgl thread 1 init success !\n");
