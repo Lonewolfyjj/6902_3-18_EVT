@@ -109,7 +109,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_init(GPIO_AMP_EN);
 
     hl_hal_gpio_high(GPIO_PWR_EN);
-    hl_hal_gpio_high(GPIO_USB_SW);
+    hl_hal_gpio_low(GPIO_USB_SW);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_ATS_PWR_EN);
     hl_hal_gpio_low(GPIO_AMP_EN);

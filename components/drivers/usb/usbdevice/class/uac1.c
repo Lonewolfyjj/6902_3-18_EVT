@@ -22,6 +22,7 @@
 #include "dma.h"
 #include "rk_audio.h"
 #include "drv_heap.h"
+#include <ipc/ringbuffer.h>
 
 #define F_AUDIO_NUM_INTERFACES      2 /* Number of streaming interfaces */
 #define USB_OUT_IT_ID               1
@@ -95,6 +96,9 @@ enum msg_type
     MSG_START,
     MSG_STOP,
 };
+
+struct rt_ringbuffer* g_host2dev_rb = RT_NULL;
+struct rt_ringbuffer* g_dev2host_rb = RT_NULL;
 
 struct usb_audio_buf
 {
@@ -1417,71 +1421,75 @@ static rt_err_t _ep0_set_sample_rate_handler(udevice_t device, rt_size_t size)
     return ret;
 }
 
+// static void _ep_out_data_handler(const void *buffer, const rt_size_t size, struct audio_play *p)
+// {
+//     struct usb_audio_buf *pbuf;
+//     rt_size_t remain_size = 0;
+//     char *dst = NULL;
+//     rt_uint32_t msg;
+//     rt_err_t ret;
+
+//     /* list don't need protect here since this callback is in ISR */
+
+//     if (rt_list_isempty(&p->free_list))
+//     {
+//         rt_kprintf("playback free_list is empty\n");
+//         /* TODO */
+//         return;
+//     }
+
+//     pbuf = rt_list_first_entry(&p->free_list, struct usb_audio_buf, list);
+//     dst = pbuf->buffer;
+
+//     if (p->total_size - p->recv_size >= size)
+//     {
+//         rt_memcpy(dst + p->recv_size, buffer, size);
+//         p->recv_size += size;
+//     }
+//     else if (p->total_size - p->recv_size > 0)
+//     {
+//         rt_memcpy(dst + p->recv_size, buffer, p->total_size - p->recv_size);
+//         remain_size = size - (p->total_size - p->recv_size);
+//         p->recv_size = p->total_size;
+//     }
+
+//     if (p->total_size == p->recv_size)
+//     {
+//         rt_list_remove(&pbuf->list);
+//         rt_list_insert_before(&p->ready_list, &pbuf->list);
+
+//         msg = MSG_DATA_NOTIFY;
+//         ret = rt_mb_send(&p->mb, msg);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("%s: mb send fail\n", __func__);
+//             /* TODO */
+//         }
+
+//         p->recv_size = 0;
+//     }
+
+//     if (remain_size)
+//     {
+//         if (rt_list_isempty(&p->free_list))
+//         {
+//             rt_kprintf("playback free_list is empty for remain size\n");
+//             return;
+//         }
+
+//         pbuf = rt_list_first_entry(&p->free_list, struct usb_audio_buf, list);
+//         dst = pbuf->buffer;
+
+//         if (p->total_size - p->recv_size >= remain_size)
+//         {
+//             rt_memcpy(dst, (char *)buffer + size - remain_size, remain_size);
+//             p->recv_size = remain_size;
+//         }
+//     }
+// }
 static void _ep_out_data_handler(const void *buffer, const rt_size_t size, struct audio_play *p)
 {
-    struct usb_audio_buf *pbuf;
-    rt_size_t remain_size = 0;
-    char *dst = NULL;
-    rt_uint32_t msg;
-    rt_err_t ret;
-
-    /* list don't need protect here since this callback is in ISR */
-
-    if (rt_list_isempty(&p->free_list))
-    {
-        rt_kprintf("playback free_list is empty\n");
-        /* TODO */
-        return;
-    }
-
-    pbuf = rt_list_first_entry(&p->free_list, struct usb_audio_buf, list);
-    dst = pbuf->buffer;
-
-    if (p->total_size - p->recv_size >= size)
-    {
-        rt_memcpy(dst + p->recv_size, buffer, size);
-        p->recv_size += size;
-    }
-    else if (p->total_size - p->recv_size > 0)
-    {
-        rt_memcpy(dst + p->recv_size, buffer, p->total_size - p->recv_size);
-        remain_size = size - (p->total_size - p->recv_size);
-        p->recv_size = p->total_size;
-    }
-
-    if (p->total_size == p->recv_size)
-    {
-        rt_list_remove(&pbuf->list);
-        rt_list_insert_before(&p->ready_list, &pbuf->list);
-
-        msg = MSG_DATA_NOTIFY;
-        ret = rt_mb_send(&p->mb, msg);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("%s: mb send fail\n", __func__);
-            /* TODO */
-        }
-
-        p->recv_size = 0;
-    }
-
-    if (remain_size)
-    {
-        if (rt_list_isempty(&p->free_list))
-        {
-            rt_kprintf("playback free_list is empty for remain size\n");
-            return;
-        }
-
-        pbuf = rt_list_first_entry(&p->free_list, struct usb_audio_buf, list);
-        dst = pbuf->buffer;
-
-        if (p->total_size - p->recv_size >= remain_size)
-        {
-            rt_memcpy(dst, (char *)buffer + size - remain_size, remain_size);
-            p->recv_size = remain_size;
-        }
-    }
+    rt_ringbuffer_put_force(g_host2dev_rb, buffer, size);
 }
 
 static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
@@ -1521,58 +1529,68 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
     return RT_EOK;
 }
 
+// static void _ep_in_data_handler(void *buffer, const rt_size_t size, struct audio_capture *c)
+// {
+//     struct usb_audio_buf *cbuf;
+//     rt_uint32_t msg;
+//     rt_err_t ret;
+
+//     /* list don't need protect here since this callback is in ISR */
+
+//     if (rt_list_len(&c->ready_list) >= 2)
+//     {
+//         cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
+//         if (C_TOTAL_SIZE - c->send_size >= size)
+//         {
+//             rt_memcpy(buffer, cbuf->buffer + c->send_size, size);
+//             c->send_size += size;
+//             if (c->send_size == C_TOTAL_SIZE)
+//             {
+//                 rt_list_remove(&cbuf->list);
+//                 rt_list_insert_before(&c->free_list, &cbuf->list);
+//                 c->send_size = 0;
+//                 msg = MSG_DATA_NOTIFY;
+//                 ret = rt_mb_send(&c->mb, msg);
+//                 if (ret != RT_EOK)
+//                 {
+//                     rt_kprintf("%s: mb send fail\n", __func__);
+//                     /* TODO */
+//                 }
+//             }
+//         }
+//         else
+//         {
+//             rt_size_t temp = C_TOTAL_SIZE - c->send_size;
+//             rt_memcpy(buffer, cbuf->buffer + c->send_size, temp);
+//             rt_list_remove(&cbuf->list);
+//             rt_list_insert_before(&c->free_list, &cbuf->list);
+//             c->send_size = 0;
+//             msg = MSG_DATA_NOTIFY;
+//             ret = rt_mb_send(&c->mb, msg);
+//             if (ret != RT_EOK)
+//             {
+//                 rt_kprintf("%s: mb send fail\n", __func__);
+//                 /* TODO */
+//             }
+
+//             cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
+//             rt_memcpy((char *)buffer + temp, cbuf->buffer, size - temp);
+//             c->send_size = size - temp;
+//         }
+//     }
+//     else
+//     {
+//         rt_memset(buffer, 0, size);
+//     }
+// }
+
 static void _ep_in_data_handler(void *buffer, const rt_size_t size, struct audio_capture *c)
 {
-    struct usb_audio_buf *cbuf;
-    rt_uint32_t msg;
-    rt_err_t ret;
+    rt_size_t data_size;
 
-    /* list don't need protect here since this callback is in ISR */
-
-    if (rt_list_len(&c->ready_list) >= 2)
-    {
-        cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
-        if (C_TOTAL_SIZE - c->send_size >= size)
-        {
-            rt_memcpy(buffer, cbuf->buffer + c->send_size, size);
-            c->send_size += size;
-            if (c->send_size == C_TOTAL_SIZE)
-            {
-                rt_list_remove(&cbuf->list);
-                rt_list_insert_before(&c->free_list, &cbuf->list);
-                c->send_size = 0;
-                msg = MSG_DATA_NOTIFY;
-                ret = rt_mb_send(&c->mb, msg);
-                if (ret != RT_EOK)
-                {
-                    rt_kprintf("%s: mb send fail\n", __func__);
-                    /* TODO */
-                }
-            }
-        }
-        else
-        {
-            rt_size_t temp = C_TOTAL_SIZE - c->send_size;
-            rt_memcpy(buffer, cbuf->buffer + c->send_size, temp);
-            rt_list_remove(&cbuf->list);
-            rt_list_insert_before(&c->free_list, &cbuf->list);
-            c->send_size = 0;
-            msg = MSG_DATA_NOTIFY;
-            ret = rt_mb_send(&c->mb, msg);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("%s: mb send fail\n", __func__);
-                /* TODO */
-            }
-
-            cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
-            rt_memcpy((char *)buffer + temp, cbuf->buffer, size - temp);
-            c->send_size = size - temp;
-        }
-    }
-    else
-    {
-        rt_memset(buffer, 0, size);
+    data_size = rt_ringbuffer_get(g_dev2host_rb, buffer, size);
+    if (data_size < size) {
+        // rt_kprintf("too few data, data_size = %d, expect size = %d \r\n", data_size, size);
     }
 }
 
@@ -1765,7 +1783,7 @@ static void playback_thread_entry(void *parameter)
 static rt_err_t _audio_playback_setup(struct uac1 *uac1)
 {
     struct audio_play *p = &uac1->p;
-    rt_thread_t play_thread;
+    // rt_thread_t play_thread;
     rt_size_t size;
     rt_uint8_t i;
     rt_err_t ret = RT_EOK;
@@ -1798,20 +1816,20 @@ static rt_err_t _audio_playback_setup(struct uac1 *uac1)
         goto err1;
     }
 
-    for (i = 0; i < P_BUFFER_NUM; i++)
-    {
-        p->pbuf[i].buffer = rt_malloc(P_TOTAL_SIZE);
-        if (!p->pbuf[i].buffer)
-        {
-            rt_kprintf("%s: alloc playback buf fail!\n", __func__);
-            ret = -RT_ENOMEM;
-            goto err2;
-        }
+    // for (i = 0; i < P_BUFFER_NUM; i++)
+    // {
+    //     p->pbuf[i].buffer = rt_malloc(P_TOTAL_SIZE);
+    //     if (!p->pbuf[i].buffer)
+    //     {
+    //         rt_kprintf("%s: alloc playback buf fail!\n", __func__);
+    //         ret = -RT_ENOMEM;
+    //         goto err2;
+    //     }
 
-        rt_base_t level = rt_hw_interrupt_disable();
-        rt_list_insert_before(&p->free_list, &p->pbuf[i].list);
-        rt_hw_interrupt_enable(level);
-    }
+    //     rt_base_t level = rt_hw_interrupt_disable();
+    //     rt_list_insert_before(&p->free_list, &p->pbuf[i].list);
+    //     rt_hw_interrupt_enable(level);
+    // }
 
     ret = rt_mb_init(&p->mb, "play_mb", p->mb_pool,
                      P_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
@@ -1821,17 +1839,17 @@ static rt_err_t _audio_playback_setup(struct uac1 *uac1)
         goto err3;
     }
 
-    play_thread = rt_thread_create("play_usb", playback_thread_entry, p, 2048, 0, 8);
-    if (play_thread != RT_NULL)
-    {
-        rt_thread_startup(play_thread);
-    }
-    else
-    {
-        rt_kprintf("%s: create play thread fail!\n", __func__);
-        ret = -RT_ERROR;
-        goto err4;
-    }
+    // play_thread = rt_thread_create("play_usb", playback_thread_entry, p, 2048, 0, 8);
+    // if (play_thread != RT_NULL)
+    // {
+    //     rt_thread_startup(play_thread);
+    // }
+    // else
+    // {
+    //     rt_kprintf("%s: create play thread fail!\n", __func__);
+    //     ret = -RT_ERROR;
+    //     goto err4;
+    // }
 
     return ret;
 
@@ -1934,7 +1952,7 @@ static void capture_thread_entry(void *parameter)
 static rt_err_t _audio_capture_setup(struct uac1 *uac1)
 {
     struct audio_capture *c = &uac1->c;
-    rt_thread_t cap_thread;
+    // rt_thread_t cap_thread;
     rt_size_t size;
     rt_uint8_t i;
     rt_err_t ret = RT_EOK;
@@ -1967,20 +1985,20 @@ static rt_err_t _audio_capture_setup(struct uac1 *uac1)
         goto err1;
     }
 
-    for (i = 0; i < C_BUFFER_NUM; i++)
-    {
-        c->cbuf[i].buffer = rt_malloc(C_TOTAL_SIZE);
-        if (!c->cbuf[i].buffer)
-        {
-            rt_kprintf("%s: alloc capture buf fail!\n", __func__);
-            ret = -RT_ENOMEM;
-            goto err2;
-        }
+    // for (i = 0; i < C_BUFFER_NUM; i++)
+    // {
+    //     c->cbuf[i].buffer = rt_malloc(C_TOTAL_SIZE);
+    //     if (!c->cbuf[i].buffer)
+    //     {
+    //         rt_kprintf("%s: alloc capture buf fail!\n", __func__);
+    //         ret = -RT_ENOMEM;
+    //         goto err2;
+    //     }
 
-        rt_base_t level = rt_hw_interrupt_disable();
-        rt_list_insert_before(&c->free_list, &c->cbuf[i].list);
-        rt_hw_interrupt_enable(level);
-    }
+    //     rt_base_t level = rt_hw_interrupt_disable();
+    //     rt_list_insert_before(&c->free_list, &c->cbuf[i].list);
+    //     rt_hw_interrupt_enable(level);
+    // }
 
     ret = rt_mb_init(&c->mb, "capt_mb", c->mb_pool,
                      C_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
@@ -1990,17 +2008,17 @@ static rt_err_t _audio_capture_setup(struct uac1 *uac1)
         goto err3;
     }
 
-    cap_thread = rt_thread_create("capt_usb", capture_thread_entry, c, 2048, 0, 8);
-    if (cap_thread != RT_NULL)
-    {
-        rt_thread_startup(cap_thread);
-    }
-    else
-    {
-        rt_kprintf("%s: create capture thread fail!\n", __func__);
-        ret = -RT_ERROR;
-        goto err4;
-    }
+    // cap_thread = rt_thread_create("capt_usb", capture_thread_entry, c, 2048, 0, 8);
+    // if (cap_thread != RT_NULL)
+    // {
+    //     rt_thread_startup(cap_thread);
+    // }
+    // else
+    // {
+    //     rt_kprintf("%s: create capture thread fail!\n", __func__);
+    //     ret = -RT_ERROR;
+    //     goto err4;
+    // }
 
     return ret;
 
@@ -2036,6 +2054,19 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
 
+    /* create ringbuffer */
+    g_host2dev_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 40) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存25ms数据
+    if (g_host2dev_rb == RT_NULL) {
+        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+        return -1;
+    }
+
+    g_dev2host_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 40) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存25ms数据
+    if (g_dev2host_rb == RT_NULL) {
+        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+        return -1;
+    }
+
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
 
@@ -2046,7 +2077,7 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     g_uac1 = (struct uac1 *)rt_malloc(sizeof(struct uac1));
     rt_memset(g_uac1, 0, sizeof(struct uac1));
     func->user_data = (void *)g_uac1;
-    g_uac1->ep0_buffer = rt_dma_malloc(64);
+    g_uac1->ep0_buffer = rt_dma_malloc(128);                // 64=》128，描述比较长要增加buff大小
     g_uac1->p.sample_rate = P_DEFAULT_SAMPLE_RATE;
     g_uac1->c.sample_rate = C_DEFAULT_SAMPLE_RATE;
 
