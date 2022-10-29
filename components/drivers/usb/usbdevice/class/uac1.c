@@ -50,7 +50,7 @@
 #define P_BUFFER_BOTTOM_NUM         3
 #define P_DEFAULT_SAMPLE_RATE       48000
 #define P_AUDIO_PERIOD_COUNT        2
-#define P_AUDIO_SAMPLE_BITS         16
+#define P_AUDIO_SAMPLE_BITS         24
 #define P_AUDIO_PERIOD_SIZE         1024
 #define P_MB_POOL_SIZE              (P_BUFFER_NUM + 8)
 #define P_TOTAL_SIZE                (P_AUDIO_PERIOD_SIZE * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3))
@@ -60,7 +60,7 @@
 #define C_BUFFER_NUM                32
 #define C_DEFAULT_SAMPLE_RATE       48000
 #define C_AUDIO_PERIOD_COUNT        4
-#define C_AUDIO_SAMPLE_BITS         16
+#define C_AUDIO_SAMPLE_BITS         24
 #define C_AUDIO_PERIOD_SIZE         1024
 #define C_MB_POOL_SIZE              (C_BUFFER_NUM + 8)
 #define C_TOTAL_SIZE                (C_AUDIO_PERIOD_SIZE * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3))
@@ -341,21 +341,16 @@ static struct uac1_interface_alt _as_out_intf_alt1_desc =
         UAC_FORMAT_TYPE_I_PCM,
     },
     {
-        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(6),
+        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
         USB_DT_CS_INTERFACE,
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         P_NR_CHANNEL,
-        0x02,
-        0x10,
-        0x06,
+        0x03,
+        0x18,
+        0x01,
         {
-            FREQ(96000),
             FREQ(48000),
-            FREQ(44100),
-            FREQ(32000),
-            FREQ(16000),
-            FREQ(8000),
         },
     },
     {
@@ -415,21 +410,16 @@ static struct uac1_interface_alt _as_in_intf_alt1_desc =
         UAC_FORMAT_TYPE_I_PCM,
     },
     {
-        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(6),
+        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(1),
         USB_DT_CS_INTERFACE,
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         C_NR_CHANNEL,
-        0x02,
-        0x10,
-        0x06,
+        0x03,
+        0x18,
+        0x01,
         {
-            FREQ(96000),
             FREQ(48000),
-            FREQ(44100),
-            FREQ(32000),
-            FREQ(16000),
-            FREQ(8000),
         },
     },
     {

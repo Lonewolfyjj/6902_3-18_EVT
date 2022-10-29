@@ -21,7 +21,7 @@
 
 DECLARE_UAC_AC_HEADER_DESCRIPTOR(2);
 DECLARE_UAC_FEATURE_UNIT_DESCRIPTOR(0);
-DECLARE_UAC_FORMAT_TYPE_I_DISCRETE_DESC(6);
+DECLARE_UAC_FORMAT_TYPE_I_DISCRETE_DESC(1);
 
 struct uac1_control
 {
@@ -43,7 +43,7 @@ struct uac1_interface_alt
 {
     struct uinterface_descriptor interface_desc;
     struct uac1_as_header_descriptor as_header_desc;
-    struct uac_format_type_i_discrete_descriptor_6 type_i_desc;
+    struct uac_format_type_i_discrete_descriptor_1 type_i_desc;
     struct uaudio_endpoint_descriptor endpoint_desc;
     struct uac_iso_endpoint_descriptor iso_endpoint_desc;
 };
