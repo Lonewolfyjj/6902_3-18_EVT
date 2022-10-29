@@ -24,28 +24,25 @@ hl_gpio_pin_e           rx_key_pair_gpio;
 uint8_t                 telink_pair_state;
 uint8_t                 get_pair_count = 1;
 
-static void hl_hal_gpio_telink_pairleft_irq_process(void* args)
+static void _hl_hal_gpio_telink_pairleft_irq_process(void* args)
 {
     hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
 
     uint8_t data = 0;
-    // rt_kprintf("telink pair leftkey\n");
     hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_LEFT, &data, 1);
 }
-static void hl_hal_gpio_telink_pairright_irq_process(void* args)
+static void _hl_hal_gpio_telink_pairright_irq_process(void* args)
 {
     hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
 
     uint8_t data = 0;
-    // rt_kprintf("telink pair rightkey\n");
     hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_RIGHT, &data, 1);
 }
-static void hl_hal_gpio_telink_pairall_irq_process(void* args)
+static void _hl_hal_gpio_telink_pairall_irq_process(void* args)
 {
     hl_gpio_pin_e gpio_pin_e = *(hl_gpio_pin_e*)args;
 
     uint8_t data = 0;
-    // rt_kprintf("telink pair allkey\n");
     hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_ALL, &data, 1);
 }
 
@@ -54,19 +51,19 @@ static void _hl_drv_key_init(void)
 #if HL_GET_DEVICE_TYPE()
     tx_key_pairleft_gpio = GPIO_PAIR_KEY;
     hl_hal_gpio_init(GPIO_PAIR_KEY);
-    hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairleft_irq_process,
+    hl_hal_gpio_attach_irq(GPIO_PAIR_KEY, PIN_IRQ_MODE_FALLING, _hl_hal_gpio_telink_pairleft_irq_process,
                            &tx_key_pairleft_gpio);
     hl_hal_gpio_irq_enable(GPIO_PAIR_KEY, PIN_IRQ_ENABLE);
 
     tx_key_pairright_gpio = GPIO_PWR_KEY;
     hl_hal_gpio_init(GPIO_PWR_KEY);
-    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairright_irq_process,
+    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, _hl_hal_gpio_telink_pairright_irq_process,
                            &tx_key_pairright_gpio);
     hl_hal_gpio_irq_enable(GPIO_PWR_KEY, PIN_IRQ_ENABLE);
 #else
     rx_key_pair_gpio = GPIO_PWR_KEY;
     hl_hal_gpio_init(GPIO_PWR_KEY);
-    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, hl_hal_gpio_telink_pairall_irq_process,
+    hl_hal_gpio_attach_irq(GPIO_PWR_KEY, PIN_IRQ_MODE_FALLING, _hl_hal_gpio_telink_pairall_irq_process,
                            &rx_key_pair_gpio);
     hl_hal_gpio_irq_enable(GPIO_PWR_KEY, PIN_IRQ_ENABLE);
 #endif
@@ -184,18 +181,12 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 /* 串口接收数据回调函数 */
 static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
 {
-    uint32_t ret = 0;
-
-    ret = rt_device_read(s_telink.serial, 0, s_uart_recv_buf, TELINK_UART_BUF_SIZE);
-    // ret = hl_util_fifo_write(&s_telink.fifo, s_uart_recv_buf, ret);
-
-    // rt_kprintf("[ Telink Recv Len = %d ] ", ret);
-    // rt_kprintf("[cmd] = %02x ", s_uart_recv_buf[0]);
-    // rt_kprintf("[pair] = %02x ", s_uart_recv_buf[1]);
-    // rt_kprintf("[left] = %02x ", s_uart_recv_buf[2]);
-    // rt_kprintf("[right] = %02x ", s_uart_recv_buf[3]);
-    // rt_kprintf("[ok] = %02x\n", s_uart_recv_buf[4]);
+    rt_device_read(s_telink.serial, 0, s_uart_recv_buf, TELINK_UART_BUF_SIZE);
+    
     switch (s_uart_recv_buf[0]) {
+        case TELINK_CMD_GET_VERSION:
+            rt_kprintf("\n#Telink Version: %s\n", &s_uart_recv_buf[1]);
+            break;
         case TELINK_CMD_GET_PAIR_INFO:
             if (s_uart_recv_buf[1] == 0x00 && s_uart_recv_buf[2] == 0x00 && s_uart_recv_buf[3] == 0x00) {
                 telink_pair_state = TELINK_PAIR_FAILED;
@@ -233,9 +224,6 @@ static void hl_mod_telink_thread_entry(void* parameter)
     uint8_t  send_data = 0;
     uint8_t  buf[256]  = { 0 };
 
-    // // 通过串口给Telink发送配对命令(0x03)
-    // hl_mod_telink_ioctl(TELINK_CMD_WIRELESS_PAIR_LEFT, &data, 1);
-
     while (s_telink.thread_flag == RT_TRUE) {
         data = hl_util_fifo_data_size(&s_telink.fifo);
         if (data > 0) {
@@ -254,28 +242,20 @@ static void hl_mod_led_thread_entry(void* parameter)
 
     uint8_t telink_pair_state_last = 0xff; 
     while (1) {
-        if (telink_pair_state_last != telink_pair_state) {
-            if (telink_pair_state == TELINK_PAIR_START) {
-                _hl_drv_led_ctrl(0, 0, 15);
-                // // rt_kprintf("[OK] start pair\n");
-            } else if (telink_pair_state == TELINK_PAIR_FAILED) {
-                _hl_drv_led_ctrl(15, 0, 0);
-                // // rt_kprintf("[OK] pair failed\n");
-            } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_L) {
-                _hl_drv_led_ctrl(0, 15, 0);
-                // // rt_kprintf("[OK] pair succedd left\n");
-            } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_R) {
-                _hl_drv_led_ctrl(0, 15, 15);
-                // // rt_kprintf("[OK] pair succedd right\n");
-            }
-            telink_pair_state_last = telink_pair_state;
+        if (telink_pair_state == TELINK_PAIR_START) {
+            _hl_drv_led_ctrl(0, 0, 15);
+        } else if (telink_pair_state == TELINK_PAIR_FAILED) {
+            _hl_drv_led_ctrl(15, 0, 0);
+        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_L) {
+            _hl_drv_led_ctrl(0, 15, 0);
+        } else if (telink_pair_state == TELINK_PAIR_SUCCEDD_R) {
+            _hl_drv_led_ctrl(0, 15, 15);
         }
 
         get_pair_count %= 100;
         if (get_pair_count == 0) {
             // 通过串口给Telink发送获取配对信息命令(0x02)
             hl_mod_telink_ioctl(TELINK_CMD_GET_PAIR_INFO, &data, 1);
-            // rt_kprintf("[OK] send get pair info\n");
         }
 
         get_pair_count++;
@@ -387,11 +367,6 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
         hl_util_hup_encode(s_telink.hup.hup_handle.role, cmd, frame_buf, TELINK_UART_BUF_SIZE, data_addr, data_len);
 
     frame_len = rt_device_write(s_telink.serial, 0, frame_buf, frame_len);
-    // rt_kprintf("[ Telink Write Len = %d] [", frame_len);
-    // for (uint8_t i = 0; i < frame_len; i++) {
-    //     // rt_kprintf(" %02x ", frame_buf[i]);
-    // }
-    // rt_kprintf("]\n");
 
     return 0;
 }
@@ -417,13 +392,12 @@ void hl_telink_ioctrl(int argc, char** argv)
         rt_kprintf("\n*      -->arg = 2 TX pair Right Channel  *");
         rt_kprintf("\n*  [6]ON/OFF Telink                      *");
         rt_kprintf("\n*  [7]Set PA Mode                        *");
-        rt_kprintf("\n*      -->arg = 0 All Off                *");
-        rt_kprintf("\n*      -->arg = 16 Sleep Mode            *");
         rt_kprintf("\n*      -->arg = 18 TX Low Power          *");
         rt_kprintf("\n*      -->arg = 19 TX High Power         *");
         rt_kprintf("\n*      -->arg = 20 RX LNA Mode           *");
         rt_kprintf("\n*      -->arg = 26 TX By Pass Mode       *");
-        rt_kprintf("\n*      -->arg = 28 TX By Pass Mode       *");
+        rt_kprintf("\n*      -->arg = 28 RX By Pass Mode       *");
+        rt_kprintf("\n*  [8]Get Sofware Version                *");
         rt_kprintf("\n******************************************\n");
         return;
     }
@@ -481,6 +455,10 @@ void hl_telink_ioctrl(int argc, char** argv)
         case '7':
             data = (uint8_t)atoi(argv[2]);
             hl_mod_telink_ioctl(TELINK_CMD_SET_PA_MODE, &data, 1);
+            break;
+
+        case '8':
+            hl_mod_telink_ioctl(TELINK_CMD_GET_VERSION, &data, 1);
             break;
 
         default:
