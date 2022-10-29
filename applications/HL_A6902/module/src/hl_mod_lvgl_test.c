@@ -13,11 +13,11 @@ static rt_thread_t lvgl_tid1 = RT_NULL, lvgl_tid2 = RT_NULL, lvgl_tid3 = RT_NULL
 static lv_obj_t *scr,*btn_1,*btn_label,*btn_label1;
 static lv_style_t h_style,style_2;
 static lv_fs_drv_t *test_f;
-static lv_disp_t * ptr = RT_NULL;
+// static lv_disp_t * ptr = RT_NULL;
 static int hl_mod_lvgl_init(void)
 {
     lv_init();
-    ptr = lv_port_disp_init();
+    lv_port_disp_init();
     lv_port_indev_init();
     return 0;
 }
@@ -90,16 +90,17 @@ static void hl_mod_lvgl_thread_picture(void* parameter)
     // f = test_f->open_cb(RT_NULL,"test.txt",LV_FS_MODE_WR);
     LV_IMG_DECLARE(test_pic);
     lv_obj_t *pic = lv_img_create(scr);
+    lv_disp_t *screen_ptr = lv_disp_get_default();
     lv_img_set_src(pic,&test_pic);
     lv_obj_align(pic,LV_ALIGN_BOTTOM_RIGHT,0,0);
     while(1)
     {
         // f = test_f.open_cb(RT_NULL,"./test.txt",LV_FS_MODE_WR | LV_FS_MODE_RD);
-        // test_f.seek_cb(RT_NULL,f,0,LV_FS_SEEK_END);
+        // test_f.seek_cb(RT_NULL,f,0,LV_FS_SEEK_END);lv_disp_get_default
         rt_thread_mdelay(3000);
-        lv_disp_set_rotation(ptr, LV_DISP_ROT_180);
+        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_180);
         rt_thread_mdelay(3000);
-        lv_disp_set_rotation(ptr, LV_DISP_ROT_NONE);
+        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_NONE);
     }
 }
 

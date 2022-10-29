@@ -56,7 +56,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_disp_t * lv_port_disp_init(void)
+void lv_port_disp_init(void)
 {
     /*-------------------------
      * Initialize your display
@@ -134,7 +134,7 @@ lv_disp_t * lv_port_disp_init(void)
     //disp_drv.gpu_fill_cb = gpu_fill;
 
     /*Finally register the driver*/
-    return lv_disp_drv_register(&disp_drv);
+    lv_disp_drv_register(&disp_drv);
 }
 
 /**********************
