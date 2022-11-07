@@ -25,6 +25,7 @@
 #include <ipc/ringbuffer.h>
 
 #define F_AUDIO_NUM_INTERFACES      2 /* Number of streaming interfaces */
+#define F_AUDIO_NUM_INTERFACES_SINGLE   1 /* 单独mic或者spk */
 #define USB_OUT_IT_ID               1
 #define USB_OUT_IT_FU_ID            2
 #define IO_OUT_OT_ID                3
@@ -51,7 +52,7 @@
 #define P_BUFFER_BOTTOM_NUM         3
 #define P_DEFAULT_SAMPLE_RATE       48000
 #define P_AUDIO_PERIOD_COUNT        2
-#define P_AUDIO_SAMPLE_BITS         24
+#define P_AUDIO_SAMPLE_BITS         32
 #define P_AUDIO_PERIOD_SIZE         1024
 #define P_MB_POOL_SIZE              (P_BUFFER_NUM + 8)
 #define P_TOTAL_SIZE                (P_AUDIO_PERIOD_SIZE * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3))
@@ -68,10 +69,14 @@
 
 #define FREQ(f) { ((f) & 0xFF), ((f) >> 8 & 0xFF), ((f) >> 16 & 0xFF) }
 #define UAC_DT_AC_HEADER_LENGTH UAC_DT_AC_HEADER_SIZE(F_AUDIO_NUM_INTERFACES)
+#define UAC_DT_AC_HEADER_LENGTH_SINGLE UAC_DT_AC_HEADER_SIZE(F_AUDIO_NUM_INTERFACES_SINGLE)
 /* 2 input terminal, 2 output terminal and 2 feature unit */
 #define UAC_DT_TOTAL_LENGTH (UAC_DT_AC_HEADER_LENGTH \
         + UAC_DT_INPUT_TERMINAL_SIZE * 2 + UAC_DT_OUTPUT_TERMINAL_SIZE * 2 \
         + UAC_DT_FEATURE_UNIT_SIZE(0) * 2)
+#define UAC_DT_TOTAL_LENGTH_SINGLE (UAC_DT_AC_HEADER_LENGTH_SINGLE \
+        + UAC_DT_INPUT_TERMINAL_SIZE * 1 + UAC_DT_OUTPUT_TERMINAL_SIZE * 1 \
+        + UAC_DT_FEATURE_UNIT_SIZE(0) * 1)        
 #define VOLUME_USB_TO_DB(v_usb) (v_usb <= 0x7FFF) ? v_usb: \
         (- (((rt_int16_t)0xFFFF - v_usb)+1))
 #define VOLUME_DB_TO_PERCENT(v_db, v_max_db, v_min_db) \
@@ -97,8 +102,22 @@ enum msg_type
     MSG_STOP,
 };
 
+/// @brief uac 类型枚举
+typedef enum _hl_uac_type_e
+{
+    HL_UAC_MIC = 1,
+    HL_UAC_SPK,
+    HL_UAC_MIC_SPK,
+} hl_uac_type_e;
+
+/// @brief usb主机到设备uac音频流buff 
 struct rt_ringbuffer* g_host2dev_rb = RT_NULL;
+/// @brief usb 设备到主机uac音频流buff
 struct rt_ringbuffer* g_dev2host_rb = RT_NULL;
+/// @brief uac 设备类型字符串（"mic"、 "spk"、"mic&spk"）
+char uac_type[16] = "mic&spk";
+/// @brief uac设备类型（通过uac_type得出的类型值）
+hl_uac_type_e  hl_uac_type = HL_UAC_MIC;
 
 struct usb_audio_buf
 {
@@ -308,6 +327,232 @@ static struct uac1_control _control_desc =
     }
 };
 
+static struct uac1_mic_control _mic_control_desc =
+{
+#ifdef RT_USB_DEVICE_COMPOSITE
+    /* Interface Association Descriptor */
+    {
+        USB_DESC_LENGTH_IAD,
+        USB_DESC_TYPE_IAD,
+        USB_DYNAMIC,
+        0x02,
+        USB_CLASS_AUDIO,
+        USB_SUBCLASS_AUDIOSTREAMING,
+        0x00,
+        0x00,
+    },
+#endif
+    /* Audio Control Interface Descriptor */
+    {
+        USB_DESC_LENGTH_INTERFACE,
+        USB_DESC_TYPE_INTERFACE,
+        USB_DYNAMIC,
+        0x00,
+        0x00,
+        USB_CLASS_AUDIO,
+        USB_SUBCLASS_AUDIOCONTROL,
+        0x00,
+        0x00,
+    },
+    /* Audio Control Interface Header Descriptor */
+    {
+        UAC_DT_AC_HEADER_LENGTH_SINGLE,
+        USB_DT_CS_INTERFACE,
+        UAC_HEADER,
+        0x0100,
+        UAC_DT_TOTAL_LENGTH_SINGLE,
+        F_AUDIO_NUM_INTERFACES_SINGLE,
+        {
+            /* Interface number of the AudioStream interfaces */
+            /* baInterfaceNr[0] = DYNAMIC, */
+            /* baInterfaceNr[1] = DYNAMIC, */
+        },
+    },
+    /*
+    {
+        UAC_DT_INPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_INPUT_TERMINAL,
+        USB_OUT_IT_ID,
+        UAC_TERMINAL_STREAMING,
+        IO_OUT_OT_ID,
+        P_NR_CHANNEL,
+        0x0003,
+        0x00,
+        0x00,
+    },
+    {
+        UAC_DT_OUTPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_OUTPUT_TERMINAL,
+        IO_OUT_OT_ID,
+        UAC_OUTPUT_TERMINAL_SPEAKER,
+        USB_OUT_IT_ID,
+        USB_OUT_IT_FU_ID,
+        0x00,
+    },
+    {
+        UAC_DT_FEATURE_UNIT_SIZE(0),
+        USB_DT_CS_INTERFACE,
+        UAC_FEATURE_UNIT,
+        USB_OUT_IT_FU_ID,
+        USB_OUT_IT_ID,
+        0x02,
+        {
+            UAC_FU_MUTE | UAC_FU_VOLUME,
+        },
+        0x00,
+    },
+    */
+    {
+        UAC_DT_INPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_INPUT_TERMINAL,
+        IO_IN_IT_ID,
+        UAC_INPUT_TERMINAL_MICROPHONE,
+        USB_IN_OT_ID,
+        C_NR_CHANNEL,
+        0x0003,
+        0x00,
+        0x00,
+    },
+    {
+        UAC_DT_OUTPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_OUTPUT_TERMINAL,
+        USB_IN_OT_ID,
+        UAC_TERMINAL_STREAMING,
+        IO_IN_IT_ID,
+        IO_IN_IT_FU_ID,
+        0x00,
+    },
+    {
+        UAC_DT_FEATURE_UNIT_SIZE(0),
+        USB_DT_CS_INTERFACE,
+        UAC_FEATURE_UNIT,
+        IO_IN_IT_FU_ID,
+        IO_IN_IT_ID,
+        0x02,
+        {
+            UAC_FU_MUTE | UAC_FU_VOLUME,
+        },
+        0x00,
+    }
+};
+
+static struct uac1_spk_control _spk_control_desc =
+{
+#ifdef RT_USB_DEVICE_COMPOSITE
+    /* Interface Association Descriptor */
+    {
+        USB_DESC_LENGTH_IAD,
+        USB_DESC_TYPE_IAD,
+        USB_DYNAMIC,
+        0x02,
+        USB_CLASS_AUDIO,
+        USB_SUBCLASS_AUDIOSTREAMING,
+        0x00,
+        0x00,
+    },
+#endif
+    /* Audio Control Interface Descriptor */
+    {
+        USB_DESC_LENGTH_INTERFACE,
+        USB_DESC_TYPE_INTERFACE,
+        USB_DYNAMIC,
+        0x00,
+        0x00,
+        USB_CLASS_AUDIO,
+        USB_SUBCLASS_AUDIOCONTROL,
+        0x00,
+        0x00,
+    },
+    /* Audio Control Interface Header Descriptor */
+    {
+        UAC_DT_AC_HEADER_LENGTH_SINGLE,
+        USB_DT_CS_INTERFACE,
+        UAC_HEADER,
+        0x0100,
+        UAC_DT_TOTAL_LENGTH_SINGLE,
+        F_AUDIO_NUM_INTERFACES_SINGLE,
+        {
+            /* Interface number of the AudioStream interfaces */
+            /* baInterfaceNr[0] = DYNAMIC, */
+            /* baInterfaceNr[1] = DYNAMIC, */
+        },
+    },
+    {
+        UAC_DT_INPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_INPUT_TERMINAL,
+        USB_OUT_IT_ID,
+        UAC_TERMINAL_STREAMING,
+        IO_OUT_OT_ID,
+        P_NR_CHANNEL,
+        0x0003,
+        0x00,
+        0x00,
+    },
+    {
+        UAC_DT_OUTPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_OUTPUT_TERMINAL,
+        IO_OUT_OT_ID,
+        UAC_OUTPUT_TERMINAL_SPEAKER,
+        USB_OUT_IT_ID,
+        USB_OUT_IT_FU_ID,
+        0x00,
+    },
+    {
+        UAC_DT_FEATURE_UNIT_SIZE(0),
+        USB_DT_CS_INTERFACE,
+        UAC_FEATURE_UNIT,
+        USB_OUT_IT_FU_ID,
+        USB_OUT_IT_ID,
+        0x02,
+        {
+            UAC_FU_MUTE | UAC_FU_VOLUME,
+        },
+        0x00,
+    },
+    /*
+    {
+        UAC_DT_INPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_INPUT_TERMINAL,
+        IO_IN_IT_ID,
+        UAC_INPUT_TERMINAL_MICROPHONE,
+        USB_IN_OT_ID,
+        C_NR_CHANNEL,
+        0x0003,
+        0x00,
+        0x00,
+    },
+    {
+        UAC_DT_OUTPUT_TERMINAL_SIZE,
+        USB_DT_CS_INTERFACE,
+        UAC_OUTPUT_TERMINAL,
+        USB_IN_OT_ID,
+        UAC_TERMINAL_STREAMING,
+        IO_IN_IT_ID,
+        IO_IN_IT_FU_ID,
+        0x00,
+    },
+    {
+        UAC_DT_FEATURE_UNIT_SIZE(0),
+        USB_DT_CS_INTERFACE,
+        UAC_FEATURE_UNIT,
+        IO_IN_IT_FU_ID,
+        IO_IN_IT_ID,
+        0x02,
+        {
+            UAC_FU_MUTE | UAC_FU_VOLUME,
+        },
+        0x00,
+    }
+    */
+};
+
 ALIGN(4)
 static struct uinterface_descriptor _as_out_intf_alt0_desc =
 {
@@ -350,8 +595,8 @@ static struct uac1_interface_alt _as_out_intf_alt1_desc =
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         P_NR_CHANNEL,
-        0x03,
-        0x18,
+       (P_AUDIO_SAMPLE_BITS >> 3),
+        P_AUDIO_SAMPLE_BITS,
         0x01,
         {
             FREQ(48000),
@@ -419,8 +664,8 @@ static struct uac1_interface_alt _as_in_intf_alt1_desc =
         UAC_FORMAT_TYPE,
         UAC_FORMAT_TYPE_I,
         C_NR_CHANNEL,
-        0x03,
-        0x18,
+        (C_AUDIO_SAMPLE_BITS >> 3),
+        C_AUDIO_SAMPLE_BITS,
         0x01,
         {
             FREQ(48000),
@@ -1518,7 +1763,8 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
         return RT_EOK;
     }
 
-    if (size != 0 && p->enable)
+    // if (size != 0 && p->enable)
+    if (size != 0)
         _ep_out_data_handler(g_uac1->ep_out->buffer, size, p);
 
     g_uac1->ep_out->request.buffer = g_uac1->ep_out->buffer;
@@ -1653,132 +1899,137 @@ static rt_err_t _uac1_descriptor_config(uac1_control_t uac1, rt_uint8_t cintf_nr
 
     dev_desc.bcdUSB = device_is_hs ? 0x0200 : 0x0110;
 
-    as_out_intf_alt1->endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
-    _as_out_intf_alt1_desc.endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
+    if (HL_UAC_MIC != hl_uac_type) {
+        as_out_intf_alt1->endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
+        _as_out_intf_alt1_desc.endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
+    }
+
+    if (HL_UAC_SPK != hl_uac_type) {
 #if defined(RKMCU_RK2106)
-    as_in_intf_alt1->endpoint_desc.bInterval = 0x02;
-    _as_in_intf_alt1_desc.endpoint_desc.bInterval = 0x02;
+        as_in_intf_alt1->endpoint_desc.bInterval = 0x02;
+        _as_in_intf_alt1_desc.endpoint_desc.bInterval = 0x02;
 #else
-    as_in_intf_alt1->endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
-    _as_in_intf_alt1_desc.endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
+        as_in_intf_alt1->endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
+        _as_in_intf_alt1_desc.endpoint_desc.bInterval = device_is_hs ? 0x04 : 0x01;
 #endif
+    }
 
     return RT_EOK;
 }
 
-static void playback_thread_entry(void *parameter)
-{
-    struct audio_play *p = (struct audio_play *)parameter;
-    struct usb_audio_buf *pbuf;
-    rt_int32_t timeout = RT_WAITING_FOREVER;
-    rt_uint32_t msg;
-    rt_uint32_t tickstart = 0U;
-    rt_uint8_t ready_len;
-    rt_uint8_t up = P_BUFFER_TOP_NUM;
-    rt_uint8_t down = P_BUFFER_BOTTOM_NUM;
+// static void playback_thread_entry(void *parameter)
+// {
+//     struct audio_play *p = (struct audio_play *)parameter;
+//     struct usb_audio_buf *pbuf;
+//     rt_int32_t timeout = RT_WAITING_FOREVER;
+//     rt_uint32_t msg;
+//     rt_uint32_t tickstart = 0U;
+//     rt_uint8_t ready_len;
+//     rt_uint8_t up = P_BUFFER_TOP_NUM;
+//     rt_uint8_t down = P_BUFFER_BOTTOM_NUM;
 
-    while (1)
-    {
-        msg = 0;
-        rt_mb_recv(&p->mb, &msg, timeout);
-        if (msg == MSG_START)
-        {
-            _audio_playback_card_enable(p);
-            timeout = RT_WAITING_FOREVER;
+//     while (1)
+//     {
+//         msg = 0;
+//         rt_mb_recv(&p->mb, &msg, timeout);
+//         if (msg == MSG_START)
+//         {
+//             _audio_playback_card_enable(p);
+//             timeout = RT_WAITING_FOREVER;
 
-            up = P_BUFFER_TOP_NUM;
-            down = P_BUFFER_BOTTOM_NUM;
-        }
-        else if (msg == MSG_STOP)
-        {
-            _audio_playback_card_disable(p);
-            timeout = RT_WAITING_FOREVER;
-        }
+//             up = P_BUFFER_TOP_NUM;
+//             down = P_BUFFER_BOTTOM_NUM;
+//         }
+//         else if (msg == MSG_STOP)
+//         {
+//             _audio_playback_card_disable(p);
+//             timeout = RT_WAITING_FOREVER;
+//         }
 
-        if (timeout == RT_WAITING_FOREVER && p->audio_dev)
-        {
-            rt_base_t level = rt_hw_interrupt_disable();
-            if (rt_list_len(&p->ready_list) > P_BUFFER_READY_NUM)
-                timeout = RT_WAITING_NO;
-            rt_hw_interrupt_enable(level);
-        }
+//         if (timeout == RT_WAITING_FOREVER && p->audio_dev)
+//         {
+//             rt_base_t level = rt_hw_interrupt_disable();
+//             if (rt_list_len(&p->ready_list) > P_BUFFER_READY_NUM)
+//                 timeout = RT_WAITING_NO;
+//             rt_hw_interrupt_enable(level);
+//         }
 
-        /* If set volume and mute frequently, maybe cause noise during setting process.
-         * Use 1s interval will assure the last setting value.
-         */
-        if (HAL_GetTick() - tickstart >= UAC_SET_VOL_MUTE_INTERVAL)
-        {
-            _audio_playback_card_set_volume(p);
-            _audio_playback_card_set_mute(p);
-            tickstart = HAL_GetTick();
-        }
+//         /* If set volume and mute frequently, maybe cause noise during setting process.
+//          * Use 1s interval will assure the last setting value.
+//          */
+//         if (HAL_GetTick() - tickstart >= UAC_SET_VOL_MUTE_INTERVAL)
+//         {
+//             _audio_playback_card_set_volume(p);
+//             _audio_playback_card_set_mute(p);
+//             tickstart = HAL_GetTick();
+//         }
 
-        if (p->audio_dev && timeout == RT_WAITING_NO)
-        {
-            rt_base_t level = rt_hw_interrupt_disable();
-            if (rt_list_isempty(&p->ready_list))
-                pbuf = RT_NULL;
-            else
-                pbuf = rt_list_first_entry(&p->ready_list, struct usb_audio_buf, list);
-            rt_hw_interrupt_enable(level);
-            if (pbuf)
-            {
-                if (!rt_device_write(p->audio_dev, 0, pbuf->buffer, p->period_size))
-                    rt_kprintf("Error play\n");
+//         if (p->audio_dev && timeout == RT_WAITING_NO)
+//         {
+//             rt_base_t level = rt_hw_interrupt_disable();
+//             if (rt_list_isempty(&p->ready_list))
+//                 pbuf = RT_NULL;
+//             else
+//                 pbuf = rt_list_first_entry(&p->ready_list, struct usb_audio_buf, list);
+//             rt_hw_interrupt_enable(level);
+//             if (pbuf)
+//             {
+//                 if (!rt_device_write(p->audio_dev, 0, pbuf->buffer, p->period_size))
+//                     rt_kprintf("Error play\n");
 
-                level = rt_hw_interrupt_disable();
-                rt_list_remove(&pbuf->list);
-                rt_list_insert_before(&p->free_list, &pbuf->list);
-                ready_len = rt_list_len(&p->ready_list);
-                rt_hw_interrupt_enable(level);
-#ifdef UAC_DBG
-                static rt_int32_t cnt = 0;
-                if (++cnt % 1000 == 0)
-                    rt_kprintf("ready_len = %d\n", ready_len);
-#endif
-                if (ready_len >= up)
-                {
-                    up++;
-#ifdef RT_USB_AUDIO_PLL_COMPENSATION
-                    HAL_CRU_PllCompensation(PLL_CPLL, CPLL_COMPENSATION);
-                    rt_kprintf("[%u]: PLL_CPLL up %dppm\n", HAL_GetTick(), CPLL_COMPENSATION);
-#endif
-                    down = P_BUFFER_BOTTOM_NUM;
-                }
-                else if (ready_len <= down && ready_len > 0)
-                {
-                    down--;
-#ifdef RT_USB_AUDIO_PLL_COMPENSATION
-                    HAL_CRU_PllCompensation(PLL_CPLL, -CPLL_COMPENSATION);
-                    rt_kprintf("[%u]: PLL_CPLL down %dppm\n", HAL_GetTick(), CPLL_COMPENSATION);
-#endif
-                    up = P_BUFFER_TOP_NUM;
-                }
-                else if (ready_len == 0 || up >= P_BUFFER_NUM - 1)
-                {
-                    /*
-                     * If we check the ready_list is empty, need to
-                     * disable the playback card to avoid xrun issue,
-                     * and then enable the card again.
-                     * If ready_list is up to P_BUFFER_NUM - 1, it's
-                     * unable to compensate Cpll, it's better disable
-                     * the playback card and then enable it.
-                     */
-                    _audio_playback_card_disable(p);
-                    _audio_playback_card_enable(p);
-                    timeout = RT_WAITING_FOREVER;
+//                 level = rt_hw_interrupt_disable();
+//                 rt_list_remove(&pbuf->list);
+//                 rt_list_insert_before(&p->free_list, &pbuf->list);
+//                 ready_len = rt_list_len(&p->ready_list);
+//                 rt_hw_interrupt_enable(level);
+// #ifdef UAC_DBG
+//                 static rt_int32_t cnt = 0;
+//                 if (++cnt % 1000 == 0)
+//                     rt_kprintf("ready_len = %d\n", ready_len);
+// #endif
+//                 if (ready_len >= up)
+//                 {
+//                     up++;
+// #ifdef RT_USB_AUDIO_PLL_COMPENSATION
+//                     HAL_CRU_PllCompensation(PLL_CPLL, CPLL_COMPENSATION);
+//                     rt_kprintf("[%u]: PLL_CPLL up %dppm\n", HAL_GetTick(), CPLL_COMPENSATION);
+// #endif
+//                     down = P_BUFFER_BOTTOM_NUM;
+//                 }
+//                 else if (ready_len <= down && ready_len > 0)
+//                 {
+//                     down--;
+// #ifdef RT_USB_AUDIO_PLL_COMPENSATION
+//                     HAL_CRU_PllCompensation(PLL_CPLL, -CPLL_COMPENSATION);
+//                     rt_kprintf("[%u]: PLL_CPLL down %dppm\n", HAL_GetTick(), CPLL_COMPENSATION);
+// #endif
+//                     up = P_BUFFER_TOP_NUM;
+//                 }
+//                 else if (ready_len == 0 || up >= P_BUFFER_NUM - 1)
+//                 {
+//                     /*
+//                      * If we check the ready_list is empty, need to
+//                      * disable the playback card to avoid xrun issue,
+//                      * and then enable the card again.
+//                      * If ready_list is up to P_BUFFER_NUM - 1, it's
+//                      * unable to compensate Cpll, it's better disable
+//                      * the playback card and then enable it.
+//                      */
+//                     _audio_playback_card_disable(p);
+//                     _audio_playback_card_enable(p);
+//                     timeout = RT_WAITING_FOREVER;
 
-                    up = P_BUFFER_TOP_NUM;
-                    down = P_BUFFER_BOTTOM_NUM;
-                }
-            }
-            else
-            {
-                timeout = RT_WAITING_FOREVER;
-            }
-        }
-    }
-}
+//                     up = P_BUFFER_TOP_NUM;
+//                     down = P_BUFFER_BOTTOM_NUM;
+//                 }
+//             }
+//             else
+//             {
+//                 timeout = RT_WAITING_FOREVER;
+//             }
+//         }
+//     }
+// }
 
 static rt_err_t _audio_playback_setup(struct uac1 *uac1)
 {
@@ -1873,81 +2124,81 @@ err0:
     return ret;
 }
 
-static void capture_thread_entry(void *parameter)
-{
-    struct audio_capture *c = (struct audio_capture *)parameter;
-    struct usb_audio_buf *cbuf;
-    rt_int32_t timeout = RT_WAITING_FOREVER;
-    rt_uint32_t msg;
-    rt_uint32_t tickstart = 0U;
+// static void capture_thread_entry(void *parameter)
+// {
+//     struct audio_capture *c = (struct audio_capture *)parameter;
+//     struct usb_audio_buf *cbuf;
+//     rt_int32_t timeout = RT_WAITING_FOREVER;
+//     rt_uint32_t msg;
+//     rt_uint32_t tickstart = 0U;
 
-    while (1)
-    {
-        msg = 0;
-        rt_mb_recv(&c->mb, &msg, timeout);
-        if (msg == MSG_START)
-        {
-            _audio_capture_card_enable(c);
-            timeout = RT_WAITING_NO;
-        }
-        else if (msg == MSG_STOP)
-        {
-            _audio_capture_card_disable(c);
-            timeout = RT_WAITING_FOREVER;
-        }
+//     while (1)
+//     {
+//         msg = 0;
+//         rt_mb_recv(&c->mb, &msg, timeout);
+//         if (msg == MSG_START)
+//         {
+//             _audio_capture_card_enable(c);
+//             timeout = RT_WAITING_NO;
+//         }
+//         else if (msg == MSG_STOP)
+//         {
+//             _audio_capture_card_disable(c);
+//             timeout = RT_WAITING_FOREVER;
+//         }
 
-        if (timeout == RT_WAITING_NO)
-        {
-            rt_base_t level = rt_hw_interrupt_disable();
-            if (rt_list_isempty(&c->free_list))
-            {
-                RT_DEBUG_LOG(RT_DEBUG_USB, ("%s: clear ready list\n", __func__));
-                /* Clear ready list and insert to free list again */
-                while (!rt_list_isempty(&c->ready_list))
-                {
-                    cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
-                    rt_list_remove(&cbuf->list);
-                    rt_list_insert_before(&c->free_list, &cbuf->list);
-                }
-            }
-            rt_hw_interrupt_enable(level);
-        }
+//         if (timeout == RT_WAITING_NO)
+//         {
+//             rt_base_t level = rt_hw_interrupt_disable();
+//             if (rt_list_isempty(&c->free_list))
+//             {
+//                 RT_DEBUG_LOG(RT_DEBUG_USB, ("%s: clear ready list\n", __func__));
+//                 /* Clear ready list and insert to free list again */
+//                 while (!rt_list_isempty(&c->ready_list))
+//                 {
+//                     cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
+//                     rt_list_remove(&cbuf->list);
+//                     rt_list_insert_before(&c->free_list, &cbuf->list);
+//                 }
+//             }
+//             rt_hw_interrupt_enable(level);
+//         }
 
-        /* If set volume and mute frequently, maybe cause noise during setting process.
-         * Use 1s interval will assure the last setting value.
-         */
-        if (HAL_GetTick() - tickstart >= UAC_SET_VOL_MUTE_INTERVAL)
-        {
-            _audio_capture_card_set_volume(c);
-            _audio_capture_card_set_mute(c);
-            tickstart = HAL_GetTick();
-        }
+//         /* If set volume and mute frequently, maybe cause noise during setting process.
+//          * Use 1s interval will assure the last setting value.
+//          */
+//         if (HAL_GetTick() - tickstart >= UAC_SET_VOL_MUTE_INTERVAL)
+//         {
+//             _audio_capture_card_set_volume(c);
+//             _audio_capture_card_set_mute(c);
+//             tickstart = HAL_GetTick();
+//         }
 
-        if (c->audio_dev && timeout == RT_WAITING_NO)
-        {
-            rt_base_t level = rt_hw_interrupt_disable();
-            if (rt_list_isempty(&c->free_list))
-                cbuf = RT_NULL;
-            else
-                cbuf = rt_list_first_entry(&c->free_list, struct usb_audio_buf, list);
-            rt_hw_interrupt_enable(level);
-            if (cbuf)
-            {
-                if (!rt_device_read(c->audio_dev, 0, cbuf->buffer, C_AUDIO_PERIOD_SIZE))
-                    rt_kprintf("Error capture\n");
+//         if (c->audio_dev && timeout == RT_WAITING_NO)
+//         {
+//             rt_base_t level = rt_hw_interrupt_disable();
+//             if (rt_list_isempty(&c->free_list))
+//                 cbuf = RT_NULL;
+//             else
+//                 cbuf = rt_list_first_entry(&c->free_list, struct usb_audio_buf, list);
+//             rt_hw_interrupt_enable(level);
+//             if (cbuf)
+//             {
+//                 if (!rt_device_read(c->audio_dev, 0, cbuf->buffer, C_AUDIO_PERIOD_SIZE))
+//                     rt_kprintf("Error capture\n");
 
-                level = rt_hw_interrupt_disable();
-                rt_list_remove(&cbuf->list);
-                rt_list_insert_before(&c->ready_list, &cbuf->list);
-                rt_hw_interrupt_enable(level);
-            }
-            else
-            {
-                rt_kprintf("%s: unexpected error!\n", __func__);
-            }
-        }
-    }
-}
+//                 level = rt_hw_interrupt_disable();
+//                 rt_list_remove(&cbuf->list);
+//                 rt_list_insert_before(&c->ready_list, &cbuf->list);
+//                 rt_hw_interrupt_enable(level);
+//             }
+//             else
+//             {
+//                 rt_kprintf("%s: unexpected error!\n", __func__);
+//             }
+//         }
+//     }
+// }
 
 static rt_err_t _audio_capture_setup(struct uac1 *uac1)
 {
@@ -2045,9 +2296,9 @@ err0:
 ufunction_t rt_usbd_function_uac1_create(udevice_t device)
 {
     ufunction_t func;
-    uintf_t intf_ac, intf_as_out, intf_as_in;
-    ualtsetting_t intf_ac_alt0, intf_as_out_alt0, intf_as_out_alt1;
-    ualtsetting_t intf_as_in_alt0, intf_as_in_alt1;
+    uintf_t intf_ac, intf_as_out = RT_NULL, intf_as_in = RT_NULL;
+    ualtsetting_t intf_ac_alt0, intf_as_out_alt0 = RT_NULL, intf_as_out_alt1 = RT_NULL;
+    ualtsetting_t intf_as_in_alt0 = RT_NULL, intf_as_in_alt1 = RT_NULL;
     uac1_interface_alt_t  as_out_intf_desc, as_in_intf_desc;
     rt_err_t ret;
 
@@ -2055,17 +2306,21 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     RT_ASSERT(device != RT_NULL);
 
     /* create ringbuffer */
-    g_host2dev_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 40) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存25ms数据
-    if (g_host2dev_rb == RT_NULL) {
-        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
-        return -1;
-    }
+    //if (HL_UAC_MIC != hl_uac_type) {
+        g_host2dev_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 20) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
+        if (g_host2dev_rb == RT_NULL) {
+            rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+            return RT_NULL;
+        }
+    //}
 
-    g_dev2host_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 40) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存25ms数据
-    if (g_dev2host_rb == RT_NULL) {
-        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
-        return -1;
-    }
+    //if (HL_UAC_SPK != hl_uac_type) {
+        g_dev2host_rb = rt_ringbuffer_create((C_DEFAULT_SAMPLE_RATE / 20) * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
+        if (g_dev2host_rb == RT_NULL) {
+            rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+            return RT_NULL;
+        }
+    //}
 
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
@@ -2077,7 +2332,7 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     g_uac1 = (struct uac1 *)rt_malloc(sizeof(struct uac1));
     rt_memset(g_uac1, 0, sizeof(struct uac1));
     func->user_data = (void *)g_uac1;
-    g_uac1->ep0_buffer = rt_dma_malloc(128);                // 64=》128，描述比较长要增加buff大小
+    g_uac1->ep0_buffer = rt_dma_malloc(256);                // 64=》256，描述比较长要增加buff大小
     g_uac1->p.sample_rate = P_DEFAULT_SAMPLE_RATE;
     g_uac1->c.sample_rate = C_DEFAULT_SAMPLE_RATE;
 
@@ -2086,34 +2341,67 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
      * out interface, an uac audio streaming in interface
      */
     intf_ac = rt_usbd_interface_new(device, _interface_handler);
-    intf_as_out = rt_usbd_interface_new(device, _interface_handler);
-    intf_as_in = rt_usbd_interface_new(device, _interface_handler);
+    if (HL_UAC_MIC != hl_uac_type) {
+        intf_as_out = rt_usbd_interface_new(device, _interface_handler);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        intf_as_in = rt_usbd_interface_new(device, _interface_handler);
+    }
 
     g_uac1->ac_intf = intf_ac->intf_num;
-    g_uac1->as_out_intf = intf_as_out->intf_num;
-    g_uac1->as_in_intf = intf_as_in->intf_num;
+    if (HL_UAC_MIC != hl_uac_type) {
+        g_uac1->as_out_intf = intf_as_out->intf_num;
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        g_uac1->as_in_intf = intf_as_in->intf_num;
+    }
 
-    _control_desc.header_desc.baInterfaceNr[0] = g_uac1->as_out_intf;
-    _control_desc.header_desc.baInterfaceNr[1] = g_uac1->as_in_intf;
+    if (HL_UAC_SPK == hl_uac_type) {
+        _spk_control_desc.header_desc.baInterfaceNr[0] = g_uac1->as_out_intf;
+    } else if (HL_UAC_MIC == hl_uac_type) {
+        _mic_control_desc.header_desc.baInterfaceNr[0] = g_uac1->as_in_intf;
+    } else {
+        _control_desc.header_desc.baInterfaceNr[0] = g_uac1->as_out_intf;
+        _control_desc.header_desc.baInterfaceNr[1] = g_uac1->as_in_intf;
+    }
 
     /*
      * create an an uac audio control alternate setting,
      * two audio streaming out alternate settings,
      * two audio streaming in alternate settingss.
      */
-    intf_ac_alt0 = rt_usbd_altsetting_new(sizeof(struct uac1_control));
-    intf_as_out_alt0 = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
-    intf_as_out_alt1 = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
-    intf_as_in_alt0 = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
-    intf_as_in_alt1 = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
+    if (HL_UAC_MIC == hl_uac_type) {
+        intf_ac_alt0 = rt_usbd_altsetting_new(sizeof(struct uac1_mic_control));
+        intf_as_in_alt0  = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
+        intf_as_in_alt1  = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
+    } else if(HL_UAC_SPK == hl_uac_type) {
+        intf_ac_alt0 = rt_usbd_altsetting_new(sizeof(struct uac1_spk_control));
+        intf_as_out_alt0 = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
+        intf_as_out_alt1 = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
+    } else {
+        intf_ac_alt0 = rt_usbd_altsetting_new(sizeof(struct uac1_control));
+        intf_as_out_alt0 = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
+        intf_as_out_alt1 = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
+        intf_as_in_alt0  = rt_usbd_altsetting_new(sizeof(struct uinterface_descriptor));
+        intf_as_in_alt1  = rt_usbd_altsetting_new(sizeof(struct uac1_interface_alt));
+    }
 
     /* config desc in alternate setting */
-    rt_usbd_altsetting_config_descriptor(intf_ac_alt0, &_control_desc,
-                                         (rt_off_t) & ((uac1_control_t)0)->interface_desc);
-    rt_usbd_altsetting_config_descriptor(intf_as_out_alt0, &_as_out_intf_alt0_desc, 0);
-    rt_usbd_altsetting_config_descriptor(intf_as_out_alt1, &_as_out_intf_alt1_desc, 0);
-    rt_usbd_altsetting_config_descriptor(intf_as_in_alt0, &_as_in_intf_alt0_desc, 0);
-    rt_usbd_altsetting_config_descriptor(intf_as_in_alt1, &_as_in_intf_alt1_desc, 0);
+    if (HL_UAC_MIC == hl_uac_type) {
+        rt_usbd_altsetting_config_descriptor(intf_ac_alt0, &_mic_control_desc, (rt_off_t) & ((uac1_mic_control_t)0)->interface_desc);
+    } else if (HL_UAC_SPK == hl_uac_type) {
+        rt_usbd_altsetting_config_descriptor(intf_ac_alt0, &_spk_control_desc, (rt_off_t) & ((uac1_spk_control_t)0)->interface_desc);
+    } else {
+        rt_usbd_altsetting_config_descriptor(intf_ac_alt0, &_control_desc, (rt_off_t) & ((uac1_control_t)0)->interface_desc);
+    }
+    if (HL_UAC_MIC != hl_uac_type) {
+        rt_usbd_altsetting_config_descriptor(intf_as_out_alt0, &_as_out_intf_alt0_desc, 0);
+        rt_usbd_altsetting_config_descriptor(intf_as_out_alt1, &_as_out_intf_alt1_desc, 0);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        rt_usbd_altsetting_config_descriptor(intf_as_in_alt0, &_as_in_intf_alt0_desc, 0);
+        rt_usbd_altsetting_config_descriptor(intf_as_in_alt1, &_as_in_intf_alt1_desc, 0);
+    }
 
     /* configure the uac1 interface descriptor */
     _uac1_descriptor_config(intf_ac_alt0->desc, intf_ac->intf_num,
@@ -2121,35 +2409,57 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
                             device->dcd->device_is_hs);
 
     /* create an isoc out and an isoc in endpoint */
-    as_out_intf_desc = (uac1_interface_alt_t)intf_as_out_alt1->desc;
-    g_uac1->ep_out = rt_usbd_endpoint_new((uep_desc_t)&as_out_intf_desc->endpoint_desc,
-                                          _ep_out_handler);
-    as_in_intf_desc = (uac1_interface_alt_t)intf_as_in_alt1->desc;
-    g_uac1->ep_in = rt_usbd_endpoint_new((uep_desc_t)&as_in_intf_desc->endpoint_desc,
-                                         _ep_in_handler);
+    if (HL_UAC_MIC != hl_uac_type) {
+        as_out_intf_desc = (uac1_interface_alt_t)intf_as_out_alt1->desc;
+        g_uac1->ep_out = rt_usbd_endpoint_new((uep_desc_t)&as_out_intf_desc->endpoint_desc, _ep_out_handler);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        as_in_intf_desc = (uac1_interface_alt_t)intf_as_in_alt1->desc;
+        g_uac1->ep_in = rt_usbd_endpoint_new((uep_desc_t)&as_in_intf_desc->endpoint_desc, _ep_in_handler);
+    }
 
-    rt_usbd_altsetting_add_endpoint(intf_as_out_alt1, g_uac1->ep_out);
-    rt_usbd_altsetting_add_endpoint(intf_as_in_alt1, g_uac1->ep_in);
+    if (HL_UAC_MIC != hl_uac_type) {
+        rt_usbd_altsetting_add_endpoint(intf_as_out_alt1, g_uac1->ep_out);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        rt_usbd_altsetting_add_endpoint(intf_as_in_alt1, g_uac1->ep_in);
+    }
 
     rt_usbd_interface_add_altsetting(intf_ac, intf_ac_alt0);
-    rt_usbd_interface_add_altsetting(intf_as_out, intf_as_out_alt0);
-    rt_usbd_interface_add_altsetting(intf_as_out, intf_as_out_alt1);
-    rt_usbd_interface_add_altsetting(intf_as_in, intf_as_in_alt0);
-    rt_usbd_interface_add_altsetting(intf_as_in, intf_as_in_alt1);
+    if (HL_UAC_MIC != hl_uac_type) {
+        rt_usbd_interface_add_altsetting(intf_as_out, intf_as_out_alt0);
+        rt_usbd_interface_add_altsetting(intf_as_out, intf_as_out_alt1);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        rt_usbd_interface_add_altsetting(intf_as_in, intf_as_in_alt0);
+        rt_usbd_interface_add_altsetting(intf_as_in, intf_as_in_alt1);
+    }
 
-    _as_out_intf_alt0_desc.bInterfaceNumber = intf_as_out->intf_num;
-    _as_out_intf_alt1_desc.interface_desc.bInterfaceNumber = intf_as_out->intf_num;
-    _as_in_intf_alt0_desc.bInterfaceNumber = intf_as_in->intf_num;
-    _as_in_intf_alt1_desc.interface_desc.bInterfaceNumber = intf_as_in->intf_num;
+    if (HL_UAC_MIC != hl_uac_type) {
+        _as_out_intf_alt0_desc.bInterfaceNumber = intf_as_out->intf_num;
+        _as_out_intf_alt1_desc.interface_desc.bInterfaceNumber = intf_as_out->intf_num;
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        _as_in_intf_alt0_desc.bInterfaceNumber = intf_as_in->intf_num;
+        _as_in_intf_alt1_desc.interface_desc.bInterfaceNumber = intf_as_in->intf_num;
+    }
 
     rt_usbd_set_altsetting(intf_ac, 0);
-    rt_usbd_set_altsetting(intf_as_out, 0);
-    rt_usbd_set_altsetting(intf_as_in, 0);
+    if (HL_UAC_MIC != hl_uac_type) {
+        rt_usbd_set_altsetting(intf_as_out, 0);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        rt_usbd_set_altsetting(intf_as_in, 0);
+    }
 
     /* add the interface to the uac1 function */
     rt_usbd_function_add_interface(func, intf_ac);
-    rt_usbd_function_add_interface(func, intf_as_out);
-    rt_usbd_function_add_interface(func, intf_as_in);
+    if (HL_UAC_MIC != hl_uac_type) {
+        rt_usbd_function_add_interface(func, intf_as_out);
+    }
+    if (HL_UAC_SPK != hl_uac_type) {
+        rt_usbd_function_add_interface(func, intf_as_in);
+    }
 
     ret = _audio_playback_setup(g_uac1);
     if (ret != RT_EOK)
@@ -2169,6 +2479,16 @@ struct udclass uac1_class =
 
 int rt_usbd_uac1_class_register(void)
 {
+    if (strcmp(uac_type, "mic") == 0) {
+        hl_uac_type = HL_UAC_MIC;
+        rt_kprintf("uac type: %s  hl_uac_type:%d \n", uac_type, hl_uac_type);
+    } else if (strcmp(uac_type, "spk") == 0) {
+        hl_uac_type = HL_UAC_SPK;
+        rt_kprintf("uac type: %s  hl_uac_type:%d \n", uac_type, hl_uac_type);
+    } else {
+        hl_uac_type = HL_UAC_MIC_SPK;
+        rt_kprintf("uac type: %s  hl_uac_type:%d \n", uac_type, hl_uac_type);
+    }
     rt_usbd_class_register(&uac1_class);
     return 0;
 }
