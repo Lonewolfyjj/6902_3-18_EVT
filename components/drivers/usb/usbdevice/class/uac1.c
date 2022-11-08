@@ -52,7 +52,7 @@
 #define P_BUFFER_BOTTOM_NUM         3
 #define P_DEFAULT_SAMPLE_RATE       48000
 #define P_AUDIO_PERIOD_COUNT        2
-#define P_AUDIO_SAMPLE_BITS         32
+#define P_AUDIO_SAMPLE_BITS         24
 #define P_AUDIO_PERIOD_SIZE         1024
 #define P_MB_POOL_SIZE              (P_BUFFER_NUM + 8)
 #define P_TOTAL_SIZE                (P_AUDIO_PERIOD_SIZE * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3))
