@@ -44,7 +44,7 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#define SGM41518_IIC_NAME "i2c1"
+#define SGM41518_IIC_NAME "i2c0"
 #define SGM41518_DEVICE_ADDRESS 0x3B
 
 /* 寄存器地址 */

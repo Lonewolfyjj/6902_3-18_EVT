@@ -59,6 +59,7 @@ typedef enum _hl_gpio_port_e
     /// (无线模块复位脚，外部上下拉都有，高电平有效)
     GPIO_ATS_RESET,
 
+    GPIO_ALL_POWER,
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;
@@ -113,6 +114,7 @@ typedef enum _hl_gpio_port_e
     /// (Swire protocol设置脚，无外部上下拉，目前oled供电芯片使用MCU暂时没用到)(硬件用做了oled电源控制脚，后续需要更改名字)
     GPIO_OLED_SWIRE,
 
+    GPIO_ALL_POWER,
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;

@@ -1,3 +1,5 @@
+#include "hl_config.h"
+#if (!HL_GET_DEVICE_TYPE())
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
 #else
@@ -133,3 +135,5 @@ const lv_img_dsc_t test_pic = {
   .data_size = 19425 * LV_COLOR_SIZE / 8,
   .data = test_pic_map,
 };
+
+#endif

@@ -30,6 +30,7 @@
 /*
  * EOF
  */
+#if 0
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "hl_drv_sgm41518.h"
@@ -1763,7 +1764,7 @@ INIT_ERR:
  * <tr><td>2022-10-08      <td>dujunjie     <td>新建
  * </table>
  */
-void tt1518(int argc, char** argv)
+void hl_drv_sgm41518_test(int argc, char** argv)
 {
     HL_SGM_INPUT_PARAM_T par;
     if (argc != 4) {
@@ -1794,5 +1795,6 @@ void tt1518(int argc, char** argv)
     smg_printf("par.param = 0x%02X \n", par.param);
 }
 // INIT_ENV_EXPORT(hl_drv_sgm41518_init);
-MSH_CMD_EXPORT(tt1518, run tt1518);
+MSH_CMD_EXPORT(hl_drv_sgm41518_test, run hl_drv_sgm41518_test);
 MSH_CMD_EXPORT(hl_drv_sgm41518_init, run hl_drv_sgm41518_init);
+#endif

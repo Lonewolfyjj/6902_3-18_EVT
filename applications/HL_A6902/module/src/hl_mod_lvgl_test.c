@@ -107,11 +107,11 @@ static void hl_mod_lvgl_thread_picture(void* parameter)
 static int lvgl_test_thread(int argc, char** argv)
 {
     hl_mod_lvgl_init();
-    lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 0xA000, 18, 10);
+    lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 0xB000, 11, 10);
 
-    lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x200, 18, 10);
+    lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x400, 11, 10);
 
-    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xA00, 18, 10);
+    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
 
     if (lvgl_tid1 != RT_NULL) {
         rt_kprintf("Lvgl thread 1 init success !\n");
