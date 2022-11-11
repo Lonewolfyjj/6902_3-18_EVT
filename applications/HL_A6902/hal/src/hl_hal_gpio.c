@@ -71,8 +71,8 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO0_C5,  PIN_MODE_OUTPUT},            //5 GPIO_R_VOL_B 新版Rx 悬空未使用
     {GPIO0_C6,  PIN_MODE_OUTPUT},            //6 GPIO_R_VOL_KEY 新版Rx 用作 LCD_PWR_EN 功能，应考虑使用OUTPUT工作模式
     {GPIO0_A3,  PIN_MODE_OUTPUT},            //7 GPIO_GAUGE_INT
-    {GPIO1_A4,  PIN_MODE_OUTPUT},   //8 GPIO_VBUS_DET
-    {GPIO0_C1,  PIN_MODE_OUTPUT},   //9 GPIO_HP_DET
+    {GPIO1_A4,  PIN_MODE_OUTPUT},            //8 GPIO_VBUS_DET
+    {GPIO0_C1,  PIN_MODE_OUTPUT},            //9 GPIO_HP_DET
     {GPIO1_B2,  PIN_MODE_OUTPUT},            //10 GPIO_GSENSOR_INT
     {GPIO1_C0,  PIN_MODE_OUTPUT},            //11 GPIO_OLED_TE
     // OUT
