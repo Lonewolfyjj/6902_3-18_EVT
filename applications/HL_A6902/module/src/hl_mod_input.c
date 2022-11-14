@@ -17,11 +17,12 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "rtthread.h"
 #include "hl_mod_input.h"
 #include "hl_hal_gpio.h"
 #include "rtdevice.h"
-
+#include "hl_drv_knob.h"
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数
@@ -74,13 +75,12 @@ typedef enum _hl_input_key_e
 {
     RX_PWR_KEY = 0,
     RX_L_VOL_KEY,
-    RX_R_VOL_KEY,
     HL_INPUT_KEYS,
 } hl_input_key_e;
 
 typedef enum _hl_input_insert_e
 {
-    VBUS_DET = 0,
+    CAM_DET = 0,
     HP_DET,
     HL_INPUT_INSERT,
 } hl_input_insert_e;
@@ -174,7 +174,7 @@ typedef struct _hl_input_mod_t
     /// 消息队列句柄
     rt_mq_t msg_hander;
     ///  消息
-    mode_to_app_msg_t msg;
+    hl_msg_t msg;
 } hl_input_msg_t;
 
 #if HL_GET_DEVICE_TYPE()
@@ -184,10 +184,10 @@ static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000}
 
 static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_VBUS_DET, GPIO_MIC_DET };
 #else
-static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_L_VOL_KEY, GPIO_R_VOL_KEY };
-static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {2000}, {2000} };
+static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_VOL_OK };
+static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000} };
 
-static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_VBUS_DET, GPIO_HP_DET };
+static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_CAM_DET, GPIO_HP_DET };
 #endif
 static hl_input_msg_t hl_input_msg = { 0 };
 /* 按键事件 */
@@ -223,7 +223,7 @@ bool hl_util_timeout_set(hl_time_t* p_timer, uint32_t time)
     if (p_timer == NULL) {
         return false;
     }
-    p_timer->timeout_time = (uint32_t)rt_tick_get() + time;
+    p_timer->timeout_time = rt_tick_get() + time;
     p_timer->timeout_flag = false;
     p_timer->activity     = true;
 
@@ -247,7 +247,7 @@ bool hl_util_timeout_judge(hl_time_t* p_timer)
         return false;
     }
 
-    if (rt_tick_get() > p_timer->timeout_time) {
+    if ((rt_tick_get() - p_timer->timeout_time) < INT32_MAX) { 
         p_timer->timeout_flag = true;
         p_timer->activity     = false;
         return true;
@@ -265,7 +265,7 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     hl_input_msg.msg.len             = 0;
     hl_input_msg.msg.param.u32_param = param;
 
-    res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(mode_to_app_msg_t));
+    res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(hl_msg_t));
     if (res == -RT_EFULL) {
         HL_PRINT("INPUT_MODE msgq full");
     } else if (res == -RT_ERROR) {
@@ -335,10 +335,7 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
                     res = MSG_RX_PWR_KEY;
                     break;
                 case RX_L_VOL_KEY:
-                    res = MSG_RX_L_VOL_KEY;
-                    break;
-                case RX_R_VOL_KEY:
-                    res = MSG_RX_R_VOL_KEY;
+                    res = MSG_RX_OK_VOL;
                     break;
                 default:
                     break;
@@ -346,12 +343,12 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
             break;
         case SWITCHS:
             switch (nums) {
-                case MSG_RX_VBUS_DET:
+                case CAM_DET:
                     res = MSG_RX_VBUS_DET;
                     break;
-                case MSG_RX_HP_DET:
-                    break;
+                case HP_DET:                    
                     res = MSG_RX_HP_DET;
+                    break;
                 default:
                     break;
             }
@@ -365,9 +362,7 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
 static uint8_t comb_key_check(hl_input_key_e key1, hl_input_key_e key2)
 {
     input_mod_msg_cmd_e res = 0xFF;
-    if (key1 == RX_L_VOL_KEY && key2 == RX_R_VOL_KEY) {
-        res = MSG_COMB_L_R_VOL;
-    }
+    
     return res;
 }
 #endif
@@ -468,7 +463,7 @@ static void hl_mod_input_send_single(void)
     for (i = 0; i < HL_INPUT_KEYS; i++) {
         if (hl_input_keys[i].trigger == true) {
             hl_mod_input_send_msg(pin_index_to_msg_cmd(i, KEYS), hl_input_keys[i].trigger);
-            hl_input_keys[i].trigger = true;
+            hl_input_keys[i].trigger = false;
         }
     }
 }
@@ -477,24 +472,41 @@ static void hl_mod_input_task(void* param)
 {
     uint8_t i =0 ;
     hl_time_t send_period = { 0,0,0 };
+    int8_t knob_value = 0;
 
+    hl_util_timeout_set(&send_period, TASK_SCAN_PERIOD);
     while (1) {
+        // 读取按键
         for (i = 0; i < HL_INPUT_KEYS; i++) {
             hl_mod_input_key_scan(&hl_input_keys[i], i);
+            if (hl_input_keys[i].trigger == true) {
+                hl_mod_input_send_msg(pin_index_to_msg_cmd(i, KEYS), hl_input_keys[i].event);
+                hl_input_keys[i].trigger = false;
+            }
         }
+
+        // 读取接口
         for (i = 0; i < HL_INPUT_INSERT; i++) {
-            hl_mod_input_insert_scan(i);
+            if (true == hl_mod_input_insert_scan(i)) {
+                hl_mod_input_send_msg(pin_index_to_msg_cmd(i, SWITCHS), hl_insert_event[i]);
+            }
         }
-
+#if !HL_GET_DEVICE_TYPE()
+        hl_drv_knob_read(KNOB_LEFT, &knob_value);
+        if (knob_value != 0) {
+            if(knob_value > 0) {
+                hl_mod_input_send_msg(MSG_RX_A_VOL, knob_value);
+            } else {
+                hl_mod_input_send_msg(MSG_RX_B_VOL, (-knob_value));
+            }            
+        }
+#endif
         // 发送消息到其他模块
-        if (hl_util_timeout_judge(&send_period)) {
+        //hl_mod_input_send_comb_key();
+        //hl_mod_input_send_single();
+        //hl_mod_input_insert_send();
 
-            hl_mod_input_send_comb_key();
-            hl_mod_input_send_single();
-            hl_mod_input_insert_send();
-            hl_util_timeout_set(&send_period, TASK_SCAN_PERIOD);
-        }
-        rt_thread_mdelay(10);
+        rt_thread_mdelay(2);
     }
 }
 
@@ -538,11 +550,6 @@ static uint8_t hl_mod_input_key_read(hl_input_key_e key_map)
                 return KEY_PRESS_YES;
             }
             break;
-        case RX_R_VOL_KEY:
-            if (hl_hal_gpio_read(hl_keys_map[RX_R_VOL_KEY]) == PIN_LOW) {
-                return KEY_PRESS_YES;
-            }
-            break;
         default:
             break;
     }
@@ -577,6 +584,8 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
 {
     hl_key_press_state_e key_press_state;
 
+    key->event   = HL_KEY_EVENT_IDLE;
+
     key_press_state = hl_mod_input_key_read(key_num);
 
     switch (key->keystate.last_state) {
@@ -584,6 +593,8 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
             key->keystate.click_cout = 0;
             if (key_press_state == KEY_PRESS_YES) {
                 HL_PRINT("state = %d\r\n", key->keystate.last_state);
+                key->keystate.last_state = KEY_STATE_JITTER;
+                hl_util_timeout_set(&(key->keystate.timer), JITTER_TIME);
             }
 
             break;
@@ -595,10 +606,10 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
 
                 if (key_press_state == KEY_PRESS_YES) {
 
-                    key->keystate.last_state = KEY_STATE_PRESS;
-                    HL_PRINT("state = %d\r\n", key->keystate.last_state);
-                    hl_util_timeout_set(&(key->keystate.timer), key->param.long_press_time);
                     key->event   = HL_KEY_EVENT_PRESS;
+                    key->keystate.last_state = KEY_STATE_PRESS;                    
+                    HL_PRINT("state = %d (%d)\r\n", key->keystate.last_state, key->param.long_press_time);
+                    hl_util_timeout_set(&(key->keystate.timer), key->param.long_press_time);                    
                     key->trigger = true;
                 }
             }
@@ -607,10 +618,11 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
         // 按键按下
         case KEY_STATE_PRESS:
             if (hl_util_timeout_judge(&(key->keystate.timer))) {
-                key->keystate.last_state = KEY_STATE_LONG;
-
+                key->event   = HL_KEY_EVENT_LONG;
+                key->trigger             = true;
+                key->keystate.last_state = KEY_STATE_LONG;               
+                
             } else if (KEY_PRESS_YES != key_press_state) {
-
                 key->keystate.last_state = KEY_STATE_DOUBLE;
                 hl_util_timeout_set(&(key->keystate.timer), DOUBLE_PRESS_TIME);
                 HL_PRINT("state = %d\r\n", key->keystate.last_state);
@@ -645,7 +657,7 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
         // 长按判断
         case KEY_STATE_LONG:
             if (key_press_state != KEY_PRESS_YES) {
-                key->event               = HL_KEY_EVENT_LONG;  // <- 长按
+                key->event               = HL_KEY_EVENT_RELEASE;  // <- 长按
                 key->trigger             = true;
                 key->keystate.last_state = KEY_STATE_IDLE;
             }
@@ -677,8 +689,8 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map)
 {
     switch (insert_map) {
-        case VBUS_DET:
-            if (hl_hal_gpio_read(hl_insert_map[VBUS_DET]) == PIN_HIGH) {
+        case CAM_DET:
+            if (hl_hal_gpio_read(hl_insert_map[CAM_DET]) == PIN_HIGH) {
                 return LINE_INSERT;
             }
             break;
@@ -692,6 +704,7 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
     }
     return LINE_OUT;
 }
+
 #endif
 
 
@@ -756,7 +769,12 @@ uint8_t hl_mod_input_init(void* msg_hander)
         HL_PRINT("insert init err!");
         return HL_FAILED;
     }
-
+#if !HL_GET_DEVICE_TYPE()
+    if (HL_SUCCESS != hl_drv_knob_init()) {
+        HL_PRINT("knob init err!");
+        return HL_FAILED;
+    }    
+#endif
     input_tid = rt_thread_create("input_thread", \
                                 hl_mod_input_task, \
                                 RT_NULL, \
@@ -765,10 +783,15 @@ uint8_t hl_mod_input_init(void* msg_hander)
                                 INPUT_THREAD_TIMESLICE);
 
     if (input_tid != RT_NULL) {
-        if (input_tid->error != RT_EOK) {
-            HL_PRINT("input thread init err!");
-            rt_thread_delete(input_tid);
-        }
+
+        rt_thread_startup(input_tid);
+        HL_PRINT("input thread init succ!");
+        // if (input_tid->error != RT_EOK) {
+        //     HL_PRINT("input thread init err!");
+        //     rt_thread_delete(input_tid);
+        // } else {
+        //     rt_thread_startup(input_tid);
+        // }
     } else {
         HL_PRINT("input thread init err!");
         return HL_FAILED;

@@ -6,6 +6,8 @@
 #include "stdbool.h"
 #include "hl_test_pre.h"
 
+#include "hl_util_ipc.h"
+
 typedef enum _hl_key_event_e
 {
     HL_KEY_EVENT_IDLE = 0x00,
@@ -56,17 +58,18 @@ typedef enum _input_mod_msg_cmd_e
 {
     /// 开关按键消息：类型hl_key_event_e
     MSG_RX_PWR_KEY,
-
-    /// 开关按键消息：类型hl_key_event_e
-    MSG_RX_L_VOL_KEY,
-    /// 开关按键消息：类型hl_key_event_e
-    MSG_RX_R_VOL_KEY,
+    /// 旋钮A消息：类型hl_key_event_e
+    MSG_RX_A_VOL,
+    /// 旋钮B消息：类型hl_key_event_e
+    MSG_RX_B_VOL,
+    /// 旋钮OK消息：类型hl_key_event_e
+    MSG_RX_OK_VOL,
     /// usb插入检测消息：类型hl_switch_event_e
     MSG_RX_VBUS_DET,
     /// 耳机插入检测消息：类型hl_switch_event_e
     MSG_RX_HP_DET,
     /// 组合按键1的消息：左按和右按
-    MSG_COMB_L_R_VOL,
+    MSG_COMB_L_R_VOL,    
 } input_mod_msg_cmd_e;
 #endif
 
