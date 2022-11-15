@@ -32,8 +32,12 @@
 #include "dma.h"
 #include "hal_base.h"
 #include "display_pattern.h"
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
+
+#if (!HL_GET_DEVICE_TYPE())
+
 #define SRC_DATA_FMT RTGRAPHIC_PIXEL_FORMAT_RGB888
 #define SRC_DATA_W RT_LV_HOR_RES
 #define SRC_DATA_H RT_LV_VER_RES
@@ -194,7 +198,7 @@ static uint8_t hl_drv_rm690a0_set_bl(uint16_t val)
 
 /* Exported functions --------------------------------------------------------*/
 
-#if (!HL_GET_DEVICE_TYPE())
+
 
 uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic)
 {
