@@ -100,7 +100,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
                 buff[0] = 0;
                 tx_info.rec_flag = 0;
             }
-            hl_mod_audio_io_ctrl(HL_MOD_AUDIO_RECORD_CMD, &buff[0],1);
+            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &buff[0],1);
             break;
         case HL_KEY_EVENT_LONG:
             break;
@@ -136,7 +136,7 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
         tx_info.ex_mic_plug = 1;
         u8_param            = 1;
     }
-    hl_mod_audio_io_ctrl(HL_MOD_AUDIO_MIC_SWITCH_CMD, &u8_param, 1);
+    hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &u8_param, 1);
 }
 
 #else
