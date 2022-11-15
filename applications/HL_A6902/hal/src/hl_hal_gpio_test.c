@@ -121,16 +121,16 @@ void hl_hal_gpio_pwr_on(void)
 }
 INIT_PREV_EXPORT(hl_hal_gpio_pwr_on);
 
-int hl_hal_gpio_low_test(int argc, char** argv)
-{
-    uint8_t i = 0;
-    for(i = GPIO_PWR_KEY;i<USER_GPIO_COUNT;i++){
-        hl_hal_gpio_init(i);
-        hl_hal_gpio_low(i);
-    }
-    return RT_EOK;
-}
-INIT_PREV_EXPORT(hl_hal_gpio_low_test);
+// int hl_hal_gpio_low_test(int argc, char** argv)
+// {
+//     uint8_t i = 0;
+//     for(i = GPIO_PWR_KEY;i<USER_GPIO_COUNT;i++){
+//         hl_hal_gpio_init(i);
+//         hl_hal_gpio_low(i);
+//     }
+//     return RT_EOK;
+// }
+// INIT_PREV_EXPORT(hl_hal_gpio_low_test);
 #endif
 /*
  * EOF

@@ -876,7 +876,7 @@ MSH_CMD_EXPORT(hl_mod_audio_test, audio io ctrl cmd);
 
 #endif
 
-INIT_APP_EXPORT(hl_mod_audio_init);
+//INIT_APP_EXPORT(hl_mod_audio_init);
 
 #endif  // HL_MOD_AUDIO_C
         /*
