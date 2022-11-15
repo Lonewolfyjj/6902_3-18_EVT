@@ -21,6 +21,8 @@
  * 
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef _HL_MSG_TYPE_H__
+#define _HL_MSG_TYPE_H__
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
@@ -29,17 +31,21 @@ typedef enum
     CMD_TEST,
 } hl_mod_disp_cmd_e;
 
-#ifndef RSENUM8
+#ifndef HL_ENUM8
 #define HL_ENUM8(EnumName) \
     Enum_##EnumName;       \
     typedef uint8_t EnumName
 #endif
 
-#ifndef RSENUM16
+
+#ifndef HL_ENUM16
 #define HL_ENUM16(EnumName) \
     Enum_##EnumName;        \
     typedef uint16_t EnumName
 #endif
+
+
+
 
 typedef enum _mode_id_e
 {
@@ -68,6 +74,7 @@ typedef struct _mode_to_app_msg_t
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+#endif
 /*
  * EOF
  */
