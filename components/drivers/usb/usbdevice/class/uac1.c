@@ -2332,7 +2332,7 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
     g_uac1 = (struct uac1 *)rt_malloc(sizeof(struct uac1));
     rt_memset(g_uac1, 0, sizeof(struct uac1));
     func->user_data = (void *)g_uac1;
-    g_uac1->ep0_buffer = rt_dma_malloc(256);                // 64=》256，描述比较长要增加buff大小
+    g_uac1->ep0_buffer = rt_dma_malloc(512);                // 64=》256，描述比较长要增加buff大小
     g_uac1->p.sample_rate = P_DEFAULT_SAMPLE_RATE;
     g_uac1->c.sample_rate = C_DEFAULT_SAMPLE_RATE;
 
