@@ -72,12 +72,12 @@ typedef enum _hl_gpio_port_e
     // IN
     /// (开关按键，外部上拉，低电平有效)
     GPIO_PWR_KEY,
-    /// (旋钮A，外部上拉，低电平有效)
-    GPIO_VOL_A,
-    /// (旋钮B，外部上拉，低电平有效)
-    GPIO_VOL_B,
-    /// (旋钮按键，外部上拉，低电平有效)
-    GPIO_VOL_OK,
+    /// (左旋钮A，外部上拉，低电平有效)
+    GPIO_L_VOL_A,
+    /// (左旋钮B，外部上拉，低电平有效)
+    GPIO_L_VOL_B,
+    /// (左旋钮按键，外部上拉，低电平有效)
+    GPIO_L_VOL_KEY,
     /// (左旋钮A，外部上拉，低电平有效)
     GPIO_R_VOL_A,
     /// (左旋钮B，外部上拉，低电平有效)
