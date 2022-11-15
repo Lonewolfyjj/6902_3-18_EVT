@@ -9,6 +9,7 @@
 // #include "hl_mod_display_lvgl.h"
 
 #if (!HL_GET_DEVICE_TYPE())
+#if 0
 static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
 static int hl_rx_oled_test_init(void);
 static int hl_rx_oled_test_deinit(void);
@@ -231,5 +232,7 @@ static int spi_cfg_init(void)
 }
 
 INIT_APP_EXPORT(spi_cfg_init);
+
+#endif
 
 #endif

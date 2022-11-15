@@ -60,6 +60,7 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 };
 #else
 // RX
+
 static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
