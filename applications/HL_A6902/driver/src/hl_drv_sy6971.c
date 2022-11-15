@@ -19,12 +19,13 @@
  * <tr><td>2022-11-03     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "hl_drv_sy6971.h"
+#include "hl_config.h"
 /* typedef -------------------------------------------------------------------*/
 typedef uint8_t (*hl_reg_ctl_fun)(uint8_t cmd, uint8_t cmd_typ, uint8_t* param);
 /* define --------------------------------------------------------------------*/
@@ -88,13 +89,12 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_op
         return HL_FAILED;
 }
 
-
 static uint8_t hl_reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg00)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -134,26 +134,25 @@ static uint8_t hl_reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg00)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg00){
+    hl_i2c_read_reg(i2c_bus, SY_REG00_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg00) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg01)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -205,26 +204,25 @@ static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg01)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg01){
+    hl_i2c_read_reg(i2c_bus, SY_REG01_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg01) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg02)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -252,26 +250,25 @@ static uint8_t hl_reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg02)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg02){
+    hl_i2c_read_reg(i2c_bus, SY_REG02_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg02) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg03)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -305,26 +302,25 @@ static uint8_t hl_reg03_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg03)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG03_ADDR, (uint8_t*)&reg_all.reg03)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg03){
+    hl_i2c_read_reg(i2c_bus, SY_REG03_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg03) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg04)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -352,26 +348,25 @@ static uint8_t hl_reg04_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg04)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg04){
+    hl_i2c_read_reg(i2c_bus, SY_REG04_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg04) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg05)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -405,27 +400,25 @@ static uint8_t hl_reg05_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg05)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg05){
+    hl_i2c_read_reg(i2c_bus, SY_REG05_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg05) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
-
 static uint8_t hl_reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg06)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -483,27 +476,25 @@ static uint8_t hl_reg06_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg06)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg06){
+    hl_i2c_read_reg(i2c_bus, SY_REG06_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg06) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
-
 static uint8_t hl_reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg07)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -543,26 +534,25 @@ static uint8_t hl_reg07_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg07)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg07){
+    hl_i2c_read_reg(i2c_bus, SY_REG07_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg07) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg08)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -614,26 +604,25 @@ static uint8_t hl_reg08_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg08)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg08){
+    hl_i2c_read_reg(i2c_bus, SY_REG08_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg08) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg09)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -673,26 +662,25 @@ static uint8_t hl_reg09_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg09)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG09_ADDR, (uint8_t*)&reg_all.reg09)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg09){
+    hl_i2c_read_reg(i2c_bus, SY_REG09_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg09) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0A)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -726,27 +714,25 @@ static uint8_t hl_reg0A_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0A)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0A_ADDR, (uint8_t*)&reg_all.reg0A)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg0A){
+    hl_i2c_read_reg(i2c_bus, SY_REG0A_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg0A) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
-
 static uint8_t hl_reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0B)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -786,27 +772,25 @@ static uint8_t hl_reg0B_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0B)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0B_ADDR, (uint8_t*)&reg_all.reg0B)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg0B){
+    hl_i2c_read_reg(i2c_bus, SY_REG0B_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg0B) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
-
 static uint8_t hl_reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0C)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -834,26 +818,25 @@ static uint8_t hl_reg0C_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0C)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0C_ADDR, (uint8_t*)&reg_all.reg0C)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg0C){
+    hl_i2c_read_reg(i2c_bus, SY_REG0C_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg0C) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0D)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -881,26 +864,25 @@ static uint8_t hl_reg0D_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0D)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0D_ADDR, (uint8_t*)&reg_all.reg0D)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg0D){
+    hl_i2c_read_reg(i2c_bus, SY_REG0D_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg0D) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0E)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -946,26 +928,24 @@ static uint8_t hl_reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0E)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg0E){
+    hl_i2c_read_reg(i2c_bus, SY_REG0E_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg0E) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
-
-
 
 static uint8_t hl_reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg0F)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     switch (cmd) {
@@ -990,17 +970,15 @@ static uint8_t hl_reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s err !\n",__FUNCTION__);
+    sy_printf("%s err !\n", __FUNCTION__);
     return HL_FAILED;
 }
-
-
 
 static uint8_t hl_reg10_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg10)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG10_ADDR, (uint8_t*)&reg_all.reg10)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     switch (cmd) {
@@ -1031,16 +1009,15 @@ static uint8_t hl_reg10_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s err !\n",__FUNCTION__);
+    sy_printf("%s err !\n", __FUNCTION__);
     return HL_FAILED;
 }
-
 
 static uint8_t hl_reg11_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg11)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG11_ADDR, (uint8_t*)&reg_all.reg11)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     switch (cmd) {
@@ -1068,17 +1045,16 @@ static uint8_t hl_reg11_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s err !\n",__FUNCTION__);
+    sy_printf("%s err !\n", __FUNCTION__);
     return HL_FAILED;
 }
 
-
 static uint8_t hl_reg12_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
 {
-    uint8_t bak_data = 0;
+    uint8_t            bak_data = 0;
     HL_SY6971_REGALL_T reg_all;
-    if (hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg12)) {
-        sy_printf("%s read err !\n",__FUNCTION__);
+    if (hl_i2c_read_reg(i2c_bus, SY_REG12_ADDR, (uint8_t*)&reg_all.reg12)) {
+        sy_printf("%s read err !\n", __FUNCTION__);
         goto CTL_ERR;
     }
     if (cmd_typ == SY_READ_CMD) {
@@ -1118,19 +1094,18 @@ static uint8_t hl_reg12_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
             goto CTL_ERR;
             break;
     }
-    if (hl_i2c_write_reg(i2c_bus, SY6971_DEVICE_ADDRESS, (uint8_t*)&reg_all.reg12)) {
+    if (hl_i2c_write_reg(i2c_bus, SY_REG12_ADDR, (uint8_t*)&reg_all.reg12)) {
         goto CTL_ERR;
     }
-    hl_i2c_read_reg(i2c_bus, SY6971_DEVICE_ADDRESS, &bak_data);
-    if(bak_data != *(uint8_t*)&reg_all.reg12){
+    hl_i2c_read_reg(i2c_bus, SY_REG12_ADDR, &bak_data);
+    if (bak_data != *(uint8_t*)&reg_all.reg12) {
         goto CTL_ERR;
     }
     return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n",__FUNCTION__);
+    sy_printf("%s write err !\n", __FUNCTION__);
     return HL_FAILED;
 }
-
 
 static void hl_reg_ctl_fun_init(void)
 {
@@ -1340,7 +1315,6 @@ static uint8_t hl_get_reg_serial(uint8_t cfg_opt)
     return reg_ser;
 }
 
-
 static uint8_t hl_reg_type_get(uint8_t cmd)
 {
     if (cmd < E_VSYS_STAT)
@@ -1349,10 +1323,10 @@ static uint8_t hl_reg_type_get(uint8_t cmd)
 }
 
 /* Exported functions --------------------------------------------------------*/
-uint8_t hl_drv_sy6971_init(void)
+int hl_drv_sy6971_init(void)
 {
     uint8_t             reg_config[SY_REG_NUM] = { 0 };
-    HL_SY_INPUT_PARAM_T reg_all;
+    HL_SY6971_REGALL_T reg_all;
     /* 查找I2C总线设备，获取I2C总线设备句柄 */
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SY6971_IIC_NAME);
     hl_reg_arr_init();
@@ -1362,10 +1336,57 @@ uint8_t hl_drv_sy6971_init(void)
         sy_printf("can't find %s device!\n", SY6971_IIC_NAME);
         goto INIT_ERR;
     }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG00_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG01_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG02_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG05_ADDR);
+        goto INIT_ERR;
+    }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG07_ADDR);
+        goto INIT_ERR;
+    }
 
-/**************************************************************************
- *                          添加初始化配置                                  *
- **************************************************************************/
+    reg_all.reg00.IINLIM = 7;
+    reg_all.reg01.SYS_MIN = 4;
+#if HL_GET_DEVICE_TYPE()
+    reg_all.reg02.ICHG = 13; //Tx
+#else
+    reg_all.reg02.ICHG = 22; //Rx
+#endif
+    reg_all.reg05.VREG = 45;
+    reg_all.reg07.NTC_JEITA = 1;
+
+    if (hl_i2c_write_reg(i2c_bus, SY_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG00_ADDR);
+        goto INIT_ERR;
+    }  
+    if (hl_i2c_write_reg(i2c_bus, SY_REG01_ADDR, (uint8_t*)&reg_all.reg01)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG01_ADDR);
+        goto INIT_ERR;
+    }  
+    if (hl_i2c_write_reg(i2c_bus, SY_REG02_ADDR, (uint8_t*)&reg_all.reg02)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG02_ADDR);
+        goto INIT_ERR;
+    }  
+    if (hl_i2c_write_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG05_ADDR);
+        goto INIT_ERR;
+    }  
+    if (hl_i2c_write_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG07_ADDR);
+        goto INIT_ERR;
+    }  
 
     sy_printf("SY6971 init success !\n");
     return HL_SUCCESS;
@@ -1376,9 +1397,9 @@ INIT_ERR:
     return HL_FAILED;
 }
 
-uint8_t hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
+int hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 {
-    uint8_t               reg_cmd, reg_serial, cmd_typ;
+    uint8_t              reg_cmd, reg_serial, cmd_typ;
     HL_SY_INPUT_PARAM_T* param = (HL_SY_INPUT_PARAM_T*)ptr;
     if (ptr == NULL || len != 1) {
         sy_printf("Param err ! len : [ %X ]\n", len);
@@ -1402,6 +1423,39 @@ uint8_t hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
     }
     return HL_SUCCESS;
 }
+
+void hl_drv_sy6971_test(int argc, char** argv)
+{
+    HL_SY_INPUT_PARAM_T par;
+    if (argc != 4) {
+        sy_printf("argc param err : %d \n", argc);
+        return;
+    }
+
+    uint8_t cmd     = atoi(argv[1]);
+    uint8_t cfg_opt = atoi(argv[2]);
+    uint8_t data    = atoi(argv[3]);
+
+    hl_reg_arr_init();
+    hl_reg_ctl_fun_init();
+
+    par.cfg_opt = cfg_opt;
+    par.param   = data;
+
+    i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(SY6971_IIC_NAME);
+
+    if (i2c_bus == RT_NULL) {
+        sy_printf("can't find %s device!\n", SY6971_IIC_NAME);
+    }
+
+    if (hl_drv_sy6971_io_ctrl(cmd, &par, 1) != HL_SUCCESS) {
+        sy_printf("hl_drv_sy6971_io_ctrl fail!\n");
+    }
+    sy_printf("par.param = 0x%02X \n", par.param);
+}
+
+MSH_CMD_EXPORT(hl_drv_sy6971_init, run hl_drv_sy6971_init);
+MSH_CMD_EXPORT(hl_drv_sy6971_test, run hl_drv_sy6971_test);
 
 /*
  * EOF

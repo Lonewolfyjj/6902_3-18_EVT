@@ -60,21 +60,22 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 };
 #else
 // RX
+
 static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {
     // IN
-    {GPIO1_B1,  PIN_MODE_OUTPUT},            //0 GPIO_PWR_KEY
-    {GPIO0_A6,  PIN_MODE_OUTPUT},            //1 GPIO_L_VOL_A
-    {GPIO0_A5,  PIN_MODE_OUTPUT},            //2 GPIO_L_VOL_B
-    {GPIO0_A7,  PIN_MODE_OUTPUT},            //3 GPIO_L_VOL_KEY
-    {GPIO0_C4,  PIN_MODE_OUTPUT},            //4 GPIO_R_VOL_A 旧版Rx 对照原理图这里应该是 GPIO0_C4，GPIO0_C0是oled复位引脚 新版Rx 用作 VBUS_P_DET 检测
-    {GPIO0_C5,  PIN_MODE_OUTPUT},            //5 GPIO_R_VOL_B 新版Rx 悬空未使用
-    {GPIO0_C6,  PIN_MODE_OUTPUT},            //6 GPIO_R_VOL_KEY 新版Rx 用作 LCD_PWR_EN 功能，应考虑使用OUTPUT工作模式
-    {GPIO0_A3,  PIN_MODE_OUTPUT},            //7 GPIO_GAUGE_INT
-    {GPIO1_A4,  PIN_MODE_OUTPUT},            //8 GPIO_VBUS_DET
-    {GPIO0_C1,  PIN_MODE_OUTPUT},            //9 GPIO_HP_DET
-    {GPIO1_B2,  PIN_MODE_OUTPUT},            //10 GPIO_GSENSOR_INT
-    {GPIO1_C0,  PIN_MODE_OUTPUT},            //11 GPIO_OLED_TE
+    {GPIO1_B1,  PIN_MODE_INPUT},            //0 GPIO_PWR_KEY
+    {GPIO0_A6,  PIN_MODE_INPUT},            //1 GPIO_L_VOL_A
+    {GPIO0_A5,  PIN_MODE_INPUT},            //2 GPIO_L_VOL_B
+    {GPIO0_A7,  PIN_MODE_INPUT},            //3 GPIO_L_VOL_KEY
+    {GPIO0_C4,  PIN_MODE_INPUT},            //4 GPIO_R_VOL_A 旧版Rx 对照原理图这里应该是 GPIO0_C4，GPIO0_C0是oled复位引脚 新版Rx 用作 VBUS_P_DET 检测
+    {GPIO0_C5,  PIN_MODE_INPUT},            //5 GPIO_R_VOL_B 新版Rx 悬空未使用
+    {GPIO0_C6,  PIN_MODE_INPUT},            //6 GPIO_R_VOL_KEY 新版Rx 用作 LCD_PWR_EN 功能，应考虑使用OUTPUT工作模式
+    {GPIO0_A3,  PIN_MODE_INPUT},            //7 GPIO_GAUGE_INT
+    {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   //8 GPIO_VBUS_DET
+    {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   //9 GPIO_HP_DET
+    {GPIO1_B2,  PIN_MODE_INPUT},            //10 GPIO_GSENSOR_INT
+    {GPIO1_C0,  PIN_MODE_INPUT},            //11 GPIO_OLED_TE
     // OUT
     {GPIO0_B0,  PIN_MODE_OUTPUT},           //12 GPIO_PWR_EN 新版Rx 已去掉该引脚功能
     {GPIO1_A5,  PIN_MODE_OUTPUT},           //13 GPIO_USB_SW 新版Rx SGM7222芯片新版原理图已经去掉，更改为检测外部麦克风插入检测相关的引脚
