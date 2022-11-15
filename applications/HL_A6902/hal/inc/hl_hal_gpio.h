@@ -58,6 +58,8 @@ typedef enum _hl_gpio_port_e
     GPIO_MIC_SW,
     /// (无线模块复位脚，外部上下拉都有，高电平有效)
     GPIO_ATS_RESET,
+    /// (电源总开关，外部下拉，高电平有效)
+    GPIO_ALL_POWER,
 
     // GPIO 总数
     USER_GPIO_COUNT
@@ -88,6 +90,8 @@ typedef enum _hl_gpio_port_e
     GPIO_VBUS_DET,
     /// (耳机插入检测，外部上拉，低电平有效)
     GPIO_HP_DET,
+    /// (相机口插入检测，外部上拉，低电平有效)
+    GPIO_CAM_DET,
     /// (加速度传感器中断脚，外部上拉，低电平有效)
     GPIO_GSENSOR_INT,
     /// (oled帧同步输出脚，无外部上下拉，未激活输出低，激活输出高)
@@ -95,9 +99,7 @@ typedef enum _hl_gpio_port_e
 
     // OUT
     /// (电源使能，无外部上下拉，高电平有效)
-    GPIO_PWR_EN,
-    /// (USB切换开关，外部下拉，低：RK USB 高：2831P USB)
-    GPIO_USB_SW,
+    GPIO_PWR_EN,    
     /// (OLED RST脚，无外部上下拉，低电平有效)
     GPIO_OLED_RST,
     /// (RF电源使能，无外部上下拉，高电平有效)
@@ -113,6 +115,10 @@ typedef enum _hl_gpio_port_e
     /// (Swire protocol设置脚，无外部上下拉，目前oled供电芯片使用MCU暂时没用到)(硬件用做了oled电源控制脚，后续需要更改名字)
     GPIO_OLED_SWIRE,
 
+    /// (电源总开关，外部下拉，高电平有效)
+    GPIO_ALL_POWER,
+    /// (显示屏供电，无外部上下拉，低电关闭，高电平打开)
+    GPIO_OLED_POWER, // MIPI_OLED供电
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;

@@ -444,6 +444,7 @@ const static struct udcd_ops g_udc_ops =
     usb_wakeup,
 };
 
+#define RT_USING_USBD_SPEED_FULL
 int rt_usbd_register(void)
 {
     rt_memset((void *)&g_usbd.udc, 0, sizeof(struct udcd));

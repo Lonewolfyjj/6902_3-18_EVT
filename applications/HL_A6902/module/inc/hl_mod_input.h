@@ -4,7 +4,7 @@
 #include "rtdef.h"
 #include "hl_config.h"
 #include "stdbool.h"
-#include "hl_test_pre.h"
+// #include "hl_test_pre.h"
 
 typedef enum _hl_key_event_e
 {
