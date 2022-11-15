@@ -30,6 +30,8 @@
 #include "hl_one_img.h"
 #include <rtdevice.h>
 #include "hl_drv_rm690a0.h"
+#include "hl_mod_display.h"
+#include "hl_test_pre.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -448,7 +450,145 @@ static int hl_rx_oled_test_init(void)
     return RT_EOK;
 }
 MSH_CMD_EXPORT(oled_test, mipi oled test);
+
+struct rt_messagequeue hl_mq;
+static char            hl_msg_pool[2048];
+
+int hl_mod_display_test_cmd(int argc, char** argv)
+{
+    static mode_to_app_msg_t msg;
+
+    if (argc == 1) {
+        rt_kprintf("display_test \r\n");
+
+    } else if (!strcmp(argv[1], "init")) {
+        rt_kprintf("display_test thread init\r\n");
+
+        rt_mq_init(&hl_mq, "AppMsg", &hl_msg_pool[0], 128 - sizeof(void*), sizeof(hl_msg_pool), RT_IPC_FLAG_FIFO);
+
+        hl_mod_display_init((void*)&hl_mq);
+
+        rt_kprintf("test!\r\n");
+
+    } else if (!strcmp(argv[1], "cmd")) {
+        rt_kprintf("display_test thread\r\n");
+        msg.cmd             = atoi(argv[2]);
+        msg.len             = 4;
+        msg.param.u32_param = atoi(argv[3]);
+
+        rt_kprintf("u32_param=%d\r\n", msg.param.u32_param);
+        rt_thread_mdelay(1000);
+        hl_mod_display_io_ctrl(msg.cmd, (void*)&msg.param.u32_param, msg.len);
+
+    } else {
+        rt_kprintf("wrong parameter, please type: oled_test \r\n");
+    }
+
+    return RT_EOK;
+}
+MSH_CMD_EXPORT(hl_mod_display_test_cmd, display cmd test);
+
 #endif 
+#else
+// TX display mod test
+
+struct rt_messagequeue hl_mq;
+static char            hl_msg_pool[2048];
+static rt_thread_t     pm_tid = RT_NULL;
+
+#define PM_THREAD_PRIORITY 20
+#define PM_THREAD_STACK_SIZE 512
+#define PM_THREAD_TIMESLICE 10
+
+static void hl_mod_display_test_thread_init(void* param)
+{
+    uint8_t           res         = 0;
+    mode_to_app_msg_t hl_msg_test = *(mode_to_app_msg_t*)param;
+
+    rt_kprintf("start display thread!\r\n");
+
+    rt_kprintf("cmd=%d\r\n", hl_msg_test.cmd);
+    rt_kprintf("u32_param=%d\r\n", hl_msg_test.param.u32_param);
+    rt_thread_mdelay(4000);
+    hl_mod_display_io_ctrl(hl_msg_test.cmd, (void*)&hl_msg_test.param, hl_msg_test.len);
+
+    while (1) {
+
+        rt_thread_mdelay(100);
+    }
+}
+
+int hl_mod_display_test_init(int argc, char** argv)
+{
+    static mode_to_app_msg_t msg;
+
+    if (argc == 1) {
+        rt_kprintf("display_test \r\n");
+
+    } else if (!strcmp(argv[1], "cmd")) {
+        rt_kprintf("display_test thread\r\n");
+        msg.cmd             = atoi(argv[2]);
+        msg.len             = 4;
+        msg.param.u32_param = atoi(argv[3]);
+
+    } else {
+        rt_kprintf("wrong parameter, please type: oled_test \r\n");
+    }
+
+    rt_mq_init(&hl_mq, "AppMsg", &hl_msg_pool[0], 128 - sizeof(void*), sizeof(hl_msg_pool), RT_IPC_FLAG_FIFO);
+
+    hl_mod_display_init((void*)&hl_mq);
+    rt_kprintf("test!\r\n");
+
+    pm_tid = rt_thread_create("oled_thread", hl_mod_display_test_thread_init, (void*)&msg, PM_THREAD_STACK_SIZE,
+                              PM_THREAD_PRIORITY, PM_THREAD_TIMESLICE);
+
+    if (pm_tid != RT_NULL) {
+        rt_kprintf("oled thread init ok!\r\n");
+        rt_thread_startup(pm_tid);
+    } else {
+        rt_kprintf("oled thread init err!\r\n");
+        return -1;
+    }
+
+    return RT_EOK;
+}
+MSH_CMD_EXPORT(hl_mod_display_test_init, display test);
+
+int hl_mod_display_test_cmd(int argc, char** argv)
+{
+    static mode_to_app_msg_t msg;
+
+    if (argc == 1) {
+        rt_kprintf("display_test \r\n");
+
+    } else if (!strcmp(argv[1], "init")) {
+        rt_kprintf("display_test thread init\r\n");
+
+        rt_mq_init(&hl_mq, "AppMsg", &hl_msg_pool[0], 128 - sizeof(void*), sizeof(hl_msg_pool), RT_IPC_FLAG_FIFO);
+
+        hl_mod_display_init((void*)&hl_mq);
+
+        rt_kprintf("test!\r\n");
+
+    } else if (!strcmp(argv[1], "cmd")) {
+        rt_kprintf("display_test thread\r\n");
+        msg.cmd             = atoi(argv[2]);
+        msg.len             = 4;
+        msg.param.u32_param = atoi(argv[3]);
+
+        rt_kprintf("u32_param=%d\r\n", msg.param.u32_param);
+        rt_thread_mdelay(1000);
+        hl_mod_display_io_ctrl(msg.cmd, (void*)&msg.param.u32_param, msg.len);
+
+    } else {
+        rt_kprintf("wrong parameter, please type: oled_test \r\n");
+    }
+
+    return RT_EOK;
+}
+MSH_CMD_EXPORT(hl_mod_display_test_cmd, display cmd test);
+
 #endif
 /*
  * EOF
