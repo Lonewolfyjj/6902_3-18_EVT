@@ -124,6 +124,8 @@ static struct rt_ringbuffer*           s_record_bypass_rb        = RT_NULL;
 static uint32_t                        s_record_after_size       = 0;
 static uint32_t                        s_record_bypass_size      = 0;
 #endif
+extern struct rt_ringbuffer*           g_host2dev_rb;
+extern struct rt_ringbuffer*           g_dev2host_rb;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -589,6 +591,8 @@ static void do_read_audio(void* arg)
             rt_ringbuffer_put(s_record_bypass_rb, dsp_config->audio_before_process_out_buffer_b24_1ch,
                               dsp_config->buffer_size_b24_1ch);
         }
+#else
+        rt_ringbuffer_put_force(g_dev2host_rb, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch);
 #endif
     }
 
