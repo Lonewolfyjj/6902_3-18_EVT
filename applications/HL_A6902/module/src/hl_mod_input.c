@@ -21,6 +21,7 @@
 #include "hl_mod_input.h"
 #include "hl_hal_gpio.h"
 #include "rtdevice.h"
+#include "hl_util_msg_type.h"
 
 /* define --------------------------------------------------------------------*/
 
