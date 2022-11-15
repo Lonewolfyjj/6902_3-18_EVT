@@ -174,7 +174,7 @@ typedef struct _hl_input_mod_t
     /// 消息队列句柄
     rt_mq_t msg_hander;
     ///  消息
-    hl_msg_t msg;
+    mode_to_app_msg_t msg;
 } hl_input_msg_t;
 
 #if HL_GET_DEVICE_TYPE()
@@ -265,7 +265,7 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     hl_input_msg.msg.len             = 0;
     hl_input_msg.msg.param.u32_param = param;
 
-    res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(hl_msg_t));
+    res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
         HL_PRINT("INPUT_MODE msgq full");
     } else if (res == -RT_ERROR) {
