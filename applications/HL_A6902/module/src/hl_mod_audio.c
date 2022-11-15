@@ -32,8 +32,8 @@
 
 #include "hl_mod_audio.h"
 #include "hl_drv_audio.h"
+#include "hal_audio.h"
 #include "hl_drv_rk_xtensa_dsp.h"
-#include "hl_config.h"
 
 #include "hl_drv_aw21009.h"
 #include "hl_hal_gpio.h"
@@ -92,6 +92,7 @@ struct playback_config
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
+//"pdmc" "codecc"
 #if HL_GET_DEVICE_TYPE()
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wifip"
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecc"
@@ -188,12 +189,17 @@ static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
 
 static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t* s_record_size)
 {
-    close(p_file_audio);
+    if(*s_record_size < 86400000) {
+        return;
+    }
 
+    close(p_file_audio);
+    // 文件名改变 file_name
     p_file_audio = open(file_name, O_WRONLY | O_CREAT);
     if (!p_file_audio) {
         rt_kprintf("%s:Unable to create file '%s'\n", __func__, file_name);
         hl_mod_audio_record_stop(p_file_audio, s_record_size);
+        *s_record_size = 0x00;
         return;
     }
 }
@@ -396,15 +402,15 @@ static void do_record_audio(void* arg)
     char*    record_buffer1;
     uint32_t record_size1;
 
-    record_size   = dsp_config->buffer_size_b24_1ch * 10;  
+    record_size   = dsp_config->buffer_size_b24_1ch * 57;  
     record_buffer = rt_malloc(record_size);
 
-    record_size1   = dsp_config->buffer_size_b24_1ch * 10; 
+    record_size1   = dsp_config->buffer_size_b24_1ch * 57; 
     record_buffer1 = rt_malloc(record_size);
     
     while (1) {
         if ((rt_ringbuffer_data_len(s_record_after_rb) < record_size) || (s_record_switch != 1)
-            || (rt_ringbuffer_data_len(s_record_bypass_rb) < record_size)) {
+            || (rt_ringbuffer_data_len(s_record_bypass_rb) < record_size1)) {
             rt_thread_delay(1);
         } else {
             if (rt_ringbuffer_data_len(s_record_after_rb) >= record_size) {
@@ -414,7 +420,7 @@ static void do_record_audio(void* arg)
 
             if (rt_ringbuffer_data_len(s_record_bypass_rb) >= record_size1) {
                 rt_ringbuffer_get(s_record_bypass_rb, record_buffer1, record_size1);
-                hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_after_size);
+                hl_mod_audio_record(cap_config->file_audio_bypass, record_buffer1, record_size1, &s_record_bypass_size);
             }
         }
         
@@ -435,6 +441,7 @@ static void do_record_audio(void* arg)
     }
 }
 #endif
+
 
 static void do_write_audio(void* arg)
 {
@@ -566,11 +573,11 @@ static void do_read_audio(void* arg)
 
         hl_drv_rk_xtensa_dsp_transfer();
 
-        if ((rt_ringbuffer_space_len(s_audio_rb) >= cap_size) && (s_audio_switch == 1)) {
-            rt_ringbuffer_put(s_audio_rb, dsp_config->audio_process_out_buffer_b32_2ch, dsp_config->process_size);
-        } else {
-            rt_kprintf("rt_ringbuffer_get_size(s_audio_rb) =  %d", rt_ringbuffer_get_size(s_audio_rb));
+        if (rt_device_write(ply_config->card, 0, dsp_config->audio_process_out_buffer_b32_2ch, ply_config->period_size)
+            <= 0) {
+            rt_kprintf("Error playing sample\n");
         }
+
 
 #if HL_GET_DEVICE_TYPE()        
         if (s_record_switch == 1) {
@@ -595,7 +602,20 @@ static void do_read_audio(void* arg)
 #endif
 }
 
+static void hl_mod_audio_set_gain(int dB, uint8_t ch)
+{
+    int8_t ret = 0;
+    struct AUDIO_DB_CONFIG db_config = {0};
 
+    db_config.dB = dB;
+    db_config.ch = ch;
+
+    ret = rt_device_control(cap_config->card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    if (ret != RT_EOK) {
+        rt_kprintf("fail to set gain\n");
+        return -RT_ERROR;
+    }
+}
 
 
 /* Exported functions --------------------------------------------------------*/
@@ -611,13 +631,11 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
 
 #if HL_GET_DEVICE_TYPE()
     hl_drv_aw21009_init();
-    _hl_drv_key_init();
+    //_hl_drv_key_init();
     s_record_switch = 0;
     ///
-    hl_hal_gpio_init(GPIO_MIC_SW);
-    hl_hal_gpio_high(GPIO_MIC_SW);
-    temp = 0;
-    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &temp, 1);
+    hl_hal_gpio_init(GPIO_MIC_SW);    
+    hl_hal_gpio_low(GPIO_MIC_SW);
 #else
     hl_hal_gpio_init(GPIO_AMP_EN);
     hl_hal_gpio_high(GPIO_AMP_EN);
@@ -631,20 +649,22 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     RT_ASSERT(s_audio_rb != RT_NULL);
 
 #if HL_GET_DEVICE_TYPE()
-    s_record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 30);
+    s_record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
     RT_ASSERT(s_record_after_rb != RT_NULL);
 
-    s_record_bypass_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 30);
+    s_record_bypass_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
     RT_ASSERT(s_record_bypass_rb != RT_NULL);
 #endif
+    audio_tid = rt_thread_create("audio_read", do_read_audio, RT_NULL, 2048, 0, 3);  //
 
-    audio_tid = rt_thread_create("audio_read", do_read_audio, RT_NULL, 2048, 5, 1);  //
     if (audio_tid)
         rt_thread_startup(audio_tid);
 
+#if 0
     audio_tid = rt_thread_create("audio_write", do_write_audio, RT_NULL, 2048, 5, 1);  //
     if (audio_tid)
         rt_thread_startup(audio_tid);
+#endif
 
 #if HL_GET_DEVICE_TYPE()
     record_tid = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);  //
@@ -659,58 +679,86 @@ uint8_t hl_mod_audio_deinit()
 {
     return 0;
 }
+#if HL_GET_DEVICE_TYPE()
 uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
+    int8_t ret = 0;
+
     switch (cmd) {
-        case HL_MOD_AUDIO_GET_INFO_CMD:
+        case HL_AUDIO_GET_INFO_CMD:
             break;
-        case HL_MOD_AUDIO_SET_TIME_CMD:
+        case HL_AUDIO_SET_TIME_CMD:
             break;
-        case HL_MOD_AUDIO_GET_TIME_CMD:
+        case HL_AUDIO_GET_TIME_CMD:
             break;
-        case HL_MOD_AUDIO_SET_DENOISE_CMD:
+        case HL_AUDIO_SET_DENOISE_CMD:
             if (ptr == NULL) {
                 rt_kprintf("HL_MOD_AUDIO_SET_DENOISE_CMD parem error");
                 return -1;
             }
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, ptr, 1);
             break;
-        case HL_MOD_AUDIO_SET_GAIN_CMD:
+        case HL_AUDIO_SET_GAIN_CMD:
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
             break;
-        case HL_MOD_AUDIO_SET_MUTE_CMD:
+        case HL_AUDIO_SET_MUTE_CMD:
             break;
-        case HL_MOD_AUDIO_SET_EQ_CMD:
+        case HL_AUDIO_SET_EQ_CMD:
             break;
-        case HL_MOD_AUDIO_RECORD_CMD:
+        case HL_AUDIO_RECORD_CMD:
             if (ptr == NULL) {
                 rt_kprintf("HL_MOD_AUDIO_RECORD_CMD parem error");
                 return -1;
             }
             return hl_mod_audio_record_switch(((char*)ptr)[0]);
             break;
-#if HL_GET_DEVICE_TYPE()
-        case HL_MOD_AUDIO_MIC_SWITCH_CMD:
+
+        case HL_AUDIO_MIC_SWITCH_CMD:
             if (ptr == NULL) {
                 rt_kprintf("HL_MOD_AUDIO_RECORD_CMD parem error");
                 return -1;
             }
-            if(((char*)ptr)[0] != 0) {
-                hl_hal_gpio_init(GPIO_MIC_SW);
+            if(((char*)ptr)[0] != 0) {                
                 hl_hal_gpio_high(GPIO_MIC_SW);
-            } else {
-                hl_hal_gpio_init(GPIO_MIC_SW);
+            } else {                
                 hl_hal_gpio_low(GPIO_MIC_SW);
             }                
             break;
-#endif
+
         default:
-            rt_kprintf("Audio io ctrl param error \r\n");
+            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
             break;
     }
 
     return 0;
 }
+#else
+uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
+{
+    int8_t ret = 0;
 
+    switch (cmd) {
+        case HL_AUDIO_GET_INFO_CMD:
+            break;
+        case HL_AUDIO_SET_GAIN_CMD:
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
+            break;
+        case HL_AUDIO_SET_HP_AMP_CMD:
+            if(((char*)ptr)[0] != 0) {
+                hl_hal_gpio_high(GPIO_AMP_EN);
+            } else {
+                hl_hal_gpio_low(GPIO_AMP_EN);
+            } 
+            break;
+
+        default:
+            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
+            break;
+    }
+
+    return 0;
+}
+#endif
 /**
  * 
  * @brief 
@@ -728,6 +776,7 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
  * <tr><td>2022-10-13      <td>lixiang     <td>新建
  * </table>
  */
+#if HL_GET_DEVICE_TYPE()
 int hl_mod_audio_test(int argc, char** argv)
 {
     uint8_t audio_param = 0; 
@@ -748,7 +797,7 @@ int hl_mod_audio_test(int argc, char** argv)
             return 0;
         }
         audio_param = (uint8_t) atoi(argv[2]);
-        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_RECORD_CMD, &audio_param, 1);
+        hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &audio_param, 1);
     } else if (!strcmp("denoise", argv[1])) {
         if (argc <= 2) {
             rt_kprintf("wrong parameter, please type: hl_mod_audio_test denoise [0 | 1] \r\n");
@@ -756,7 +805,7 @@ int hl_mod_audio_test(int argc, char** argv)
             return 0;
         }
         audio_param = (uint8_t) atoi(argv[2]);
-        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_SET_DENOISE_CMD, &audio_param, 1);
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &audio_param, 1);
     } else  if (!strcmp("micswitch", argv[1])) {
         if (argc <= 2) {
             rt_kprintf("wrong parameter, please type: hl_mod_audio_test micswitch [0 | 1] \r\n");
@@ -764,7 +813,16 @@ int hl_mod_audio_test(int argc, char** argv)
             return 0;
         }
         audio_param = (uint8_t) atoi(argv[2]);
-        hl_mod_audio_io_ctrl(HL_MOD_AUDIO_MIC_SWITCH_CMD, &audio_param, 1);
+        hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &audio_param, 1);
+    } else  if (!strcmp("gain", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test gain [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=set gain, 1=get gain)\r\n");
+            rt_kprintf("                              gain :(uint8_t)\r\n");
+            return 0;
+        }
+        audio_param = (int8_t) atoi(argv[3]);
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_param, 1);
     } else {
         rt_kprintf("wrong parameter, please type: hl_mod_audio_test cmd error\r\n");
         return 0;
@@ -772,7 +830,41 @@ int hl_mod_audio_test(int argc, char** argv)
 
     return 0;
 }
+#else
+int hl_mod_audio_test(int argc, char** argv)
+{
+    uint8_t audio_param = 0; 
 
+    if (argc <= 1) {
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | gain | ampswitch ] [param] \r\n");
+        return 0;
+    }    
+    
+    if (!strcmp("ampswitch", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test ampswitch [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=OFF, 1=NO)\r\n");
+            return 0;
+        }
+        audio_param = (uint8_t) atoi(argv[2]);
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &audio_param, 1);
+    } else  if (!strcmp("gain", argv[1])) {
+        if (argc <= 2) {
+            rt_kprintf("wrong parameter, please type: hl_mod_audio_test gain [0 | 1] \r\n");
+            rt_kprintf("                              param:(0=set gain, 1=get gain)\r\n");
+            rt_kprintf("                              gain :(uint8_t)\r\n");
+            return 0;
+        }
+        audio_param = (int8_t) atoi(argv[3]);
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_param, 1);
+    } else {
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test cmd error\r\n");
+        return 0;
+    }
+
+    return 0;
+}
+#endif
 
 #ifdef RT_USING_FINSH
 
