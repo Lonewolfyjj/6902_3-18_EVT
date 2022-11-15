@@ -46,7 +46,10 @@
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME 5
 
+#if HL_GET_DEVICE_TYPE()
 #define HL_MOD_TX_RECORD_LED HL_DRV_AW2016A_LED1
+#endif
+
 #define HL_MOD_TX_STATE_LED HL_DRV_AW2016A_LED0
 
 #define HL_BLUE_CHANNEL HL_DRV_AW2016A_LED_CHANNEL3
@@ -56,8 +59,7 @@
 #define HL_ALL_CHANNEL HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3
 
 static rt_thread_t display_tid = RT_NULL;
-static uint8_t now_color = RGB888_BLACK;
-static uint8_t last_now_color = RGB888_BLACK;
+
 typedef struct _hl_display_msg_t
 {
     /// 消息队列句柄
@@ -84,6 +86,10 @@ typedef struct _hl_display_led_t
 } hl_display_led_t;
 #else
 // RX
+
+static uint8_t now_color = RGB888_BLACK;
+static uint8_t last_now_color = RGB888_BLACK;
+
 typedef struct _hl_display_led_t
 {
     uint32_t last_led_mode;
@@ -91,6 +97,8 @@ typedef struct _hl_display_led_t
     uint32_t current_led_mode;
 
 } hl_display_led_t;
+
+
 #endif
 
 static hl_display_led_t hl_display_led;
@@ -542,12 +550,43 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 }
 #endif
 
+#if HL_GET_DEVICE_TYPE()
+// TX
 static void hl_mod_display_task(void* param)
 {
 
     while (1) {
 
         hl_mod_display_led_set();
+        rt_thread_mdelay(RTHEAD_DELAY_TIME);
+    }
+}
+
+uint8_t hl_mod_display_deinit(void)
+{
+
+    if (display_tid != RT_NULL) {
+        rt_thread_delete(display_tid);
+    }
+
+    hl_drv_aw2016a_deinit();
+
+    // TX
+    hl_hal_gpio_init(GPIO_PWR_EN);
+    hl_hal_gpio_low(GPIO_PWR_EN);
+
+    return HL_DISPLAY_SUCCESS;
+}
+
+#else
+// RX
+static void hl_mod_display_task(void* param)
+{
+
+    while (1) {
+
+        hl_mod_display_led_set();
+
         hl_mod_display_screen_set();
         rt_thread_mdelay(RTHEAD_DELAY_TIME);
     }
@@ -555,8 +594,16 @@ static void hl_mod_display_task(void* param)
 
 uint8_t hl_mod_display_deinit(void)
 {
+    if (display_tid != RT_NULL) {
+        rt_thread_delete(display_tid);
+    }
+    hl_drv_aw2016a_deinit();
+    hl_drv_rm690a0_deinit();
+
     return HL_DISPLAY_SUCCESS;
 }
+
+#endif
 
 #if HL_GET_DEVICE_TYPE()
 //TX
