@@ -59,7 +59,7 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_RELEASE:
             break;
         default:
-            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FILE__, __LINE__, event);
+            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, event);
             break;
     }
 }
@@ -79,7 +79,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_RELEASE:
             break;
         default:
-            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FILE__, __LINE__, event);
+            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, event);
             break;
     }
 }
@@ -109,7 +109,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_RELEASE:
             break;
         default:
-            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FILE__, __LINE__, event);
+            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, event);
             break;
     }
 }
@@ -155,7 +155,7 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_RELEASE:
             break;
         default:
-            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FILE__, __LINE__, event);
+            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, event);
             break;
     }
 }
@@ -175,7 +175,7 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_RELEASE:
             break;
         default:
-            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FILE__, __LINE__, event);
+            rt_kprintf("[%s][line:%d] event(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, event);
             break;
     }
 }
@@ -250,7 +250,7 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
             break;
         case MSG_TX_PAIR_KEY:
             hl_app_tx_pair_key_pro(p_msg->param.u32_param);
-            rt_kprintf("MSG_TX_PWR_KEY:(%d) \r\n", p_msg->param.u32_param);
+            rt_kprintf("MSG_TX_PAIR_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
         case MSG_TX_REC_KEY:
             hl_app_tx_rec_key_pro(p_msg->param.u32_param);
@@ -266,7 +266,7 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
 			rt_kprintf("MSG_TX_MIC_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, p_msg->cmd);
+            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, p_msg->cmd);
             break;
     }
 }
@@ -278,36 +278,38 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_rx_pwr_key_pro(p_msg->param.u32_param);
             rt_kprintf("MSG_RX_PWR_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
-            /*
-        case MSG_RX_KNOB_KEY:
+
+        case MSG_RX_OK_VOL:
             hl_app_rx_knob_key_pro(p_msg->param.u32_param);
             break;
-            */
 
         case MSG_RX_A_VOL:
             hl_app_rx_knob_pro(HL_KNOB_L, p_msg->param.u32_param);
             rt_kprintf("MSG_RX_L_VOL_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
+
         case MSG_RX_B_VOL:
             hl_app_rx_knob_pro(HL_KNOB_R, p_msg->param.u32_param);
             rt_kprintf("MSG_RX_R_VOL_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
+
         case MSG_RX_VBUS_DET:
             hl_app_rx_usb_plug_pro(p_msg->param.u32_param);
             rt_kprintf("MSG_RX_VBUS_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
+
         case MSG_RX_HP_DET:
             hl_app_rx_hp_plug_pro(p_msg->param.u32_param);
             rt_kprintf("MSG_RX_HP_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
-        /*
+
         case MSG_RX_CAM_DET:
             hl_app_rx_cam_plug_pro(p_msg->param.u32_param);
-            rt_kprintf("MSG_RX_HP_DET:(%d) \r\n", p_msg->param.u32_param);
+            rt_kprintf("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
-        */
+
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, p_msg->cmd);
+            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, p_msg->cmd);
             break;
     }
 }

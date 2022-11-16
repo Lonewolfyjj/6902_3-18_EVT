@@ -420,29 +420,29 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case MSG_STATE_LED_MODE_CMD: {
             uint32_t val = *(uint32_t*)ptr;
             if (val >= LED_MODE_ID_CNT) {
-                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FILE__, __LINE__, cmd);
+                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
             } else {
                 hl_display_led.current_led_mode = val;
-                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FILE__, __LINE__, val);
+                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FUNCTION__, __LINE__, val);
             }
         }
         break;
         case MSG_SOUND_CHANNEL_CMD: {
             uint32_t val = *(uint32_t*)ptr;
             if (val >= RECORD_LED_MODE_ID_CNT) {
-                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FILE__, __LINE__, cmd);
+                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
             } else {
                 hl_display_led.current_record_led_mode = val;
-                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FILE__, __LINE__, val);
+                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FUNCTION__, __LINE__, val);
             }
         }
         break;
         case MSG_RECORD_LED_MODE_CMD: {
             uint32_t val                 = *(uint32_t*)ptr;
             hl_display_led.sound_channel = val;
-            HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FILE__, __LINE__, val);
+            HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FUNCTION__, __LINE__, val);
         }
         break;
         default:
@@ -523,22 +523,22 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case MSG_STATE_LED_MODE_CMD: {
             uint32_t val = *(uint32_t*)ptr;
             if (val >= LED_MODE_ID_CNT) {
-                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FILE__, __LINE__, cmd);
+                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
             } else {
                 hl_display_led.current_led_mode = val;
-                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FILE__, __LINE__, val);
+                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FUNCTION__, __LINE__, val);
             }
         }
         break;
         case MSG_OLED_COLOR_CHANGE_CMD: {
             uint8_t val = *(uint32_t*)ptr;
             if (val >= RGB888_COLOR_CNT) {
-                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FILE__, __LINE__, cmd);
+                HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
             } else {
                 now_color = val;
-                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FILE__, __LINE__, val);
+                HL_PRINT("[%s][line:%d] val(%d)!!! \r\n", __FUNCTION__, __LINE__, val);
             }
         }
         break;

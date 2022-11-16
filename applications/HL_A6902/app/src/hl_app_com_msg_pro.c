@@ -45,7 +45,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, p_msg->cmd);
+            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, p_msg->cmd);
             break;
     }
 }

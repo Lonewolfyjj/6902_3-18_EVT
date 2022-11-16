@@ -730,7 +730,7 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
 
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
+            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FUNCTION__, __LINE__, cmd);
             break;
     }
 
@@ -756,7 +756,7 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
 
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
+            rt_kprintf("[%s][line:%d] cmd(%d) error!!! \r\n", __FUNCTION__, __LINE__, cmd);
             break;
     }
 

@@ -374,7 +374,7 @@ static rt_err_t nau88l25b_set_gain(struct audio_codec *codec, eAUDIO_streamType 
             ret |= nau88l25b_set_gain_volume(nau88l25b, dBConfig->dB);
             break;
         default:
-            rt_kprintf("[%s][line:%d] cmd(0x%02x) unkown!!! \r\n", __FILE__, __LINE__, dBConfig->ch);
+            rt_kprintf("[%s][line:%d] cmd(0x%02x) unkown!!! \r\n", __FUNCTION__, __LINE__, dBConfig->ch);
             break;
     }        
 

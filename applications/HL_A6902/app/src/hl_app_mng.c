@@ -65,7 +65,7 @@ void hl_app_msg_thread(void* parameter)
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
         if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), RT_WAITING_FOREVER) == RT_EOK) {
-            // rt_kprintf("[%s][line:%d] recv msg sender:%d, cmd:%d, param:%d !!! \r\n", __FILE__, __LINE__, msg.sender, msg.cmd, msg.param);
+            // rt_kprintf("[%s][line:%d] recv msg sender:%d, cmd:%d, param:%d !!! \r\n", __FUNCTION__, __LINE__, msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
@@ -92,7 +92,7 @@ void hl_app_msg_thread(void* parameter)
                     hl_app_pm_msg_pro(&msg);
                     break;
                 default:
-                    rt_kprintf("[%s][line:%d] sender(%d) unkown!!! \r\n", __FILE__, __LINE__, msg.sender);
+                    rt_kprintf("[%s][line:%d] sender(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, msg.sender);
                     break;
             }
         }
@@ -106,7 +106,7 @@ void hl_app_mng_init(void)
 
 	ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], 128, sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
     if (ret != RT_EOK) {
-        rt_kprintf("[%s][line:%d] message queuecreate init err!!! \r\n", __FILE__, __LINE__);
+        rt_kprintf("[%s][line:%d] message queuecreate init err!!! \r\n", __FUNCTION__, __LINE__);
         return;
     }
 
@@ -120,7 +120,7 @@ void hl_app_mng_init(void)
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
-        rt_kprintf("[%s][line:%d] thread create err!!! \r\n", __FILE__, __LINE__);
+        rt_kprintf("[%s][line:%d] thread create err!!! \r\n", __FUNCTION__, __LINE__);
     }
         
 }
