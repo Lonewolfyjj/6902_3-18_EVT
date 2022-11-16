@@ -24,7 +24,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hl_mod_telink.h"
 #include "hl_hal_gpio.h"
-#include "hl_test_pre.h"
+#include "hl_util_msg_type.h"
 #include <stdlib.h>
 
 /* typedef -------------------------------------------------------------------*/

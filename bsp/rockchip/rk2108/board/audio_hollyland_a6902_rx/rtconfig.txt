@@ -171,7 +171,6 @@
 #define RT_USING_WDT
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
-#define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
 #define RT_USING_TOUCH
 
@@ -182,7 +181,28 @@
 /* Using USB */
 
 /* RT_USING_USB_HOST is not set */
-/* RT_USING_USB_DEVICE is not set */
+#define RT_USING_USB_DEVICE
+#define RT_USBD_THREAD_STACK_SZ 4096
+#define USB_VENDOR_ID 0x3547
+#define USB_PRODUCT_ID 0x0002
+#define RT_USB_DEVICE_COMPOSITE
+/* RT_USB_DEVICE_CDC is not set */
+#define RT_USB_DEVICE_NONE
+#define RT_USB_DEVICE_MSTORAGE
+#define RT_USB_DEVICE_HID
+#define RT_USB_DEVICE_WINUSB
+#define RT_USB_DEVICE_UAC1
+/* RT_USB_DEVICE_UVC is not set */
+#define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
+#define RT_USB_AUDIO_P_NAME "codecp"
+#define RT_USB_AUDIO_C_NAME "pdmc"
+/* RT_USB_AUDIO_PLL_COMPENSATION is not set */
+/* RT_USB_DEVICE_HID_KEYBOARD is not set */
+/* RT_USB_DEVICE_HID_MOUSE is not set */
+/* RT_USB_DEVICE_HID_GENERAL is not set */
+#define RT_USB_DEVICE_HID_MEDIA
 
 /* POSIX layer and C standard library */
 
@@ -505,7 +525,6 @@
 /* RT_USING_NET_HTTP is not set */
 /* RT_USING_OTA is not set */
 /* RT_USING_AUPIPE is not set */
-/* RT_USING_AUPIPE is not set */
 
 /* RT-Thread third party package */
 
@@ -745,7 +764,6 @@
 /* PKG_USING_CBOX is not set */
 /* PKG_USING_SNOWFLAKE is not set */
 /* PKG_USING_HASH_MATCH is not set */
-/* PKG_USING_FIRE_PID_CURVE is not set */
 /* PKG_USING_ARMV7M_DWT_TOOL is not set */
 /* PKG_USING_VOFA_PLUS is not set */
 
@@ -816,11 +834,80 @@
 
 /* peripheral libraries and drivers */
 
-/* PKG_USING_SENSORS_DRIVERS is not set */
-/* PKG_USING_REALTEK_AMEBA is not set */
+/* sensors drivers */
+
+/* PKG_USING_FINGERPRINT is not set */
+/* PKG_USING_LSM6DSM is not set */
+/* PKG_USING_LSM6DSL is not set */
+/* PKG_USING_LPS22HB is not set */
+/* PKG_USING_HTS221 is not set */
+/* PKG_USING_LSM303AGR is not set */
+/* PKG_USING_BME280 is not set */
+/* PKG_USING_BME680 is not set */
+/* PKG_USING_BMA400 is not set */
+/* PKG_USING_BMI160_BMX160 is not set */
+/* PKG_USING_SPL0601 is not set */
+/* PKG_USING_MS5805 is not set */
+/* PKG_USING_DA270 is not set */
+/* PKG_USING_DF220 is not set */
+/* PKG_USING_HSHCAL001 is not set */
+/* PKG_USING_BH1750 is not set */
+/* PKG_USING_MPU6XXX is not set */
+/* PKG_USING_AHT10 is not set */
+/* PKG_USING_AP3216C is not set */
+/* PKG_USING_TSL4531 is not set */
+/* PKG_USING_DS18B20 is not set */
+/* PKG_USING_DHT11 is not set */
+/* PKG_USING_DHTXX is not set */
+/* PKG_USING_GY271 is not set */
+/* PKG_USING_GP2Y10 is not set */
+/* PKG_USING_SGP30 is not set */
+/* PKG_USING_HDC1000 is not set */
+/* PKG_USING_BMP180 is not set */
+/* PKG_USING_BMP280 is not set */
+/* PKG_USING_SHTC1 is not set */
+/* PKG_USING_BMI088 is not set */
+/* PKG_USING_HMC5883 is not set */
+/* PKG_USING_MAX6675 is not set */
+/* PKG_USING_TMP1075 is not set */
+/* PKG_USING_SR04 is not set */
+/* PKG_USING_CCS811 is not set */
+/* PKG_USING_PMSXX is not set */
+/* PKG_USING_RT3020 is not set */
+/* PKG_USING_MLX90632 is not set */
+/* PKG_USING_MLX90393 is not set */
+/* PKG_USING_MLX90392 is not set */
+/* PKG_USING_MLX90397 is not set */
+/* PKG_USING_MS5611 is not set */
+/* PKG_USING_MAX31865 is not set */
+/* PKG_USING_VL53L0X is not set */
+/* PKG_USING_INA260 is not set */
+/* PKG_USING_MAX30102 is not set */
+/* PKG_USING_INA226 is not set */
+/* PKG_USING_LIS2DH12 is not set */
+/* PKG_USING_HS300X is not set */
+/* PKG_USING_ZMOD4410 is not set */
+/* PKG_USING_ISL29035 is not set */
+/* PKG_USING_MMC3680KJ is not set */
+/* PKG_USING_QMP6989 is not set */
+/* PKG_USING_BALANCE is not set */
 /* PKG_USING_SHT2X is not set */
 /* PKG_USING_SHT3X is not set */
+/* PKG_USING_AD7746 is not set */
 /* PKG_USING_ADT74XX is not set */
+/* PKG_USING_MAX17048 is not set */
+
+/* touch drivers */
+
+/* PKG_USING_GT9147 is not set */
+/* PKG_USING_GT1151 is not set */
+/* PKG_USING_GT917S is not set */
+/* PKG_USING_GT911 is not set */
+/* PKG_USING_FT6206 is not set */
+/* PKG_USING_FT5426 is not set */
+/* PKG_USING_FT6236 is not set */
+/* PKG_USING_XPT2046_TOUCH is not set */
+/* PKG_USING_REALTEK_AMEBA is not set */
 /* PKG_USING_AS7341 is not set */
 /* PKG_USING_STM32_SDIO is not set */
 /* PKG_USING_ESP_IDF is not set */
@@ -846,20 +933,9 @@
 /* PKG_USING_AGILE_LED is not set */
 /* PKG_USING_AT24CXX is not set */
 /* PKG_USING_MOTIONDRIVER2RTT is not set */
-/* PKG_USING_AD7746 is not set */
 /* PKG_USING_PCA9685 is not set */
 /* PKG_USING_I2C_TOOLS is not set */
 /* PKG_USING_NRF24L01 is not set */
-#define PKG_USING_TOUCH_DRIVERS
-/* PKG_USING_GT9147 is not set */
-/* PKG_USING_GT1151 is not set */
-/* PKG_USING_GT917S is not set */
-/* PKG_USING_GT911 is not set */
-/* PKG_USING_FT6206 is not set */
-/* PKG_USING_FT5426 is not set */
-/* PKG_USING_FT6236 is not set */
-/* PKG_USING_XPT2046_TOUCH is not set */
-/* PKG_USING_MAX17048 is not set */
 /* PKG_USING_RPLIDAR is not set */
 /* PKG_USING_AS608 is not set */
 /* PKG_USING_RC522 is not set */
@@ -923,6 +999,11 @@
 /* PKG_USING_QUEST is not set */
 /* PKG_USING_NAXOS is not set */
 
+/* Signal Processing and Control Algorithm Packages */
+
+/* PKG_USING_FIRE_PID_CURVE is not set */
+/* PKG_USING_UKAL is not set */
+
 /* miscellaneous packages */
 
 /* project laboratory */
@@ -967,7 +1048,6 @@
 /* PKG_USING_HELLO is not set */
 /* PKG_USING_VI is not set */
 /* PKG_USING_ARMv7M_DWT is not set */
-/* PKG_USING_UKAL is not set */
 /* PKG_USING_CRCLIB is not set */
 /* PKG_USING_LWGPS is not set */
 /* PKG_USING_STATE_MACHINE is not set */
@@ -1102,6 +1182,25 @@
 /* PKG_USING_ARDUINO_SEEED_PAJ7620 is not set */
 /* PKG_USING_ARDUINO_SEEED_VL53L0X is not set */
 /* PKG_USING_SEEED_ITG3200 is not set */
+/* PKG_USING_ARDUINO_SEEED_SHT31 is not set */
+/* PKG_USING_ARDUINO_SEEED_HP20X is not set */
+/* PKG_USING_ARDUINO_SEEED_DRV2605L is not set */
+/* PKG_USING_ARDUINO_SEEED_BBM150 is not set */
+/* PKG_USING_ARDUINO_SEEED_HMC5883L is not set */
+/* PKG_USING_ARDUINO_SEEED_LSM303DLH is not set */
+/* PKG_USING_ARDUINO_SEEED_TCS3414CS is not set */
+/* PKG_USING_SEEED_MP503 is not set */
+/* PKG_USING_ARDUINO_SEEED_BMP085 is not set */
+/* PKG_USING_ARDUINO_SEEED_HIGHTEMP is not set */
+/* PKG_USING_ARDUINO_SEEED_VEML6070 is not set */
+/* PKG_USING_ARDUINO_SEEED_SI1145 is not set */
+/* PKG_USING_ARDUINO_SEEED_SHT35 is not set */
+/* PKG_USING_ARDUINO_SEEED_AT42QT1070 is not set */
+/* PKG_USING_ARDUINO_SEEED_LSM6DS3 is not set */
+/* PKG_USING_ARDUINO_SEEED_HDC1000 is not set */
+/* PKG_USING_ARDUINO_SEEED_HM3301 is not set */
+/* PKG_USING_ARDUINO_SEEED_MCP9600 is not set */
+/* PKG_USING_ARDUINO_SEEED_LTC2941 is not set */
 
 /* Display */
 
@@ -1128,6 +1227,7 @@
 
 /* PKG_USING_ARDUINO_ADAFRUIT_PCF8574 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_PCA9685 is not set */
+/* PKG_USING_ARDUINO_SEEED_PCF85063TP is not set */
 
 /* Other */
 
@@ -1215,7 +1315,6 @@
 
 /* RT_USING_ISP is not set */
 /* RT_USING_ISP3 is not set */
-/* RT_USING_ISP3 is not set */
 
 /* RT-Thread rockchip vcm driver */
 
@@ -1249,15 +1348,6 @@
 #define RT_USING_FT3169
 #define RT_TOUCH_X_RANGE 720
 #define RT_TOUCH_Y_RANGE 1280
-#define RT_USING_TOUCH_DRIVERS
-/* RT_USING_TOUCH_GTXX is not set */
-/* RT_USING_TOUCH_S3706 is not set */
-/* RT_USING_CSTXX is not set */
-/* RT_USING_CYTTSP5 is not set */
-/* RT_USING_IT7259 is not set */
-#define RT_USING_FT3169
-#define RT_TOUCH_X_RANGE 720
-#define RT_TOUCH_Y_RANGE 1280
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
@@ -1270,8 +1360,6 @@
 /* Enable PSTORE */
 
 /* RT_USING_PSTORE is not set */
-
-/* RT-Thread rockchip AMP driver */
 
 /* RT-Thread rockchip AMP driver */
 
@@ -1301,7 +1389,6 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
-#define RT_USING_AUDIO_CARD_NAU88L25B
 
 /* Audio Interfaces */
 
@@ -1310,7 +1397,6 @@
 #define RT_USING_CRU
 #define RT_USING_DMA
 #define RT_USING_DMA_PL330
-#define RT_USING_DMA0
 #define RT_USING_DMA0
 #define RT_USING_PMU
 #define RT_USING_DISPLAY
@@ -1355,7 +1441,8 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-/* RT_USING_RK_BATTERY_IPC is not set */
+#define RT_USING_USBAPP
+#define RT_USING_HIDTEST
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -1376,6 +1463,7 @@
 /* RT_USING_COMMON_TEST_CPU_USAGE is not set */
 /* RT_USING_COMMON_TEST_DCACHE is not set */
 /* RT_USING_COMMON_TEST_ICACHE is not set */
+#define RT_USING_COMMON_TEST_DISPLAY
 /* RT_USING_COMMON_TEST_DSP is not set */
 /* RT_USING_DSP_OPUS_CODEC_TEST is not set */
 /* RT_USING_COMMON_TEST_GPIO is not set */

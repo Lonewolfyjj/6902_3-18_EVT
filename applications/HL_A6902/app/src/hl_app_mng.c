@@ -28,6 +28,7 @@
 #include "hl_app_mng.h"
 #include "hl_mod_input.h"
 #include "hl_mod_audio.h"
+#include "hl_mod_telink.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_app_com_msg_pro.h"
 #include "hl_app_disp_msg_pro.h"
@@ -110,6 +111,8 @@ void hl_app_mng_init(void)
 
 	hl_mod_input_init(&hl_app_mq);
     hl_mod_audio_init(&hl_app_mq);
+    hl_mod_telink_init(&hl_app_mq);
+    hl_mod_telink_start();
 
 	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 20, 2);
     if (app_task_tid) {
