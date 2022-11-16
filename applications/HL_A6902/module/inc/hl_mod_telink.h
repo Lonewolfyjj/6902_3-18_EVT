@@ -47,7 +47,7 @@ typedef enum _hl_mod_telink_ctrl_cmd
 
 typedef enum _hl_mod_telink_ctrl_ind
 {
-    /// 返回版本号 (CMD + 6字节MAC地址)
+    /// 返回版本号 (CMD + 版本字符串)
     HL_MOD_TELINK_VERSION_IND = 0x00,
     /// 返回配对信息 
     HL_MOD_TELINK_PAIR_INFO_IND,

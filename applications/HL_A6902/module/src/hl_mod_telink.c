@@ -53,12 +53,21 @@ static uint8_t* s_telink_fifo_buf;
 /// 消息队列结构体
 static mode_to_app_msg_t app_msg_t;
 
-static uint8_t old_pair_workmode  = 0xFF;
-static uint8_t old_pair_chn_state = 0xFF;
-static uint8_t new_pair_workmode  = 0xFF;
-static uint8_t new_pair_chn_state = 0xFF;
+static uint8_t old_pair_workmode  = 0x1f;
+static uint8_t old_pair_chn_state = 0x1f;
+static uint8_t new_pair_workmode  = 0x1f;
+static uint8_t new_pair_chn_state = 0x1f;
 
 /* Private function(only *.c)  -----------------------------------------------*/
+
+static void telink_show_val(void)
+{
+    rt_kprintf("\n\nold_pair_workmode = %02x\n", old_pair_workmode);
+    rt_kprintf("new_pair_workmode = %02x\n", new_pair_workmode);
+    rt_kprintf("old_pair_chn_state = %02x\n", old_pair_chn_state);
+    rt_kprintf("new_pair_chn_state = %02x\n\n\n", new_pair_chn_state);
+}
+MSH_CMD_EXPORT(telink_show_val, telink show val cmd);
 
 /**
  * 
@@ -84,8 +93,6 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
     data_len |= (hup_frame.data_len_h << 8);
     data_len |= hup_frame.data_len_l;
 
-    app_msg_t.sender = TELINK_MODE;
-
     switch (hup_frame.cmd) {
         case HL_MOD_TELINK_VERSION_IND:
             app_msg_t.cmd       = HL_MOD_TELINK_VERSION_IND;
@@ -104,8 +111,8 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             //     rt_kprintf("%02x ", hup_frame.data_addr[i]);
             // }
             // rt_kprintf("]\n");
-            new_pair_workmode  = hup_frame.data_addr[0];
-            new_pair_chn_state = hup_frame.data_addr[1] | hup_frame.data_addr[2];
+            new_pair_workmode  = (uint8_t)hup_frame.data_addr[0];
+            new_pair_chn_state = (uint8_t)(hup_frame.data_addr[1] | hup_frame.data_addr[2]);
             break;
 
         case HL_MOD_TELINK_RSSI_IND:
@@ -172,8 +179,8 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
 static void hl_mod_telink_thread_entry(void* parameter)
 {
     rt_err_t ret;
-    uint32_t data     = 0;
     uint8_t  buf[256] = { 0 };
+    uint32_t data     = 0;
 
     while (s_telink.thread_flag == RT_TRUE) {
         // 读取数据并解析
@@ -186,35 +193,35 @@ static void hl_mod_telink_thread_entry(void* parameter)
         }
 
         // 延时5ms
-        rt_thread_mdelay(10);
+        rt_thread_mdelay(5);
 
         // 更新配对状态
         if ((old_pair_workmode == new_pair_workmode) && (new_pair_chn_state == old_pair_chn_state)) {
             continue;
         } else if ((old_pair_workmode != PAIR_START) && (new_pair_workmode == PAIR_START)) {
-            old_pair_workmode  = PAIR_START;
-            app_msg_t.cmd = HL_MOD_TELINK_PAIR_START_IND;
-            app_msg_t.len = 0;
-        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_workmode == PAIR_STOP) && (new_pair_chn_state == PAIR_FAILED)) {
+            old_pair_workmode = PAIR_START;
+            app_msg_t.cmd     = HL_MOD_TELINK_PAIR_START_IND;
+            app_msg_t.len     = 0;
+        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_workmode == PAIR_STOP)
+                   && (new_pair_chn_state == PAIR_FAILED)) {
             old_pair_workmode  = PAIR_STOP;
             old_pair_chn_state = PAIR_FAILED;
-            app_msg_t.cmd = HL_MOD_TELINK_PAIR_STOP_IND;
-            app_msg_t.len = 0;
-        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_chn_state == PAIR_STOP)
+            app_msg_t.cmd      = HL_MOD_TELINK_PAIR_STOP_IND;
+            app_msg_t.len      = 0;
+        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_workmode == PAIR_STOP)
                    && (new_pair_chn_state != PAIR_FAILED)) {
-            old_pair_workmode        = PAIR_STOP;
-            old_pair_chn_state       = new_pair_chn_state;
+            old_pair_workmode   = PAIR_STOP;
+            old_pair_chn_state  = new_pair_chn_state;
             app_msg_t.cmd       = HL_MOD_TELINK_PAIR_INFO_IND;
             app_msg_t.len       = 1;
             app_msg_t.param.ptr = &new_pair_chn_state;
         } else if ((old_pair_workmode == PAIR_STOP) && (new_pair_chn_state != old_pair_chn_state)) {
-            old_pair_chn_state       = new_pair_chn_state;
+            old_pair_chn_state  = new_pair_chn_state;
             app_msg_t.cmd       = HL_MOD_TELINK_PAIR_INFO_IND;
             app_msg_t.len       = 1;
             app_msg_t.param.ptr = &new_pair_chn_state;
         } else {
-            old_pair_workmode  = new_pair_workmode;
-            old_pair_chn_state = new_pair_chn_state;
+            continue;
         }
         // 将数据上传至APP层消息队列
         ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
@@ -293,6 +300,8 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     // Telink获取并赋值APP层下发的消息队列指针
     s_telink.app_msq     = input_msq;
     s_telink.thread_flag = RT_TRUE;
+    // Telink消息队列结构体赋初值
+    app_msg_t.sender = TELINK_MODE;
 
     // 初始化Telink模块串口交互所需的资源
     // 初始化hup
@@ -369,8 +378,7 @@ void telink_send_cmd(int argc, char** argv)
     uint8_t cmd  = (uint8_t)atoi(argv[1]);
     uint8_t data = (uint8_t)argv[2][0] - '0';
     uint8_t len  = (uint8_t)atoi(argv[3]);
-    rt_kprintf("\nSEND CMD:%02x\n", cmd);
-    rt_kprintf("SEND DATA:%02x\n\n", data);
+    
     hl_mod_telink_ioctl(cmd, &data, len);
 }
 MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
