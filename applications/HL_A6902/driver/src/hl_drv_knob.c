@@ -39,8 +39,7 @@ typedef struct _hl_drv_knob
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 static hl_drv_knob knobs[HL_KNOBS] = { 
-                                        {GPIO_L_VOL_A, GPIO_L_VOL_B, 0},
-                                        {GPIO_R_VOL_A, GPIO_R_VOL_B, 0},
+                                        {GPIO_VOL_A, GPIO_VOL_B, 0},
                                      };
 
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -49,24 +48,27 @@ static void hl_mod_input_knob_irq_cb(void *args);
 
 static void hl_mod_input_knob_irq_cb(void *args)
 {
-    int8_t knob_value = 0;                                        
-    uint8_t knob_num = *(uint8_t *)args;
+    static int8_t knob_value = 0;                                        
+    static uint8_t knob_num = 0;
 
-    if (hl_hal_gpio_read(knobs[knob_num].knob_a_pin) != 0) {
-        if (hl_hal_gpio_read(knobs[knob_num].knob_b_pin) == 0) {
+    knob_value = 0;
+    knob_num = *(uint8_t *)args;
+
+    if (hl_hal_gpio_read(knobs[0].knob_a_pin) != 0) {
+        if (hl_hal_gpio_read(knobs[0].knob_b_pin) == 0) {
             knob_value += 1;
         } else {
             knob_value -= 1;
         }
     } else {
-        if (hl_hal_gpio_read(knobs[knob_num].knob_b_pin) != 0) {
+        if (hl_hal_gpio_read(knobs[0].knob_b_pin) != 0) {
             knob_value += 1;
         } else {
             knob_value -= 1;
         }
     }
 
-    knobs[knob_num].knob_gain_val = knob_value;
+    knobs[0].knob_gain_val = knob_value;
 }
 /* Exported functions --------------------------------------------------------*/
 
@@ -91,13 +93,9 @@ uint8_t hl_drv_knob_init(void)
         hl_hal_gpio_irq_enable(knobs[i].knob_b_pin, PIN_IRQ_ENABLE);
         
     }
-    knobs[KNOB_LEFT].knob_a_pin = GPIO_L_VOL_A;
-    knobs[KNOB_LEFT].knob_a_pin = GPIO_L_VOL_B;
-    knobs[KNOB_LEFT].knob_gain_val = 0;
-    
-    knobs[KNOB_RIGHT].knob_a_pin = GPIO_R_VOL_A;
-    knobs[KNOB_RIGHT].knob_a_pin = GPIO_R_VOL_B;
-    knobs[KNOB_RIGHT].knob_gain_val = 0;
+    // knobs[KNOB_LEFT].knob_a_pin = GPIO_VOL_A;
+    // knobs[KNOB_LEFT].knob_b_pin = GPIO_VOL_B;
+    // knobs[KNOB_LEFT].knob_gain_val = 0;    
     
     return HL_SUCCESS;
 }
@@ -116,7 +114,6 @@ uint8_t hl_drv_knob_deinit(void)
         if (RT_EOK != hl_hal_gpio_irq_enable(knobs[i].knob_b_pin, PIN_IRQ_DISABLE)) {
             return HL_FAILED;
         }
-
     }
     return HL_SUCCESS;
 }

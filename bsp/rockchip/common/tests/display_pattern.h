@@ -57,6 +57,6 @@ enum util_fill_pattern
 
 void util_fill_pattern(uint32_t format,
                        void *planes[3], unsigned int width,
-                       unsigned int height, unsigned int stride);
+                       unsigned int height, unsigned int stride,unsigned char color_c);
 
 #endif

@@ -171,6 +171,7 @@
 #define RT_USING_WDT
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
+#define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
 #define RT_USING_TOUCH
 
@@ -503,6 +504,7 @@
 /* RT_USING_BENCHMARK is not set */
 /* RT_USING_NET_HTTP is not set */
 /* RT_USING_OTA is not set */
+/* RT_USING_AUPIPE is not set */
 /* RT_USING_AUPIPE is not set */
 
 /* RT-Thread third party package */
@@ -1167,6 +1169,18 @@
 #define RT_LARGE_HEAP_SIZE 262144
 /* RT_USING_DTCM_HEAP is not set */
 /* RT_USING_PSRAM_HEAP is not set */
+/* RT_USING_PANEL_FPGA_LVDS is not set */
+/* RT_USING_PANEL_SS is not set */
+/* RT_USING_PANEL_S6E3FC2X01 is not set */
+/* RT_USING_PANEL_S6E3HC2_X1 is not set */
+/* RT_USING_PANEL_S6E3HC2_X4 is not set */
+/* RT_USING_PANEL_ST7703_DS is not set */
+/* RT_USING_PANEL_ST7796H2 is not set */
+/* RT_USING_PANEL_AM018RT90211 is not set */
+/* RT_USING_PANEL_AM014RT90327V0 is not set */
+/* RT_USING_PANEL_H245QBN02 is not set */
+#define RT_USING_PANEL_HL_RM690A0
+/* RT_USING_BACKLIGHT is not set */
 
 /* Enable Fault Dump Hook */
 
@@ -1201,6 +1215,7 @@
 
 /* RT_USING_ISP is not set */
 /* RT_USING_ISP3 is not set */
+/* RT_USING_ISP3 is not set */
 
 /* RT-Thread rockchip vcm driver */
 
@@ -1234,6 +1249,15 @@
 #define RT_USING_FT3169
 #define RT_TOUCH_X_RANGE 720
 #define RT_TOUCH_Y_RANGE 1280
+#define RT_USING_TOUCH_DRIVERS
+/* RT_USING_TOUCH_GTXX is not set */
+/* RT_USING_TOUCH_S3706 is not set */
+/* RT_USING_CSTXX is not set */
+/* RT_USING_CYTTSP5 is not set */
+/* RT_USING_IT7259 is not set */
+#define RT_USING_FT3169
+#define RT_TOUCH_X_RANGE 720
+#define RT_TOUCH_Y_RANGE 1280
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
@@ -1246,6 +1270,8 @@
 /* Enable PSTORE */
 
 /* RT_USING_PSTORE is not set */
+
+/* RT-Thread rockchip AMP driver */
 
 /* RT-Thread rockchip AMP driver */
 
@@ -1275,6 +1301,7 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
+#define RT_USING_AUDIO_CARD_NAU88L25B
 
 /* Audio Interfaces */
 
@@ -1284,8 +1311,13 @@
 #define RT_USING_DMA
 #define RT_USING_DMA_PL330
 #define RT_USING_DMA0
+#define RT_USING_DMA0
 #define RT_USING_PMU
-/* RT_USING_DISPLAY is not set */
+#define RT_USING_DISPLAY
+#define RT_USING_VOP
+/* RT_USING_SPI_SCREEN is not set */
+/* RT_USING_VOP_MCU is not set */
+#define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
 #define RT_USING_PWM0
 
@@ -1323,6 +1355,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
+/* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */

@@ -26,7 +26,7 @@
 
 #if HL_GET_DEVICE_TYPE() == 1
 #define AW2016_IIC_BUS_0_NAME "i2c2"
-#define AW2016_IIC_BUS_1_NAME "i2c2"
+#define AW2016_IIC_BUS_1_NAME "i2c0"
 #else
 #define AW2016_IIC_BUS_0_NAME "i2c1"
 #define AW2016_IIC_BUS_1_NAME "i2c1"

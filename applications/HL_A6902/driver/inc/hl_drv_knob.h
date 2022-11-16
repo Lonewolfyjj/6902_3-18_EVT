@@ -31,8 +31,6 @@ typedef enum _hl_drv_knob_e
 {
     /// 左旋钮编号
     KNOB_LEFT = 0,
-    /// 右旋钮编号
-    KNOB_RIGHT,
     /// 旋钮数目
     HL_KNOBS,
 } hl_drv_knob_e;
