@@ -24,6 +24,7 @@
 #include "rtdevice.h"
 #include "hl_drv_knob.h"
 #include "hl_util_msg_type.h"
+#include "hl_util_timeout.h"
 
 /* define --------------------------------------------------------------------*/
 
@@ -129,23 +130,12 @@ typedef enum _hl_key_press_state_e
 } hl_key_press_state_e;
 
 /* variables -----------------------------------------------------------------*/
-
-typedef struct _hl_time_t
-{
-    /// 超时器是否有效
-    uint8_t activity;
-    /// 已超时标志
-    uint8_t timeout_flag;
-    /// 超时时间(开始时间+设置的时间)
-    uint32_t timeout_time;
-} hl_time_t;
-
 typedef struct _key_state_s
 {
     // 最近的按键状态
     hl_key_state_e last_state;
     // 按键超时定时器
-    hl_time_t timer;
+    hl_timeout_t timer;
     // 按下计数
     uint8_t click_cout;
 } key_state_s;
@@ -172,7 +162,7 @@ typedef struct _insert_state_s
     hl_insert_state_e       insert_cur_state;
     hl_input_insert_state_e last_pin_state;
     // 输入超时定时器
-    hl_time_t               insert_timer;
+    hl_timeout_t            insert_timer;
 } insert_state_s;
 static rt_thread_t input_tid = RT_NULL;
 
@@ -225,44 +215,6 @@ static uint8_t hl_mod_input_insert_deinit();
 static bool    hl_mod_input_insert_scan(hl_input_insert_e insert_nums);
 static void hl_mod_input_insert_send(void);
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map);
-
-bool hl_util_timeout_set(hl_time_t* p_timer, uint32_t time)
-{
-    if (p_timer == NULL) {
-        return false;
-    }
-    p_timer->timeout_time = rt_tick_get() + time;
-    p_timer->timeout_flag = false;
-    p_timer->activity     = true;
-
-    return true;
-}
-
-bool hl_util_timeout_close(hl_time_t* p_timer)
-{
-    if (p_timer == NULL) {
-        return false;
-    }
-
-    p_timer->timeout_flag = false;
-    p_timer->activity     = false;
-    return true;
-}
-
-bool hl_util_timeout_judge(hl_time_t* p_timer)
-{
-    if (p_timer->activity != true) {
-        return false;
-    }
-
-    if ((rt_tick_get() - p_timer->timeout_time) < INT32_MAX) { 
-        p_timer->timeout_flag = true;
-        p_timer->activity     = false;
-        return true;
-    }
-
-    return false;
-}
 
 static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
 {
@@ -491,7 +443,7 @@ static void hl_mod_input_send_single(void)
 static void hl_mod_input_task(void* param)
 {
     uint8_t i =0 ;
-    hl_time_t send_period = { 0,0,0 };
+    hl_timeout_t send_period = { 0,0,0 };
     int8_t knob_value = 0;
 
     hl_util_timeout_set(&send_period, TASK_SCAN_PERIOD);
