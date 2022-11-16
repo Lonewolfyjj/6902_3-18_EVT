@@ -33,7 +33,7 @@
 #include "hl_mod_display.h"
 #include "hl_drv_aw2016a.h"
 #include "hl_drv_rm690a0.h"
-#include "hl_test_pre.h"
+#include "hl_util_msg_type.h"
 #include "hl_hal_gpio.h"
 #include <rtthread.h>
 

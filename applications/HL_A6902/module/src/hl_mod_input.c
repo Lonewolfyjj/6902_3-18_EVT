@@ -23,6 +23,8 @@
 #include "hl_hal_gpio.h"
 #include "rtdevice.h"
 #include "hl_drv_knob.h"
+#include "hl_util_msg_type.h"
+
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数

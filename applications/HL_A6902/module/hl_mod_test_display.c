@@ -9,7 +9,7 @@
 // // #include "hl_mod_display_lvgl.h"
 
 // #if (!HL_GET_DEVICE_TYPE())
-#if 0
+// #if 0
 // static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
 // static int hl_rx_oled_test_init(void);
 // static int hl_rx_oled_test_deinit(void);
@@ -42,7 +42,7 @@
 //     hl_hal_gpio_low(GPIO_OLED_SWIRE);
 //     //rt_thread_mdelay(5);
 //     for (i=0;i<2000000;i++ ) {
->>>>>>> origin/liujie
+//>>>>>>> origin/liujie
         
 //     }
 //     hl_hal_gpio_high(GPIO_PWR_EN);

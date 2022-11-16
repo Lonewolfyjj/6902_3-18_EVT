@@ -284,11 +284,11 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
             break;
             */
 
-        case MSG_RX_L_VOL_KEY:
+        case MSG_RX_A_VOL:
             hl_app_rx_knob_pro(HL_KNOB_L, p_msg->param.u32_param);
             rt_kprintf("MSG_RX_L_VOL_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
-        case MSG_RX_R_VOL_KEY:
+        case MSG_RX_B_VOL:
             hl_app_rx_knob_pro(HL_KNOB_R, p_msg->param.u32_param);
             rt_kprintf("MSG_RX_R_VOL_KEY:(%d) \r\n", p_msg->param.u32_param);
             break;
