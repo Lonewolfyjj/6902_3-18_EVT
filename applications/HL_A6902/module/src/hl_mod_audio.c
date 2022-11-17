@@ -752,9 +752,11 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case HL_AUDIO_SET_HP_AMP_CMD:
             if(((char*)ptr)[0] != 0) {
                 hl_hal_gpio_high(GPIO_AMP_EN);
+                rt_kprintf("[%s][line:%d] enable hp amp!!!\r\n", __FUNCTION__, __LINE__);
             } else {
                 hl_hal_gpio_low(GPIO_AMP_EN);
-            } 
+                rt_kprintf("[%s][line:%d] disable hp amp!!!\r\n", __FUNCTION__, __LINE__);
+            }
             break;
 
         default:
@@ -874,11 +876,7 @@ int hl_mod_audio_test(int argc, char** argv)
 
 #ifdef RT_USING_FINSH
 
-#include <finsh.h>
-
-#if HL_GET_DEVICE_TYPE()
 MSH_CMD_EXPORT(hl_mod_audio_test, audio io ctrl cmd);
-#endif
 
 #endif
 

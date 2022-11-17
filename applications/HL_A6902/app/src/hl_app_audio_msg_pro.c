@@ -28,6 +28,10 @@
 #include "hl_app_mng.h"
 #include "hl_mod_audio.h"
 
+#define DBG_SECTION_NAME "app_audio"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -38,6 +42,7 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
         default:
+            LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }
@@ -46,7 +51,7 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, p_msg->cmd);
+            LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }

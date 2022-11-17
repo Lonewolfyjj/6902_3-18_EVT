@@ -33,6 +33,7 @@
 
 #include "rtdef.h"
 #include "hl_config.h"
+#include "hl_util_general_type.h"
 
 #define HL_DISPLAY_SUCCESS RT_EOK
 #define HL_DISPLAY_FAILED RT_ERROR
@@ -118,13 +119,13 @@ typedef enum _hl_screen_color_e
     RGB888_WHITE,
 
     RGB888_COLOR_CNT,
-} hl_screen_color_e;
+} HL_ENUM8(hl_screen_color_e);
 
 typedef enum _hl_cmd_e
 {
     /// RX状态指示灯状态变更命令，io_ctrl的参数参考<hl_led_mode>,参数为四字节
     MSG_STATE_LED_MODE_CMD,
-    /// MIPI OLED 颜色变更命令，io_ctrl的参数参考<hl_led_mode>,参数为四字节
+    /// MIPI OLED 颜色变更命令，io_ctrl的参数参考<hl_screen_color_e*>
     MSG_OLED_COLOR_CHANGE_CMD,
 
     MSG_ID_CNT

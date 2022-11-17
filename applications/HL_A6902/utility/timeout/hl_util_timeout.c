@@ -24,8 +24,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hl_util_timeout.h"
 
-#define DBG_TAG "timeout"
-#define DBG_LVL DBG_LOG
+#define DBG_SECTION_NAME "timeout"
+#define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
 /* typedef -------------------------------------------------------------------*/

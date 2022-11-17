@@ -532,7 +532,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         }
         break;
         case MSG_OLED_COLOR_CHANGE_CMD: {
-            uint8_t val = *(uint32_t*)ptr;
+            hl_screen_color_e val = *(uint32_t*)ptr;
             if (val >= RGB888_COLOR_CNT) {
                 HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;

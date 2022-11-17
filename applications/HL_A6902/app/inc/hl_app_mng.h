@@ -58,19 +58,19 @@ typedef struct _rx_app_info_t
 
     /// 无线状态
     uint8_t             rf_state;
-    int16_t             cur_volume_r;
-    int16_t             cur_volume_l;
+    int32_t             cur_volume_r;
+    int32_t             cur_volume_l;
 
     /// 单声道音量
-    int16_t             single_volume;
+    int32_t             single_volume;
     /// 立体声右音量
-    int16_t             stereo_volume_r;
+    int32_t             stereo_volume_r;
     /// 立体声左音量
-    int16_t             stereo_volume_l;
+    int32_t             stereo_volume_l;
     /// 安全音轨右音量
-    int16_t             safety_volume_r;
+    int32_t             safety_volume_r;
     /// 安全音轨左音量
-    int16_t             safety_volume_l;
+    int32_t             safety_volume_l;
 } rx_app_info_t;
 extern rx_app_info_t rx_info;
 #endif
