@@ -27,8 +27,10 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_mod_input.h"
+#include "hl_mod_display.h"
 #include "hl_mod_audio.h"
-// #include "hl_mod_disp.h"
+#include "hl_mod_telink.h"
+#include "hl_mod_pm.h"
 
 /* typedef -------------------------------------------------------------------*/
 typedef enum _hl_knob_dir_e
@@ -47,12 +49,22 @@ typedef enum _hl_knob_dir_e
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
+    HL_PMIC_INPUT_PARAM_T pm_crl;
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
             break;
         case HL_KEY_EVENT_LONG:
+            pm_crl.param = HL_MOD_RK2108_POWER_DOWN_CMD;
+            hl_mod_pm_ctrl(1, &pm_crl, 1);
+            hl_mod_input_deinit();
+            hl_mod_display_deinit();
+            hl_mod_audio_deinit();
+            hl_mod_telink_stop();
+            hl_mod_telink_deinit();
+            //hl_mod_pm_stop();
+            //hl_mod_pm_deinit();
             break;
         case HL_KEY_EVENT_DOUBLE:
             break;
@@ -67,10 +79,20 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 /// 配对键处理
 static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 {
+    uint8_t buff[2];
+
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
+            if (tx_info.denoise_flag == 0) {
+                buff[0] = 1;
+                tx_info.denoise_flag = 1;
+            } else {
+                buff[0] = 0;
+                tx_info.denoise_flag = 0;
+            }
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &buff[0], 1);
             break;
         case HL_KEY_EVENT_LONG:
             break;
@@ -87,7 +109,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 /// 录制键处理
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
-    uint8_t buff[8];
+    uint8_t buff[2];
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
@@ -143,12 +165,22 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
 /// 电源键处理
 static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 {
+    HL_PMIC_INPUT_PARAM_T pm_crl;
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
             break;
         case HL_KEY_EVENT_LONG:
+            pm_crl.param = HL_MOD_RK2108_POWER_DOWN_CMD;
+            hl_mod_pm_ctrl(1, &pm_crl, 1);
+            hl_mod_input_deinit();
+            hl_mod_display_deinit();
+            hl_mod_audio_deinit();
+            hl_mod_telink_stop();
+            hl_mod_telink_deinit();
+            //hl_mod_pm_stop();
+            //hl_mod_pm_deinit();
             break;
         case HL_KEY_EVENT_DOUBLE:
             break;

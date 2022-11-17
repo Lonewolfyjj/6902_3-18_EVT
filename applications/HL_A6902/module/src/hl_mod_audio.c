@@ -722,11 +722,13 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                 rt_kprintf("HL_MOD_AUDIO_RECORD_CMD parem error");
                 return -1;
             }
-            if(((char*)ptr)[0] != 0) {                
+            if(((char*)ptr)[0] != 0) {
                 hl_hal_gpio_high(GPIO_MIC_SW);
-            } else {                
+                rt_kprintf("[%s][line:%d] external mic!!!\r\n", __FUNCTION__, __LINE__);
+            } else {
                 hl_hal_gpio_low(GPIO_MIC_SW);
-            }                
+                rt_kprintf("[%s][line:%d] Internal mic!!!\r\n", __FUNCTION__, __LINE__);
+            }
             break;
 
         default:

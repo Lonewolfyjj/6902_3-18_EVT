@@ -612,12 +612,14 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 #else
                 sg_rx_dsp_param->io_ctrl_op = 0;
 #endif
-                }else {
+                rt_kprintf("[%s][line:%d] open denoise!!!\r\n", __FUNCTION__, __LINE__);
+            } else {
 #if HL_GET_DEVICE_TYPE()
                 sg_tx_dsp_param->io_ctrl_op = 3;
 #else
                 sg_rx_dsp_param->io_ctrl_op = 3;
 #endif
+                rt_kprintf("[%s][line:%d] close denoise!!!\r\n", __FUNCTION__, __LINE__);
             }
             
             break;

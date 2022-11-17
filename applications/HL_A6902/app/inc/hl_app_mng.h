@@ -38,6 +38,8 @@ typedef struct _tx_app_info_t
     uint8_t             ex_mic_plug:1;
     /// 录制标志(1:录制中  0：没在录制)
     uint8_t             rec_flag:1;
+    /// 降噪标志(1:打开降噪 0:关闭降噪)
+    uint8_t             denoise_flag:1;
 
     /// 无线状态
     uint8_t      rf_state;
