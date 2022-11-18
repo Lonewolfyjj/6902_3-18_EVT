@@ -45,7 +45,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     hl_led_mode     led_ctrl;
     uint8_t         *p_param;
 
-    LOG_D("receive telink msg(%d)\r\n", p_msg->cmd);
+    LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_MOD_TELINK_PAIR_START_IND:
             tx_info.rf_state = HL_RF_STATE_PAIR;
@@ -77,7 +77,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     hl_led_mode     led_ctrl;
     uint8_t         *p_param;
 
-    rt_kprintf("get telink msg!!! \r\n");
+    LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_MOD_TELINK_PAIR_START_IND:
             led_ctrl = LED_MODE_PAIR;

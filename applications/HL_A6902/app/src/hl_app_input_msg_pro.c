@@ -223,12 +223,18 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
             hl_mod_display_io_ctrl(MSG_OLED_COLOR_CHANGE_CMD, &screen_color_ctrl, sizeof(screen_color_ctrl));
             break;
         case HL_KEY_EVENT_LONG:
+            /*
             channel++;
             channel &= 0x01;
+            */
+            channel = 0x00;
             hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
-            LOG_D("send pair cmd!!! \r\n");
+            LOG_D("send pair cmd (channel = %d)!!! \r\n",channel);
             break;
         case HL_KEY_EVENT_DOUBLE:
+            channel = 0x01;
+            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            LOG_D("send pair cmd (channel = %d)!!! \r\n",channel);
             break;
         case HL_KEY_EVENT_RELEASE:
             break;
