@@ -37,7 +37,7 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {

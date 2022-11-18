@@ -29,7 +29,7 @@
 
 /* typedef -------------------------------------------------------------------*/
 /// 模块层发送给APP的消息格式
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 typedef struct _tx_app_info_t
 {
     /// usb接口状态(1:连接 0：未连接)

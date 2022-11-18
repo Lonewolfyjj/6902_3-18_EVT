@@ -16,7 +16,7 @@
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #include "hl_drv_knob.h"
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #else
 // RX旋钮配置
 /* Includes ------------------------------------------------------------------*/

@@ -93,7 +93,7 @@ struct playback_config
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
 //"pdmc" "codecc"
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_PLAY "wifip"
 #define HL_MOD_AUDIO_DEFAULT_DEVICE_CAPTURE "codecc"
 #else
@@ -117,7 +117,7 @@ struct wav_header                      s_audio_header            = { 0 };
 static struct rt_ringbuffer*           s_audio_rb                = RT_NULL;
 static char                            s_audio_switch            = 0;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static char                            s_record_switch           = 0;
 static struct rt_ringbuffer*           s_record_after_rb         = RT_NULL;
 static struct rt_ringbuffer*           s_record_bypass_rb        = RT_NULL;
@@ -129,7 +129,7 @@ extern struct rt_ringbuffer*           g_dev2host_rb;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static void hl_mod_audio_record(int p_file_audio, uint8_t* buffer, uint32_t size, uint32_t* s_record_size);
 static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t* s_record_size);
 static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size);
@@ -143,7 +143,7 @@ static int  hl_mod_audio_record_switch(uint8_t record_switch);
 
 static uint8_t s_record_key_flag = 0;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static void hl_hal_gpio_audio_record_irq_process(void* args)
 {
     s_record_key_flag = 1;
@@ -364,7 +364,7 @@ static void hl_mod_audio_codec_config(void)
         ply_config->card = rt_device_find(card_play);
     }
 
-    rt_kprintf("[%d]: audio codec config succeed! , dev is %d\n", __LINE__, HL_GET_DEVICE_TYPE());
+    rt_kprintf("[%d]: audio codec config succeed! , dev is %d\n", __LINE__, HL_IS_TX_DEVICE());
 }
 
 static void hl_mod_audio_dsp_config(void)
@@ -378,7 +378,7 @@ static void hl_mod_audio_dsp_config(void)
     dsp_config->buffer_size_b32_2ch              = dsp_config->process_size;
     dsp_config->audio_process_in_buffer_b32_2ch  = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
     dsp_config->audio_process_out_buffer_b32_2ch = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     dsp_config->buffer_size_b24_1ch                     = dsp_config->period_size * 1 * 3;
     dsp_config->audio_after_process_out_buffer_b24_1ch  = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
     dsp_config->audio_before_process_out_buffer_b24_1ch = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
@@ -394,7 +394,7 @@ static void hl_mod_audio_dsp_config(void)
     rt_kprintf("[%d]: audio dsp config succeed! \n", __LINE__);
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static void do_record_audio(void* arg)
 {
     char*    record_buffer;
@@ -581,7 +581,7 @@ static void do_read_audio(void* arg)
         }
 
 
-#if HL_GET_DEVICE_TYPE()        
+#if HL_IS_TX_DEVICE()        
         if (s_record_switch == 1) {
             rt_ringbuffer_put(s_record_after_rb, dsp_config->audio_after_process_out_buffer_b24_1ch,
                               dsp_config->buffer_size_b24_1ch);
@@ -633,7 +633,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     card_play[0]    = NULL;
     card_capture[0] = NULL;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     hl_drv_aw21009_init();
     //_hl_drv_key_init();
     s_record_switch = 0;
@@ -652,7 +652,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     s_audio_rb = rt_ringbuffer_create(dsp_config->process_size * 30);
     RT_ASSERT(s_audio_rb != RT_NULL);
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     s_record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
     RT_ASSERT(s_record_after_rb != RT_NULL);
 
@@ -670,7 +670,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
         rt_thread_startup(audio_tid);
 #endif
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     record_tid = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, RT_THREAD_PRIORITY_MAX / 2, 1);  //
     if (record_tid)
         rt_thread_startup(record_tid);
@@ -683,7 +683,7 @@ uint8_t hl_mod_audio_deinit()
 {
     return 0;
 }
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     int8_t ret = 0;
@@ -784,13 +784,13 @@ uint8_t hl_mod_audio_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
  * <tr><td>2022-10-13      <td>lixiang     <td>新建
  * </table>
  */
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 int hl_mod_audio_test(int argc, char** argv)
 {
     uint8_t audio_param = 0; 
 
     if (argc <= 1) {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
         rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | time | denoise | gain | mute | record | eq | micswitch] [param] \r\n");
 #else
         rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | denoise | gain | mute | eq ] [param] \r\n");

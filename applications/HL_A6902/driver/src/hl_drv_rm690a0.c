@@ -36,7 +36,7 @@
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 
-#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_IS_TX_DEVICE())
 
 #define SRC_DATA_FMT RTGRAPHIC_PIXEL_FORMAT_RGB888
 #define SRC_DATA_W RT_LV_HOR_RES
@@ -409,7 +409,7 @@ rt_thread_mdelay(20);
 }
 // INIT_BOARD_EXPORT(hl_drv_rm690a0_init);
 
-#endif /* (!HL_GET_DEVICE_TYPE()) */
+#endif /* (!HL_IS_TX_DEVICE()) */
        /*
  * EOF
  */

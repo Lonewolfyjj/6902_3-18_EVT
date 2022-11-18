@@ -50,7 +50,7 @@ typedef enum _hl_knob_dir_e
 
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
@@ -304,7 +304,7 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
 
 /// 
 /* Exported functions --------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {

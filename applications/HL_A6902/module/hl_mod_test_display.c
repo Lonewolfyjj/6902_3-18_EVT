@@ -8,7 +8,7 @@
 // // #include "hl_drv_rm69310.h"
 // // #include "hl_mod_display_lvgl.h"
 
-// #if (!HL_GET_DEVICE_TYPE())
+// #if (!HL_IS_TX_DEVICE())
 // #if 0
 // static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
 // static int hl_rx_oled_test_init(void);

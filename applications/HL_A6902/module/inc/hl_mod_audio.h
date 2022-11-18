@@ -25,7 +25,7 @@
 #include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 typedef enum _hl_mod_audio_ctrl_cmd
 {
     /// 暂无

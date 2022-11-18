@@ -88,7 +88,7 @@ MSH_CMD_EXPORT(hl_hal_gpio_test, gpio test cmd);
 void hl_hal_gpio_pwr_on(void)
 {
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);

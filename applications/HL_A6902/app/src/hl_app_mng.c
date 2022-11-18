@@ -53,7 +53,7 @@ struct rt_messagequeue hl_app_mq;
 static char            hl_app_msg_pool[2048];
 
 /// 模块层发送给APP的消息格式
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 /// tx app 状态信息
 tx_app_info_t tx_info = {0};
 #else
@@ -134,7 +134,7 @@ void hl_app_mng_init(void)
 // hl_app_info [no param]
 int hl_app_info(int argc, char** argv)
 {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     LOG_I("------show tx app info------");
     LOG_I("usb_plug = %d ", tx_info.usb_plug);
     LOG_I("ex_mic_plug = %d ", tx_info.ex_mic_plug);

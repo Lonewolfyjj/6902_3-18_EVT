@@ -103,7 +103,7 @@ static clock_name_t clock_name[] =
     ADD_LABEL(OCC_SCAN_CLK_DPHYLANBYTE),
 };
 /* Private function(only *.c)  -----------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 static void hl_mod_pm_gpio_deal()
 {

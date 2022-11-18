@@ -38,7 +38,7 @@
 #define HL_DISPLAY_SUCCESS RT_EOK
 #define HL_DISPLAY_FAILED RT_ERROR
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 typedef enum _led_mode
 {

@@ -23,7 +23,7 @@
 #include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 /// TX gpio 引脚枚举
 typedef enum _hl_gpio_port_e
 {

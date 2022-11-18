@@ -55,7 +55,7 @@ enum
 };
 
 /* typedef -------------------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 typedef enum _hl_input_key_e
 {
@@ -89,7 +89,7 @@ typedef enum _hl_input_insert_e
     HL_INPUT_INSERT,
 } hl_input_insert_e;
 
-#endif /* HL_GET_DEVICE_TYPE() */
+#endif /* HL_IS_TX_DEVICE() */
 
 /// 按键检测的参数
 typedef struct _key_param_s
@@ -174,7 +174,7 @@ typedef struct _hl_input_mod_t
     mode_to_app_msg_t msg;
 } hl_input_msg_t;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_PAIR_KEY, GPIO_REC_KEY };
 static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000} };
@@ -233,7 +233,7 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     }
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
 {
@@ -463,7 +463,7 @@ static void hl_mod_input_task(void* param)
                 hl_mod_input_send_msg(pin_index_to_msg_cmd(i, SWITCHS), hl_insert_event[i]);
             }
         }
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
         hl_drv_knob_read(KNOB_LEFT, &knob_value);
         if (knob_value != 0) {
             if(knob_value > 0) {
@@ -482,7 +482,7 @@ static void hl_mod_input_task(void* param)
     }
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 static uint8_t hl_mod_input_key_read(hl_input_key_e key_map)
 {
@@ -638,7 +638,7 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
             break;
     }
 }
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map)
 {
     switch (insert_map) {
@@ -754,7 +754,7 @@ uint8_t hl_mod_input_init(void* msg_hander)
         HL_PRINT("insert init err!");
         return HL_FAILED;
     }
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
     if (HL_SUCCESS != hl_drv_knob_init()) {
         HL_PRINT("knob init err!");
         return HL_FAILED;

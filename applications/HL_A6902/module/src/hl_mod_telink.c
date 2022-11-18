@@ -273,7 +273,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 
     rt_err_t result;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     // 使能TX相关GPIO引脚
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);

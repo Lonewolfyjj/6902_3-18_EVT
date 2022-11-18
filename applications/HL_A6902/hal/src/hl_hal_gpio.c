@@ -36,7 +36,7 @@ typedef struct _hl_gpio_config_t
 /* variables -----------------------------------------------------------------*/
 // notice: The array element sequence must be the same as HL_GPIO PORT_E
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // Tx
 static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
 {

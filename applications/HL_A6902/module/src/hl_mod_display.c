@@ -46,7 +46,7 @@
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME 5
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #define HL_MOD_TX_RECORD_LED HL_DRV_AW2016A_LED1
 #endif
 
@@ -69,7 +69,7 @@ typedef struct _hl_display_msg_t
 
 } hl_display_msg_t;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 typedef struct _hl_display_led_t
 {
@@ -299,7 +299,7 @@ static int hl_mod_display_led_fast_flash(uint8_t led_num, uint8_t color)
     return AW2016A_FUNC_RET_OK;
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX有录制灯
 
 static uint8_t hl_mod_display_record_led_mode_get(uint32_t* now_led_mode)
@@ -550,7 +550,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 }
 #endif
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 static void hl_mod_display_task(void* param)
 {
@@ -605,7 +605,7 @@ uint8_t hl_mod_display_deinit(void)
 
 #endif
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 //TX
 #else
 //RX
@@ -624,7 +624,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_drv_aw2016a_deinit();
     hl_drv_aw2016a_init();
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     // TX
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_high(GPIO_PWR_EN);
@@ -636,7 +636,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_drv_rm690a0_write(0, MIPI_OLED_WIDTH - 1, 0, MIPI_OLED_HEIGHT - 1, (const uint8_t*)&now_color);
 #endif
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     //TX
     hl_display_led.last_led_mode           = LED_MODE_PAIR;
     hl_display_led.last_record_led_mode    = RECORD_LED_MODE_CLOSE;

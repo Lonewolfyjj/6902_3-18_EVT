@@ -61,7 +61,7 @@ typedef enum _hl_switch_event_e
     HL_SWITCH_EVENT_ON,       
 } hl_switch_event_e;
 
-#if HL_GET_DEVICE_TYPE() 
+#if HL_IS_TX_DEVICE() 
 //TX
 typedef enum _input_mod_msg_cmd_e
 {
