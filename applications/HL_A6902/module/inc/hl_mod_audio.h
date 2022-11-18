@@ -22,7 +22,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hl_config.h"
-
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
 #if HL_GET_DEVICE_TYPE()
@@ -36,7 +36,7 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_GET_TIME_CMD,
     /// int(-103~24)
     HL_AUDIO_SET_GAIN_CMD,
-    /// uint8_t(0=OFF, 1=ON)
+    /// 降噪开关设置, 参数<hl_switch_e>(HL_SWITCH_ON--打开降噪, HL_SWITCH_OFF--关闭降噪)
     HL_AUDIO_SET_DENOISE_CMD,
     /// uint8_t(0=OFF, 1=ON)
     HL_AUDIO_SET_MUTE_CMD,
@@ -46,7 +46,7 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_RECORD_CMD,
     /// uint8_t(0=External Mic, 1=Internal Mic)
     HL_AUDIO_MIC_SWITCH_CMD,  
-} hl_mod_audio_ctrl_cmd;
+} HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #else
 typedef enum _hl_mod_audio_ctrl_cmd
 {
@@ -56,24 +56,17 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_GAIN_CMD,
     /// int8_t(0=OFF, 1=ON)
     HL_AUDIO_SET_HP_AMP_CMD,    
-} hl_mod_audio_ctrl_cmd;
+} HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 
-typedef enum _hl_mod_audio_switch
-{
-    /// 关闭
-    HL_AUDIO_OFF = 0x00,
-    /// 打开
-    HL_AUDIO_ON,  
-} hl_mod_audio_switch;
-
-typedef enum _hl_mod_audio_mic
+typedef enum _hl_mic_switch_e
 {
     /// 内置麦
-    HL_AUDIO_MIC_EXTERNAL = 0x00,
+    HL_MIC_EXTERNAL = 0x00,
     /// 外置麦
-    HL_AUDIO_MIC_INTERNAL,  
-} hl_mod_audio_mic;
+    HL_MIC_INTERNAL,  
+} HL_ENUM8(hl_mic_switch_e);
+
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

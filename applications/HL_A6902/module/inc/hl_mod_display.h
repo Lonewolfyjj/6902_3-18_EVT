@@ -55,7 +55,7 @@ typedef enum _led_mode
 
     LED_MODE_ID_CNT
 
-} hl_led_mode;
+} HL_ENUM8(hl_led_mode);
 
 typedef enum _hl_sound_channel
 {
@@ -64,7 +64,7 @@ typedef enum _hl_sound_channel
     /// 配置当前闪灯逻辑为右声道逻辑
     RIGHT_SOUND_CHANNEL,
 
-} hl_sound_channel;
+} HL_ENUM8(hl_sound_channel);
 
 typedef enum _hl_record_led_mode
 {
@@ -75,7 +75,7 @@ typedef enum _hl_record_led_mode
 
     RECORD_LED_MODE_ID_CNT
 
-} hl_record_led_mode;
+} HL_ENUM8(hl_record_led_mode);
 typedef enum _hl_cmd_e
 {
     /// 状态指示LED变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_mode>,参数为四字节

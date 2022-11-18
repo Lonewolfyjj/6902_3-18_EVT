@@ -42,7 +42,7 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_flag:1;
 
     /// 无线状态
-    uint8_t      rf_state;
+    hl_rf_state_e       rf_state;
 
 } tx_app_info_t;
 extern tx_app_info_t tx_info;
@@ -57,7 +57,7 @@ typedef struct _rx_app_info_t
     uint8_t             cam_spk_plug:1;
 
     /// 无线状态
-    uint8_t             rf_state;
+    hl_rf_state_e       rf_state;
     int32_t             cur_volume_r;
     int32_t             cur_volume_l;
 

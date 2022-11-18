@@ -131,7 +131,30 @@ void hl_app_mng_init(void)
     }
 }
 
+// hl_app_info [no param]
+int hl_app_info(int argc, char** argv)
+{
+#if HL_GET_DEVICE_TYPE()
+    LOG_I("------show tx app info------");
+    LOG_I("usb_plug = %d ", tx_info.usb_plug);
+    LOG_I("ex_mic_plug = %d ", tx_info.ex_mic_plug);
+    LOG_I("rec_flag = %d ", tx_info.rec_flag);
+    LOG_I("rf_state = %d ", tx_info.rf_state);
+#else
+    LOG_I("------show rx app info------");
+    LOG_I("usb_plug = %d ", rx_info.usb_plug);
+    LOG_I("hp_spk_plug = %d ", rx_info.hp_spk_plug);
+    LOG_I("cam_spk_plug = %d ", rx_info.cam_spk_plug);
+    LOG_I("rf_state = %d ", rx_info.rf_state);
+    LOG_I("cur_volume_r = %d ", rx_info.cur_volume_r);
+    LOG_I("cur_volume_l = %d ", rx_info.cur_volume_l);
+#endif
+    return 0;
+}
+
 INIT_APP_EXPORT(hl_app_mng_init);
+MSH_CMD_EXPORT(hl_app_info, show app info cmd);
+
 /*
  * EOF
  */

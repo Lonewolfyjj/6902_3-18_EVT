@@ -418,7 +418,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
     switch (cmd) {
         case MSG_STATE_LED_MODE_CMD: {
-            uint32_t val = *(uint32_t*)ptr;
+            hl_led_mode val = *(hl_led_mode*)ptr;
             if (val >= LED_MODE_ID_CNT) {
                 HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
@@ -429,7 +429,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         }
         break;
         case MSG_RECORD_LED_MODE_CMD: {
-            uint32_t val = *(uint32_t*)ptr;
+            hl_record_led_mode val = *(hl_record_led_mode*)ptr;
             if (val >= RECORD_LED_MODE_ID_CNT) {
                 HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;
@@ -521,7 +521,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
     switch (cmd) {
         case MSG_STATE_LED_MODE_CMD: {
-            uint32_t val = *(uint32_t*)ptr;
+            hl_led_mode val = *(hl_led_mode*)ptr;
             if (val >= LED_MODE_ID_CNT) {
                 HL_PRINT("[%s][line:%d] cmd(%d) err!!! \r\n", __FUNCTION__, __LINE__, cmd);
                 res = HL_DISPLAY_FAILED;

@@ -38,6 +38,23 @@
     typedef uint16_t EnumName
 #endif
 
+typedef enum _hl_switch_e
+{
+    /// 关闭
+    HL_SWITCH_OFF = 0x00,
+    /// 打开
+    HL_SWITCH_ON,  
+} HL_ENUM8(hl_switch_e);
+
+typedef enum _hl_rf_state_e
+{
+    HL_RF_STATE_IDLE = 0,
+    HL_RF_STATE_RELEASE,
+    HL_RF_STATE_PAIR,
+    HL_RF_STATE_CONNECT,
+    HL_RF_STATE_STOP,
+} HL_ENUM8(hl_rf_state_e);
+
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

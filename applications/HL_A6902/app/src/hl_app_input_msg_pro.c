@@ -26,6 +26,7 @@
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
+#include "hl_app_disp_msg_pro.h"
 #include "hl_mod_input.h"
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
@@ -84,22 +85,27 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 /// 配对键处理
 static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 {
-    uint8_t denoise_ctrl;
+    hl_switch_e     denoise_switch;
+    uint8_t         channel;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
             if (tx_info.denoise_flag == 0) {
-                denoise_ctrl         = 1;
+                denoise_switch       = HL_SWITCH_ON;
                 tx_info.denoise_flag = 1;
             } else {
-                denoise_ctrl         = 0;
+                denoise_switch       = HL_SWITCH_OFF;
                 tx_info.denoise_flag = 0;
             }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_ctrl, 1);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, sizeof(denoise_switch));
+            hl_app_disp_state_led_set();
             break;
         case HL_KEY_EVENT_LONG:
+            channel = 0;
+            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            LOG_D("send pair cmd!!! \r\n");
             break;
         case HL_KEY_EVENT_DOUBLE:
             break;
@@ -114,20 +120,24 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 /// 录制键处理
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
-    uint8_t record_ctrl;
+    hl_switch_e        record_switch;
+    hl_record_led_mode record_led_ctrl;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
             if (tx_info.rec_flag == 0) {
-                record_ctrl      = 1;
+                record_switch    = HL_SWITCH_ON;
                 tx_info.rec_flag = 1;
+                record_led_ctrl  = RECORD_LED_MODE_OPEN;
             } else {
-                record_ctrl      = 0;
+                record_switch    = HL_SWITCH_OFF;
                 tx_info.rec_flag = 0;
+                record_led_ctrl  = RECORD_LED_MODE_CLOSE;
             }
-            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_ctrl, 1);
+            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
+            hl_mod_display_io_ctrl(MSG_RECORD_LED_MODE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
             break;
         case HL_KEY_EVENT_LONG:
             break;
@@ -154,14 +164,14 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
 /// 外置mic状态处理
 static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
 {
-    uint8_t mic_select;
+    hl_mic_switch_e mic_select;
     
     if (value == 0) {
         tx_info.ex_mic_plug = 0;
-        mic_select          = 0;
+        mic_select          = HL_MIC_EXTERNAL;
     } else {
         tx_info.ex_mic_plug = 1;
-        mic_select          = 1;
+        mic_select          = HL_MIC_INTERNAL;
     }
     hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
 }
@@ -202,6 +212,7 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 static void hl_app_rx_knob_key_pro(hl_key_event_e event)
 {
     static hl_screen_color_e screen_color_ctrl = RGB888_BLACK;
+    static uint8_t           channel           = 0;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
@@ -212,6 +223,10 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
             hl_mod_display_io_ctrl(MSG_OLED_COLOR_CHANGE_CMD, &screen_color_ctrl, sizeof(screen_color_ctrl));
             break;
         case HL_KEY_EVENT_LONG:
+            channel++;
+            channel &= 0x01;
+            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            LOG_D("send pair cmd!!! \r\n");
             break;
         case HL_KEY_EVENT_DOUBLE:
             break;
@@ -263,16 +278,16 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 /// 监听口状态处理
 static void hl_app_rx_hp_plug_pro(uint32_t value)
 {
-    uint8_t hp_amp_ctrl;
+    hl_switch_e hp_amp_ctrl;
 
     if (value == 0) {
         rx_info.hp_spk_plug = 0;
-        hp_amp_ctrl         = 0;
+        hp_amp_ctrl         = HL_SWITCH_OFF;
     } else {
         rx_info.hp_spk_plug = 1;
-        hp_amp_ctrl         = 1;
+        hp_amp_ctrl         = HL_SWITCH_ON;
     }
-    hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &hp_amp_ctrl, 1);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &hp_amp_ctrl, sizeof(hp_amp_ctrl));
 }
 
 /// 相机口状态处理
