@@ -96,7 +96,7 @@ static void _tgpio_output(uint8_t bank_id, uint32_t pin_id, uint8_t level)
             break;
     }
 }
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 int hl_drv_emmc_gpio_init(void)
 {

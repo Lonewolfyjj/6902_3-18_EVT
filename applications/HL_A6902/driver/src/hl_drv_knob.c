@@ -16,7 +16,7 @@
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #include "hl_drv_knob.h"
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #else
 // RX旋钮配置
 /* Includes ------------------------------------------------------------------*/
@@ -39,65 +39,48 @@ typedef struct _hl_drv_knob
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 static hl_drv_knob knobs[HL_KNOBS] = { 
-                                        {GPIO_L_VOL_A, GPIO_L_VOL_B, 0},
-                                        {GPIO_R_VOL_A, GPIO_R_VOL_B, 0},
+                                        {GPIO_VOL_A, GPIO_VOL_B, 0},
                                      };
-
+static hl_knob_irq_num[HL_KNOBS]   = {0};
 /* Private function(only *.c)  -----------------------------------------------*/
-static void hl_mod_input_knob_irq_cb(void *args);
-
-
 static void hl_mod_input_knob_irq_cb(void *args)
-{
-    int8_t knob_value = 0;                                        
-    uint8_t knob_num = *(uint8_t *)args;
+{                                     
+    uint8_t knob_num = 0;
 
+    knob_num = *(uint8_t *)args;
+
+    // rt_kprintf("[%s][line:%d]  knob_num = %d!!! \r\n", __FUNCTION__, __LINE__, knob_num);
     if (hl_hal_gpio_read(knobs[knob_num].knob_a_pin) != 0) {
         if (hl_hal_gpio_read(knobs[knob_num].knob_b_pin) == 0) {
-            knob_value += 1;
+            knobs[knob_num].knob_gain_val += 1;
         } else {
-            knob_value -= 1;
+            knobs[knob_num].knob_gain_val -= 1;
         }
     } else {
         if (hl_hal_gpio_read(knobs[knob_num].knob_b_pin) != 0) {
-            knob_value += 1;
+            knobs[knob_num].knob_gain_val += 1;
         } else {
-            knob_value -= 1;
+            knobs[knob_num].knob_gain_val -= 1;
         }
     }
-
-    knobs[knob_num].knob_gain_val = knob_value;
 }
 /* Exported functions --------------------------------------------------------*/
-
 uint8_t hl_drv_knob_init(void)
 {
     uint8_t i;
     rt_err_t res;
 
-    for (i = 0;i < HL_KNOBS; i++) {
+    for (i = 0; i < HL_KNOBS; i++) {
         hl_hal_gpio_init(knobs[i].knob_a_pin);
         hl_hal_gpio_init(knobs[i].knob_b_pin);
-
-        res = hl_hal_gpio_attach_irq(knobs[i].knob_a_pin, PIN_IRQ_MODE_RISING_FALLING, hl_mod_input_knob_irq_cb, (void*)&i);
+        hl_knob_irq_num[i] = i;
+        res = hl_hal_gpio_attach_irq(knobs[i].knob_a_pin, PIN_IRQ_MODE_RISING_FALLING, hl_mod_input_knob_irq_cb, (void*)&hl_knob_irq_num[i]);
         if (res != RT_EOK) {
-            return HL_FAILED;
-        }
-        res = hl_hal_gpio_attach_irq(knobs[i].knob_b_pin, PIN_IRQ_MODE_RISING_FALLING, hl_mod_input_knob_irq_cb, (void*)&i);
-        if (res != RT_EOK) {
+            rt_kprintf("[%s][line:%d]gpio attach err!!! \r\n", __FUNCTION__, __LINE__);
             return HL_FAILED;
         }
         hl_hal_gpio_irq_enable(knobs[i].knob_a_pin, PIN_IRQ_ENABLE);
-        hl_hal_gpio_irq_enable(knobs[i].knob_b_pin, PIN_IRQ_ENABLE);
-        
     }
-    knobs[KNOB_LEFT].knob_a_pin = GPIO_L_VOL_A;
-    knobs[KNOB_LEFT].knob_a_pin = GPIO_L_VOL_B;
-    knobs[KNOB_LEFT].knob_gain_val = 0;
-    
-    knobs[KNOB_RIGHT].knob_a_pin = GPIO_R_VOL_A;
-    knobs[KNOB_RIGHT].knob_a_pin = GPIO_R_VOL_B;
-    knobs[KNOB_RIGHT].knob_gain_val = 0;
     
     return HL_SUCCESS;
 }
@@ -107,17 +90,13 @@ uint8_t hl_drv_knob_deinit(void)
     uint8_t i;
 
     for (i = 0;i < HL_KNOBS; i++) {
-        hl_hal_gpio_deinit(knobs[i].knob_a_pin);
-        hl_hal_gpio_deinit(knobs[i].knob_b_pin);
-
         if(RT_EOK != hl_hal_gpio_irq_enable(knobs[i].knob_a_pin, PIN_IRQ_DISABLE)) {
             return HL_FAILED;
         }
-        if (RT_EOK != hl_hal_gpio_irq_enable(knobs[i].knob_b_pin, PIN_IRQ_DISABLE)) {
-            return HL_FAILED;
-        }
-
+        hl_hal_gpio_deinit(knobs[i].knob_a_pin);
+        hl_hal_gpio_deinit(knobs[i].knob_b_pin);
     }
+    
     return HL_SUCCESS;
 }
 
@@ -128,12 +107,9 @@ uint8_t hl_drv_knob_read(uint8_t knob_num, int8_t * val)
     }
 
     hl_hal_gpio_irq_enable(knobs[knob_num].knob_a_pin, PIN_IRQ_DISABLE);
-    hl_hal_gpio_irq_enable(knobs[knob_num].knob_b_pin, PIN_IRQ_DISABLE);
-
     *val = knobs[knob_num].knob_gain_val;
     knobs[knob_num].knob_gain_val = 0;
     hl_hal_gpio_irq_enable(knobs[knob_num].knob_a_pin, PIN_IRQ_ENABLE);
-    hl_hal_gpio_irq_enable(knobs[knob_num].knob_b_pin, PIN_IRQ_ENABLE);
 
     return HL_SUCCESS;
 }

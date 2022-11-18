@@ -30,7 +30,7 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()  //tx
+#if HL_IS_TX_DEVICE()  //tx
 int hl_drv_aw2016a_test_init(int argc, char* argv[])
 {
     int                            ret;

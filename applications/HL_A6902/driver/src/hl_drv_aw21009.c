@@ -46,7 +46,7 @@ typedef enum
 *****************************************************/
 #define DBG_LOG rt_kprintf
 
-#if HL_GET_DEVICE_TYPE() == 0
+#if HL_IS_TX_DEVICE() == 0
 ///Rx
 #define HL_DRV_AW21009_I2C_NAME "i2c1"
 
@@ -1041,7 +1041,7 @@ int hl_drv_aw21009_init(void)
 
     DBG_LOG("LED init success: i2c addr:%02x\n", AW210XX_I2C_ADDR);
 
-#if HL_GET_DEVICE_TYPE() == 0
+#if HL_IS_TX_DEVICE() == 0
     ///Rx
     ret = aw210xx_init(HL_DRV_AW21009_OTHER_DEV_ADDR);
     if (ret == -1) {
@@ -1068,7 +1068,7 @@ int hl_drv_aw21009_deinit(void)
 
     aw210xx_chipen_set(AW210XX_I2C_ADDR, false);
 
-#if HL_GET_DEVICE_TYPE() == 0
+#if HL_IS_TX_DEVICE() == 0
     aw210xx_chipen_set(HL_DRV_AW21009_OTHER_DEV_ADDR, false);
 #endif
 
@@ -1090,7 +1090,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
     if (led_num == HL_DRV_AW21009_LED_DEV_0) {
         dev_addr = AW210XX_I2C_ADDR;
     } else if (led_num == HL_DRV_AW21009_LED_DEV_1) {
-#if HL_GET_DEVICE_TYPE() == 0
+#if HL_IS_TX_DEVICE() == 0
         dev_addr = HL_DRV_AW21009_OTHER_DEV_ADDR;
 #else
         dev_addr = AW210XX_I2C_ADDR;

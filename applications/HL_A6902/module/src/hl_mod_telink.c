@@ -24,7 +24,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hl_mod_telink.h"
 #include "hl_hal_gpio.h"
-#include "hl_test_pre.h"
+#include "hl_util_msg_type.h"
 #include <stdlib.h>
 
 /* typedef -------------------------------------------------------------------*/
@@ -128,7 +128,7 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
     }
 
     if (RT_EOK != ret) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, ret);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, ret);
     }
 }
 
@@ -226,7 +226,7 @@ static void hl_mod_telink_thread_entry(void* parameter)
         // 将数据上传至APP层消息队列
         ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
         if (RT_EOK != ret) {
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, ret);
+            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, ret);
         }
     }
 }
@@ -251,7 +251,7 @@ static rt_err_t _hl_mod_telink_serial_init(void)
     // 查找系统中的串口设备
     s_telink.serial = rt_device_find(TELINK_UART_DEV_NAME);
     if (RT_NULL == s_telink.serial) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, s_telink.serial);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, s_telink.serial);
         return RT_ERROR;
     }
 
@@ -267,13 +267,13 @@ static rt_err_t _hl_mod_telink_serial_init(void)
 uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 {
     if (NULL == input_msq) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, input_msq);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
         return -1;
     }
 
     rt_err_t result;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     // 使能TX相关GPIO引脚
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);
@@ -293,7 +293,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     s_telink_hup_buf  = (uint8_t*)rt_malloc(sizeof(uint8_t) * TELINK_HUP_BUF_SIZE);
     s_telink_fifo_buf = (uint8_t*)rt_malloc(sizeof(uint8_t) * TELINK_FIFO_BUF_SIZE);
     if ((NULL == s_telink_hup_buf) || (NULL == s_telink_fifo_buf)) {
-        rt_kprintf("[%s][line:%d] rt_malloc failed!!! \r\n", __FILE__, __LINE__);
+        rt_kprintf("[%s][line:%d] rt_malloc failed!!! \r\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -320,7 +320,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     result = rt_thread_init(&telink_thread, "telink", hl_mod_telink_thread_entry, RT_NULL, &telink_thread_stack[0],
                             sizeof(telink_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, result);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
         return -1;
     }
 
@@ -346,7 +346,7 @@ uint8_t hl_mod_telink_start(void)
 
     result = rt_thread_startup(&telink_thread);
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, result);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
         return -1;
     }
     return 0;
@@ -360,7 +360,7 @@ uint8_t hl_mod_telink_stop(void)
 uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
     if (TELINK_UART_BUF_SIZE < data_len) {
-        rt_kprintf("[%s][line:%d] data_len is too long!!! \r\n", __FILE__, __LINE__);
+        rt_kprintf("[%s][line:%d] data_len is too long!!! \r\n", __FUNCTION__, __LINE__);
         return -1;
     }
     uint8_t frame_buf[TELINK_UART_BUF_SIZE] = { 0 };
