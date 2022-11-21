@@ -169,7 +169,6 @@ const rt_uint8_t _report_desc[]=
 #endif
     // Media Control
 #ifdef RT_USB_DEVICE_HID_MEDIA
-    /*
     USAGE_PAGE(1),      0x0C,
     USAGE(1),           0x01,
     COLLECTION(1),      0x01,
@@ -187,26 +186,6 @@ const rt_uint8_t _report_desc[]=
     USAGE(1),           0xE9,             // Volume Up
     USAGE(1),           0xEA,             // Volume Down
     INPUT(1),           0x02,             // Input (Data, Variable, Absolute)
-    REPORT_COUNT(1),    0x01,
-    INPUT(1),           0x01,
-    END_COLLECTION(0),
-    */
- 
-    USAGE_PAGE(1),      0x0C,
-    USAGE(1),           0x01,
-    COLLECTION(1),      0x01,
-    REPORT_ID(1),       0x02,
-    LOGICAL_MINIMUM(1), 0x00,
-    LOGICAL_MAXIMUM(1), 0x01,
-    USAGE(1),           0xE9,             // Volume Up
-    USAGE(1),           0xEA,             // Volume Down
-    USAGE(1),           0xCD,             // Play / Pause
-    USAGE(1),           0xCF,             //
-    REPORT_COUNT(1),    0x04,
-    REPORT_SIZE(1),     0x01,
-    INPUT(1),           0x02,             // Input (Data, Variable, Absolute)
-    REPORT_COUNT(1),    0x04,
-    INPUT(1),           0x05,
     REPORT_COUNT(1),    0x01,
     INPUT(1),           0x01,
     END_COLLECTION(0),
