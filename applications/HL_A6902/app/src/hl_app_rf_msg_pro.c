@@ -43,7 +43,7 @@
 void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 {
     hl_led_mode     led_ctrl;
-    uint8_t         *p_param;
+    uint8_t         p_param;
 
     LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -54,13 +54,20 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             tx_info.rf_state = HL_RF_STATE_RELEASE;
             break;
         case HL_MOD_TELINK_PAIR_INFO_IND:
-            p_param  = (uint8_t*)p_msg->param.ptr;
-            LOG_D("telink info(%d,%d,%d)\r\n", p_param[0], p_param[1], p_param[2]);
-            if (p_param[0] == 0x01) {
-                tx_info.rf_state = HL_RF_STATE_PAIR;
-            } else if ((p_param[1] == 0) && (p_param[2] == 0)) {
+            p_param  = *(uint8_t*)p_msg->param.ptr;
+            LOG_D("telink info(%02X)\r\n", p_param);
+            // if (p_param[0] == 0x01) {
+            //     tx_info.rf_state = HL_RF_STATE_PAIR;
+            // } else if ((p_param[1] == 0) && (p_param[2] == 0)) {
+            //     tx_info.rf_state = HL_RF_STATE_RELEASE;
+            // } else {
+            //     tx_info.rf_state = HL_RF_STATE_CONNECT;
+            // }
+            if (p_param == 0) {
+                led_ctrl = LED_MODE_RECONNECTION;
                 tx_info.rf_state = HL_RF_STATE_RELEASE;
             } else {
+                led_ctrl = LED_MODE_CONNECTED;
                 tx_info.rf_state = HL_RF_STATE_CONNECT;
             }
             break;
@@ -75,7 +82,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 {
     hl_led_mode     led_ctrl;
-    uint8_t         *p_param;
+    uint8_t         p_param;
 
     LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -90,12 +97,19 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
             break;
         case HL_MOD_TELINK_PAIR_INFO_IND:
-            p_param  = (uint8_t*)p_msg->param.ptr;
-            LOG_D("telink info(%d,%d,%d)\r\n", p_param[0], p_param[1], p_param[2]);
-            if (p_param[0] == 0x01) {
-                led_ctrl = LED_MODE_PAIR;
-                rx_info.rf_state = HL_RF_STATE_PAIR;
-            } else if ((p_param[1] == 0) && (p_param[2] == 0)) {
+            p_param  = *(uint8_t*)p_msg->param.ptr;
+            LOG_D("telink info(%02X)\r\n", p_param);
+            // if (p_param[0] == 0x01) {
+            //     led_ctrl = LED_MODE_PAIR;
+            //     rx_info.rf_state = HL_RF_STATE_PAIR;
+            // } else if ((p_param[1] == 0) && (p_param[2] == 0)) {
+            //     led_ctrl = LED_MODE_RECONNECTION;
+            //     rx_info.rf_state = HL_RF_STATE_RELEASE;
+            // } else {
+            //     led_ctrl = LED_MODE_CONNECTED;
+            //     rx_info.rf_state = HL_RF_STATE_CONNECT;
+            // }
+            if (p_param == 0) {
                 led_ctrl = LED_MODE_RECONNECTION;
                 rx_info.rf_state = HL_RF_STATE_RELEASE;
             } else {
