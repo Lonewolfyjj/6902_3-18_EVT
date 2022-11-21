@@ -176,7 +176,7 @@
 /* RT_USING_GD is not set */
 /* RT_USING_ENC28J60 is not set */
 /* RT_USING_SPI_WIFI is not set */
-/* RT_USING_WDT is not set */
+#define RT_USING_WDT
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
@@ -398,6 +398,7 @@
 
 /* RT_USING_BUFFER_MANAGE is not set */
 /* RT_USING_SENSOR_HUB is not set */
+/* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
 
 /* RT-Thread rockchip coredump driver */
@@ -522,6 +523,7 @@
 /* RT_USING_COMMON_TEST_SPI is not set */
 /* RT_USING_COMMON_TEST_SPI2APB is not set */
 /* RT_USING_COMMON_STRESS_TEST is not set */
+/* RT_USING_COMMON_TEST_WDT is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
 /* RT_USING_COMMON_TEST_TIMER is not set */

@@ -127,7 +127,7 @@ struct nau88l25b_priv* nau88l25b_test = NULL;
 #define HL_CODEC_SET 0
 //#define RT_CODEC_NAU88L21 1
 NAU88L25B_REG_T s_nau88l25b_param[] = {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(TX)
     { 0x0001, 0x01BC }, { 0x0002, 0x0000 }, { 0x0003, 0x0050 }, { 0x0004, 0x0081 }, { 0x0005, 0x0000 },
     { 0x0006, 0x0408 }, { 0x0007, 0x0010 }, { 0x0008, 0x1000 }, { 0x0009, 0x6000 }, { 0x000A, 0xF13C },
@@ -264,7 +264,7 @@ static rt_err_t nau88l25b_set_gain_pga(struct nau88l25b_priv* nau88l25b, int16_t
 {
     rt_err_t ret = RT_EOK;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     uint16_t reg_gain = 0x00;
     uint16_t val = 0x00;
 
@@ -310,7 +310,7 @@ static rt_err_t nau88l25b_set_gain_volume(struct nau88l25b_priv* nau88l25b, int1
 {
     rt_err_t ret = RT_EOK;
     
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     uint16_t reg_gain = 0x00;
     uint16_t val      = 0x00;
 
@@ -374,7 +374,7 @@ static rt_err_t nau88l25b_set_gain(struct audio_codec *codec, eAUDIO_streamType 
             ret |= nau88l25b_set_gain_volume(nau88l25b, dBConfig->dB);
             break;
         default:
-            rt_kprintf("[%s][line:%d] cmd(0x%02x) unkown!!! \r\n", __FILE__, __LINE__, dBConfig->ch);
+            rt_kprintf("[%s][line:%d] cmd(0x%02x) unkown!!! \r\n", __FUNCTION__, __LINE__, dBConfig->ch);
             break;
     }        
 

@@ -31,7 +31,7 @@
 #include "hl_hal_gpio.h"
 #include "rtdef.h"
 
-#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_IS_TX_DEVICE())
 
 #define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
 #define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
@@ -898,6 +898,17 @@ static uint8_t hl_drv_rm69310_config(void)
     return result = (result != HL_SUCCESS) ? HL_FAILED : HL_SUCCESS;
 }
 
+void hl_drv_rm69310_mem_deal(const uint8_t* buf,const uint8_t* data,uint16_t vor,uint16_t size)
+{
+    uint16_t i = 0, j = 0, k = 0;
+    size = size * 2;
+    for(i = 0;i < vor;i++){
+        memcpy(&buf[k],&data[j],size);
+        j = j + size + 2;
+        k = (i+1) * size;
+    }
+}
+
 /**
  * 
  * @brief 显示单帧图像
@@ -921,24 +932,76 @@ static uint8_t hl_drv_rm69310_config(void)
 uint8_t hl_drv_rm69310_display_write(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end,
                                      const uint8_t* p_pic)
 {
-    uint8_t column, row;
+    uint8_t column, row,cs, ce;
     uint8_t result = HL_SUCCESS;
+    uint8_t buf[OLED_MEM_SIZE],*p = RT_NULL;    
+    p = buf;
 
     column = x_end - x_start + 1;
     row    = y_end - y_start + 1;
 
-    if (HL_FAILED == hl_drv_rm69310_set_area(x_start, x_end, y_start, y_end + 1)) {
+    cs = (x_start & 0x01); 
+    ce = (x_end & 0x01); 
+
+    if(cs == 1 && ce == 1){//奇 奇
+        x_start -= 1;
+        x_end -= 2;
+        hl_drv_rm69310_mem_deal(buf,p_pic,(y_end - y_start + 1),(x_end - x_start + 1));
+    }
+
+    if(cs == 0 && ce == 0){//偶 偶
+        x_end -= 1;
+        hl_drv_rm69310_mem_deal(buf,p_pic,(y_end - y_start + 1),(x_end - x_start + 1));
+    }
+
+    if(cs == 1 && ce == 0){//奇 偶
+        x_start -= 1;
+        x_end -= 1;
+        cs = (x_start & 0x01); 
+
+        x_start -= cs;
+
+        column = x_end - x_start + 1;
+
+        ce = (column & 0x01); 
+
+        x_end -= ce;
+
+        p = p_pic;
+    }
+
+    if(cs == 0 && ce == 1){//偶 奇
+
+        cs = (x_start & 0x01); 
+
+        x_start -= cs;
+
+        column = x_end - x_start + 1;
+
+        ce = (column & 0x01); 
+
+        x_end -= ce;
+
+        p = p_pic;
+    }
+
+    column = x_end - x_start + 1;
+    row    = y_end - y_start + 1;
+
+    if (HL_FAILED == hl_drv_rm69310_set_area(x_start, x_end, y_start, y_end)) {
         HL_PRINTF("err: set area fail!\r\n");
+        p = RT_NULL;
         return HL_FAILED;
     }
 
     result = hl_drv_rm69310_start_write_mem();
 
-    if (HL_FAILED == hl_drv_rm69310_write_mem(p_pic, column * (row + 1) * 2)) {
+    if (HL_FAILED == hl_drv_rm69310_write_mem(p, column * row * 2)) {
         HL_PRINTF("err: write memory fail!\r\n");
+        p = RT_NULL;
         return HL_FAILED;
     }
-
+    p = RT_NULL;
     return result;
 }
 

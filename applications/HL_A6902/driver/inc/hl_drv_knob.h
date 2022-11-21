@@ -19,7 +19,7 @@
 #define __HL_DRV_KNOB_H__
 
 #include "hl_config.h"
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #else
 
 /* Includes ------------------------------------------------------------------*/
@@ -31,8 +31,6 @@ typedef enum _hl_drv_knob_e
 {
     /// 左旋钮编号
     KNOB_LEFT = 0,
-    /// 右旋钮编号
-    KNOB_RIGHT,
     /// 旋钮数目
     HL_KNOBS,
 } hl_drv_knob_e;

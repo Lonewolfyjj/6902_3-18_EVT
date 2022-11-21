@@ -84,8 +84,8 @@ typedef struct _lib_alango_srp_param_
 
 /* define --------------------------------------------------------------------*/
 
-#ifndef HL_GET_DEVICE_TYPE()
-#error "HL_GET_DEVICE_TYPE() not define"
+#ifndef HL_IS_TX_DEVICE()
+#error "HL_IS_TX_DEVICE() not define"
 #endif
 
 // 以下一段为DSP的帧处理配置，后续可能优化
@@ -137,7 +137,7 @@ static struct dsp_work* sg_dsp_work = NULL;
 /// 全局的帧长计算保存
 static uint16_t sg_dsp_frame_bytes = 0;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // tx = 1
 static lib_alango_srp_param_type_t_p sg_tx_dsp_param = NULL;
 #else
@@ -208,7 +208,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     rt_device_control(sg_dsp_dev, RKDSP_CTL_GET_FREQ, (void*)&rate);
     HL_DRV_DSP_LOG("current dsp freq: %d MHz\n", rate / MHZ);
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     RT_ASSERT(sg_tx_dsp_param != NULL);
     sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_tx_dsp_param,
                                   sizeof(lib_alango_srp_param_type_t));
@@ -286,7 +286,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
 
     sg_dsp_drv_handle->enable = 0;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     sg_dsp_work->algo_type = DSP_ALGO_ALANGO_SRP_DEINIT;
     ret                    = rt_device_control(sg_dsp_dev, RKDSP_CTL_QUEUE_WORK, sg_dsp_work);
     RT_ASSERT(!ret);
@@ -340,7 +340,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
 static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_t_p config)
 {
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     // tx = 1
     if (!sg_tx_dsp_param) {
         HL_DRV_DSP_LOG("not init\r\n");
@@ -450,7 +450,7 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
         sg_dsp_drv_handle = (hl_drv_rk_xtensa_dsp_t_p)malloc(sizeof(hl_drv_rk_xtensa_dsp_t));
     }
 
-#if (HL_GET_DEVICE_TYPE())
+#if (HL_IS_TX_DEVICE())
     // tx = 1
     sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_TX;
     sg_tx_dsp_param                = rkdsp_malloc(sizeof(lib_alango_srp_param_type_t));
@@ -465,7 +465,7 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
 #endif
 #endif
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     sg_tx_dsp_param->io_ctrl_op = 3;
 #else
     sg_rx_dsp_param->io_ctrl_op = 3;
@@ -497,7 +497,7 @@ uint8_t hl_drv_rk_xtensa_dsp_deinit()
 
     rt_device_close(sg_dsp_dev);
 
-#if (HL_GET_DEVICE_TYPE())
+#if (HL_IS_TX_DEVICE())
     // tx = 1
     if (sg_tx_dsp_param) {
         rkdsp_free(sg_tx_dsp_param);
@@ -524,7 +524,7 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         return 1;
     }
     // HL_DRV_DSP_LOG("dsp work type = 0x%02x\r\n", sg_dsp_work->algo_type);
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->in_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b24_1ch_after_process,
@@ -607,17 +607,19 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
         case HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP:
             if(((uint8_t *)ptr)[0] != 0) {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
                 sg_tx_dsp_param->io_ctrl_op = 0;
 #else
                 sg_rx_dsp_param->io_ctrl_op = 0;
 #endif
-                }else {
-#if HL_GET_DEVICE_TYPE()
+                rt_kprintf("[%s][line:%d] open denoise!!!\r\n", __FUNCTION__, __LINE__);
+            } else {
+#if HL_IS_TX_DEVICE()
                 sg_tx_dsp_param->io_ctrl_op = 3;
 #else
                 sg_rx_dsp_param->io_ctrl_op = 3;
 #endif
+                rt_kprintf("[%s][line:%d] close denoise!!!\r\n", __FUNCTION__, __LINE__);
             }
             
             break;
@@ -636,7 +638,7 @@ int denoise_set(int argc, char** argv)
     }
 
     if (atoi(argv[1])) {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
         // tx = 1
         sg_tx_dsp_param->io_ctrl_op = 0;
 #else
@@ -644,7 +646,7 @@ int denoise_set(int argc, char** argv)
         sg_rx_dsp_param->io_ctrl_op = 0;
 #endif
     }else {
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
         // tx = 1
         sg_tx_dsp_param->io_ctrl_op = 3;
 #else
