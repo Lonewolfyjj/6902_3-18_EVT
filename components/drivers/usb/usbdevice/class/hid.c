@@ -20,6 +20,7 @@
 
 #include "hid.h"
 #include "dma.h"
+#include "hl_config.h"
 
 #ifdef RT_USB_DEVICE_HID
 
@@ -370,7 +371,11 @@ const static char* _ustring[] =
 {
     "Language",
     "Shenzhen Hollyland technology Co.,LTD",
-    "Wireless Microphone",
+#if HL_IS_TX_DEVICE()
+    "Wireless Microphone Tx",
+#else
+    "Wireless Microphone Rx",
+#endif
     "32021919830108",
     "Configuration",
     "Interface",
