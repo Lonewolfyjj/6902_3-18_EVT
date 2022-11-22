@@ -709,7 +709,8 @@ INIT_ERR:
     return HL_FAILED;
 }
 
-void tt25(int argc, char** argv)
+#if 0
+void hl_drv_nau88l25b_test(int argc, char** argv)
 {
     if (argc != 4) {
         nau_printf("argc param err : %d \n", argc);
@@ -739,4 +740,6 @@ void tt25(int argc, char** argv)
     nau_printf("param = %d \n", par.param);
 }
 
-MSH_CMD_EXPORT(tt25, run tt25);
+MSH_CMD_EXPORT(hl_drv_nau88l25b_test, run hl_drv_nau88l25b_test);
+
+#endif

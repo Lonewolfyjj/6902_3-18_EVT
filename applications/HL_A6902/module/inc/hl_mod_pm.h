@@ -33,10 +33,18 @@
 #include "stdbool.h"
 
 /* typedef -------------------------------------------------------------------*/
+typedef struct _HL_PMIC_INPUT_PARAM_T
+{
+    uint8_t cfg_opt;//参数参考 ： sgm41518 或者 sy6971 枚举内容
+    uint8_t param; //参数参考 ： 功能选项参数宏
+}HL_PMIC_INPUT_PARAM_T;
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_PM_FUNC_RET_OK 0
 #define HL_MOD_PM_FUNC_RET_ERR 1
+
+#define HL_MOD_RK2108_POWER_UP_CMD  0xFE
+#define HL_MOD_RK2108_POWER_DOWN_CMD 0xFF
 
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

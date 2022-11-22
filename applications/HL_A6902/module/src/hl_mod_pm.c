@@ -25,9 +25,12 @@
 
 #include "hl_mod_pm.h"
 #include "hl_drv_cw2215.h"
+#include "hl_drv_sgm41518.h"
+#include "hl_drv_sy6971.h"
 #include "hl_hal_gpio.h"
 
 /* typedef -------------------------------------------------------------------*/
+typedef int (*pm_io_ctl)(uint8_t cmd, void* ptr, uint8_t len);
 
 typedef struct _hl_mod_pm_bat_info_st
 {
@@ -84,6 +87,8 @@ static hl_mod_pm_st _pm_mod = { .init_flag        = false,
                                     .temp.temp_d = 0,
                                     .voltage     = 0,
                                 } };
+
+static pm_io_ctl pm_ioctl = RT_NULL;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -207,7 +212,17 @@ int hl_mod_pm_init(void* msg_hd)
         DBG_LOG("pm is already inited!\n");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
-
+    if (hl_drv_sy6971_init() == HL_SUCCESS) {
+        pm_ioctl = hl_drv_sy6971_io_ctrl;
+    }
+    else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
+        pm_ioctl = hl_drv_sgm41518_io_ctrl;
+    }
+    if (pm_ioctl == RT_NULL) {
+        DBG_LOG("pm init fail! Not find pm IC !\n");
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
+    
     ret = hl_drv_cw2215_init();
     if (ret == CW2215_FUNC_RET_ERR) {
         return HL_MOD_PM_FUNC_RET_ERR;
@@ -223,6 +238,8 @@ int hl_mod_pm_init(void* msg_hd)
 
     return HL_MOD_PM_FUNC_RET_OK;
 }
+
+INIT_ENV_EXPORT(hl_mod_pm_init);
 
 int hl_mod_pm_deinit(void)
 {
@@ -319,13 +336,69 @@ int hl_mod_pm_stop(void)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
+static int hl_mod_iocmd_parse(uint8_t cmd)
+{
+    int ret = HL_MOD_PM_FUNC_RET_OK;
+    switch (cmd) {
+        case HL_MOD_RK2108_POWER_UP_CMD:
+            hl_hal_gpio_high(GPIO_ALL_POWER);
+            DBG_LOG("power up\n");
+            break;
+        case HL_MOD_RK2108_POWER_DOWN_CMD:
+            hl_hal_gpio_low(GPIO_ALL_POWER);
+            DBG_LOG("power down\n");
+            break;
+        default:
+            ret = HL_MOD_PM_FUNC_RET_ERR;
+            break;
+    }
+    return ret;
+}
+
+/**
+ * 
+ * @brief 
+ * @param [in] op 
+ * @param [in] arg 应该为 HL_PMIC_INPUT_PARAM_T 类型
+ * @param [in] arg_size 
+ * @return int 
+ * @date 2022-11-15
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-15      <td>dujunjie     <td>新建
+ * </table>
+ */
 int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
 {
+    int                    i;
+    HL_PMIC_INPUT_PARAM_T* ptr = (HL_PMIC_INPUT_PARAM_T*)arg;
+    if (arg_size == 0) {
+        DBG_LOG("arg_size err!\n");
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
     if (_pm_mod.init_flag == false) {
         DBG_LOG("pm is not init!\n");
         return HL_MOD_PM_FUNC_RET_ERR;
+    }    
+    if (ptr->param >= HL_MOD_RK2108_POWER_UP_CMD) {
+        if (hl_mod_iocmd_parse(ptr->param) == HL_MOD_PM_FUNC_RET_OK) {
+            return HL_MOD_PM_FUNC_RET_OK;
+        } else {
+            DBG_LOG("hl_mod_iocmd_parse err!\n", i);
+            return HL_MOD_PM_FUNC_RET_ERR;
+        }
     }
-
+    for (i = 0; i < arg_size; i++) {
+        if (pm_ioctl(op, &arg[i], 1) == HL_FAILED) {
+            DBG_LOG("pm_ioctl [%d] err!\n", i);
+            return HL_MOD_PM_FUNC_RET_ERR;
+        }
+    }
     return HL_MOD_PM_FUNC_RET_OK;
 }
 

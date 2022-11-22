@@ -19,7 +19,7 @@
 #define __HL_DRV_KNOB_H__
 
 #include "hl_config.h"
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 #else
 
 /* Includes ------------------------------------------------------------------*/

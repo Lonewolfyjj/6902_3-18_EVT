@@ -34,7 +34,7 @@
 #ifndef __HL_DRV_NAU88L25B_H__
 #define __HL_DRV_NAU88L25B_H__
 #include "stdint.h"
-
+#include "hl_config.h"
 /**************************************************************************
  *                                基本宏                                     *
  **************************************************************************/
@@ -44,7 +44,11 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
+#if !HL_IS_TX_DEVICE()
+#define NAU88L25B_IIC_NAME "i2c1"
+#else
 #define NAU88L25B_IIC_NAME "i2c2"
+#endif
 #define NAU88L25B_DEVICE_ADDRESS 0x1A
 
 /* 寄存器地址 */

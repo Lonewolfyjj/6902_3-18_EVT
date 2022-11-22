@@ -23,6 +23,9 @@
 #include "hl_hal_gpio.h"
 #include "rtdevice.h"
 #include "hl_drv_knob.h"
+#include "hl_util_msg_type.h"
+#include "hl_util_timeout.h"
+
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数
@@ -30,7 +33,7 @@
 /// 双击间隔时间
 #define DOUBLE_PRESS_TIME 400
 /// 插入的消抖时间 ms
-#define INSERT_DEBANCE_TIME 1000
+#define INSERT_DEBANCE_TIME 500
 
 #define TASK_SCAN_PERIOD 600
 
@@ -52,7 +55,7 @@ enum
 };
 
 /* typedef -------------------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 typedef enum _hl_input_key_e
 {
@@ -80,12 +83,13 @@ typedef enum _hl_input_key_e
 
 typedef enum _hl_input_insert_e
 {
-    CAM_DET = 0,
+    VBUS_DET = 0,
+    CAM_DET,
     HP_DET,
     HL_INPUT_INSERT,
 } hl_input_insert_e;
 
-#endif /* HL_GET_DEVICE_TYPE() */
+#endif /* HL_IS_TX_DEVICE() */
 
 /// 按键检测的参数
 typedef struct _key_param_s
@@ -106,9 +110,10 @@ typedef enum _hl_key_state_e
 
 typedef enum _hl_insert_state_e
 {
-    INSERT_STATE_RELEASE = 0,
+    INSERT_STATE_IDLE = 0,
     INSERT_STATE_WAIT,
-    INSERT_STATE_INSERTED,
+    INSERT_STATE_INSERT,
+    INSERT_STATE_RELEASE,
 } hl_insert_state_e;
 
 typedef enum _hl_input_insert_state_e
@@ -125,23 +130,12 @@ typedef enum _hl_key_press_state_e
 } hl_key_press_state_e;
 
 /* variables -----------------------------------------------------------------*/
-
-typedef struct _hl_time_t
-{
-    /// 超时器是否有效
-    uint8_t activity;
-    /// 已超时标志
-    uint8_t timeout_flag;
-    /// 超时时间(开始时间+设置的时间)
-    uint32_t timeout_time;
-} hl_time_t;
-
 typedef struct _key_state_s
 {
     // 最近的按键状态
     hl_key_state_e last_state;
     // 按键超时定时器
-    hl_time_t timer;
+    hl_timeout_t timer;
     // 按下计数
     uint8_t click_cout;
 } key_state_s;
@@ -162,10 +156,13 @@ typedef struct _hl_input_key_s
 
 typedef struct _insert_state_s
 {
-    // 最近的按键状态
-    hl_key_state_e key_last_state;
-    // 按键超时定时器
-    hl_time_t key_timer;
+    // 上次输入状态
+    hl_insert_state_e       insert_last_state;
+    // 当前输入状态
+    hl_insert_state_e       insert_cur_state;
+    hl_input_insert_state_e last_pin_state;
+    // 输入超时定时器
+    hl_timeout_t            insert_timer;
 } insert_state_s;
 static rt_thread_t input_tid = RT_NULL;
 
@@ -177,17 +174,18 @@ typedef struct _hl_input_mod_t
     mode_to_app_msg_t msg;
 } hl_input_msg_t;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_PAIR_KEY, GPIO_REC_KEY };
 static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000} };
 
-static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_VBUS_DET, GPIO_MIC_DET };
+static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_MIC_DET };
 #else
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_VOL_OK };
-static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000} };
+static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000} };
 
-static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_CAM_DET, GPIO_HP_DET };
+static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_CAM_DET, GPIO_HP_DET };
+
 #endif
 static hl_input_msg_t hl_input_msg = { 0 };
 /* 按键事件 */
@@ -218,44 +216,6 @@ static bool    hl_mod_input_insert_scan(hl_input_insert_e insert_nums);
 static void hl_mod_input_insert_send(void);
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map);
 
-bool hl_util_timeout_set(hl_time_t* p_timer, uint32_t time)
-{
-    if (p_timer == NULL) {
-        return false;
-    }
-    p_timer->timeout_time = rt_tick_get() + time;
-    p_timer->timeout_flag = false;
-    p_timer->activity     = true;
-
-    return true;
-}
-
-bool hl_util_timeout_close(hl_time_t* p_timer)
-{
-    if (p_timer == NULL) {
-        return false;
-    }
-
-    p_timer->timeout_flag = false;
-    p_timer->activity     = false;
-    return true;
-}
-
-bool hl_util_timeout_judge(hl_time_t* p_timer)
-{
-    if (p_timer->activity != true) {
-        return false;
-    }
-
-    if ((rt_tick_get() - p_timer->timeout_time) < INT32_MAX) { 
-        p_timer->timeout_flag = true;
-        p_timer->activity     = false;
-        return true;
-    }
-
-    return false;
-}
-
 static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
 {
     rt_err_t res;
@@ -273,11 +233,11 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     }
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
 {
-    input_mod_msg_cmd_e res;
+    input_mod_msg_cmd_e res = MSG_TX_IDLE;
     switch (class) {
         case KEYS:
             switch (nums) {
@@ -300,8 +260,8 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
                     res = MSG_TX_VBUS_DET;
                     break;
                 case MIC_DET:
-                    break;
                     res = MSG_TX_MIC_DET;
+                    break;
                 default:
                     break;
             }
@@ -327,7 +287,7 @@ static uint8_t comb_key_check(hl_input_key_e key1, hl_input_key_e key2)
 //RX
 static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
 {
-    input_mod_msg_cmd_e res;
+    input_mod_msg_cmd_e res = MSG_RX_IDLE;
     switch (class) {
         case KEYS:
             switch (nums) {
@@ -343,8 +303,11 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
             break;
         case SWITCHS:
             switch (nums) {
-                case CAM_DET:
+                case VBUS_DET:
                     res = MSG_RX_VBUS_DET;
+                    break;
+                case CAM_DET:
+                    res = MSG_RX_CAM_DET;
                     break;
                 case HP_DET:                    
                     res = MSG_RX_HP_DET;
@@ -416,41 +379,50 @@ static bool hl_mod_input_insert_scan(hl_input_insert_e insert_nums)
     insert_state_s*         state       = &insert_state[insert_nums];
 
     insert_pin_state = hl_mod_input_insert_read(insert_nums);
+    switch (state->insert_cur_state) {
+        case INSERT_STATE_IDLE:
+            state->insert_last_state = INSERT_STATE_IDLE;
+            state->insert_cur_state  = INSERT_STATE_WAIT;
+            state->last_pin_state    = insert_pin_state;
+            hl_util_timeout_set(&(state->insert_timer), INSERT_DEBANCE_TIME);
+            break;
 
-    switch (state->key_last_state) {
+        case INSERT_STATE_WAIT:
+            if (state->last_pin_state != insert_pin_state) {
+                state->last_pin_state = insert_pin_state;
+                hl_util_timeout_set(&(state->insert_timer), INSERT_DEBANCE_TIME);
+            }
+            if (hl_util_timeout_judge(&(state->insert_timer))) {
+                if (insert_pin_state == LINE_INSERT) {
+                    state->insert_cur_state = INSERT_STATE_INSERT;
+                    hl_insert_event[insert_nums] = HL_SWITCH_EVENT_ON;
+                } else {
+                    state->insert_cur_state = INSERT_STATE_RELEASE;
+                    hl_insert_event[insert_nums] = HL_SWITCH_EVENT_OFF;
+                }
+                if (state->insert_last_state != state->insert_cur_state) {
+                    state->insert_last_state  = state->insert_cur_state;
+                    update_flag               = true;
+                }
+            }
+            break;
+
+        case INSERT_STATE_INSERT:
+            if (insert_pin_state != LINE_INSERT) {
+                state->insert_cur_state  = INSERT_STATE_WAIT;
+                state->last_pin_state    = insert_pin_state;
+                hl_util_timeout_set(&(state->insert_timer), INSERT_DEBANCE_TIME);
+            }
+            break;
+
         case INSERT_STATE_RELEASE:
             if (insert_pin_state == LINE_INSERT) {
-                hl_util_timeout_set(&(state->key_timer), INSERT_DEBANCE_TIME);
-                state->key_last_state = INSERT_STATE_WAIT;
-            }
-
-            break;
-        // 按键按下
-        case INSERT_STATE_WAIT:
-            if (hl_util_timeout_judge(&(state->key_timer))) {
-                if (insert_pin_state == LINE_INSERT) {
-                    state->key_last_state = INSERT_STATE_INSERTED;
-                    if (hl_insert_event[insert_nums] == HL_SWITCH_EVENT_OFF) {
-                        update_flag                  = true;
-                        hl_insert_event[insert_nums] = HL_SWITCH_EVENT_ON;
-                    }
-
-                } else if (insert_pin_state == LINE_OUT) {
-                        state->key_last_state = INSERT_STATE_RELEASE;
-                        if (hl_insert_event[insert_nums] == HL_SWITCH_EVENT_ON) {
-                            update_flag                  = true;
-                            hl_insert_event[insert_nums] = HL_SWITCH_EVENT_OFF;
-                        }
-                    }
+                state->insert_cur_state  = INSERT_STATE_WAIT;
+                state->last_pin_state    = insert_pin_state;
+                hl_util_timeout_set(&(state->insert_timer), INSERT_DEBANCE_TIME);
             }
             break;
-
-        case INSERT_STATE_INSERTED:
-            if (insert_pin_state == LINE_OUT) {
-                hl_util_timeout_set(&(state->key_timer), INSERT_DEBANCE_TIME);
-                state->key_last_state = INSERT_STATE_WAIT;
-            }
-            break;
+        
         default:
             break;
     }
@@ -471,7 +443,7 @@ static void hl_mod_input_send_single(void)
 static void hl_mod_input_task(void* param)
 {
     uint8_t i =0 ;
-    hl_time_t send_period = { 0,0,0 };
+    hl_timeout_t send_period = { 0,0,0 };
     int8_t knob_value = 0;
 
     hl_util_timeout_set(&send_period, TASK_SCAN_PERIOD);
@@ -491,7 +463,7 @@ static void hl_mod_input_task(void* param)
                 hl_mod_input_send_msg(pin_index_to_msg_cmd(i, SWITCHS), hl_insert_event[i]);
             }
         }
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
         hl_drv_knob_read(KNOB_LEFT, &knob_value);
         if (knob_value != 0) {
             if(knob_value > 0) {
@@ -510,7 +482,7 @@ static void hl_mod_input_task(void* param)
     }
 }
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 // TX
 static uint8_t hl_mod_input_key_read(hl_input_key_e key_map)
 {
@@ -592,26 +564,25 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
         case KEY_STATE_IDLE:
             key->keystate.click_cout = 0;
             if (key_press_state == KEY_PRESS_YES) {
-                HL_PRINT("state = %d\r\n", key->keystate.last_state);
+                HL_PRINT("key:%d state = %d\r\n", key_num, key->keystate.last_state);
                 key->keystate.last_state = KEY_STATE_JITTER;
                 hl_util_timeout_set(&(key->keystate.timer), JITTER_TIME);
             }
-
             break;
 
         // 消抖
         case KEY_STATE_JITTER:
             if (hl_util_timeout_judge(&(key->keystate.timer))) {
-                HL_PRINT("state = %d\r\n", key->keystate.last_state);
+                key->event   = HL_KEY_EVENT_PRESS;
+                key->keystate.last_state = KEY_STATE_PRESS;                    
+                HL_PRINT("key:%d state = %d (%d)\r\n", key_num, key->keystate.last_state, key->param.long_press_time);
+                hl_util_timeout_set(&(key->keystate.timer), key->param.long_press_time);                    
+                key->trigger = true;
+                break;
+            }
 
-                if (key_press_state == KEY_PRESS_YES) {
-
-                    key->event   = HL_KEY_EVENT_PRESS;
-                    key->keystate.last_state = KEY_STATE_PRESS;                    
-                    HL_PRINT("state = %d (%d)\r\n", key->keystate.last_state, key->param.long_press_time);
-                    hl_util_timeout_set(&(key->keystate.timer), key->param.long_press_time);                    
-                    key->trigger = true;
-                }
+            if (key_press_state != KEY_PRESS_YES) {
+                key->keystate.last_state = KEY_STATE_IDLE;  
             }
             break;
 
@@ -625,7 +596,7 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
             } else if (KEY_PRESS_YES != key_press_state) {
                 key->keystate.last_state = KEY_STATE_DOUBLE;
                 hl_util_timeout_set(&(key->keystate.timer), DOUBLE_PRESS_TIME);
-                HL_PRINT("state = %d\r\n", key->keystate.last_state);
+                HL_PRINT("key:%d state = %d\r\n", key_num, key->keystate.last_state);
             }
             break;
 
@@ -663,20 +634,21 @@ static void hl_mod_input_key_scan(hl_input_key_s* key, uint8_t key_num)
             }
             break;
         default:
+            rt_kprintf("[%s][line:%d] key last state(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, key->keystate.last_state);
             break;
     }
 }
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map)
 {
     switch (insert_map) {
         case VBUS_DET:
-            if (hl_hal_gpio_read(hl_insert_map[VBUS_DET]) == PIN_HIGH) {
+            if (hl_hal_gpio_read(hl_insert_map[VBUS_DET]) == PIN_LOW) {
                 return LINE_INSERT;
             }
             break;
         case MIC_DET:
-            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_LOW) {
+            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_HIGH) {
                 return LINE_INSERT;
             }
             break;
@@ -689,13 +661,18 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
 static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert_map)
 {
     switch (insert_map) {
+        case VBUS_DET:
+            if (hl_hal_gpio_read(hl_insert_map[VBUS_DET]) == PIN_LOW) {
+                return LINE_INSERT;
+            }
+            break;
         case CAM_DET:
             if (hl_hal_gpio_read(hl_insert_map[CAM_DET]) == PIN_HIGH) {
                 return LINE_INSERT;
             }
             break;
         case HP_DET:
-            if (hl_hal_gpio_read(hl_insert_map[HP_DET]) == PIN_LOW) {
+            if (hl_hal_gpio_read(hl_insert_map[HP_DET]) == PIN_HIGH) {
                 return LINE_INSERT;
             }
             break;
@@ -724,6 +701,10 @@ static uint8_t hl_mod_input_insert_init(void)
     uint8_t i;
 
     for (i = 0; i < HL_INPUT_INSERT; i++) {
+        // vbus在drv_usbd.c中初始化成中断了，这里不需要初始化
+        if (VBUS_DET == i) {
+            continue;
+        }
         if (RT_EOK != hl_hal_gpio_init(hl_insert_map[i])) {
             return HL_FAILED;
         }
@@ -738,6 +719,10 @@ static uint8_t hl_mod_input_insert_deinit()
     uint8_t i;
 
     for (i = 0; i < HL_INPUT_INSERT; i++) {
+        // vbus在drv_usbd.c中初始化，这里不需要去初始化
+        if (VBUS_DET == i) {
+            continue;
+        }
         if (RT_EOK != hl_hal_gpio_deinit(hl_insert_map[i])) {
             return HL_FAILED;
         }
@@ -769,7 +754,7 @@ uint8_t hl_mod_input_init(void* msg_hander)
         HL_PRINT("insert init err!");
         return HL_FAILED;
     }
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
     if (HL_SUCCESS != hl_drv_knob_init()) {
         HL_PRINT("knob init err!");
         return HL_FAILED;

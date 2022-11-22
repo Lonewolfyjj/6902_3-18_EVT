@@ -8,7 +8,8 @@
 // // #include "hl_drv_rm69310.h"
 // // #include "hl_mod_display_lvgl.h"
 
-// #if (!HL_GET_DEVICE_TYPE())
+// #if (!HL_IS_TX_DEVICE())
+// #if 0
 // static uint16_t databuf[OLED_WIDTH*OLED_HEIGHT] = {0};
 // static int hl_rx_oled_test_init(void);
 // static int hl_rx_oled_test_deinit(void);
@@ -34,7 +35,18 @@
 //     //rt_thread_mdelay(5); // board init时不能用这个
 //     //hl_hal_gpio_high(GPIO_OLED_SWIRE);
 
-
+//     // SYS_3.3V
+//     hl_hal_gpio_init(GPIO_PWR_EN);
+//     hl_hal_gpio_init(GPIO_OLED_SWIRE);
+//     hl_hal_gpio_low(GPIO_PWR_EN);
+//     hl_hal_gpio_low(GPIO_OLED_SWIRE);
+//     //rt_thread_mdelay(5);
+//     for (i=0;i<2000000;i++ ) {
+//>>>>>>> origin/liujie
+        
+//     }
+//     hl_hal_gpio_high(GPIO_PWR_EN);
+//     for (i=0;i<2000000;i++ ) {
 
 //     // 2831p初始化
 //     hl_hal_gpio_init(GPIO_ATS_PWR_EN);
@@ -50,6 +62,8 @@
 
 // INIT_BOARD_EXPORT(hl_mod_test_rx_init);
 
+//     hl_hal_gpio_high(GPIO_ATS_PWR_EN);
+//     hl_hal_gpio_high(GPIO_RF_PWR_EN);
 
 // static void hl_hal_gpio_test_irq_process(void *args)
 // {

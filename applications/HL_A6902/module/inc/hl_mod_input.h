@@ -36,7 +36,7 @@
 #include "rtdef.h"
 #include "hl_config.h"
 #include "stdbool.h"
-#include "hl_test_pre.h"
+// #include "hl_test_pre.h"
 
 typedef enum _hl_key_event_e
 {
@@ -61,10 +61,12 @@ typedef enum _hl_switch_event_e
     HL_SWITCH_EVENT_ON,       
 } hl_switch_event_e;
 
-#if HL_GET_DEVICE_TYPE() 
+#if HL_IS_TX_DEVICE() 
 //TX
 typedef enum _input_mod_msg_cmd_e
 {
+    /// 空命令
+    MSG_TX_IDLE = 0,
     /// 开关按键消息：类型hl_key_event_e
     MSG_TX_PWR_KEY,
     /// 降噪按键消息：类型hl_key_event_e
@@ -86,6 +88,8 @@ typedef enum _input_mod_msg_cmd_e
 //RX
 typedef enum _input_mod_msg_cmd_e
 {
+    /// 空命令
+    MSG_RX_IDLE = 0,
     /// 开关按键消息：类型hl_key_event_e
     MSG_RX_PWR_KEY,
     /// 旋钮A消息：类型hl_key_event_e
@@ -96,6 +100,8 @@ typedef enum _input_mod_msg_cmd_e
     MSG_RX_OK_VOL,
     /// usb插入检测消息：类型hl_switch_event_e
     MSG_RX_VBUS_DET,
+    /// 相机口插入检测消息：类型hl_switch_event_e
+    MSG_RX_CAM_DET,
     /// 耳机插入检测消息：类型hl_switch_event_e
     MSG_RX_HP_DET,
     /// 组合按键1的消息：左按和右按

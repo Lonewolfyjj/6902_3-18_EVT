@@ -168,7 +168,7 @@
 /* RT_USING_GD is not set */
 /* RT_USING_ENC28J60 is not set */
 /* RT_USING_SPI_WIFI is not set */
-/* RT_USING_WDT is not set */
+#define RT_USING_WDT
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
@@ -181,7 +181,30 @@
 /* Using USB */
 
 /* RT_USING_USB_HOST is not set */
-/* RT_USING_USB_DEVICE is not set */
+#define RT_USING_USB_DEVICE
+#define RT_USBD_THREAD_STACK_SZ 4096
+#define USB_VENDOR_ID 0x3547
+#define USB_PRODUCT_ID 0x0002
+#define RT_USB_DEVICE_COMPOSITE
+/* RT_USB_DEVICE_CDC is not set */
+#define RT_USB_DEVICE_NONE
+#define RT_USB_DEVICE_MSTORAGE
+#define RT_USB_DEVICE_HID
+#define RT_USB_DEVICE_WINUSB
+#define RT_USB_DEVICE_UAC1
+/* RT_USB_DEVICE_UVC is not set */
+#define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
+#define RT_USB_AUDIO_P_NAME "codecp"
+#define RT_USB_AUDIO_C_NAME "pdmc"
+/* RT_USB_AUDIO_PLL_COMPENSATION is not set */
+/* RT_USB_DEVICE_HID_KEYBOARD is not set */
+/* RT_USB_DEVICE_HID_MOUSE is not set */
+#define RT_USB_DEVICE_HID_GENERAL
+#define RT_USB_DEVICE_HID_GENERAL_OUT_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_GENERAL_IN_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_MEDIA
 
 /* POSIX layer and C standard library */
 
@@ -1328,6 +1351,7 @@
 #define RT_TOUCH_X_RANGE 720
 #define RT_TOUCH_Y_RANGE 1280
 /* RT_USING_SENSOR_HUB is not set */
+/* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
 
 /* RT-Thread rockchip coredump driver */
@@ -1419,6 +1443,8 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
+#define RT_USING_USBAPP
+#define RT_USING_HIDTEST
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -1453,6 +1479,7 @@
 /* RT_USING_COMMON_TEST_SPI is not set */
 /* RT_USING_COMMON_TEST_SPI2APB is not set */
 /* RT_USING_COMMON_STRESS_TEST is not set */
+/* RT_USING_COMMON_TEST_WDT is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
 /* RT_USING_COMMON_TEST_TIMER is not set */

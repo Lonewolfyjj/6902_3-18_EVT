@@ -1,9 +1,9 @@
 /**
- * @file hl_test_pre.h
- * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 用来预研时把一些公用东西放在这里面，后面要删掉！！！
+ * @file hl_util_msg_type.h
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @brief 
  * @version V1.0
- * @date 2022-10-12
+ * @date 2022-11-14
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,37 +16,19 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-10-12     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
  * </table>
  * 
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HL_MSG_TYPE_H__
-#define _HL_MSG_TYPE_H__
+#ifndef __HL_UTIL_MSG_TYPE__
+#define __HL_UTIL_MSG_TYPE__
+
 /* Includes ------------------------------------------------------------------*/
+#include "hl_util_general_type.h"
+
 /* typedef -------------------------------------------------------------------*/
-/* define --------------------------------------------------------------------*/
-typedef enum
-{
-    CMD_TEST,
-} hl_mod_disp_cmd_e;
-
-#ifndef HL_ENUM8
-#define HL_ENUM8(EnumName) \
-    Enum_##EnumName;       \
-    typedef uint8_t EnumName
-#endif
-
-
-#ifndef HL_ENUM16
-#define HL_ENUM16(EnumName) \
-    Enum_##EnumName;        \
-    typedef uint16_t EnumName
-#endif
-
-
-
-
+/// 模块id枚举
 typedef enum _mode_id_e
 {
     APP_MODE = 0x00,
@@ -60,7 +42,7 @@ typedef enum _mode_id_e
     PM_MODE,
 } HL_ENUM8(hl_mode_id_e);
 
-
+/// 模块层发送给APP的消息格式
 typedef struct _mode_to_app_msg_t
 {
     hl_mode_id_e sender;
@@ -71,10 +53,13 @@ typedef struct _mode_to_app_msg_t
         void*    ptr;
     } param;
 } mode_to_app_msg_t;
+
+/* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-#endif
+
+#endif /* __HL_UTIL_MSG_TYPE__ */
 /*
  * EOF
  */
