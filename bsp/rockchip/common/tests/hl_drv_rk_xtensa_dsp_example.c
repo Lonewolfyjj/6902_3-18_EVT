@@ -230,7 +230,7 @@ static void do_cap(void* arg)
     dsp_config->buffer_size_b32_2ch = dsp_config->process_size;
     dsp_config->audio_process_in_buffer_b32_2ch         = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
     dsp_config->audio_process_out_buffer_b32_2ch        = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     dsp_config->buffer_size_b24_1ch = dsp_config->period_size * 1 * 3;
     dsp_config->audio_after_process_out_buffer_b24_1ch  = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
     dsp_config->audio_before_process_out_buffer_b24_1ch = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
@@ -290,7 +290,7 @@ static void do_cap(void* arg)
     hl_drv_rk_xtensa_dsp_deinit();
     rkdsp_free(dsp_config->audio_process_in_buffer_b32_2ch);
     rkdsp_free(dsp_config->audio_process_out_buffer_b32_2ch);
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     rkdsp_free(dsp_config->audio_after_process_out_buffer_b24_1ch);
     rkdsp_free(dsp_config->audio_before_process_out_buffer_b24_1ch);
 #else

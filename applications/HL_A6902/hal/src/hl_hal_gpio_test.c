@@ -88,51 +88,49 @@ MSH_CMD_EXPORT(hl_hal_gpio_test, gpio test cmd);
 void hl_hal_gpio_pwr_on(void)
 {
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
     hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);
     hl_hal_gpio_init(GPIO_2831P_EN);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
-    hl_hal_gpio_init(GPIO_RK2108_POWER);
+    hl_hal_gpio_init(GPIO_ALL_POWER);
 
     hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
     hl_hal_gpio_high(GPIO_PWR_EN);
     hl_hal_gpio_high(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
-    hl_hal_gpio_high(GPIO_RK2108_POWER);
+    hl_hal_gpio_high(GPIO_ALL_POWER);
     rt_kprintf("A6902 Tx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #else
     hl_hal_gpio_init(GPIO_PWR_EN);
-    hl_hal_gpio_init(GPIO_USB_SW);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     hl_hal_gpio_init(GPIO_ATS_PWR_EN);
     hl_hal_gpio_init(GPIO_AMP_EN);
-    hl_hal_gpio_init(GPIO_RK2108_POWER);
+    hl_hal_gpio_init(GPIO_ALL_POWER);
 
     hl_hal_gpio_high(GPIO_PWR_EN);
-    hl_hal_gpio_high(GPIO_USB_SW);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_ATS_PWR_EN);
     hl_hal_gpio_low(GPIO_AMP_EN);
-    hl_hal_gpio_high(GPIO_RK2108_POWER);
+    hl_hal_gpio_high(GPIO_ALL_POWER);
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #endif
     rt_thread_mdelay(10);
 }
 INIT_PREV_EXPORT(hl_hal_gpio_pwr_on);
 
-int hl_hal_gpio_low_test(int argc, char** argv)
-{
-    uint8_t i = 0;
-    for(i = GPIO_PWR_KEY;i<USER_GPIO_COUNT;i++){
-        hl_hal_gpio_init(i);
-        hl_hal_gpio_low(i);
-    }
-    return RT_EOK;
-}
-INIT_PREV_EXPORT(hl_hal_gpio_low_test);
+// int hl_hal_gpio_low_test(int argc, char** argv)
+// {
+//     uint8_t i = 0;
+//     for(i = GPIO_PWR_KEY;i<USER_GPIO_COUNT;i++){
+//         hl_hal_gpio_init(i);
+//         hl_hal_gpio_low(i);
+//     }
+//     return RT_EOK;
+// }
+// INIT_PREV_EXPORT(hl_hal_gpio_low_test);
 #endif
 /*
  * EOF

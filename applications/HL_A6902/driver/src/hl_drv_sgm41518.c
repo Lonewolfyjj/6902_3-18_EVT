@@ -1631,7 +1631,7 @@ int hl_drv_sgm41518_init(void)
     reg_all.reg00.IINDPM      = IINDPM_SET(7);            //
     reg_config[0]             = *(uint8_t*)&reg_all.reg00;
 
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     reg_all.reg02.ICHG = FAST_CHARGE_CURRENT_SET(11);  // Tx
 #else
     reg_all.reg02.ICHG = FAST_CHARGE_CURRENT_SET(18);  // Rx
