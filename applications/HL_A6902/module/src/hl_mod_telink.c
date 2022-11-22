@@ -25,9 +25,17 @@
 #include "hl_mod_telink.h"
 #include "hl_hal_gpio.h"
 #include "hl_util_msg_type.h"
+#include <unistd.h>
 #include <stdlib.h>
 
 /* typedef -------------------------------------------------------------------*/
+
+typedef struct
+{
+    uint8_t number;      //升级数据包序号
+    uint8_t data[1024];  //升级数据
+} hl_rf_upgrade_pack_t;
+
 /* define --------------------------------------------------------------------*/
 #define TELINK_THREAD_STACK_SIZE 1024
 #define TELINK_THREAD_PRIORITY 7
@@ -53,19 +61,15 @@ static uint8_t* s_telink_fifo_buf;
 /// 消息队列结构体
 static mode_to_app_msg_t app_msg_t;
 
-static uint8_t old_pair_workmode  = 0x1f;
-static uint8_t old_pair_chn_state = 0x1f;
-static uint8_t new_pair_workmode  = 0x1f;
-static uint8_t new_pair_chn_state = 0x1f;
+static uint8_t old_pair_info = 0x1f;
+static uint8_t new_pair_info = 0x1f;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static void telink_show_val(void)
 {
-    rt_kprintf("\n\nold_pair_workmode = %02x\n", old_pair_workmode);
-    rt_kprintf("new_pair_workmode = %02x\n", new_pair_workmode);
-    rt_kprintf("old_pair_chn_state = %02x\n", old_pair_chn_state);
-    rt_kprintf("new_pair_chn_state = %02x\n\n\n", new_pair_chn_state);
+    rt_kprintf("\n\nold_pair_info = %02x\n", old_pair_info);
+    rt_kprintf("new_pair_info = %02x\n", new_pair_info);
 }
 MSH_CMD_EXPORT(telink_show_val, telink show val cmd);
 
@@ -103,16 +107,9 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
-        case HL_MOD_TELINK_PAIR_INFO_IND:
+        case HL_MOD_TELINK_PAIR_STATE_IND:
             // 更新Telink模块工作状态和配对状态
-            // rt_kprintf("telink cmd = %d\n", hup_frame.cmd);
-            // rt_kprintf("telink len = %d\n[ ", data_len);
-            // for(int i=0;i<data_len;i++){
-            //     rt_kprintf("%02x ", hup_frame.data_addr[i]);
-            // }
-            // rt_kprintf("]\n");
-            new_pair_workmode  = (uint8_t)hup_frame.data_addr[0];
-            new_pair_chn_state = (uint8_t)(hup_frame.data_addr[1] | hup_frame.data_addr[2]);
+            new_pair_info = (uint8_t)hup_frame.data_addr[0];
             break;
 
         case HL_MOD_TELINK_RSSI_IND:
@@ -121,6 +118,10 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报无线模块RSSI值
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            break;
+
+        case HL_MOD_TELINK_UPGRADE_STATE_IND:
+            rt_kprintf("UPGRADE STATE[%02X]\n", hup_frame.data_addr[0]);
             break;
 
         default:
@@ -196,37 +197,20 @@ static void hl_mod_telink_thread_entry(void* parameter)
         rt_thread_mdelay(5);
 
         // 更新配对状态
-        if ((old_pair_workmode == new_pair_workmode) && (new_pair_chn_state == old_pair_chn_state)) {
-            continue;
-        } else if ((old_pair_workmode != PAIR_START) && (new_pair_workmode == PAIR_START)) {
-            old_pair_workmode = PAIR_START;
-            app_msg_t.cmd     = HL_MOD_TELINK_PAIR_START_IND;
-            app_msg_t.len     = 0;
-        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_workmode == PAIR_STOP)
-                   && (new_pair_chn_state == PAIR_FAILED)) {
-            old_pair_workmode  = PAIR_STOP;
-            old_pair_chn_state = PAIR_FAILED;
-            app_msg_t.cmd      = HL_MOD_TELINK_PAIR_STOP_IND;
-            app_msg_t.len      = 0;
-        } else if ((old_pair_workmode != PAIR_STOP) && (new_pair_workmode == PAIR_STOP)
-                   && (new_pair_chn_state != PAIR_FAILED)) {
-            old_pair_workmode   = PAIR_STOP;
-            old_pair_chn_state  = new_pair_chn_state;
-            app_msg_t.cmd       = HL_MOD_TELINK_PAIR_INFO_IND;
+        if (old_pair_info != new_pair_info) {
+            // 更新配对状态
+            old_pair_info = new_pair_info;
+            // 编辑消息结构体
+            app_msg_t.cmd       = HL_MOD_TELINK_PAIR_STATE_IND;
             app_msg_t.len       = 1;
-            app_msg_t.param.ptr = &new_pair_chn_state;
-        } else if ((old_pair_workmode == PAIR_STOP) && (new_pair_chn_state != old_pair_chn_state)) {
-            old_pair_chn_state  = new_pair_chn_state;
-            app_msg_t.cmd       = HL_MOD_TELINK_PAIR_INFO_IND;
-            app_msg_t.len       = 1;
-            app_msg_t.param.ptr = &new_pair_chn_state;
+            app_msg_t.param.ptr = &old_pair_info;
+            // 将消息结构体上传至APP层消息队列
+            ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            if (RT_EOK != ret) {
+                rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, ret);
+            }
         } else {
             continue;
-        }
-        // 将数据上传至APP层消息队列
-        ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
-        if (RT_EOK != ret) {
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, ret);
         }
     }
 }
@@ -303,7 +287,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     // Telink消息队列结构体赋初值
     app_msg_t.sender = TELINK_MODE;
 
-    // 初始化Telink模块串口交互所需的资源
+    /* 初始化Telink模块串口交互所需的资源 */
     // 初始化hup
     s_telink.hup.hup_handle.role           = EM_HUP_ROLE_MASTER;
     s_telink.hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
@@ -378,10 +362,47 @@ void telink_send_cmd(int argc, char** argv)
     uint8_t cmd  = (uint8_t)atoi(argv[1]);
     uint8_t data = (uint8_t)argv[2][0] - '0';
     uint8_t len  = (uint8_t)atoi(argv[3]);
-    
+
     hl_mod_telink_ioctl(cmd, &data, len);
 }
 MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
+
+// void telink_upgrade(void)
+// {
+//     int     fd    = 0;
+//     int     ret   = 1;
+//     uint8_t count = 0;
+
+//     hl_rf_upgrade_pack_t pack;
+
+//     uint16_t data_len    = 0;
+//     uint8_t  frame[1200] = { 0 };
+
+//     fd = open("/mnt/sdcard/tx.bin", O_RDONLY);
+//     if (fd == -1) {
+//         rt_kprintf("[%s][line:%d] open failed!!! \r\n", __FUNCTION__, __LINE__);
+//     }
+
+//     rt_kprintf("telink open fd succedd\n");
+
+//     size_t a = 0;
+//     while (ret > 0) {
+//         pack.number = count++;
+//         ret         = read(fd, pack.data, 1024);
+//         rt_kprintf("telink upgrade read size:%d\n", ret);
+//         if (ret<=0) {
+//             rt_kprintf("telink upgrade break\n");
+//             break;
+//         }
+//         data_len = hl_util_hup_encode(s_telink.hup.hup_handle.role, HL_MOD_TELINK_UPGRADE_PACK_CMD, frame, 1200, &pack, sizeof(pack));
+
+//         data_len = rt_device_write(s_telink.serial, 0, frame, data_len);
+//     }
+
+//     rt_kprintf("telink upgrade quit\n");
+//     close(fd);
+// }
+// MSH_CMD_EXPORT(telink_upgrade, telink upgrade cmd);
 
 /*
  * EOF
