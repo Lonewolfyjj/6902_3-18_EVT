@@ -3,7 +3,7 @@
 
 #define RT_HW_LCD_XRES 126         /* LCD PIXEL WIDTH             */
 #define RT_HW_LCD_YRES 294         /* LCD PIXEL HEIGHT            */
-#define RT_HW_LCD_PIXEL_CLOCK 3940 /* pixel clock in khz          */
+#define RT_HW_LCD_PIXEL_CLOCK 4000 /* pixel clock in khz          */
 #define RT_HW_LCD_LANE_MBPS 240    /* DSI per lane Mbps           */
 #define RT_HW_LCD_LEFT_MARGIN 40   /* Horizontal back porch       */
 #define RT_HW_LCD_RIGHT_MARGIN 40  /* Horizontal front porch      */
