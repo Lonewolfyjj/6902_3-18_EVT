@@ -27,16 +27,21 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 
+#define DBG_SECTION_NAME "app_iap2"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
         default:
+            LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }
@@ -45,7 +50,7 @@ void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
         default:
-            rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FILE__, __LINE__, p_msg->cmd);
+            LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }

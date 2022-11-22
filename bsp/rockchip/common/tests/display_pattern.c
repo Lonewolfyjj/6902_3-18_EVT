@@ -50,14 +50,14 @@ struct color_yuv
       .u = MAKE_YUV_601_U(r, g, b), \
       .v = MAKE_YUV_601_V(r, g, b) }
 
-#define MAKE_RGBA(rgb, r, g, b, a) \
+#define MAKE_RGBA(rgb, b, g, r, a) \
     ((((r) >> (8 - (rgb)->red.length)) << (rgb)->red.offset) | \
      (((g) >> (8 - (rgb)->green.length)) << (rgb)->green.offset) | \
      (((b) >> (8 - (rgb)->blue.length)) << (rgb)->blue.offset) | \
      (((a) >> (8 - (rgb)->alpha.length)) << (rgb)->alpha.offset))
 
 #define MAKE_RGB24(rgb, r, g, b) \
-    { .value = MAKE_RGBA(rgb, r, g, b, 0) }
+    { .value = MAKE_RGBA(rgb, b, g, r, 0) }
 
 static const struct util_format_info format_info[] =
 {
@@ -346,7 +346,51 @@ static void fill_smpte_rgb24(const struct util_rgb_info *rgb, void *mem,
         mem += stride;
     }
 }
+static void fill_smpte_rgb24_1(const struct util_rgb_info *rgb, void *mem,
+                             unsigned int width, unsigned int height,
+                             unsigned int stride,unsigned char color_c)
+{
+    const struct color_rgb24 colors_top[] =
+    {
+        MAKE_RGB24(rgb, 0, 0, 0),   /* black */
+        MAKE_RGB24(rgb, 192, 0, 0),     /* red */
+        MAKE_RGB24(rgb, 0, 192, 0),     /* green */
+        MAKE_RGB24(rgb, 0, 0, 192),     /* blue */
+        MAKE_RGB24(rgb, 192, 192, 192), /* white */
+    };
+    const struct color_rgb24 colors_middle[] =
+    {
+        MAKE_RGB24(rgb, 0, 0, 192), /* blue */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* black */
+        MAKE_RGB24(rgb, 192, 0, 192),   /* magenta */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* black */
+        MAKE_RGB24(rgb, 0, 192, 192),   /* cyan */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* black */
+        MAKE_RGB24(rgb, 192, 192, 192), /* grey */
+    };
+    const struct color_rgb24 colors_bottom[] =
+    {
+        MAKE_RGB24(rgb, 0, 33, 76), /* in-phase */
+        MAKE_RGB24(rgb, 255, 255, 255), /* super white */
+        MAKE_RGB24(rgb, 50, 0, 106),    /* quadrature */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* black */
+        MAKE_RGB24(rgb, 9, 9, 9),   /* 3.5% */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* 7.5% */
+        MAKE_RGB24(rgb, 29, 29, 29),    /* 11.5% */
+        MAKE_RGB24(rgb, 19, 19, 19),    /* black */
+    };
+    unsigned int x;
+    unsigned int y;
+    rt_kprintf("colors_top=%d\r\n", colors_top[1]);
+    for (y = 0; y < height; ++y)
+    {
+        for (x = 0; x < width; ++x)
+            ((struct color_rgb24 *)mem)[x] = colors_top[color_c];
+        mem += stride;
+    }
 
+
+}
 static void fill_smpte_rgb32(const struct util_rgb_info *rgb, void *mem,
                              unsigned int width, unsigned int height,
                              unsigned int stride)
@@ -416,7 +460,7 @@ static void fill_smpte_rgb32(const struct util_rgb_info *rgb, void *mem,
 
 static void fill_smpte(const struct util_format_info *info, void *planes[3],
                        unsigned int width, unsigned int height,
-                       unsigned int stride)
+                       unsigned int stride,unsigned char color_c)
 {
     unsigned char *u, *v;
 
@@ -432,8 +476,10 @@ static void fill_smpte(const struct util_format_info *info, void *planes[3],
         return fill_smpte_rgb16(&info->rgb, planes[0],
                                 width, height, stride);
     case RTGRAPHIC_PIXEL_FORMAT_RGB888:
-        return fill_smpte_rgb24(&info->rgb, planes[0],
-                                width, height, stride);
+        return fill_smpte_rgb24_1(&info->rgb, planes[0],
+                                width, height, stride,color_c);
+        // return fill_smpte_rgb24(&info->rgb, planes[0],
+        //                         width, height, stride);
     case RTGRAPHIC_PIXEL_FORMAT_ARGB888:
     case RTGRAPHIC_PIXEL_FORMAT_ABGR888:
         return fill_smpte_rgb32(&info->rgb, planes[0],
@@ -455,13 +501,13 @@ static void fill_smpte(const struct util_format_info *info, void *planes[3],
  */
 void util_fill_pattern(uint32_t format,
                        void *planes[3], unsigned int width,
-                       unsigned int height, unsigned int stride)
+                       unsigned int height, unsigned int stride,unsigned char color_c)
 {
     const struct util_format_info *info;
 
     info = util_format_info_find(format);
     if (info == NULL)
         return;
-    return fill_smpte(info, planes, width, height, stride);
+    return fill_smpte(info, planes, width, height, stride,color_c);
 }
 #endif

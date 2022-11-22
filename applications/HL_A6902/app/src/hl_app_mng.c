@@ -27,7 +27,10 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_mod_input.h"
+#include "hl_mod_display.h"
 #include "hl_mod_audio.h"
+#include "hl_mod_telink.h"
+#include "hl_mod_pm.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_app_com_msg_pro.h"
 #include "hl_app_disp_msg_pro.h"
@@ -36,6 +39,10 @@
 #include "hl_app_pm_msg_pro.h"
 #include "hl_app_rf_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
+
+#define DBG_SECTION_NAME "app_mng"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
@@ -46,7 +53,7 @@ struct rt_messagequeue hl_app_mq;
 static char            hl_app_msg_pool[2048];
 
 /// 模块层发送给APP的消息格式
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 /// tx app 状态信息
 tx_app_info_t tx_info = {0};
 #else
@@ -63,7 +70,7 @@ void hl_app_msg_thread(void* parameter)
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
         if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), RT_WAITING_FOREVER) == RT_EOK) {
-            // rt_kprintf("[%s][line:%d] recv msg sender:%d, cmd:%d, param:%d !!! \r\n", __FILE__, __LINE__, msg.sender, msg.cmd, msg.param);
+            // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!! \r\n", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
@@ -90,7 +97,7 @@ void hl_app_msg_thread(void* parameter)
                     hl_app_pm_msg_pro(&msg);
                     break;
                 default:
-                    rt_kprintf("[%s][line:%d] sender(%d) unkown!!! \r\n", __FILE__, __LINE__, msg.sender);
+                    LOG_E("sender(%d) unkown!!! \r\n",  msg.sender);
                     break;
             }
         }
@@ -104,23 +111,50 @@ void hl_app_mng_init(void)
 
 	ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], 128, sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
     if (ret != RT_EOK) {
-        rt_kprintf("[%s][line:%d] message queuecreate init err!!! \r\n", __FILE__, __LINE__);
+        LOG_E("message queuecreate init err!!! \r\n");
         return;
     }
 
 	hl_mod_input_init(&hl_app_mq);
+    hl_mod_display_init(&hl_app_mq);
     hl_mod_audio_init(&hl_app_mq);
+    hl_mod_telink_init(&hl_app_mq);
+    hl_mod_telink_start();
+    hl_mod_pm_init(&hl_app_mq);
+    hl_mod_pm_start();
 
 	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 20, 2);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
-        rt_kprintf("[%s][line:%d] thread create err!!! \r\n", __FILE__, __LINE__);
+        LOG_E("thread create err!!! \r\n");
     }
-        
+}
+
+// hl_app_info [no param]
+int hl_app_info(int argc, char** argv)
+{
+#if HL_IS_TX_DEVICE()
+    LOG_I("------show tx app info------");
+    LOG_I("usb_plug = %d ", tx_info.usb_plug);
+    LOG_I("ex_mic_plug = %d ", tx_info.ex_mic_plug);
+    LOG_I("rec_flag = %d ", tx_info.rec_flag);
+    LOG_I("rf_state = %d ", tx_info.rf_state);
+#else
+    LOG_I("------show rx app info------");
+    LOG_I("usb_plug = %d ", rx_info.usb_plug);
+    LOG_I("hp_spk_plug = %d ", rx_info.hp_spk_plug);
+    LOG_I("cam_spk_plug = %d ", rx_info.cam_spk_plug);
+    LOG_I("rf_state = %d ", rx_info.rf_state);
+    LOG_I("cur_volume_r = %d ", rx_info.cur_volume_r);
+    LOG_I("cur_volume_l = %d ", rx_info.cur_volume_l);
+#endif
+    return 0;
 }
 
 INIT_APP_EXPORT(hl_app_mng_init);
+MSH_CMD_EXPORT(hl_app_info, show app info cmd);
+
 /*
  * EOF
  */

@@ -23,7 +23,7 @@
 #include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 /// TX gpio 引脚枚举
 typedef enum _hl_gpio_port_e
 {
@@ -73,11 +73,11 @@ typedef enum _hl_gpio_port_e
     /// (开关按键，外部上拉，低电平有效)
     GPIO_PWR_KEY,
     /// (左旋钮A，外部上拉，低电平有效)
-    GPIO_L_VOL_A,
+    GPIO_VOL_A,
     /// (左旋钮B，外部上拉，低电平有效)
-    GPIO_L_VOL_B,
+    GPIO_VOL_B,
     /// (左旋钮按键，外部上拉，低电平有效)
-    GPIO_L_VOL_KEY,
+    GPIO_VOL_OK,
     /// (左旋钮A，外部上拉，低电平有效)
     GPIO_R_VOL_A,
     /// (左旋钮B，外部上拉，低电平有效)

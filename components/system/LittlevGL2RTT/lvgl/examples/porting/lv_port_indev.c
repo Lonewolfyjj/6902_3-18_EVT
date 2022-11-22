@@ -10,7 +10,7 @@
  *      INCLUDES
  *********************/
 #include "hl_config.h"
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
 
 #include "lv_port_indev.h"
 #include "../../lvgl.h"

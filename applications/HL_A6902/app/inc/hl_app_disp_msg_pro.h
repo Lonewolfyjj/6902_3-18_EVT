@@ -45,6 +45,20 @@
  */
 void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg);
 
+/**
+ * @brief 根据当前rf状态和降噪状态设置状态灯
+ * @date 2022-11-17
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-17      <td>luzhanghao     <td>新建
+ * </table>
+ */
+void hl_app_disp_state_led_set(void);
+
 #endif /* __HL_APP_DISP_MSG_PRO_H__ */
 /*
  * EOF

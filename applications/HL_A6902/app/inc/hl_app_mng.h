@@ -29,7 +29,7 @@
 
 /* typedef -------------------------------------------------------------------*/
 /// 模块层发送给APP的消息格式
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
 typedef struct _tx_app_info_t
 {
     /// usb接口状态(1:连接 0：未连接)
@@ -38,9 +38,11 @@ typedef struct _tx_app_info_t
     uint8_t             ex_mic_plug:1;
     /// 录制标志(1:录制中  0：没在录制)
     uint8_t             rec_flag:1;
+    /// 降噪标志(1:打开降噪 0:关闭降噪)
+    uint8_t             denoise_flag:1;
 
     /// 无线状态
-    uint8_t      rf_state;
+    hl_rf_state_e       rf_state;
 
 } tx_app_info_t;
 extern tx_app_info_t tx_info;
@@ -55,20 +57,20 @@ typedef struct _rx_app_info_t
     uint8_t             cam_spk_plug:1;
 
     /// 无线状态
-    uint8_t             rf_state;
-    int16_t             cur_volume_r;
-    int16_t             cur_volume_l;
+    hl_rf_state_e       rf_state;
+    int32_t             cur_volume_r;
+    int32_t             cur_volume_l;
 
     /// 单声道音量
-    int16_t             single_volume;
+    int32_t             single_volume;
     /// 立体声右音量
-    int16_t             stereo_volume_r;
+    int32_t             stereo_volume_r;
     /// 立体声左音量
-    int16_t             stereo_volume_l;
+    int32_t             stereo_volume_l;
     /// 安全音轨右音量
-    int16_t             safety_volume_r;
+    int32_t             safety_volume_r;
     /// 安全音轨左音量
-    int16_t             safety_volume_l;
+    int32_t             safety_volume_l;
 } rx_app_info_t;
 extern rx_app_info_t rx_info;
 #endif
