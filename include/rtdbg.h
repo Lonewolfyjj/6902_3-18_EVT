@@ -123,6 +123,17 @@
     }                                                       \
     while (0)
 
+#define dbg_log_func(lvl, color_n, fmt, ...)                \
+    do                                                      \
+    {                                                       \
+        _DBG_LOG_HDR(lvl, color_n);                         \
+        rt_kprintf("[%s:%d]",                               \
+            __FUNCTION__, __LINE__);                        \
+        rt_kprintf(fmt, ##__VA_ARGS__);                     \
+        _DBG_LOG_X_END;                                     \
+    }                                                       \
+    while (0)
+
 #define dbg_raw(...)         rt_kprintf(__VA_ARGS__);
 
 #else
@@ -147,13 +158,13 @@
 #endif
 
 #if (DBG_LEVEL >= DBG_WARNING)
-#define LOG_W(fmt, ...)      dbg_log_line("W", 33, fmt, ##__VA_ARGS__)
+#define LOG_W(fmt, ...)      dbg_log_func("W", 33, fmt, ##__VA_ARGS__)
 #else
 #define LOG_W(...)
 #endif
 
 #if (DBG_LEVEL >= DBG_ERROR)
-#define LOG_E(fmt, ...)      dbg_log_line("E", 31, fmt, ##__VA_ARGS__)
+#define LOG_E(fmt, ...)      dbg_log_func("E", 31, fmt, ##__VA_ARGS__)
 #else
 #define LOG_E(...)
 #endif

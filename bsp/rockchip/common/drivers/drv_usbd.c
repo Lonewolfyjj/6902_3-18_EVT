@@ -270,7 +270,7 @@ static void usb_vbus_pin_isr(void *args)
 {
     struct PCD_HANDLE *pcd = args;
 
-    if (PIN_HIGH == rt_pin_read(USB_VBUS_PIN) && pcd->bcdState == PCD_BCD_DEFAULT_STATE)
+    if (PIN_LOW == rt_pin_read(USB_VBUS_PIN) && pcd->bcdState == PCD_BCD_DEFAULT_STATE)
     {
         /*
          * Handle Charging Process in vbus isr work and
@@ -294,11 +294,11 @@ static rt_err_t usb_vbus_irq_init(struct PCD_HANDLE *pcd)
 {
 #if defined(USB_VBUS_PIN)
     // rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT);
-    rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT_PULLDOWN);
+    rt_pin_mode(USB_VBUS_PIN, PIN_MODE_INPUT_PULLUP);
     rt_pin_attach_irq(USB_VBUS_PIN, PIN_IRQ_MODE_RISING_FALLING, usb_vbus_pin_isr, (void *)pcd);
     rt_pin_irq_enable(USB_VBUS_PIN, RT_TRUE);
 
-    if (PIN_HIGH == rt_pin_read(USB_VBUS_PIN))
+    if (PIN_LOW == rt_pin_read(USB_VBUS_PIN))
     {
         HAL_PCDEx_BcdDetect(pcd);
         /* Set PHY suspend in HAL_PCDEx_BcdCallback */
@@ -444,6 +444,7 @@ const static struct udcd_ops g_udc_ops =
     usb_wakeup,
 };
 
+#define RT_USING_USBD_SPEED_FULL
 int rt_usbd_register(void)
 {
     rt_memset((void *)&g_usbd.udc, 0, sizeof(struct udcd));

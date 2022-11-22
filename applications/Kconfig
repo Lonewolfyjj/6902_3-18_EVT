@@ -93,6 +93,16 @@ choice
 
 endchoice
 
+config RT_USING_USBAPP
+    bool "usb app enable"
+    default n
+    help
+        usb functon app
+
+if RT_USING_USBAPP
+    source "$RTT_DIR/applications/usb_app/Kconfig"
+endif
+
 if RT_USING_RECORDING_PEN_APP
     source "$RTT_DIR/applications/recording_pen/Kconfig"
 endif
