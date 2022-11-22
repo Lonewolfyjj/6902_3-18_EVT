@@ -20,6 +20,7 @@
 
 #include "hid.h"
 #include "dma.h"
+#include "hl_config.h"
 
 #ifdef RT_USB_DEVICE_HID
 
@@ -369,11 +370,16 @@ ALIGN(4)
 const static char* _ustring[] =
 {
     "Language",
-    "RT-Thread Team.",
-    "RTT HID-Device",
+    "Shenzhen Hollyland technology Co.,LTD",
+#if HL_IS_TX_DEVICE()
+    "Wireless Microphone Tx",
+#else
+    "Wireless Microphone Rx",
+#endif
     "32021919830108",
     "Configuration",
     "Interface",
+    "iAP Interface",
 };
 
 static void dump_data(uint8_t *data, rt_size_t size)

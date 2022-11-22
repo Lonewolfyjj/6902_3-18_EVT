@@ -89,7 +89,7 @@ typedef struct _hl_drv_rk_xtensa_dsp_config_t_
     /// 音频处理过程中的暂存输出buffer
     char* audio_process_out_buffer_b32_2ch;
     /// 音频处理过程中的暂存输出buffer
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     /// tx
     uint32_t buffer_size_b24_1ch;
     char* audio_before_process_out_buffer_b24_1ch;

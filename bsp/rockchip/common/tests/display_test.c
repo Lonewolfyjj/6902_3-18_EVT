@@ -13,7 +13,7 @@
   *
   ******************************************************************************
   */
-
+#if 0
 #include <rtdevice.h>
 #include <rthw.h>
 #include <rtthread.h>
@@ -2041,5 +2041,6 @@ static int _at_display_test(void)
 MSH_CMD_EXPORT(display_test, display drive test. e.g: display_test);
 MSH_CMD_EXPORT(flush_cache, flush cache. e.g: flush_cache);
 FINSH_FUNCTION_EXPORT(_at_display_test, display test for auto test);
+#endif
 #endif
 #endif

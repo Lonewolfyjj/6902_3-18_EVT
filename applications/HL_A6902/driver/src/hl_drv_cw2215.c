@@ -32,7 +32,7 @@
 ///IIC设备地址
 #define CW2215_IIC_DEV_ADDR 0x64
 
-#if HL_GET_DEVICE_TYPE() == 1
+#if HL_IS_TX_DEVICE() == 1
 ///使用的IIC接口名字
 #define CW2215_IIC_BUS_NAME "i2c1"
 #else
@@ -101,7 +101,7 @@
 static struct rt_i2c_bus_device* _p_i2c_bus = NULL;
 static uint8_t                   _init_flag = 0;
 
-#if HL_GET_DEVICE_TYPE() == 1
+#if HL_IS_TX_DEVICE() == 1
 ///Tx电池profile信息
 static uint8_t battery_profile_info[CW2215_BATINFO_SIZE] = {
     0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAD, 0xCB, 0xCC, 0xCE, 0xC5, 0xC2, 0x95, 0x57,
@@ -110,7 +110,7 @@ static uint8_t battery_profile_info[CW2215_BATINFO_SIZE] = {
     0x34, 0x4A, 0x6C, 0x87, 0x9F, 0x98, 0x57, 0x6C, 0x20, 0x00, 0x57, 0x10, 0x00, 0x60, 0x5B, 0x00,
     0x00, 0x00, 0x64, 0x11, 0x83, 0x4F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAD
 };
-#elif HL_GET_DEVICE_TYPE() == 0
+#elif HL_IS_TX_DEVICE() == 0
 ///Rx电池profile信息
 static uint8_t battery_profile_info[CW2215_BATINFO_SIZE] = {
     0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9E, 0xAC, 0xB4, 0xCE, 0xC3, 0xC9, 0x88, 0x48,
@@ -121,7 +121,7 @@ static uint8_t battery_profile_info[CW2215_BATINFO_SIZE] = {
 };
 
 #else
-#error "HL_GET_DEVICE_TYPE() not 1 or 0!"
+#error "HL_IS_TX_DEVICE() not 1 or 0!"
 #endif
 
 /* Private function(only *.c)  -----------------------------------------------*/

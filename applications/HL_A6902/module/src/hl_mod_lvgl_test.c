@@ -1,15 +1,20 @@
 #include "hl_config.h"
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
+#if 0
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "lvgl.h"
+#include "stdio.h"
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
 
-static rt_thread_t lvgl_tid1 = RT_NULL, lvgl_tid2 = RT_NULL;
-static lv_obj_t *scr,*btn_1,*btn_label;
-static lv_style_t h_style;
+// extern const lv_img_dsc_t test_pic;
 
+static rt_thread_t  lvgl_tid1 = RT_NULL, lvgl_tid2 = RT_NULL, lvgl_tid3 = RT_NULL;
+static lv_obj_t *   scr, *btn_1, *btn_label, *btn_label1;
+static lv_style_t   h_style, style_2;
+static lv_fs_drv_t* test_f;
+// static lv_disp_t * ptr = RT_NULL;
 static int hl_mod_lvgl_init(void)
 {
     lv_init();
@@ -18,47 +23,93 @@ static int hl_mod_lvgl_init(void)
     return 0;
 }
 
-static void hl_mod_style_init(void)
+void hl_mod_lvgl_style_1(void)
 {
-    lv_style_init(&h_style);
+    lv_style_init(&style_2);
+    // lv_style_set_radius(&style_2, 5);
+    // lv_style_set_width(&style_2, 50);
+    // lv_style_set_height(&style_2, 80);
+
+    lv_style_set_bg_opa(&style_2, LV_OPA_100);
+    lv_style_set_bg_color(&style_2, lv_palette_lighten(LV_PALETTE_GREY, 1));
+    // lv_style_set_bg_grad_color(&style_2, lv_palette_main(LV_PALETTE_BLUE));
+    // lv_style_set_bg_grad_dir(&style_2, LV_GRAD_DIR_VER);
+
+    // lv_style_set_bg_main_stop(&style_2, 50);
+    // lv_style_set_bg_grad_stop(&style_2, 150);
+
+    lv_style_set_text_color(&style_2, lv_palette_main(LV_PALETTE_RED));
 }
 
-static void creat_btn(void)
-{  
-    // lv_style_copy(&h_style, &lv_style_transp);
+static void hl_mod_lvgl_creat_btn(void)
+{
     btn_1 = lv_btn_create(scr);
-    lv_obj_set_size(btn_1,40,20);
-    lv_obj_align(btn_1,LV_ALIGN_TOP_LEFT,0,0);
+    lv_obj_add_style(btn_1, &style_2, LV_PART_MAIN);
+    lv_obj_set_size(btn_1, 100, 50);
+    lv_obj_align(btn_1, LV_ALIGN_TOP_LEFT, 0, 0);
+
     btn_label = lv_label_create(btn_1);
-    lv_label_set_text(btn_label,"BTN 1");  
+    // lv_obj_set_size(btn_label,80,20);
+    lv_label_set_text(btn_label, "This is the first btn !");
+    lv_label_set_long_mode(btn_label, LV_LABEL_LONG_DOT);
+    lv_obj_align(btn_label, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    btn_label1 = lv_label_create(btn_1);
+    lv_obj_set_size(btn_label1, 80, 20);
+    lv_obj_add_style(btn_label1, &style_2, LV_PART_MAIN);
+    lv_label_set_text(btn_label1, "This is the second btn !");
+    lv_label_set_long_mode(btn_label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_align(btn_label1, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 }
 
-static void lvgl_thread_fun(void* parameter)
+static void hl_mod_lvgl_thread_fun(void* parameter)
 {
     scr = lv_scr_act();
-    creat_btn();
-    while(1)
-    {
+    hl_mod_lvgl_style_1();
+    hl_mod_lvgl_creat_btn();
+    while (1) {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
     }
 }
 
-static void lvgl_thread_timer(void* parameter)
+static void hl_mod_lvgl_thread_timer(void* parameter)
 {
-    while(1)
-    {
+    while (1) {
         lv_tick_inc(LV_INDEV_DEF_READ_PERIOD);
         rt_thread_mdelay(LV_INDEV_DEF_READ_PERIOD);
+    }
+}
+
+static void hl_mod_lvgl_thread_picture(void* parameter)
+{
+    // FILE *f;
+    // test_f = lv_fs_get_drv(LV_FS_STDIO_LETTER);
+    // f = fopen("/mnt/sdcard/lvgl/test.txt","w");
+    // f = test_f->open_cb(RT_NULL,"test.txt",LV_FS_MODE_WR);
+    LV_IMG_DECLARE(test_pic);
+    lv_obj_t*  pic        = lv_img_create(scr);
+    lv_disp_t* screen_ptr = lv_disp_get_default();
+    lv_img_set_src(pic, &test_pic);
+    lv_obj_align(pic, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    while (1) {
+        // f = test_f.open_cb(RT_NULL,"./test.txt",LV_FS_MODE_WR | LV_FS_MODE_RD);
+        // test_f.seek_cb(RT_NULL,f,0,LV_FS_SEEK_END);lv_disp_get_default
+        rt_thread_mdelay(3000);
+        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_180);
+        rt_thread_mdelay(3000);
+        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_NONE);
     }
 }
 
 static int lvgl_test_thread(int argc, char** argv)
 {
     hl_mod_lvgl_init();
-    lvgl_tid1 = rt_thread_create("touch_thread", lvgl_thread_fun, RT_NULL, 40960, 18, 10);
+    lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 0xB000, 11, 10);
 
-    lvgl_tid2 = rt_thread_create("touch_thread_esd", lvgl_thread_timer, RT_NULL, 4096, 18, 10);
+    lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x400, 11, 10);
+
+    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
 
     if (lvgl_tid1 != RT_NULL) {
         rt_kprintf("Lvgl thread 1 init success !\n");
@@ -69,8 +120,14 @@ static int lvgl_test_thread(int argc, char** argv)
         rt_kprintf("Lvgl thread 2 init success !\n");
         rt_thread_startup(lvgl_tid2);
     }
+
+    if (lvgl_tid3 != RT_NULL) {
+        rt_kprintf("Lvgl thread 3 init success !\n");
+        rt_thread_startup(lvgl_tid3);
+    }
     return RT_EOK;
 }
 
 MSH_CMD_EXPORT(lvgl_test_thread, lvgl test thread);
+#endif
 #endif
