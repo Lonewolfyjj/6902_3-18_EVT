@@ -29,8 +29,8 @@ typedef enum _hl_mod_telink_ctrl_cmd
 {
     /// 获取版本号
     HL_MOD_TELINK_GET_VERSION_CMD = 0x00,
-    /// 获取配对信息
-    HL_MOD_TELINK_GET_PAIR_INFO_CMD,
+    /// 获取无线模块最新状态
+    HL_MOD_TELINK_GET_PAIR_STATE_CMD,
     /// 开始配对 (CMD + 0x00左声道/0x01右声道)
     HL_MOD_TELINK_PAIR_START_CMD,
     /// 停止配对
@@ -43,33 +43,48 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_MOD_TELINK_BY_PASS_CMD,
     /// (测试命令)设置RF射频发射功率 (0~23档位调节)
     HL_MOD_TELINK_SET_RF_POWER_CMD,
+    /// 模块升级开始
+    HL_MOD_TELINK_UPGRADE_START_CMD = 0xA1,
+    /// 升级文件大小
+    HL_MOD_TELINK_UPGRADE_SIZE_CMD = 0xA2,
+    /// 升级分包发送
+    HL_MOD_TELINK_UPGRADE_PACK_CMD = 0xA3,
+    /// 模块升级结束
+    HL_MOD_TELINK_UPGRADE_STOP_CMD = 0xA4,
+    /// 模块升级reboot
+    HL_MOD_TELINK_UPGRADE_REBOOT_CMD = 0xA5,
 } hl_mod_telink_ctrl_cmd;
 
 typedef enum _hl_mod_telink_ctrl_ind
 {
     /// 返回版本号 (CMD + 版本字符串)
     HL_MOD_TELINK_VERSION_IND = 0x00,
-    /// 返回配对信息 
-    HL_MOD_TELINK_PAIR_INFO_IND,
-    /// 开始配对
-    HL_MOD_TELINK_PAIR_START_IND,
-    /// 停止配对
-    HL_MOD_TELINK_PAIR_STOP_IND,
+    /// 返回无线模块最新状态 (CMD + 枚举值hl_rf_pair_state_em)
+    HL_MOD_TELINK_PAIR_STATE_IND,
     /// (测试命令)返回RSSI值 (CMD + RSSI值[0~100])
     HL_MOD_TELINK_RSSI_IND,
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
     HL_MOD_TELINK_BY_PASS_IND,
+    /// 模块升级状态
+    HL_MOD_TELINK_UPGRADE_STATE_IND = 0xA1,
 } hl_mod_telink_ctrl_ind;
 
 typedef enum
 {
-    PAIR_STOP       = 0x00,
-    PAIR_START      = 0x01,
-    PAIR_FAILED     = 0x00,
-    PAIR_L_SUCCEDD  = 0x01,
-    PAIR_R_SUCCEDD  = 0x02,
-    PAIR_LR_SUCCEDD = 0x03,
-} hl_pair_state_em;
+    HL_RF_UNCONNECT = 0x00,
+    HL_RF_L_CONNECT,
+    HL_RF_R_CONNECT,
+    HL_RF_LR_CONNECT,
+    HL_RF_PAIRING,
+} hl_rf_pair_state_em;
+
+typedef enum
+{
+    HL_RF_UPGRADE_START = 0x00,
+    HL_RF_UPGRADE_STOP,
+    HL_RF_UPGRADE_SIZE,
+    HL_RF_UPGRADE_PACK,
+} hl_rf_upgrade_state_em;
 
 typedef struct
 {

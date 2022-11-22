@@ -634,7 +634,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     card_capture[0] = NULL;
 
 #if HL_IS_TX_DEVICE()
-    hl_drv_aw21009_init();
+    // hl_drv_aw21009_init();
     //_hl_drv_key_init();
     s_record_switch = 0;
     ///
