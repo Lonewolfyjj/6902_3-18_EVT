@@ -1363,7 +1363,7 @@ int hl_drv_sy6971_init(void)
 
     reg_all.reg00.IINLIM = 7;
     reg_all.reg01.SYS_MIN = 4;
-#if HL_GET_DEVICE_TYPE()
+#if HL_IS_TX_DEVICE()
     reg_all.reg02.ICHG = 13; //Tx
 #else
     reg_all.reg02.ICHG = 22; //Rx

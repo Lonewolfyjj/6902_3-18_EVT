@@ -486,6 +486,8 @@ RT_WEAK struct ep_id g_usb_ep_pool[] =
     { 0x4,  USB_EP_ATTR_ISOC,       USB_DIR_OUT,    512,  ID_UNASSIGNED },
     { 0x5,  USB_EP_ATTR_INT,        USB_DIR_IN,     64,   ID_UNASSIGNED },
     { 0x6,  USB_EP_ATTR_INT,        USB_DIR_OUT,    64,   ID_UNASSIGNED },
+    { 0x7,  USB_EP_ATTR_BULK,       USB_DIR_IN,     64,   ID_UNASSIGNED },
+    { 0x8,  USB_EP_ATTR_BULK,       USB_DIR_OUT,    64,   ID_UNASSIGNED },
     { 0xFF, USB_EP_ATTR_TYPE_MASK,  USB_DIR_MASK,   0,    ID_ASSIGNED   },
 };
 #endif

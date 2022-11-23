@@ -5,6 +5,7 @@ from building import *
 cwd     = GetCurrentDir()
 inc_path = [cwd]
 inc_path += [cwd + '/inc']
+inc_path += [cwd + '/hl_type_def']
 src  = Glob('*.c')
 src += Glob('src/*.c')
 CPPPATH = inc_path

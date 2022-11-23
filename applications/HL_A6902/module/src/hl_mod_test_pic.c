@@ -1,5 +1,5 @@
 #include "hl_config.h"
-#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_IS_TX_DEVICE())
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
 #else

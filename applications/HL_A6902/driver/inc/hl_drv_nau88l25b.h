@@ -44,7 +44,7 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
 #define NAU88L25B_IIC_NAME "i2c1"
 #else
 #define NAU88L25B_IIC_NAME "i2c2"

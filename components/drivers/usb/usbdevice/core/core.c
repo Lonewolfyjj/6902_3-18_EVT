@@ -1183,7 +1183,7 @@ uconfig_t rt_usbd_config_new(void)
     cfg->cfg_desc.type = USB_DESC_TYPE_CONFIGURATION;
     cfg->cfg_desc.wTotalLength = USB_DESC_LENGTH_CONFIG;
     cfg->cfg_desc.bmAttributes = 0xC0;
-    cfg->cfg_desc.MaxPower = 0xFA;
+    cfg->cfg_desc.MaxPower = 0x32;
 
     /* to initialize function object list */
     rt_list_init(&cfg->func_list);

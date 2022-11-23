@@ -341,10 +341,12 @@ static int hl_mod_iocmd_parse(uint8_t cmd)
     int ret = HL_MOD_PM_FUNC_RET_OK;
     switch (cmd) {
         case HL_MOD_RK2108_POWER_UP_CMD:
-            hl_hal_gpio_high(GPIO_RK2108_POWER);
+            hl_hal_gpio_high(GPIO_ALL_POWER);
+            DBG_LOG("power up\n");
             break;
         case HL_MOD_RK2108_POWER_DOWN_CMD:
-            hl_hal_gpio_low(GPIO_RK2108_POWER);
+            hl_hal_gpio_low(GPIO_ALL_POWER);
+            DBG_LOG("power down\n");
             break;
         default:
             ret = HL_MOD_PM_FUNC_RET_ERR;

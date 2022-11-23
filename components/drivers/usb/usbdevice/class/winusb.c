@@ -24,6 +24,7 @@ struct winusb_device
 };
 
 typedef struct winusb_device * winusb_device_t;
+static uint8_t rx_has_data = 0;
 
 ALIGN(4)
 static struct udevice_descriptor dev_desc =
@@ -136,12 +137,17 @@ struct usb_os_function_comp_id_descriptor winusb_func_comp_id_desc =
     .reserved2          = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 };
 
+static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
+winusb_device_t winusb_device;
+
 static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
 {
     winusb_device_t winusb_device = (winusb_device_t)func->user_data;
     if(winusb_device->parent.rx_indicate != RT_NULL)
     {
         winusb_device->parent.rx_indicate(&winusb_device->parent, size);
+        // rt_kprintf("winusb get out %d\r\n", size);
+        rx_has_data = 1;
     }
     return RT_EOK;
 }
@@ -152,6 +158,7 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
     if(winusb_device->parent.tx_complete != RT_NULL)
     {
         winusb_device->parent.tx_complete(&winusb_device->parent, winusb_device->ep_in->buffer);
+        // rt_kprintf("winusb get in %d\r\n", size);
     }
     return RT_EOK;
 }
@@ -187,7 +194,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         switch(setup->wIndex)
         {
         case 0x05:
-            // usbd_os_proerty_descriptor_send(func,setup,winusb_proerty,sizeof(winusb_proerty)/sizeof(winusb_proerty[0]));
+            usbd_os_proerty_descriptor_send(func,setup,winusb_proerty,sizeof(winusb_proerty)/sizeof(winusb_proerty[0]));
             break;
         }
         break;
@@ -195,12 +202,15 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         _ep0_cmd_read(func, setup);
         break;
     }
+
+    // rt_kprintf("00\r\n");
     
     return RT_EOK;
 }
 static rt_err_t _function_enable(ufunction_t func)
 {
     RT_ASSERT(func != RT_NULL);
+    // rt_kprintf("01\r\n");
     return RT_EOK;
 }
 static rt_err_t _function_disable(ufunction_t func)
@@ -221,8 +231,8 @@ static rt_err_t _winusb_descriptor_config(winusb_desc_t winusb, rt_uint8_t cintf
 #ifdef RT_USB_DEVICE_COMPOSITE
     winusb->iad_desc.bFirstInterface = cintf_nr;
 #endif
-    winusb->ep_out_desc.wMaxPacketSize = device_is_hs ? 512 : 64;
-    winusb->ep_in_desc.wMaxPacketSize = device_is_hs ? 512 : 64;
+    winusb->ep_out_desc.wMaxPacketSize = device_is_hs ? 64 : 64;
+    winusb->ep_in_desc.wMaxPacketSize = device_is_hs ? 64 : 64;
     winusb_func_comp_id_desc.bFirstInterfaceNumber = cintf_nr;
     return RT_EOK;
 }
@@ -238,8 +248,14 @@ static rt_size_t win_usb_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_si
     winusb_device->ep_out->request.buffer = buffer;
     winusb_device->ep_out->request.size = size;
     winusb_device->ep_out->request.req_type = UIO_REQUEST_READ_FULL;
-    rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_out,&winusb_device->ep_out->request);
-    return size;
+    int ret = rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_out,&winusb_device->ep_out->request);
+    // rt_kprintf("02 -- %d\r\n", ret);
+    if (rx_has_data) {
+        // rt_kprintf("read OK\r\n");
+        rx_has_data = 0;
+        return size;
+    }
+    return RT_EOK;
 }
 static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)
 {
@@ -253,6 +269,7 @@ static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer
     winusb_device->ep_in->request.size = size;
     winusb_device->ep_in->request.req_type = UIO_REQUEST_WRITE;
     rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_in,&winusb_device->ep_in->request);
+    // rt_kprintf("03\r\n");
     return size;
 }
 static rt_err_t  win_usb_control(rt_device_t dev, int cmd, void *args)
@@ -316,7 +333,7 @@ ufunction_t rt_usbd_function_winusb_create(udevice_t device)
 
     /* create a cdc function */
     func = rt_usbd_function_new(device, &dev_desc, &ops);
-    // rt_usbd_device_set_qualifier(device, &dev_qualifier);
+    rt_usbd_device_set_qualifier(device, &dev_qualifier);
 
     /* allocate memory for cdc vcom data */
     winusb_device = (winusb_device_t)rt_malloc(sizeof(struct winusb_device));

@@ -31,7 +31,7 @@
 #include "hl_hal_gpio.h"
 #include "rtdef.h"
 
-#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_IS_TX_DEVICE())
 
 #define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
 #define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
