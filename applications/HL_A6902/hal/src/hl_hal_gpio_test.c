@@ -108,6 +108,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_init(GPIO_USB_SW);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     hl_hal_gpio_init(GPIO_ATS_PWR_EN);
+    hl_hal_gpio_init(GPIO_R_VOL_KEY);
     hl_hal_gpio_init(GPIO_AMP_EN);
     hl_hal_gpio_init(GPIO_RK2108_POWER);
 
@@ -115,6 +116,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_high(GPIO_USB_SW);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
     hl_hal_gpio_high(GPIO_ATS_PWR_EN);
+    hl_hal_gpio_high(GPIO_R_VOL_KEY);
     hl_hal_gpio_low(GPIO_AMP_EN);
     hl_hal_gpio_high(GPIO_RK2108_POWER);
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);

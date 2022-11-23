@@ -35,6 +35,7 @@
 #include "touch.h"
 #include "hl_drv_touch_test.h"
 #include "hl_drv_ft3169.h"
+#include "hl_drv_ztw523a.h"
 
 static rt_thread_t         touch_tid1 = RT_NULL, touch_tid2 = RT_NULL;
 static rt_device_t         touch_dev = RT_NULL;
@@ -59,7 +60,6 @@ static void touch_thread_fun(void* parameter)
 {
     struct fts_ts_event touch_pos;
     while (1) {
-        // rt_sem_take(&touch_sem, (1 << 31));
         rt_thread_mdelay(500);
         rt_device_read(touch_dev, 0, &touch_pos, 1);
         rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
@@ -164,10 +164,6 @@ static void touch_dev_init(void)
         rt_kprintf("open touch device failed!");
         return;
     }
-    // if (rt_device_set_rx_indicate(touch_dev, touch_rx_int_callback) != RT_EOK) {
-    //     rt_kprintf("Touch device int failed!");
-    //     return;
-    // }
 }
 
 /**
@@ -187,7 +183,7 @@ static void touch_dev_init(void)
  * <tr><td>2022-10-19      <td>dujunjie     <td>新建
  * </table>
  */
-static int touch_test_thread(int argc, char** argv)
+static int ft3169_touch_test_thread(int argc, char** argv)
 {
     touch_sem_init();
     touch_dev_init();
@@ -207,7 +203,39 @@ static int touch_test_thread(int argc, char** argv)
     return RT_EOK;
 }
 
-MSH_CMD_EXPORT(touch_test_thread, touch test thread);
+MSH_CMD_EXPORT(ft3169_touch_test_thread, ft3169_touch_test_thread);
+
+
+
+
+
+
+
+static void ztw523a_thread_fun(void* parameter)
+{
+    struct fts_ts_event touch_pos;
+    while (1) {
+        rt_thread_mdelay(500);
+        tpd_touchinfo();
+        // rt_device_read(touch_dev, 0, &touch_pos, 1);
+        // rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
+    }
+}
+
+
+static int ztw523a_touch_test_thread(int argc, char** argv)
+{
+    Tp_Init();
+    touch_tid1 = rt_thread_create("touch_thread", ztw523a_thread_fun, RT_NULL, 4096, 18, 10);
+
+    if (touch_tid1 != RT_NULL) {
+        rt_kprintf("Touch thread 1 init success !\n");
+        rt_thread_startup(touch_tid1);
+    }
+    return RT_EOK;
+}
+
+MSH_CMD_EXPORT(ztw523a_touch_test_thread, ztw523a_touch_test_thread);
 
 #endif
 /*

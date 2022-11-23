@@ -70,7 +70,7 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO0_A7,  PIN_MODE_INPUT},            //3 GPIO_L_VOL_KEY
     {GPIO0_C4,  PIN_MODE_INPUT},            //4 GPIO_R_VOL_A 旧版Rx 对照原理图这里应该是 GPIO0_C4，GPIO0_C0是oled复位引脚 新版Rx 用作 VBUS_P_DET 检测
     {GPIO0_C5,  PIN_MODE_INPUT},            //5 GPIO_R_VOL_B 新版Rx 悬空未使用
-    {GPIO0_C6,  PIN_MODE_INPUT},            //6 GPIO_R_VOL_KEY 新版Rx 用作 LCD_PWR_EN 功能，应考虑使用OUTPUT工作模式
+    {GPIO0_C6,  PIN_MODE_OUTPUT},            //6 GPIO_R_VOL_KEY 新版Rx 用作 LCD_PWR_EN 功能，应考虑使用OUTPUT工作模式
     {GPIO0_A3,  PIN_MODE_INPUT},            //7 GPIO_GAUGE_INT
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   //8 GPIO_VBUS_DET
     {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   //9 GPIO_HP_DET
