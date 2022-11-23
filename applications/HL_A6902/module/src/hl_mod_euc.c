@@ -25,7 +25,6 @@
 
 #include "hl_mod_euc.h"
 #include "hl_util_hup.h"
-#include "hl_util_fifo.h"
 
 #define DBG_SECTION_NAME "euc"
 #define DBG_LEVEL DBG_INFO
@@ -40,7 +39,6 @@ typedef struct _hl_mod_euc
     rt_thread_t             euc_thread;
     int                     thread_exit_flag;
     hl_util_hup_t           hup;
-    hl_util_fifo_t          fifo;
     void*                   msg_handle;
     rt_device_t             uart_dev;
     struct serial_configure uart_config;
@@ -51,7 +49,6 @@ typedef struct _hl_mod_euc
 #define HL_MOD_EUC_UART_NAME "uart1"
 
 #define HL_MOD_EUC_UART_BUFSZ 256
-#define HL_MOD_EUC_FIFO_BUFSZ 256
 #define HL_MOD_EUC_HUP_BUFSZ 256
 
 /* variables -----------------------------------------------------------------*/
@@ -61,7 +58,6 @@ static hl_mod_euc_st _euc_mod = { .init_flag        = false,
                                   .euc_thread       = NULL,
                                   .thread_exit_flag = 0,
                                   .hup              = { 0 },
-                                  .fifo             = { 0 },
                                   .msg_handle       = NULL,
                                   .uart_dev         = NULL,
                                   .uart_config      = {
@@ -75,8 +71,7 @@ static hl_mod_euc_st _euc_mod = { .init_flag        = false,
                                       .bufsz     = HL_MOD_EUC_UART_BUFSZ,       //在 open 串口之后不可改变
                                   }, };
 
-static uint8_t hup_buf[HL_MOD_EUC_HUP_BUFSZ]   = { 0 };
-static uint8_t fifo_buf[HL_MOD_EUC_FIFO_BUFSZ] = { 0 };
+static uint8_t hup_buf[HL_MOD_EUC_HUP_BUFSZ] = { 0 };
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -112,17 +107,6 @@ static inline void _hl_mod_euc_hup_deinit(void)
     hl_util_hup_deinit(&(_euc_mod.hup));
 }
 
-static rt_err_t uart_rx_callback(rt_device_t dev, rt_size_t size)
-{
-    uint8_t   buf[64];
-    rt_size_t len;
-
-    len = rt_device_read(dev, -1, buf, sizeof(buf));
-    hl_util_fifo_write(&(_euc_mod.fifo), buf, len);
-
-    return RT_EOK;
-}
-
 static int uart_init(void)
 {
     rt_device_t uart_dev;
@@ -143,12 +127,6 @@ static int uart_init(void)
     rt_err = rt_device_open(uart_dev, RT_DEVICE_FLAG_INT_RX);
     if (rt_err != RT_EOK) {
         LOG_E("can not open dev:%s", HL_MOD_EUC_UART_NAME);
-        return HL_MOD_EUC_FUNC_RET_ERR;
-    }
-
-    rt_err = rt_device_set_rx_indicate(uart_dev, uart_rx_callback);
-    if (rt_err != RT_EOK) {
-        LOG_E("can not set rx indicate dev:%s", HL_MOD_EUC_UART_NAME);
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -175,10 +153,10 @@ static void uart_deinit()
 
 static inline void uart_data_process()
 {
-    uint8_t buf[64];
+    uint8_t buf[256];
     int     size;
 
-    size = hl_util_fifo_read(&(_euc_mod.fifo), buf, sizeof(buf));
+    size = rt_device_read(_euc_mod.uart_dev, -1, buf, sizeof(buf));
     if (size <= 0) {
         return;
     }
@@ -214,8 +192,6 @@ int hl_mod_euc_init(void* msg_hd)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
-    hl_util_fifo_init(&(_euc_mod.fifo), fifo_buf, sizeof(fifo_buf));
-
     _euc_mod.msg_handle = msg_hd;
 
     LOG_D("euc init success\n");
@@ -233,8 +209,6 @@ int hl_mod_euc_deinit(void)
     }
 
     hl_mod_euc_stop();
-
-    hl_util_fifo_deinit(&(_euc_mod.fifo));
 
     _hl_mod_euc_hup_deinit();
 
