@@ -215,7 +215,7 @@ int8_t hl_drv_cw2215_deinit(void);
  * <tr><td>2022-09-01      <td>lilin     <td>新建
  * </table>
  */
-int8_t hl_drv_cw2215_ctrl(uint8_t op, void* arg, int32_t arg_size);
+int8_t hl_drv_cw2215_ctrl(hl_drv_guage_op_t op, void* arg, int32_t arg_size);
 
 #endif
 /*

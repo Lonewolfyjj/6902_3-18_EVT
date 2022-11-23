@@ -27,6 +27,10 @@
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
 
+#define DBG_SECTION_NAME "euc"
+#define DBG_LEVEL DBG_INFO
+#include "rtdbg.h"
+
 /* typedef -------------------------------------------------------------------*/
 
 typedef struct _hl_mod_euc
@@ -43,8 +47,6 @@ typedef struct _hl_mod_euc
 } hl_mod_euc_st;
 
 /* define --------------------------------------------------------------------*/
-
-#define DBG_LOG rt_kprintf
 
 #define HL_MOD_EUC_UART_NAME "uart1"
 
@@ -98,7 +100,7 @@ static inline int _hl_mod_euc_hup_init(void)
 
     ret = hl_util_hup_init(&(_euc_mod.hup), hup_buf, NULL, hup_success_handle_func);
     if (ret == -1) {
-        DBG_LOG("hup init err!");
+        LOG_E("hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -128,25 +130,25 @@ static int uart_init(void)
 
     uart_dev = rt_device_find(HL_MOD_EUC_UART_NAME);
     if (uart_dev == NULL) {
-        DBG_LOG("can not find dev:%s", HL_MOD_EUC_UART_NAME);
+        LOG_E("can not find dev:%s", HL_MOD_EUC_UART_NAME);
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     rt_err = rt_device_control(uart_dev, RT_DEVICE_CTRL_CONFIG, &(_euc_mod.uart_config));
     if (rt_err != RT_EOK) {
-        DBG_LOG("can not control dev:%s", HL_MOD_EUC_UART_NAME);
+        LOG_E("can not control dev:%s", HL_MOD_EUC_UART_NAME);
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     rt_err = rt_device_open(uart_dev, RT_DEVICE_FLAG_INT_RX);
     if (rt_err != RT_EOK) {
-        DBG_LOG("can not open dev:%s", HL_MOD_EUC_UART_NAME);
+        LOG_E("can not open dev:%s", HL_MOD_EUC_UART_NAME);
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     rt_err = rt_device_set_rx_indicate(uart_dev, uart_rx_callback);
     if (rt_err != RT_EOK) {
-        DBG_LOG("can not set rx indicate dev:%s", HL_MOD_EUC_UART_NAME);
+        LOG_E("can not set rx indicate dev:%s", HL_MOD_EUC_UART_NAME);
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -164,7 +166,7 @@ static void uart_deinit()
 
     rt_err = rt_device_close(uart_dev);
     if (rt_err != RT_EOK) {
-        DBG_LOG("can not close dev:%s", HL_MOD_EUC_UART_NAME);
+        LOG_E("can not close dev:%s", HL_MOD_EUC_UART_NAME);
         return;
     }
 
@@ -203,7 +205,7 @@ int hl_mod_euc_init(void* msg_hd)
     int ret;
 
     if (_euc_mod.init_flag == true) {
-        DBG_LOG("euc already inited!\n");
+        LOG_W("euc already inited!\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -216,7 +218,7 @@ int hl_mod_euc_init(void* msg_hd)
 
     _euc_mod.msg_handle = msg_hd;
 
-    DBG_LOG("euc init success\n");
+    LOG_D("euc init success\n");
 
     _euc_mod.init_flag = true;
 
@@ -226,7 +228,7 @@ int hl_mod_euc_init(void* msg_hd)
 int hl_mod_euc_deinit(void)
 {
     if (_euc_mod.init_flag == false) {
-        DBG_LOG("euc not init!\n");
+        LOG_W("euc not init!\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -236,7 +238,7 @@ int hl_mod_euc_deinit(void)
 
     _hl_mod_euc_hup_deinit();
 
-    DBG_LOG("euc deinit success\n");
+    LOG_D("euc deinit success\n");
 
     _euc_mod.init_flag = false;
 
@@ -248,7 +250,7 @@ int hl_mod_euc_start(void)
     int ret;
 
     if (_euc_mod.init_flag == false) {
-        DBG_LOG("euc not init!\n");
+        LOG_E("euc not init!\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -260,7 +262,7 @@ int hl_mod_euc_start(void)
 
     _euc_mod.euc_thread = rt_thread_create("hl_mod_euc_thread", _euc_thread_entry, RT_NULL, 1024, 25, 10);
     if (_euc_mod.euc_thread == RT_NULL) {
-        DBG_LOG("euc thread create failed\n");
+        LOG_E("euc thread create failed\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -272,7 +274,7 @@ int hl_mod_euc_start(void)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
-    DBG_LOG("euc start success\n");
+    LOG_I("euc start success\n");
 
     _euc_mod.start_flag = true;
 
@@ -282,12 +284,12 @@ int hl_mod_euc_start(void)
 int hl_mod_euc_stop(void)
 {
     if (_euc_mod.init_flag == false) {
-        DBG_LOG("euc not init!\n");
+        LOG_E("euc not init!\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     if (_euc_mod.start_flag == false) {
-        DBG_LOG("euc not start\n");
+        LOG_W("euc not start\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -295,13 +297,13 @@ int hl_mod_euc_stop(void)
 
     _euc_mod.thread_exit_flag = 1;
 
-    DBG_LOG("wait euc thread exit\n");
+    LOG_I("wait euc thread exit\n");
 
     while (_euc_mod.thread_exit_flag != -1) {
         rt_thread_mdelay(10);
     }
 
-    DBG_LOG("euc stop success\n");
+    LOG_I("euc stop success\n");
 
     _euc_mod.start_flag = false;
 
@@ -311,7 +313,7 @@ int hl_mod_euc_stop(void)
 int hl_mod_euc_ctrl(int op, void* arg, int arg_size)
 {
     if (_euc_mod.init_flag == false) {
-        DBG_LOG("euc not init!\n");
+        LOG_E("euc not init!\n");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 

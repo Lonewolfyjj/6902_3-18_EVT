@@ -336,7 +336,7 @@ int hl_drv_aw2016a_init(void);
 
 int hl_drv_aw2016a_deinit(void);
 
-int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size);
+int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op, void* arg, int32_t arg_size);
 
 #endif
 /*
