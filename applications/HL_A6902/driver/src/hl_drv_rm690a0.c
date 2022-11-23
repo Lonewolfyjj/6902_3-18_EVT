@@ -323,8 +323,6 @@ uint8_t hl_drv_rm690a0_deinit(void)
 }
 
 
-
-
 uint8_t         hl_drv_rm690a0_init(void)
 {
     uint8_t ret = RT_NULL;

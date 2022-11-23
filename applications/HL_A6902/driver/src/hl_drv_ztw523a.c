@@ -1,7 +1,7 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "hl_drv_ztw523a.h"
-#if !HL_GET_DEVICE_TYPE()
+#if ! HL_IS_TX_DEVICE()
 #include "touch.h"
 #include "hal_pinctrl.h"
 
