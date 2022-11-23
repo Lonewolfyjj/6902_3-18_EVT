@@ -454,7 +454,7 @@ typedef struct _HL_SY6971_REGALL_T
     HL_SY6971_REG12_T reg12;
 }HL_SY6971_REGALL_T;
 
-uint8_t hl_drv_sy6971_init(void);
-uint8_t hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len);
+int hl_drv_sy6971_init(void);
+int hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len);
 
 #endif

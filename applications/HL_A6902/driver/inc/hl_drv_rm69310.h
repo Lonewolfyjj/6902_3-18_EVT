@@ -3,7 +3,7 @@
 
 #include "rtdef.h"
 #include "hl_config.h"
-#if (!HL_GET_DEVICE_TYPE())
+#if (!HL_IS_TX_DEVICE())
 #define DEFAULT_BACKLIGHT 0x80
 
 #define OLED_WIDTH 2//240

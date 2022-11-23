@@ -133,8 +133,6 @@ void rt_hw_iomux_config(void)
     i2c1_m1_iomux_config();
 
     i2c2_m2_iomux_config();
-
-    rt_kprintf("nfijdasnvjsdnvkl \n\n\n");
 #ifdef RT_USING_I2STDM1
     i2s1_output_iomux_config();
 #endif

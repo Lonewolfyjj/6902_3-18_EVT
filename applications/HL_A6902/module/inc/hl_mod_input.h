@@ -1,10 +1,42 @@
+/**
+ * @file hl_mod_input.h
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @brief 输入模块，检测按键的长按、短按、双击，检测插入的USB或者耳机，事件直接发给消息队列
+ * @version V1.0
+ * @date 2022-11-15
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2022 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2022-11-15     <td>v1.0     <td>liujie     <td>内容
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 #ifndef __HL_MOD_INPUT_H__
 #define __HL_MOD_INPUT_H__
 
 #include "rtdef.h"
 #include "hl_config.h"
 #include "stdbool.h"
-#include "hl_test_pre.h"
+// #include "hl_test_pre.h"
 
 typedef enum _hl_key_event_e
 {
@@ -29,10 +61,12 @@ typedef enum _hl_switch_event_e
     HL_SWITCH_EVENT_ON,       
 } hl_switch_event_e;
 
-#if HL_GET_DEVICE_TYPE() 
+#if HL_IS_TX_DEVICE() 
 //TX
 typedef enum _input_mod_msg_cmd_e
 {
+    /// 空命令
+    MSG_TX_IDLE = 0,
     /// 开关按键消息：类型hl_key_event_e
     MSG_TX_PWR_KEY,
     /// 降噪按键消息：类型hl_key_event_e
@@ -54,19 +88,24 @@ typedef enum _input_mod_msg_cmd_e
 //RX
 typedef enum _input_mod_msg_cmd_e
 {
+    /// 空命令
+    MSG_RX_IDLE = 0,
     /// 开关按键消息：类型hl_key_event_e
     MSG_RX_PWR_KEY,
-
-    /// 开关按键消息：类型hl_key_event_e
-    MSG_RX_L_VOL_KEY,
-    /// 开关按键消息：类型hl_key_event_e
-    MSG_RX_R_VOL_KEY,
+    /// 旋钮A消息：类型hl_key_event_e
+    MSG_RX_A_VOL,
+    /// 旋钮B消息：类型hl_key_event_e
+    MSG_RX_B_VOL,
+    /// 旋钮OK消息：类型hl_key_event_e
+    MSG_RX_OK_VOL,
     /// usb插入检测消息：类型hl_switch_event_e
     MSG_RX_VBUS_DET,
+    /// 相机口插入检测消息：类型hl_switch_event_e
+    MSG_RX_CAM_DET,
     /// 耳机插入检测消息：类型hl_switch_event_e
     MSG_RX_HP_DET,
     /// 组合按键1的消息：左按和右按
-    MSG_COMB_L_R_VOL,
+    MSG_COMB_L_R_VOL,    
 } input_mod_msg_cmd_e;
 #endif
 

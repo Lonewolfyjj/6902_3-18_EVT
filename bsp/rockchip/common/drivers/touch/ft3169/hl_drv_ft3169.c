@@ -32,7 +32,7 @@
 * Included header files
 *****************************************************************************/
 #include "hl_config.h"
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "touch.h"
@@ -94,14 +94,14 @@
 // #define CURRENT_TOUCH_RESET_PIN_L PIN_LOW
 
 // static rt_device_t touch_dev  = RT_NULL;
-static rt_touch_t touch_hand = RT_NULL;
-static rt_device_t         touch_dev = RT_NULL;
-static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
+static rt_touch_t                touch_hand = RT_NULL;
+static rt_device_t               touch_dev  = RT_NULL;
+static struct rt_i2c_bus_device* i2c_bus    = RT_NULL; /* I2C总线设备句柄 */
 static int                       hl_drv_touch_dev_suspend(void);
 // static rt_err_t                  hl_drv_touch_dev_cfg(rt_device_t dev);
-static rt_err_t                  fts_touch_irq_callback(rt_touch_t touch);
-static rt_err_t                  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
-static rt_size_t                 hl_drv_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
+static rt_err_t  fts_touch_irq_callback(rt_touch_t touch);
+static rt_err_t  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
+static rt_size_t hl_drv_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
 
 /*****************************************************************************
 * Private variables/functions
@@ -1094,14 +1094,13 @@ static int hl_drv_touch_dev_register(void)
     touch_hand->ops    = &touch_ops_top;
     // touch_hand->irq_handle = fts_touch_irq_callback;
 
-    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_RDONLY,
-                               RT_NULL);
+    ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_RDONLY, RT_NULL);
     if (ret != RT_EOK) {
         ft_printf("Touch device ft3169 register fail !\n");
         return HL_FAILED;
     }
 
-    if(hl_drv_touch_dev_init() == HL_FAILED){
+    if (hl_drv_touch_dev_init() == HL_FAILED) {
         ft_printf("Touch device ft3169 init fail !\n");
         return HL_FAILED;
     }
@@ -1109,7 +1108,7 @@ static int hl_drv_touch_dev_register(void)
     return HL_SUCCESS;
 }
 
-rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event *touch_pos)
+rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event* touch_pos)
 {
     // rt_device_read(touch_dev, 0, touch_pos, 1);
     // rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
@@ -1136,7 +1135,6 @@ rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event *touch_pos)
 
 // MSH_CMD_EXPORT(tt3169, run tt3169);
 // INIT_DEVICE_EXPORT(hl_drv_touch_dev_register);
-
 
 #endif
 /*

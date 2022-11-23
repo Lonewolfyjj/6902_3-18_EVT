@@ -844,7 +844,6 @@ typedef struct _HL_SGM41518_REGALL_T
  *                            全局函数实现                                      *
  **************************************************************************/
 
-uint8_t hl_drv_sgm41518_init(void);
-uint8_t hl_drv_sgm41518_deinit(void);
-uint8_t hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len);
+int hl_drv_sgm41518_init(void);
+int hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len);
 #endif /* end of #ifndef __HL_DRV_SGM41518_H */

@@ -3,7 +3,7 @@
  *
  */
 #include "hl_config.h"
-#if !HL_GET_DEVICE_TYPE()
+#if !HL_IS_TX_DEVICE()
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
 #if 1
