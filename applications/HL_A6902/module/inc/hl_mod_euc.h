@@ -33,6 +33,50 @@
 #include "stdbool.h"
 
 /* typedef -------------------------------------------------------------------*/
+
+#if HL_IS_TX_DEVICE() == 1
+
+typedef enum _hl_mod_euc_cmd_e
+{
+    /// 设置设备电量，参数为<uint8_t *>
+    HL_SET_SOC_CMD,
+    /// 设置设备配对Mac地址，参数为<uint8_t[6]>
+    HL_SET_PAIR_MAC_CMD,
+    /// 设置设备Mac地址，参数为<uint8_t[6]>
+    HL_SET_MAC_CMD,
+} hl_mod_euc_cmd_e;
+
+typedef enum _hl_mod_euc_ind_e
+{
+    /// 通知 app 收到收纳盒的探测包，无参数。
+    HL_IN_BOX_IND,
+    /// 请求 app 获取设备电量，无参数。
+    HL_GET_SOC_REQ_IND,
+    /// 请求 app 获取设备配对的mac地址，无参数。
+    HL_GET_PAIR_MAC_REQ_IND,
+    /// 请求 app 设置设备配对mac地址，带参数<uint8_t[6]>。
+    HL_SET_PAIR_MAC_REQ_IND,
+    /// 请求 app 获取设备mac地址，无参数。
+    HL_GET_MAC_REQ_IND,
+} hl_mod_euc_ind_e;
+
+#else
+
+typedef enum _hl_mod_euc_cmd_e
+{
+    /// 设置设备电量，参数为<uint8_t *>
+    HL_SET_SOC_CMD,
+} hl_mod_euc_cmd_e;
+
+typedef enum _hl_mod_euc_ind_e
+{
+    /// 通知 app 收到收纳盒的探测包，无参数。
+    HL_IN_BOX_IND,
+    /// 请求 app 获取设备电量，无参数。
+    HL_GET_SOC_IND,
+} hl_mod_euc_ind_e;
+
+#endif
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_EUC_FUNC_RET_ERR 1
@@ -49,7 +93,7 @@ int hl_mod_euc_start(void);
 
 int hl_mod_euc_stop(void);
 
-int hl_mod_euc_ctrl(int op, void* arg, int arg_size);
+int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size);
 
 #endif
 /*
