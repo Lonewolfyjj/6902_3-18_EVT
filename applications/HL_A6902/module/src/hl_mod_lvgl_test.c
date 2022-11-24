@@ -1,6 +1,5 @@
 #include "hl_config.h"
 #if !HL_IS_TX_DEVICE()
-#if 0
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "lvgl.h"
@@ -64,9 +63,9 @@ static void hl_mod_lvgl_creat_btn(void)
 
 static void hl_mod_lvgl_thread_fun(void* parameter)
 {
-    scr = lv_scr_act();
-    hl_mod_lvgl_style_1();
-    hl_mod_lvgl_creat_btn();
+    // scr = lv_scr_act();
+    // hl_mod_lvgl_style_1();
+    // hl_mod_lvgl_creat_btn();
     while (1) {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
@@ -109,7 +108,7 @@ static int lvgl_test_thread(int argc, char** argv)
 
     lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x400, 11, 10);
 
-    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
+    // lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
 
     if (lvgl_tid1 != RT_NULL) {
         rt_kprintf("Lvgl thread 1 init success !\n");
@@ -121,13 +120,12 @@ static int lvgl_test_thread(int argc, char** argv)
         rt_thread_startup(lvgl_tid2);
     }
 
-    if (lvgl_tid3 != RT_NULL) {
-        rt_kprintf("Lvgl thread 3 init success !\n");
-        rt_thread_startup(lvgl_tid3);
-    }
+    // if (lvgl_tid3 != RT_NULL) {
+    //     rt_kprintf("Lvgl thread 3 init success !\n");
+    //     rt_thread_startup(lvgl_tid3);
+    // }
     return RT_EOK;
 }
 
 MSH_CMD_EXPORT(lvgl_test_thread, lvgl test thread);
-#endif
 #endif

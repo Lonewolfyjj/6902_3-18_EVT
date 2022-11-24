@@ -74,9 +74,9 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO0_A3,  PIN_MODE_INPUT},            //7 GPIO_GAUGE_INT
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   //8 GPIO_VBUS_DET
     {GPIO0_C1,  PIN_MODE_INPUT_PULLDOWN},   //9 GPIO_HP_DET
-    {GPIO1_A5,  PIN_MODE_INPUT_PULLUP},     // GPIO_CAM_DET
-    {GPIO1_B2,  PIN_MODE_INPUT},            //10 GPIO_GSENSOR_INT
-    {GPIO1_C0,  PIN_MODE_INPUT},            //11 GPIO_OLED_TE
+    {GPIO1_A5,  PIN_MODE_INPUT_PULLUP},     //10 GPIO_CAM_DET
+    {GPIO1_B2,  PIN_MODE_INPUT},            //11 GPIO_GSENSOR_INT
+    {GPIO1_C0,  PIN_MODE_INPUT},            //12 GPIO_OLED_TE
     // OUT
     {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
     {GPIO0_C0,  PIN_MODE_OUTPUT},           // GPIO_OLED_RST

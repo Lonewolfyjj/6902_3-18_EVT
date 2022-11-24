@@ -180,7 +180,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
         //         color_p++;
         //     }
         // }
-        hl_drv_rm69310_display_write(area->x1,area->x2,area->y1,area->y2,(const uint8_t*)color_p);
+        // hl_drv_rm69310_display_write(area->x1,area->x2,area->y1,area->y2,(const uint8_t*)color_p);
     }
 
     /*IMPORTANT!!!

@@ -1,6 +1,7 @@
 #ifndef __HL_DRV_ZTW523A_H
 #define __HL_DRV_ZTW523A_H
-
+#include <rtthread.h>
+#include <rtdevice.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -23,8 +24,8 @@
 
 /*可能需要修改的宏定义，根据具体情况的不同*/
     /*分辨率*/   
-#define TPD_RES_MAX_X		126
-#define TPD_RES_MAX_Y		294
+#define TPD_RES_MAX_X		RT_TOUCH_X_RANGE
+#define TPD_RES_MAX_Y		RT_TOUCH_Y_RANGE
 /*多指个数的定义1~10*/
 #define MAX_SUPPORTED_FINGER_NUM	1
 
@@ -49,6 +50,13 @@
 
 #define ZINITIX_INIT_RETRY_CNT	       3
 
+struct ztw523a_ts_event
+{
+    int x;    /*x coordinate */
+    int y;    /*y coordinate */
+    int type; /* touch event flag: 0 -- down; 1-- up; 2 -- contact */
+};
+
 /*报点相关结构体的定义*/
 struct _ts_zinitix_coord {
   uint16_t    x;
@@ -58,9 +66,9 @@ struct _ts_zinitix_coord {
 };
 
 struct _ts_zinitix_point_info {
-  uint16_t    status;
+  uint16_t    status;//0x80
   #if TOUCH_POINT_MODE
-  uint16_t event_flag;
+  uint16_t event_flag;//0x81
   #else
   uint8_t    finger_cnt;
   uint8_t    time_stamp;
@@ -143,9 +151,10 @@ struct _ts_zinitix_point_info touch_info;
 #define zinitix_swap_v(a, b, t)	((t) = (a), (a) = (b), (b) = (t))
 #define zinitix_swap_16(s) (((((s) & 0xff) << 8) | (((s) >> 8) & 0xff)))
 
-
-void Tp_Init(void);
-void tpd_touchinfo(void);
+rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos);
+int hl_drv_ztw523a_botton_status(void);
+// void Tp_Init(void);
+// void tpd_touchinfo(void);
 
 #endif
 #endif

@@ -10,11 +10,17 @@
  *      INCLUDES
  *********************/
 #include "hl_config.h"
+#include "rtconfig.h"
 #if !HL_IS_TX_DEVICE()
 
 #include "lv_port_indev.h"
 #include "../../lvgl.h"
+#ifdef RT_USING_FT3169
 #include "hl_drv_ft3169.h"
+#endif
+#ifdef RT_USING_ZTW523A
+#include "hl_drv_ztw523a.h"
+#endif
 /*********************
  *      DEFINES
  *********************/
@@ -61,12 +67,20 @@ lv_indev_t * indev_button;
 
 static int32_t encoder_diff;
 static lv_indev_state_t encoder_state;
+#ifdef RT_USING_FT3169
 static struct fts_ts_event touch_pos = {
     .type = 1,
     .x = 0,
     .y = 0,
 };
-
+#endif
+#ifdef RT_USING_ZTW523A
+static struct ztw523a_ts_event touch_pos = {
+    .type = 1,
+    .x = 0,
+    .y = 0,
+};
+#endif
 /**********************
  *      MACROS
  **********************/
@@ -199,9 +213,9 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
 
-    /*Save the pressed coordinates and the state*/
+    /*Save the pressed coordinates and the state*/    
     if(touchpad_is_pressed()) {
-        rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
+        // rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
         touchpad_get_xy(&last_x, &last_y);
         data->state = LV_INDEV_STATE_PR;
     }
@@ -217,19 +231,28 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 /*Return true is the touchpad is pressed*/
 static bool touchpad_is_pressed(void)
 {
+    #ifdef RT_USING_FT3169
     /*Your code comes here*/
     hl_drv_touch_dev_read_info(&touch_pos);
     if(touch_pos.type != 1){
         return true;
     }
     return false;
+    #endif
+    #ifdef RT_USING_ZTW523A
+    /*Your code comes here*/
+    hl_drv_ztw523a_dev_read_info(&touch_pos);
+    if(touch_pos.type != 1){
+        return true;
+    }
+    return false;
+    #endif
 }
 
 /*Get the x and y coordinates if the touchpad is pressed*/
 static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 {
     /*Your code comes here*/
-
     (*x) = touch_pos.x;
     (*y) = touch_pos.y;
 }

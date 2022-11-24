@@ -1258,9 +1258,10 @@
 /* RT_USING_CSTXX is not set */
 /* RT_USING_CYTTSP5 is not set */
 /* RT_USING_IT7259 is not set */
-#define RT_USING_FT3169
-#define RT_TOUCH_X_RANGE 720
-#define RT_TOUCH_Y_RANGE 1280
+/* RT_USING_FT3169 is not set */
+#define RT_USING_ZTW523A
+#define RT_TOUCH_X_RANGE 126
+#define RT_TOUCH_Y_RANGE 294
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */

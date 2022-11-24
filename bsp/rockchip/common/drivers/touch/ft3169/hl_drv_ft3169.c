@@ -39,17 +39,13 @@
 #include "hl_drv_ft3169.h"
 #include "hal_pinctrl.h"
 
+#define DBG_SECTION_NAME "drv_ztw523a"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 /*****************************************************************************
 * Private constant and macro definitions using #define
 *****************************************************************************/
 
-#define FT3169_DEBUG
-
-#ifdef FT3169_DEBUG
-#define ft_printf(...) rt_kprintf(__VA_ARGS__)
-#else
-#define ft_printf(...)
-#endif
 
 #define FTS_CMD_START_DELAY 12
 
@@ -77,8 +73,8 @@
 #define FTS_MAX_POINTS_SUPPORT 10
 
 #define CURRENT_TOUCH_POINT_NUM 1
-#define CURRENT_TOUCH_X_RANGE 10
-#define CURRENT_TOUCH_Y_RANGE 10
+#define CURRENT_TOUCH_X_RANGE RT_TOUCH_X_RANGE
+#define CURRENT_TOUCH_Y_RANGE RT_TOUCH_Y_RANGE
 #define CURRENT_TOUCH_DEVICE_NAME "FT3169"
 #define CURRENT_TOUCH_IRQ_PIN GPIO1_C7
 #define CURRENT_TOUCH_IRQ_MODE PIN_MODE_INPUT_PULLUP
@@ -98,7 +94,7 @@ static rt_touch_t                touch_hand = RT_NULL;
 static rt_device_t               touch_dev  = RT_NULL;
 static struct rt_i2c_bus_device* i2c_bus    = RT_NULL; /* I2C总线设备句柄 */
 static int                       hl_drv_touch_dev_suspend(void);
-// static rt_err_t                  hl_drv_touch_dev_cfg(rt_device_t dev);
+
 static rt_err_t  fts_touch_irq_callback(rt_touch_t touch);
 static rt_err_t  hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, void* arg);
 static rt_size_t hl_drv_touch_process(struct rt_touch_device* touch, void* buf, rt_size_t touch_num);
@@ -281,7 +277,7 @@ static int hl_drv_touch_i2c_init(void)
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(FT3169_IIC_NAME);
 
     if (i2c_bus == RT_NULL) {
-        ft_printf("can't find %s device!\n", FT3169_IIC_NAME);
+        LOG_E("can't find %s device!\n", FT3169_IIC_NAME);
         return HL_FAILED;
     }
     return HL_SUCCESS;
@@ -991,7 +987,7 @@ static rt_err_t hl_drv_ft3169_io_ctrl(struct rt_touch_device* touch, int cmd, vo
             ret = hl_drv_touch_check_id();
             break;
         default:
-            ft_printf("param err ! \n");
+            LOG_E("param err ! \n");
             break;
     }
     return ret;
@@ -1047,15 +1043,15 @@ static int hl_drv_touch_dev_init(void)
     touch_dev = rt_device_find("FT3169");
 
     if (touch_dev == RT_NULL) {
-        rt_kprintf("Can't find touch device FT3169\n");
+        LOG_E("Can't find touch device FT3169\n");
         return HL_FAILED;
     }
     if (rt_device_init(touch_dev) != RT_EOK) {
-        rt_kprintf("open touch device init failed!");
+        LOG_E("open touch device init failed!");
         return HL_FAILED;
     }
     if (rt_device_open(touch_dev, RT_DEVICE_FLAG_INT_RX) != RT_EOK) {
-        rt_kprintf("open touch device failed!");
+        LOG_E("open touch device failed!");
         return HL_FAILED;
     }
     return HL_SUCCESS;
@@ -1076,14 +1072,14 @@ static int hl_drv_touch_dev_init(void)
  * <tr><td>2022-10-17      <td>dujunjie     <td>新建
  * </table>
  */
-static int hl_drv_touch_dev_register(void)
+static int hl_drv_ft3169_dev_register(void)
 {
     rt_err_t ret;
     hl_drv_touch_dev_cfg();
     // touch_dev  = rt_device_create(RT_Device_Class_Touch, RT_NULL);
     touch_hand = (struct rt_touch_device*)rt_malloc(sizeof(struct rt_touch_device));
     if (touch_hand == RT_NULL) {
-        ft_printf("Touch device ft3169 create fail !\n");
+        LOG_E("Touch device ft3169 create fail !\n");
         return HL_FAILED;
     }
     // touch_dev->ops         = &touch_ops;
@@ -1096,15 +1092,16 @@ static int hl_drv_touch_dev_register(void)
 
     ret = rt_hw_touch_register(touch_hand, CURRENT_TOUCH_DEVICE_NAME, RT_DEVICE_FLAG_RDONLY, RT_NULL);
     if (ret != RT_EOK) {
-        ft_printf("Touch device ft3169 register fail !\n");
+        LOG_E("Touch device ft3169 register fail !\n");
+        LOG_E("Touch device ft3169 init fail !\n");
         return HL_FAILED;
     }
 
     if (hl_drv_touch_dev_init() == HL_FAILED) {
-        ft_printf("Touch device ft3169 init fail !\n");
+        LOG_E("Touch device ft3169 init fail !\n");
         return HL_FAILED;
     }
-    ft_printf("Touch device ft3169 init success !\n");
+    LOG_D("Touch device ft3169 init success !\n");
     return HL_SUCCESS;
 }
 
@@ -1134,7 +1131,7 @@ rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event* touch_pos)
 // }
 
 // MSH_CMD_EXPORT(tt3169, run tt3169);
-// INIT_DEVICE_EXPORT(hl_drv_touch_dev_register);
+// INIT_DEVICE_EXPORT(hl_drv_ft3169_dev_register);
 
 #endif
 /*
