@@ -28,13 +28,20 @@
 #include "hl_drv_sgm41518.h"
 #include "hl_drv_sy6971.h"
 #include "hl_hal_gpio.h"
+#include "hl_util_msg_type.h"
 
 #define DBG_SECTION_NAME "pm"
 #define DBG_LEVEL DBG_INFO
 #include "rtdbg.h"
 
 /* typedef -------------------------------------------------------------------*/
-typedef int (*pm_io_ctl)(uint8_t cmd, void* ptr, uint8_t len);
+
+typedef enum _hl_mod_pm_charger_e
+{
+    HL_MOD_PM_CHARGER_UNKNOWN,
+    HL_MOD_PM_CHARGER_SY6971,
+    HL_MOD_PM_CHARGER_SGM41518,
+} hl_mod_pm_charger_e;
 
 typedef struct _hl_mod_pm_bat_info_st
 {
@@ -52,7 +59,8 @@ typedef struct _hl_mod_pm_st
     bool                  start_flag;
     bool                  update_flag;
     bool                  soc_update_flag;
-    void*                 msg_hd;
+    hl_mod_pm_charger_e   charger;
+    rt_mq_t               msg_hd;
     rt_thread_t           pm_thread;
     int                   thread_exit_flag;
     hl_mod_pm_bat_info_st bat_info;
@@ -89,9 +97,29 @@ static hl_mod_pm_st _pm_mod = { .init_flag        = false,
                                     .voltage     = 0,
                                 } };
 
-static pm_io_ctl pm_ioctl = RT_NULL;
-
 /* Private function(only *.c)  -----------------------------------------------*/
+
+static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
+{
+    if (_pm_mod.msg_hd == NULL) {
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    mode_to_app_msg_t msg;
+    rt_err_t          rt_err;
+
+    msg.sender    = PM_MODE;
+    msg.cmd       = cmd;
+    msg.param.ptr = param;
+    msg.len       = len;
+
+    rt_err = rt_mq_send(_pm_mod.msg_hd, (void*)&msg, sizeof(msg));
+    if (RT_EOK != rt_err) {
+        return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    return HL_MOD_PM_FUNC_RET_OK;
+}
 
 static void _soc_gpio_irq_handle(void* args)
 {
@@ -117,6 +145,20 @@ static inline void _guage_soc_gpio_irq_enable(bool flag)
         hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_ENABLE);
     } else {
         hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_DISABLE);
+    }
+}
+
+static void _power_gpio_init(void)
+{
+    hl_hal_gpio_init(GPIO_ALL_POWER);
+}
+
+static void _power_gpio_set(hl_gpio_pin_e power_gpio, bool flag)
+{
+    if (flag == true) {
+        hl_hal_gpio_high(power_gpio);
+    } else {
+        hl_hal_gpio_low(power_gpio);
     }
 }
 
@@ -189,6 +231,8 @@ static inline void _pm_update_bat_info_check(void)
         _pm_update_bat_info(HL_MOD_PM_BAT_INFO_VOL);
         _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
         _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
+        
+        _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
     }
 }
 
@@ -205,7 +249,7 @@ static void _pm_thread_entry(void* arg)
 
 /* Exported functions --------------------------------------------------------*/
 
-int hl_mod_pm_init(void* msg_hd)
+int hl_mod_pm_init(rt_mq_t msg_hd)
 {
     int ret;
 
@@ -213,23 +257,26 @@ int hl_mod_pm_init(void* msg_hd)
         LOG_W("pm is already inited!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
+
     if (hl_drv_sy6971_init() == HL_SUCCESS) {
-        pm_ioctl = hl_drv_sy6971_io_ctrl;
-    }
-    else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
-        pm_ioctl = hl_drv_sgm41518_io_ctrl;
-    }
-    if (pm_ioctl == RT_NULL) {
-        LOG_E("pm init fail! Not find pm IC !");
+        _pm_mod.charger = HL_MOD_PM_CHARGER_SY6971;
+        LOG_I("sy6971 charger init success!");
+    } else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
+        _pm_mod.charger = HL_MOD_PM_CHARGER_SGM41518;
+        LOG_I("sgm41518 charger init success!");
+    } else {
+        _pm_mod.charger = HL_MOD_PM_CHARGER_UNKNOWN;
+        LOG_E("all charger init err! please check charger");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
-    
+
     ret = hl_drv_cw2215_init();
     if (ret == CW2215_FUNC_RET_ERR) {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
     _guage_soc_gpio_irq_init();
+    _power_gpio_init();
 
     _pm_mod.msg_hd = msg_hd;
 
@@ -239,8 +286,6 @@ int hl_mod_pm_init(void* msg_hd)
 
     return HL_MOD_PM_FUNC_RET_OK;
 }
-
-INIT_ENV_EXPORT(hl_mod_pm_init);
 
 int hl_mod_pm_deinit(void)
 {
@@ -337,69 +382,24 @@ int hl_mod_pm_stop(void)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static int hl_mod_iocmd_parse(uint8_t cmd)
+int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
 {
-    int ret = HL_MOD_PM_FUNC_RET_OK;
-    switch (cmd) {
-        case HL_MOD_RK2108_POWER_UP_CMD:
-            hl_hal_gpio_high(GPIO_ALL_POWER);
-            LOG_I("power up");
-            break;
-        case HL_MOD_RK2108_POWER_DOWN_CMD:
-            hl_hal_gpio_low(GPIO_ALL_POWER);
-            LOG_I("power down");
-            break;
-        default:
-            ret = HL_MOD_PM_FUNC_RET_ERR;
-            break;
-    }
-    return ret;
-}
-
-/**
- * 
- * @brief 
- * @param [in] op 
- * @param [in] arg 应该为 HL_PMIC_INPUT_PARAM_T 类型
- * @param [in] arg_size 
- * @return int 
- * @date 2022-11-15
- * @author dujunjie (junjie.du@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-11-15      <td>dujunjie     <td>新建
- * </table>
- */
-int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
-{
-    int                    i;
-    HL_PMIC_INPUT_PARAM_T* ptr = (HL_PMIC_INPUT_PARAM_T*)arg;
-    if (arg_size == 0) {
-        LOG_E("arg_size err!");
-        return HL_MOD_PM_FUNC_RET_ERR;
-    }
     if (_pm_mod.init_flag == false) {
         LOG_E("pm is not init!");
         return HL_MOD_PM_FUNC_RET_ERR;
-    }    
-    if (ptr->param >= HL_MOD_RK2108_POWER_UP_CMD) {
-        if (hl_mod_iocmd_parse(ptr->param) == HL_MOD_PM_FUNC_RET_OK) {
-            return HL_MOD_PM_FUNC_RET_OK;
-        } else {
-            LOG_E("hl_mod_iocmd_parse err!", i);
-            return HL_MOD_PM_FUNC_RET_ERR;
-        }
     }
-    for (i = 0; i < arg_size; i++) {
-        if (pm_ioctl(op, &arg[i], 1) == HL_FAILED) {
-            LOG_E("pm_ioctl [%d] err!", i);
-            return HL_MOD_PM_FUNC_RET_ERR;
-        }
+
+    switch (cmd) {
+        case HL_PM_POWER_UP_CMD: {
+            _power_gpio_set(GPIO_ALL_POWER, true);
+        } break;
+        case HL_PM_POWER_DOWN_CMD: {
+            _power_gpio_set(GPIO_ALL_POWER, false);
+        } break;
+        default:
+            break;
     }
+
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
