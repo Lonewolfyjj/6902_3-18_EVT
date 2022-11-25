@@ -60,7 +60,7 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_MAC_REQ_IND,
 } hl_mod_euc_ind_e;
 
-#else
+#else // rx
 
 typedef enum _hl_mod_euc_cmd_e
 {
@@ -85,14 +85,94 @@ typedef enum _hl_mod_euc_ind_e
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-int hl_mod_euc_init(void* msg_hd);
 
+/**
+ * 
+ * @brief 初始化 euc 模块
+ * @param [in] msg_hd 消息队列的指针
+ * @return int 
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
+int hl_mod_euc_init(rt_mq_t msg_hd);
+
+/**
+ * 
+ * @brief 解初始化 euc 模块，会自动停止线程
+ * @return int 
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_euc_deinit(void);
 
+/**
+ * 
+ * @brief 启动 euc 模块，拉起线程和使能通信
+ * @return int 
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_euc_start(void);
 
+/**
+ * 
+ * @brief 停止 euc 模块，会停止线程和通信
+ * @return int 
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_euc_stop(void);
 
+/**
+ * 
+ * @brief euc 控制接口
+ * @param [in] cmd 见<hl_mod_euc_cmd_e>
+ * @param [in] arg 命令所需参数指针
+ * @param [in] arg_size 参数的大小
+ * @return int 
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size);
 
 #endif

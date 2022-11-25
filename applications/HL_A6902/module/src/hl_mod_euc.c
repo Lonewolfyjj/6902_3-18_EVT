@@ -295,7 +295,7 @@ static void _euc_thread_entry(void* arg)
 }
 
 /* Exported functions --------------------------------------------------------*/
-int hl_mod_euc_init(void* msg_hd)
+int hl_mod_euc_init(rt_mq_t msg_hd)
 {
     int ret;
 
