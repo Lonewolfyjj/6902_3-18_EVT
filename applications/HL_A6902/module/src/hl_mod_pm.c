@@ -29,6 +29,10 @@
 #include "hl_drv_sy6971.h"
 #include "hl_hal_gpio.h"
 
+#define DBG_SECTION_NAME "pm"
+#define DBG_LEVEL DBG_INFO
+#include "rtdbg.h"
+
 /* typedef -------------------------------------------------------------------*/
 typedef int (*pm_io_ctl)(uint8_t cmd, void* ptr, uint8_t len);
 
@@ -65,9 +69,6 @@ typedef enum _hl_mod_pm_bat_info_e
 } hl_mod_pm_bat_info_e;
 
 /* define --------------------------------------------------------------------*/
-
-#define DBG_LOG rt_kprintf
-
 /* variables -----------------------------------------------------------------*/
 
 static hl_mod_pm_st _pm_mod = { .init_flag        = false,
@@ -128,27 +129,27 @@ static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
     switch (type) {
         case HL_MOD_PM_BAT_INFO_SOC: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOC, &(p_bat_info->soc), sizeof(p_bat_info->soc));
-            DBG_LOG("soc:%d . %d\n", p_bat_info->soc.soc, p_bat_info->soc.soc_d);
+            LOG_I("soc:%d . %d", p_bat_info->soc.soc, p_bat_info->soc.soc_d);
         } break;
         case HL_MOD_PM_BAT_INFO_VOL: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_VOLTAGE, &(p_bat_info->voltage), sizeof(p_bat_info->voltage));
-            DBG_LOG("voltage:%d\n", p_bat_info->voltage);
+            LOG_I("voltage:%d", p_bat_info->voltage);
         } break;
         case HL_MOD_PM_BAT_INFO_CUR: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CURRENT, &(p_bat_info->current), sizeof(p_bat_info->current));
-            DBG_LOG("current:%d\n", p_bat_info->current);
+            LOG_I("current:%d", p_bat_info->current);
         } break;
         case HL_MOD_PM_BAT_INFO_TEMP: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_TEMP, &(p_bat_info->temp), sizeof(p_bat_info->temp));
-            DBG_LOG("temp:%d . %d\n", p_bat_info->temp.temp, p_bat_info->temp.temp_d);
+            LOG_I("temp:%d . %d", p_bat_info->temp.temp, p_bat_info->temp.temp_d);
         } break;
         case HL_MOD_PM_BAT_INFO_SOH: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_SOH, &(p_bat_info->soh), sizeof(p_bat_info->soh));
-            DBG_LOG("soh:%d\n", p_bat_info->soh);
+            LOG_I("soh:%d", p_bat_info->soh);
         } break;
         case HL_MOD_PM_BAT_INFO_CYCLE: {
             hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CYCLE_COUNT, &(p_bat_info->cycle), sizeof(p_bat_info->cycle));
-            DBG_LOG("cycle:%d\n", p_bat_info->cycle);
+            LOG_I("cycle:%d", p_bat_info->cycle);
         } break;
         default:
             break;
@@ -209,7 +210,7 @@ int hl_mod_pm_init(void* msg_hd)
     int ret;
 
     if (_pm_mod.init_flag == true) {
-        DBG_LOG("pm is already inited!\n");
+        LOG_W("pm is already inited!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
     if (hl_drv_sy6971_init() == HL_SUCCESS) {
@@ -219,7 +220,7 @@ int hl_mod_pm_init(void* msg_hd)
         pm_ioctl = hl_drv_sgm41518_io_ctrl;
     }
     if (pm_ioctl == RT_NULL) {
-        DBG_LOG("pm init fail! Not find pm IC !\n");
+        LOG_E("pm init fail! Not find pm IC !");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
     
@@ -232,7 +233,7 @@ int hl_mod_pm_init(void* msg_hd)
 
     _pm_mod.msg_hd = msg_hd;
 
-    DBG_LOG("pm init success!\n");
+    LOG_D("pm init success!");
 
     _pm_mod.init_flag = true;
 
@@ -246,7 +247,7 @@ int hl_mod_pm_deinit(void)
     int ret;
 
     if (_pm_mod.init_flag == false) {
-        DBG_LOG("pm is already deinited!\n");
+        LOG_W("pm is already deinited!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
@@ -261,7 +262,7 @@ int hl_mod_pm_deinit(void)
 
     _pm_mod.msg_hd = NULL;
 
-    DBG_LOG("pm deinit success!\n");
+    LOG_D("pm deinit success!");
 
     _pm_mod.init_flag = false;
 
@@ -273,14 +274,14 @@ int hl_mod_pm_start(void)
     int ret;
 
     if (_pm_mod.init_flag == false) {
-        DBG_LOG("pm is not init!\n");
+        LOG_E("pm is not init!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
     if (_pm_mod.start_flag == true) {
         ret = hl_mod_pm_stop();
         if (ret == HL_MOD_PM_FUNC_RET_ERR) {
-            DBG_LOG("pm try stop failed\n");
+            LOG_W("pm try stop failed");
             return HL_MOD_PM_FUNC_RET_ERR;
         }
     }
@@ -294,13 +295,13 @@ int hl_mod_pm_start(void)
 
     _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
-        DBG_LOG("pm thread create failed\n");
+        LOG_E("pm thread create failed");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
     rt_thread_startup(_pm_mod.pm_thread);
 
-    DBG_LOG("pm start success\n");
+    LOG_I("pm start success");
 
     _pm_mod.start_flag = true;
 
@@ -310,12 +311,12 @@ int hl_mod_pm_start(void)
 int hl_mod_pm_stop(void)
 {
     if (_pm_mod.init_flag == false) {
-        DBG_LOG("pm is not init!\n");
+        LOG_E("pm is not init!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
     if (_pm_mod.start_flag == false) {
-        DBG_LOG("pm already stop\n");
+        LOG_W("pm already stop");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
@@ -323,13 +324,13 @@ int hl_mod_pm_stop(void)
 
     _pm_mod.thread_exit_flag = 1;
 
-    DBG_LOG("wait pm thread exit\n");
+    LOG_I("wait pm thread exit");
 
     while (_pm_mod.thread_exit_flag != -1) {
         rt_thread_mdelay(10);
     }
 
-    DBG_LOG("pm stop success\n");
+    LOG_I("pm stop success");
 
     _pm_mod.start_flag = false;
 
@@ -342,11 +343,11 @@ static int hl_mod_iocmd_parse(uint8_t cmd)
     switch (cmd) {
         case HL_MOD_RK2108_POWER_UP_CMD:
             hl_hal_gpio_high(GPIO_ALL_POWER);
-            DBG_LOG("power up\n");
+            LOG_I("power up");
             break;
         case HL_MOD_RK2108_POWER_DOWN_CMD:
             hl_hal_gpio_low(GPIO_ALL_POWER);
-            DBG_LOG("power down\n");
+            LOG_I("power down");
             break;
         default:
             ret = HL_MOD_PM_FUNC_RET_ERR;
@@ -378,24 +379,24 @@ int hl_mod_pm_ctrl(int op, void* arg, int arg_size)
     int                    i;
     HL_PMIC_INPUT_PARAM_T* ptr = (HL_PMIC_INPUT_PARAM_T*)arg;
     if (arg_size == 0) {
-        DBG_LOG("arg_size err!\n");
+        LOG_E("arg_size err!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }
     if (_pm_mod.init_flag == false) {
-        DBG_LOG("pm is not init!\n");
+        LOG_E("pm is not init!");
         return HL_MOD_PM_FUNC_RET_ERR;
     }    
     if (ptr->param >= HL_MOD_RK2108_POWER_UP_CMD) {
         if (hl_mod_iocmd_parse(ptr->param) == HL_MOD_PM_FUNC_RET_OK) {
             return HL_MOD_PM_FUNC_RET_OK;
         } else {
-            DBG_LOG("hl_mod_iocmd_parse err!\n", i);
+            LOG_E("hl_mod_iocmd_parse err!", i);
             return HL_MOD_PM_FUNC_RET_ERR;
         }
     }
     for (i = 0; i < arg_size; i++) {
         if (pm_ioctl(op, &arg[i], 1) == HL_FAILED) {
-            DBG_LOG("pm_ioctl [%d] err!\n", i);
+            LOG_E("pm_ioctl [%d] err!", i);
             return HL_MOD_PM_FUNC_RET_ERR;
         }
     }

@@ -300,7 +300,7 @@ int hl_mod_euc_init(void* msg_hd)
     int ret;
 
     if (_euc_mod.init_flag == true) {
-        LOG_W("euc already inited!\n");
+        LOG_W("euc already inited!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -311,7 +311,7 @@ int hl_mod_euc_init(void* msg_hd)
 
     _euc_mod.msg_handle = msg_hd;
 
-    LOG_D("euc init success\n");
+    LOG_D("euc init success");
 
     _euc_mod.init_flag = true;
 
@@ -321,7 +321,7 @@ int hl_mod_euc_init(void* msg_hd)
 int hl_mod_euc_deinit(void)
 {
     if (_euc_mod.init_flag == false) {
-        LOG_W("euc not init!\n");
+        LOG_W("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -329,7 +329,7 @@ int hl_mod_euc_deinit(void)
 
     _hl_mod_euc_hup_deinit();
 
-    LOG_D("euc deinit success\n");
+    LOG_D("euc deinit success");
 
     _euc_mod.init_flag = false;
 
@@ -341,7 +341,7 @@ int hl_mod_euc_start(void)
     int ret;
 
     if (_euc_mod.init_flag == false) {
-        LOG_E("euc not init!\n");
+        LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -353,7 +353,7 @@ int hl_mod_euc_start(void)
 
     _euc_mod.euc_thread = rt_thread_create("hl_mod_euc_thread", _euc_thread_entry, RT_NULL, 1024, 25, 10);
     if (_euc_mod.euc_thread == RT_NULL) {
-        LOG_E("euc thread create failed\n");
+        LOG_E("euc thread create failed");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -365,7 +365,7 @@ int hl_mod_euc_start(void)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
-    LOG_I("euc start success\n");
+    LOG_I("euc start success");
 
     _euc_mod.start_flag = true;
 
@@ -375,12 +375,12 @@ int hl_mod_euc_start(void)
 int hl_mod_euc_stop(void)
 {
     if (_euc_mod.init_flag == false) {
-        LOG_E("euc not init!\n");
+        LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     if (_euc_mod.start_flag == false) {
-        LOG_W("euc not start\n");
+        LOG_W("euc not start");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -388,13 +388,13 @@ int hl_mod_euc_stop(void)
 
     _euc_mod.thread_exit_flag = 1;
 
-    LOG_I("wait euc thread exit\n");
+    LOG_I("wait euc thread exit");
 
     while (_euc_mod.thread_exit_flag != -1) {
         rt_thread_mdelay(10);
     }
 
-    LOG_I("euc stop success\n");
+    LOG_I("euc stop success");
 
     _euc_mod.start_flag = false;
 
@@ -406,19 +406,19 @@ int hl_mod_euc_stop(void)
 int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
     if (_euc_mod.init_flag == false) {
-        LOG_E("euc not init!\n");
+        LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     if (_euc_mod.start_flag == false) {
-        LOG_E("euc not start!\n");
+        LOG_E("euc not start!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     switch (cmd) {
         case HL_SET_SOC_CMD: {
             if (arg_size != sizeof(uint8_t)) {
-                LOG_E("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
@@ -426,7 +426,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_SET_PAIR_MAC_CMD: {
             if (arg_size != sizeof(uint8_t[6])) {
-                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
@@ -434,7 +434,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_SET_MAC_CMD: {
             if (arg_size != sizeof(uint8_t[6])) {
-                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
@@ -452,19 +452,19 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
     if (_euc_mod.init_flag == false) {
-        LOG_E("euc not init!\n");
+        LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     if (_euc_mod.start_flag == false) {
-        LOG_E("euc not start!\n");
+        LOG_E("euc not start!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     switch (cmd) {
         case HL_SET_SOC_CMD: {
             if (arg_size != sizeof(uint8_t)) {
-                LOG_E("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
@@ -472,7 +472,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_SET_PAIR_MAC_CMD: {
             if (arg_size != sizeof(uint8_t[6])) {
-                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
@@ -480,7 +480,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_SET_MAC_CMD: {
             if (arg_size != sizeof(uint8_t[6])) {
-                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!");
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
