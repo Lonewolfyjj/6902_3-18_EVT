@@ -32,8 +32,8 @@
 
 typedef struct
 {
-    uint8_t number;      //升级数据包序号
-    uint8_t data[1024];  //升级数据
+    uint16_t number;     //升级数据包序号
+    uint8_t  data[512];  //升级数据
 } hl_rf_upgrade_pack_t;
 
 /* define --------------------------------------------------------------------*/
@@ -41,9 +41,9 @@ typedef struct
 #define TELINK_THREAD_PRIORITY 7
 #define TELINK_THREAD_TIMESLICE 10
 #define TELINK_UART_DEV_NAME "uart2"
-#define TELINK_UART_BUF_SIZE 256
-#define TELINK_FIFO_BUF_SIZE 256
-#define TELINK_HUP_BUF_SIZE 256
+#define TELINK_UART_BUF_SIZE 1024
+#define TELINK_FIFO_BUF_SIZE 1024
+#define TELINK_HUP_BUF_SIZE 1024
 
 /* variables -----------------------------------------------------------------*/
 /// 线程句柄
@@ -360,49 +360,65 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 void telink_send_cmd(int argc, char** argv)
 {
     uint8_t cmd  = (uint8_t)atoi(argv[1]);
-    uint8_t data = (uint8_t)argv[2][0] - '0';
+    uint8_t data = (uint8_t)atoi(argv[2]);
     uint8_t len  = (uint8_t)atoi(argv[3]);
+
+    rt_kprintf("\nsend data = %d\n", data);
 
     hl_mod_telink_ioctl(cmd, &data, len);
 }
 MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
 
-// void telink_upgrade(void)
-// {
-//     int     fd    = 0;
-//     int     ret   = 1;
-//     uint8_t count = 0;
+void telink_upgrade(void)
+{
+    int fd  = 0;
+    int ret = 1;
 
-//     hl_rf_upgrade_pack_t pack;
+    hl_rf_upgrade_pack_t pack;
 
-//     uint16_t data_len    = 0;
-//     uint8_t  frame[1200] = { 0 };
+    uint16_t count      = 0;
+    uint16_t data_len   = 0;
+    uint8_t  frame[600] = { 0 };
 
-//     fd = open("/mnt/sdcard/tx.bin", O_RDONLY);
-//     if (fd == -1) {
-//         rt_kprintf("[%s][line:%d] open failed!!! \r\n", __FUNCTION__, __LINE__);
-//     }
+    fd = open("/mnt/sdcard/tx.bin", O_RDONLY);
+    if (fd == -1) {
+        rt_kprintf("[%s][line:%d] open failed!!! \r\n", __FUNCTION__, __LINE__);
+    }
 
-//     rt_kprintf("telink open fd succedd\n");
+    rt_kprintf("telink open fd succedd\n");
 
-//     size_t a = 0;
-//     while (ret > 0) {
-//         pack.number = count++;
-//         ret         = read(fd, pack.data, 1024);
-//         rt_kprintf("telink upgrade read size:%d\n", ret);
-//         if (ret<=0) {
-//             rt_kprintf("telink upgrade break\n");
-//             break;
-//         }
-//         data_len = hl_util_hup_encode(s_telink.hup.hup_handle.role, HL_MOD_TELINK_UPGRADE_PACK_CMD, frame, 1200, &pack, sizeof(pack));
+    while (ret > 0) {
+        pack.number = count++;
+        ret         = read(fd, pack.data, 512);
+        rt_kprintf("telink upgrade read size:%d\n", ret);
+        if (ret <= 0) {
+            rt_kprintf("telink upgrade break\n");
+            break;
+        }
+        data_len = hl_util_hup_encode(s_telink.hup.hup_handle.role, HL_MOD_TELINK_UPGRADE_PACK_CMD, frame, 600, &pack,
+                                      sizeof(pack));
 
-//         data_len = rt_device_write(s_telink.serial, 0, frame, data_len);
-//     }
+        // rt_kprintf("len = %02X\n", frame[4]|(frame[3]<<8));
 
-//     rt_kprintf("telink upgrade quit\n");
-//     close(fd);
-// }
-// MSH_CMD_EXPORT(telink_upgrade, telink upgrade cmd);
+        // rt_kprintf("data_len = %02X\n", data_len);
+        // for (uint16_t i = 0; i < data_len; i++) {
+        //     rt_kprintf("%02X ", frame[i]);
+        //     if (i % 30 == 29) {
+        //         rt_kprintf("\n");
+        //     }
+        // }
+        // rt_kprintf("\n");
+
+        data_len = rt_device_write(s_telink.serial, 0, frame, data_len);
+        rt_kprintf("write data_len = %02X\n", data_len);
+
+        rt_thread_mdelay(1000);
+    }
+
+    rt_kprintf("telink upgrade quit\n");
+    close(fd);
+}
+MSH_CMD_EXPORT(telink_upgrade, telink upgrade cmd);
 
 /*
  * EOF
