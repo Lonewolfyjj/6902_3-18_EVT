@@ -50,7 +50,17 @@ typedef enum _hl_mod_pm_ind_e
     HL_MAX_TEMP_ALERT_IND,
     /// 通知 app 当前温度超过最小温度设定值<10℃>，参数为<int8_t *>
     HL_MIN_TEMP_ALERT_IND,
+    /// 通知 app 当前的充电状态，参数为<hl_mod_pm_charge_state_e *>
+    HL_CHARGE_STATE_IND,
 } hl_mod_pm_ind_e;
+
+typedef enum _hl_mod_pm_charge_state_e
+{
+    HL_CHARGE_STATE_UNKNOWN,
+    HL_CHARGE_STATE_NO_CHARGE,
+    HL_CHARGE_STATE_CHARGING,
+    HL_CHARGE_STATE_CHARGE_DONE,
+} hl_mod_pm_charge_state_e;
 
 /* define --------------------------------------------------------------------*/
 

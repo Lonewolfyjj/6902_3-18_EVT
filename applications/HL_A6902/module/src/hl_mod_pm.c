@@ -55,15 +55,16 @@ typedef struct _hl_mod_pm_bat_info_st
 
 typedef struct _hl_mod_pm_st
 {
-    bool                  init_flag;
-    bool                  start_flag;
-    bool                  update_flag;
-    bool                  interrupt_update_flag;
-    hl_mod_pm_charger_e   charger;
-    rt_mq_t               msg_hd;
-    rt_thread_t           pm_thread;
-    int                   thread_exit_flag;
-    hl_mod_pm_bat_info_st bat_info;
+    bool                     init_flag;
+    bool                     start_flag;
+    bool                     update_flag;
+    bool                     interrupt_update_flag;
+    hl_mod_pm_charger_e      charger;
+    hl_mod_pm_charge_state_e charge_state;
+    rt_mq_t                  msg_hd;
+    rt_thread_t              pm_thread;
+    int                      thread_exit_flag;
+    hl_mod_pm_bat_info_st    bat_info;
 } hl_mod_pm_st;
 
 typedef enum _hl_mod_pm_bat_info_e
@@ -198,7 +199,7 @@ static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
     }
 }
 
-static inline void _pm_interrupt_check(void)
+static inline void _guage_interrupt_check(void)
 {
     hl_drv_guage_it_flag_e it_flag;
 
@@ -241,12 +242,85 @@ static void _pm_init_state_update(void)
     _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
 }
 
+static void _charge_state_update(void)
+{
+    HL_SY_INPUT_PARAM_T  sy6971_param;
+    HL_SGM_INPUT_PARAM_T sgm_param;
+    hl_mod_pm_charge_state_e charge_state = HL_CHARGE_STATE_UNKNOWN;
+
+    if (_pm_mod.charger == HL_MOD_PM_CHARGER_SY6971) {
+        sy6971_param.cfg_opt = E_CHRG_STAT;
+        hl_drv_sy6971_io_ctrl(SY_READ_CMD, &sy6971_param, 1);
+
+        if (sy6971_param.param == 0x00) {
+            charge_state = HL_CHARGE_STATE_NO_CHARGE;
+        } else if (sy6971_param.param == 0x01) {
+            charge_state = HL_CHARGE_STATE_CHARGING;
+        } else if (sy6971_param.param == 0x10) {
+            charge_state = HL_CHARGE_STATE_CHARGING;
+        } else {
+            charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+        }
+    } else if (_pm_mod.charger == HL_MOD_PM_CHARGER_SGM41518) {
+        sgm_param.cfg_opt = R_CHRG_STAT;
+        hl_drv_sgm41518_io_ctrl(SGM_READ_CMD, &sgm_param, 1);
+
+        if (sgm_param.param == 0x00) {
+            charge_state = HL_CHARGE_STATE_NO_CHARGE;
+        } else if (sgm_param.param == 0x01) {
+            charge_state = HL_CHARGE_STATE_CHARGING;
+        } else if (sgm_param.param == 0x10) {
+            charge_state = HL_CHARGE_STATE_CHARGING;
+        } else {
+            charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+        }
+    } else {
+        return;
+    }
+
+    if (charge_state != _pm_mod.charge_state) {
+        _pm_mod.charge_state = charge_state;
+        _mod_msg_send(HL_CHARGE_STATE_IND, &(_pm_mod.charge_state), sizeof(_pm_mod.charge_state));
+    }
+}
+
+static void _charge_state_poll(void)
+{
+    static uint8_t count = 0;
+
+    if (count == 0) {
+        _charge_state_update();
+        count = 100;
+    } else {
+        count--;
+    }
+}
+
+static void _charger_fault_state_update(void)
+{
+
+}
+
+static void _charger_fault_state_poll(void)
+{
+    static uint16_t count = 0;
+
+    if (count == 0) {
+        _charger_fault_state_update();
+        count = 500;
+    } else {
+        count--;
+    }
+}
+
 static void _pm_thread_entry(void* arg)
 {
     _pm_init_state_update();
 
     while (_pm_mod.thread_exit_flag == 0) {
-        _pm_interrupt_check();
+        _guage_interrupt_check();
+        _charge_state_poll();
+        _charger_fault_state_poll();
 
         rt_thread_mdelay(10);
     }
@@ -339,7 +413,8 @@ int hl_mod_pm_start(void)
     }
 
     _pm_mod.interrupt_update_flag = false;
-    _pm_mod.update_flag     = false;
+    _pm_mod.update_flag           = false;
+    _pm_mod.charge_state          = HL_CHARGE_STATE_UNKNOWN;
 
     _guage_gpio_irq_enable(true);
 
