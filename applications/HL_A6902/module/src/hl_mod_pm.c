@@ -58,7 +58,7 @@ typedef struct _hl_mod_pm_st
     bool                  init_flag;
     bool                  start_flag;
     bool                  update_flag;
-    bool                  soc_update_flag;
+    bool                  interrupt_update_flag;
     hl_mod_pm_charger_e   charger;
     rt_mq_t               msg_hd;
     rt_thread_t           pm_thread;
@@ -79,14 +79,14 @@ typedef enum _hl_mod_pm_bat_info_e
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 
-static hl_mod_pm_st _pm_mod = { .init_flag        = false,
-                                .start_flag       = false,
-                                .update_flag      = false,
-                                .soc_update_flag  = false,
-                                .msg_hd           = NULL,
-                                .pm_thread        = NULL,
-                                .thread_exit_flag = 0,
-                                .bat_info         = {
+static hl_mod_pm_st _pm_mod = { .init_flag             = false,
+                                .start_flag            = false,
+                                .update_flag           = false,
+                                .interrupt_update_flag = false,
+                                .msg_hd                = NULL,
+                                .pm_thread             = NULL,
+                                .thread_exit_flag      = 0,
+                                .bat_info              = {
                                     .soc.soc     = 0,
                                     .soc.soc_d   = 0,
                                     .current     = 0,
@@ -121,25 +121,25 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static void _soc_gpio_irq_handle(void* args)
+static void _guage_gpio_irq_handle(void* args)
 {
-    _pm_mod.soc_update_flag = true;
+    _pm_mod.interrupt_update_flag = true;
 }
 
-static inline void _guage_soc_gpio_irq_init()
+static inline void _guage_gpio_irq_init()
 {
     hl_hal_gpio_init(GPIO_GAUGE_INT);
-    hl_hal_gpio_attach_irq(GPIO_GAUGE_INT, PIN_IRQ_MODE_FALLING, _soc_gpio_irq_handle, NULL);
+    hl_hal_gpio_attach_irq(GPIO_GAUGE_INT, PIN_IRQ_MODE_FALLING, _guage_gpio_irq_handle, NULL);
     hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_DISABLE);
 }
 
-static inline void _guage_soc_gpio_irq_deinit()
+static inline void _guage_gpio_irq_deinit()
 {
     hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_DISABLE);
     hl_hal_gpio_deinit(GPIO_GAUGE_INT);
 }
 
-static inline void _guage_soc_gpio_irq_enable(bool flag)
+static inline void _guage_gpio_irq_enable(bool flag)
 {
     if (flag) {
         hl_hal_gpio_irq_enable(GPIO_GAUGE_INT, PIN_IRQ_ENABLE);
@@ -198,48 +198,55 @@ static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
     }
 }
 
-static inline void _pm_update_bat_info_check(void)
+static inline void _pm_interrupt_check(void)
 {
-    hl_drv_guage_check_it_flag_st it_flag;
-    uint8_t                       flag;
-    bool                          update_flag = false;
+    hl_drv_guage_it_flag_e it_flag;
 
-    if (_pm_mod.soc_update_flag == true) {
-        it_flag.it_flag = HL_DRV_GUAGE_IT_FLAG_SOC;
-        it_flag.ret     = 0;
-
+    if (_pm_mod.interrupt_update_flag == true) {
         hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IT_FLAG, &it_flag, sizeof(it_flag));
 
-        if (it_flag.ret == 1) {
-            flag = HL_DRV_GUAGE_IT_FLAG_SOC;
+        if (it_flag & HL_DRV_GUAGE_IT_FLAG_SOC) {
+            _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
 
-            hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &flag, sizeof(flag));
-
-            update_flag = true;
+            _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
         }
 
-        _pm_mod.soc_update_flag = false;
-    }
+        if (it_flag & HL_DRV_GUAGE_IT_FLAG_TMAX) {
+            _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
 
-    if (_pm_mod.update_flag == true) {
-        update_flag         = true;
-        _pm_mod.update_flag = false;
-    }
+            _mod_msg_send(HL_MAX_TEMP_ALERT_IND, &(_pm_mod.bat_info.temp.temp), sizeof(uint8_t));
+        }
 
-    if (update_flag == true) {
-        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
-        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_VOL);
-        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
-        _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
-        
-        _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+        if (it_flag & HL_DRV_GUAGE_IT_FLAG_TMIN) {
+            _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
+
+            _mod_msg_send(HL_MIN_TEMP_ALERT_IND, &(_pm_mod.bat_info.temp.temp), sizeof(uint8_t));
+        }
+
+        hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CLEAR_IT_FLAG, &it_flag, sizeof(it_flag));
+
+        _pm_mod.interrupt_update_flag = false;
     }
+}
+
+static void _pm_init_state_update(void)
+{
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_VOL);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOH);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CYCLE);
+
+    _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
 }
 
 static void _pm_thread_entry(void* arg)
 {
+    _pm_init_state_update();
+
     while (_pm_mod.thread_exit_flag == 0) {
-        _pm_update_bat_info_check();
+        _pm_interrupt_check();
 
         rt_thread_mdelay(10);
     }
@@ -275,7 +282,7 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
-    _guage_soc_gpio_irq_init();
+    _guage_gpio_irq_init();
     _power_gpio_init();
 
     _pm_mod.msg_hd = msg_hd;
@@ -298,7 +305,7 @@ int hl_mod_pm_deinit(void)
 
     hl_mod_pm_stop();
 
-    _guage_soc_gpio_irq_deinit();
+    _guage_gpio_irq_deinit();
 
     ret = hl_drv_cw2215_deinit();
     if (ret == CW2215_FUNC_RET_ERR) {
@@ -331,10 +338,10 @@ int hl_mod_pm_start(void)
         }
     }
 
-    _pm_mod.soc_update_flag = false;
-    _pm_mod.update_flag     = true;
+    _pm_mod.interrupt_update_flag = false;
+    _pm_mod.update_flag     = false;
 
-    _guage_soc_gpio_irq_enable(true);
+    _guage_gpio_irq_enable(true);
 
     _pm_mod.thread_exit_flag = 0;
 
@@ -365,7 +372,7 @@ int hl_mod_pm_stop(void)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
-    _guage_soc_gpio_irq_enable(false);
+    _guage_gpio_irq_enable(false);
 
     _pm_mod.thread_exit_flag = 1;
 

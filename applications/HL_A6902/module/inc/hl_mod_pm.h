@@ -46,6 +46,10 @@ typedef enum _hl_mod_pm_ind_e
 {
     /// 通知 app 电量更新，参数为<uint8_t *>
     HL_SOC_UPDATE_IND,
+    /// 通知 app 当前温度超过最大温度设定值<50℃>，参数为<int8_t *>
+    HL_MAX_TEMP_ALERT_IND,
+    /// 通知 app 当前温度超过最小温度设定值<10℃>，参数为<int8_t *>
+    HL_MIN_TEMP_ALERT_IND,
 } hl_mod_pm_ind_e;
 
 /* define --------------------------------------------------------------------*/

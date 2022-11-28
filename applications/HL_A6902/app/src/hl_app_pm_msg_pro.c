@@ -42,11 +42,20 @@
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
     uint8_t soc_temp;
+    int8_t  temperature_temp;
 
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND: {
             soc_temp = *(uint8_t*)p_msg->param.ptr;
             LOG_I("current soc:%d", soc_temp);
+        } break;
+        case HL_MAX_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("max temp alert:%d", temperature_temp);
+        } break;
+        case HL_MIN_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("min temp alert:%d", temperature_temp);
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -56,7 +65,22 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 #else
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
+    uint8_t soc_temp;
+    int8_t  temperature_temp;
+
     switch (p_msg->cmd) {
+        case HL_SOC_UPDATE_IND: {
+            soc_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("current soc:%d", soc_temp);
+        } break;
+        case HL_MAX_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("max temp alert:%d", temperature_temp);
+        } break;
+        case HL_MIN_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("min temp alert:%d", temperature_temp);
+        } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
