@@ -27,6 +27,7 @@
 #include "hl_util_msg_type.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -37,6 +38,7 @@ typedef struct
 } hl_rf_upgrade_pack_t;
 
 /* define --------------------------------------------------------------------*/
+
 #define TELINK_THREAD_STACK_SIZE 1024
 #define TELINK_THREAD_PRIORITY 7
 #define TELINK_THREAD_TIMESLICE 10
@@ -46,6 +48,7 @@ typedef struct
 #define TELINK_HUP_BUF_SIZE 1024
 
 /* variables -----------------------------------------------------------------*/
+
 /// 线程句柄
 static struct rt_thread telink_thread;
 /// 线程栈数组
@@ -61,7 +64,9 @@ static uint8_t* s_telink_fifo_buf;
 /// 消息队列结构体
 static mode_to_app_msg_t app_msg_t;
 
+/// 记录上次配对状态
 static uint8_t old_pair_info = 0x1f;
+/// 记录最新配对状态
 static uint8_t new_pair_info = 0x1f;
 
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -102,7 +107,6 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.cmd       = HL_MOD_TELINK_VERSION_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
-
             // 上报Telink固件版本信息
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
@@ -120,8 +124,36 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
-        case HL_MOD_TELINK_UPGRADE_STATE_IND:
-            rt_kprintf("UPGRADE STATE[%02X]\n", hup_frame.data_addr[0]);
+        case HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND:
+            rt_kprintf("\n\n[Telink Local MAC Addr]:");
+            for (int i = 0; i < 6; i++) {
+                rt_kprintf("%02X ", hup_frame.data_addr[i]);
+            }
+            rt_kprintf("\n\n");
+            app_msg_t.cmd       = HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND;
+            app_msg_t.len       = data_len;
+            app_msg_t.param.ptr = hup_frame.data_addr;
+            // 上报本地MAC地址
+            ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            break;
+
+        case HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_IND:
+            break;
+
+        case HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND:
+            rt_kprintf("\n\nTelink Remote MAC Addr:\nL: ");
+            for (int i = 0; i < 12; i++) {
+                rt_kprintf("%02X ", hup_frame.data_addr[i]);
+                if (i == 5) {
+                    rt_kprintf("\nR: ");
+                }
+            }
+            rt_kprintf("\n\n\n");
+            app_msg_t.cmd       = HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND;
+            app_msg_t.len       = data_len;
+            app_msg_t.param.ptr = hup_frame.data_addr;
+            // 上报本地MAC地址
+            ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
         default:
@@ -369,56 +401,64 @@ void telink_send_cmd(int argc, char** argv)
 }
 MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
 
-void telink_upgrade(void)
+void telink_get_local_mac(void)
 {
-    int fd  = 0;
-    int ret = 1;
-
-    hl_rf_upgrade_pack_t pack;
-
-    uint16_t count      = 0;
-    uint16_t data_len   = 0;
-    uint8_t  frame[600] = { 0 };
-
-    fd = open("/mnt/sdcard/tx.bin", O_RDONLY);
-    if (fd == -1) {
-        rt_kprintf("[%s][line:%d] open failed!!! \r\n", __FUNCTION__, __LINE__);
-    }
-
-    rt_kprintf("telink open fd succedd\n");
-
-    while (ret > 0) {
-        pack.number = count++;
-        ret         = read(fd, pack.data, 512);
-        rt_kprintf("telink upgrade read size:%d\n", ret);
-        if (ret <= 0) {
-            rt_kprintf("telink upgrade break\n");
-            break;
-        }
-        data_len = hl_util_hup_encode(s_telink.hup.hup_handle.role, HL_MOD_TELINK_UPGRADE_PACK_CMD, frame, 600, &pack,
-                                      sizeof(pack));
-
-        // rt_kprintf("len = %02X\n", frame[4]|(frame[3]<<8));
-
-        // rt_kprintf("data_len = %02X\n", data_len);
-        // for (uint16_t i = 0; i < data_len; i++) {
-        //     rt_kprintf("%02X ", frame[i]);
-        //     if (i % 30 == 29) {
-        //         rt_kprintf("\n");
-        //     }
-        // }
-        // rt_kprintf("\n");
-
-        data_len = rt_device_write(s_telink.serial, 0, frame, data_len);
-        rt_kprintf("write data_len = %02X\n", data_len);
-
-        rt_thread_mdelay(1000);
-    }
-
-    rt_kprintf("telink upgrade quit\n");
-    close(fd);
+    uint8_t data = 0;
+    hl_mod_telink_ioctl(HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_CMD, &data, 0);
 }
-MSH_CMD_EXPORT(telink_upgrade, telink upgrade cmd);
+MSH_CMD_EXPORT(telink_get_local_mac, telink get local mac cmd);
+
+void telink_get_remote_mac(void)
+{
+    uint8_t data = 0;
+
+    hl_mod_telink_ioctl(HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_CMD, &data, 0);
+}
+MSH_CMD_EXPORT(telink_get_remote_mac, telink get remote mac cmd);
+
+static uint8_t _hl_str2hex(uint8_t* str)
+{
+    if (rt_strlen(str) < 2) {
+        return 0;
+    }
+
+    uint8_t ret  = 0;
+    uint8_t data = 0;
+
+    for (int a = 0; a < 2; a++) {
+        data = atoi(str[a]);
+        if (isalpha(str[a])) {
+            data = str[a] - 'a' + 10;
+        } else {
+            data = str[a] - '0';
+        }
+
+        ret |= (data << (4 * (1 - a)));
+    }
+
+    return ret;
+}
+
+void telink_set_remote_mac(int argc, char** argv)
+{
+    hl_rf_pair_info_t info;
+
+    info.chn    = (uint8_t)atoi(argv[1]);
+    info.mac[0] = _hl_str2hex(argv[2]);
+    info.mac[1] = _hl_str2hex(argv[3]);
+    info.mac[2] = _hl_str2hex(argv[4]);
+    info.mac[3] = _hl_str2hex(argv[5]);
+    info.mac[4] = _hl_str2hex(argv[6]);
+    info.mac[5] = _hl_str2hex(argv[7]);
+
+    rt_kprintf("\nSet MAC:");
+    for (int i = 0; i < 6; i++) {
+        rt_kprintf("%02X ", info.mac[i]);
+    }
+    rt_kprintf("\n");
+    hl_mod_telink_ioctl(HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_CMD, &info, sizeof(info));
+}
+MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
 /*
  * EOF

@@ -19,40 +19,38 @@
 #define __HL_MOD_TELINK_H__
 
 /* Includes ------------------------------------------------------------------*/
+
 #include <rtthread.h>
 #include <stdint.h>
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
 
 /* typedef -------------------------------------------------------------------*/
+
 typedef enum _hl_mod_telink_ctrl_cmd
 {
     /// 获取版本号
     HL_MOD_TELINK_GET_VERSION_CMD = 0x00,
     /// 获取无线模块最新状态
-    HL_MOD_TELINK_GET_PAIR_STATE_CMD,
+    HL_MOD_TELINK_GET_PAIR_STATE_CMD = 0x01,
     /// 开始配对 (CMD + 0x00左声道/0x01右声道)
     HL_MOD_TELINK_PAIR_START_CMD,
     /// 停止配对
     HL_MOD_TELINK_PAIR_STOP_CMD,
     /// (测试命令)获取RSSI值
-    HL_MOD_TELINK_GET_RSSI_CMD,
+    HL_MOD_TELINK_GET_RSSI_CMD = 0x04,
     /// (测试命令)切换发射天线 (CMD + 0x00双天线自动切换/0x01固定天线A/0x02固定天线B)
     HL_MOD_TELINK_SWITCH_ANTENNA_CMD,
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
     HL_MOD_TELINK_BY_PASS_CMD,
     /// (测试命令)设置RF射频发射功率 (0~23档位调节)
     HL_MOD_TELINK_SET_RF_POWER_CMD,
-    /// 模块升级开始
-    HL_MOD_TELINK_UPGRADE_START_CMD = 0xA1,
-    /// 升级文件大小
-    HL_MOD_TELINK_UPGRADE_SIZE_CMD = 0xA2,
-    /// 升级分包发送
-    HL_MOD_TELINK_UPGRADE_PACK_CMD = 0xA3,
-    /// 模块升级结束
-    HL_MOD_TELINK_UPGRADE_STOP_CMD = 0xA4,
-    /// 模块升级reboot
-    HL_MOD_TELINK_UPGRADE_REBOOT_CMD = 0xA5,
+    /// 获取本地配对信息
+    HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_CMD = 0x10,
+    /// 设置配对设备配对信息 (CMD + 0x00左声道/0x01右声道 + 6字节MAC地址)
+    HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_CMD = 0x11,
+    /// 获取配对设备配对信息
+    HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_CMD = 0x12,
 } hl_mod_telink_ctrl_cmd;
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -65,26 +63,30 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_MOD_TELINK_RSSI_IND,
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
     HL_MOD_TELINK_BY_PASS_IND,
-    /// 模块升级状态
-    HL_MOD_TELINK_UPGRADE_STATE_IND = 0xA1,
+    /// 返回本地配对信息
+    HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND = 0x10,
+    /// 设置配对设备配对信息
+    HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_IND = 0x11,
+    /// 返回配对设备配对信息
+    HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND = 0x12,
 } hl_mod_telink_ctrl_ind;
 
 typedef enum
 {
-    HL_RF_UNCONNECT = 0x00,
-    HL_RF_L_CONNECT,
-    HL_RF_R_CONNECT,
-    HL_RF_LR_CONNECT,
-    HL_RF_PAIRING,
+    HL_MOD_TELINK_UNCONNECT = 0x00,
+    HL_MOD_TELINK_L_CONNECT,
+    HL_MOD_TELINK_R_CONNECT,
+    HL_MOD_TELINK_LR_CONNECT,
+    HL_MOD_TELINK_PAIRING,
 } hl_rf_pair_state_em;
 
-typedef enum
+typedef struct
 {
-    HL_RF_UPGRADE_START = 0x00,
-    HL_RF_UPGRADE_STOP,
-    HL_RF_UPGRADE_SIZE,
-    HL_RF_UPGRADE_PACK,
-} hl_rf_upgrade_state_em;
+    /// 声道(左声道0x00/右声道0x01)
+    uint8_t chn;
+    /// MAC地址
+    uint8_t mac[6];
+} hl_rf_pair_info_t;
 
 typedef struct
 {
