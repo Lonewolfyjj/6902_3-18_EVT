@@ -49,11 +49,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 
     LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
-        case HL_MOD_TELINK_VERSION_IND:
+        case HL_RF_VERSION_IND:
             ptr = (uint8_t *)p_msg->param.ptr;
             LOG_D("\n\n--- Telink Version[%d.%d.%d.%d] ---\n\n", ptr[0], ptr[1], ptr[2], ptr[3]);
             break;
-        case HL_MOD_TELINK_PAIR_STATE_IND:
+        case HL_RF_PAIR_STATE_IND:
             p_param  = *(uint8_t*)p_msg->param.ptr;
             LOG_D("\ntelink info(%02X)\r\n", p_param);
             if(HL_RF_UNCONNECT == p_param) {
@@ -64,7 +64,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
                 tx_info.rf_state = HL_RF_STATE_CONNECT;
             }
             break;
-        case HL_MOD_TELINK_RSSI_IND:
+        case HL_RF_RSSI_IND:
             p_param  = *(uint8_t*)p_msg->param.ptr;
             LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
             break;
@@ -84,11 +84,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 
     LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
-        case HL_MOD_TELINK_VERSION_IND:
+        case HL_RF_VERSION_IND:
             ptr = (uint8_t *)p_msg->param.ptr;
             LOG_D("\n\n--- Telink Version[%d.%d.%d.%d] ---\n\n", ptr[0], ptr[1], ptr[2], ptr[3]);
             break;
-        case HL_MOD_TELINK_PAIR_STATE_IND:
+        case HL_RF_PAIR_STATE_IND:
             p_param  = *(uint8_t*)p_msg->param.ptr;
             LOG_D("\ntelink info(%02X)\r\n", p_param);
             if(HL_RF_UNCONNECT == p_param) {
@@ -103,7 +103,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             }
             hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
             break;
-        case HL_MOD_TELINK_RSSI_IND:
+        case HL_RF_RSSI_IND:
             p_param  = (uint8_t*)p_msg->param.ptr;
             LOG_D("\ntelink RSSI(%02X -- %02X)\r\n", p_param[0], p_param[1]);
             break;

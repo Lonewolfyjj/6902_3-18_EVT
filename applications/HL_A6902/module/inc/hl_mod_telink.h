@@ -30,54 +30,54 @@
 typedef enum _hl_mod_telink_ctrl_cmd
 {
     /// 获取版本号
-    HL_MOD_TELINK_GET_VERSION_CMD = 0x00,
+    HL_RF_GET_VERSION_CMD = 0x00,
     /// 获取无线模块最新状态
-    HL_MOD_TELINK_GET_PAIR_STATE_CMD = 0x01,
+    HL_RF_GET_PAIR_STATE_CMD = 0x01,
     /// 开始配对 (CMD + 0x00左声道/0x01右声道)
-    HL_MOD_TELINK_PAIR_START_CMD,
+    HL_RF_PAIR_START_CMD,
     /// 停止配对
-    HL_MOD_TELINK_PAIR_STOP_CMD,
+    HL_RF_PAIR_STOP_CMD,
     /// (测试命令)获取RSSI值
-    HL_MOD_TELINK_GET_RSSI_CMD = 0x04,
+    HL_RF_GET_RSSI_CMD = 0x04,
     /// (测试命令)切换发射天线 (CMD + 0x00双天线自动切换/0x01固定天线A/0x02固定天线B)
-    HL_MOD_TELINK_SWITCH_ANTENNA_CMD,
+    HL_RF_SWITCH_ANTENNA_CMD,
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
-    HL_MOD_TELINK_BY_PASS_CMD,
+    HL_RF_BY_PASS_CMD,
     /// (测试命令)设置RF射频发射功率 (0~23档位调节)
-    HL_MOD_TELINK_SET_RF_POWER_CMD,
+    HL_RF_SET_RF_POWER_CMD,
     /// 获取本地配对信息
-    HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_CMD = 0x10,
+    HL_RF_GET_LOCAL_PAIR_INFO_CMD = 0x10,
     /// 设置配对设备配对信息 (CMD + 0x00左声道/0x01右声道 + 6字节MAC地址)
-    HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_CMD = 0x11,
+    HL_RF_SET_REMOTE_PAIR_INFO_CMD = 0x11,
     /// 获取配对设备配对信息
-    HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_CMD = 0x12,
+    HL_RF_GET_REMOTE_PAIR_INFO_CMD = 0x12,
 } hl_mod_telink_ctrl_cmd;
 
 typedef enum _hl_mod_telink_ctrl_ind
 {
     /// 返回版本号 (CMD + 版本字符串)
-    HL_MOD_TELINK_VERSION_IND = 0x00,
+    HL_RF_VERSION_IND = 0x00,
     /// 返回无线模块最新状态 (CMD + 枚举值hl_rf_pair_state_em)
-    HL_MOD_TELINK_PAIR_STATE_IND,
+    HL_RF_PAIR_STATE_IND,
     /// (测试命令)返回RSSI值 (CMD + RSSI值[0~100])
-    HL_MOD_TELINK_RSSI_IND,
+    HL_RF_RSSI_IND,
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
-    HL_MOD_TELINK_BY_PASS_IND,
+    HL_RF_BY_PASS_IND,
     /// 返回本地配对信息
-    HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND = 0x10,
+    HL_RF_GET_LOCAL_PAIR_INFO_IND = 0x10,
     /// 设置配对设备配对信息
-    HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_IND = 0x11,
+    HL_RF_SET_REMOTE_PAIR_INFO_IND = 0x11,
     /// 返回配对设备配对信息
-    HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND = 0x12,
+    HL_RF_GET_REMOTE_PAIR_INFO_IND = 0x12,
 } hl_mod_telink_ctrl_ind;
 
 typedef enum
 {
-    HL_MOD_TELINK_UNCONNECT = 0x00,
-    HL_MOD_TELINK_L_CONNECT,
-    HL_MOD_TELINK_R_CONNECT,
-    HL_MOD_TELINK_LR_CONNECT,
-    HL_MOD_TELINK_PAIRING,
+    HL_RF_UNCONNECT = 0x00,
+    HL_RF_L_CONNECT,
+    HL_RF_R_CONNECT,
+    HL_RF_LR_CONNECT,
+    HL_RF_PAIRING,
 } hl_rf_pair_state_em;
 
 typedef struct

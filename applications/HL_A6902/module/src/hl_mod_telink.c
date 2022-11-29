@@ -103,44 +103,44 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
     data_len |= hup_frame.data_len_l;
 
     switch (hup_frame.cmd) {
-        case HL_MOD_TELINK_VERSION_IND:
-            app_msg_t.cmd       = HL_MOD_TELINK_VERSION_IND;
+        case HL_RF_VERSION_IND:
+            app_msg_t.cmd       = HL_RF_VERSION_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报Telink固件版本信息
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
-        case HL_MOD_TELINK_PAIR_STATE_IND:
+        case HL_RF_PAIR_STATE_IND:
             // 更新Telink模块工作状态和配对状态
             new_pair_info = (uint8_t)hup_frame.data_addr[0];
             break;
 
-        case HL_MOD_TELINK_RSSI_IND:
-            app_msg_t.cmd       = HL_MOD_TELINK_RSSI_IND;
+        case HL_RF_RSSI_IND:
+            app_msg_t.cmd       = HL_RF_RSSI_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报无线模块RSSI值
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
-        case HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND:
+        case HL_RF_GET_LOCAL_PAIR_INFO_IND:
             rt_kprintf("\n\n[Telink Local MAC Addr]:");
             for (int i = 0; i < 6; i++) {
                 rt_kprintf("%02X ", hup_frame.data_addr[i]);
             }
             rt_kprintf("\n\n");
-            app_msg_t.cmd       = HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_IND;
+            app_msg_t.cmd       = HL_RF_GET_LOCAL_PAIR_INFO_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报本地MAC地址
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
 
-        case HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_IND:
+        case HL_RF_SET_REMOTE_PAIR_INFO_IND:
             break;
 
-        case HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND:
+        case HL_RF_GET_REMOTE_PAIR_INFO_IND:
             rt_kprintf("\n\nTelink Remote MAC Addr:\nL: ");
             for (int i = 0; i < 12; i++) {
                 rt_kprintf("%02X ", hup_frame.data_addr[i]);
@@ -149,7 +149,7 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
                 }
             }
             rt_kprintf("\n\n\n");
-            app_msg_t.cmd       = HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_IND;
+            app_msg_t.cmd       = HL_RF_GET_REMOTE_PAIR_INFO_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报本地MAC地址
@@ -233,7 +233,7 @@ static void hl_mod_telink_thread_entry(void* parameter)
             // 更新配对状态
             old_pair_info = new_pair_info;
             // 编辑消息结构体
-            app_msg_t.cmd       = HL_MOD_TELINK_PAIR_STATE_IND;
+            app_msg_t.cmd       = HL_RF_PAIR_STATE_IND;
             app_msg_t.len       = 1;
             app_msg_t.param.ptr = &old_pair_info;
             // 将消息结构体上传至APP层消息队列
@@ -404,7 +404,7 @@ MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
 void telink_get_local_mac(void)
 {
     uint8_t data = 0;
-    hl_mod_telink_ioctl(HL_MOD_TELINK_GET_LOCAL_PAIR_INFO_CMD, &data, 0);
+    hl_mod_telink_ioctl(HL_RF_GET_LOCAL_PAIR_INFO_CMD, &data, 0);
 }
 MSH_CMD_EXPORT(telink_get_local_mac, telink get local mac cmd);
 
@@ -412,7 +412,7 @@ void telink_get_remote_mac(void)
 {
     uint8_t data = 0;
 
-    hl_mod_telink_ioctl(HL_MOD_TELINK_GET_REMOTE_PAIR_INFO_CMD, &data, 0);
+    hl_mod_telink_ioctl(HL_RF_GET_REMOTE_PAIR_INFO_CMD, &data, 0);
 }
 MSH_CMD_EXPORT(telink_get_remote_mac, telink get remote mac cmd);
 
@@ -456,7 +456,7 @@ void telink_set_remote_mac(int argc, char** argv)
         rt_kprintf("%02X ", info.mac[i]);
     }
     rt_kprintf("\n");
-    hl_mod_telink_ioctl(HL_MOD_TELINK_SET_REMOTE_PAIR_INFO_CMD, &info, sizeof(info));
+    hl_mod_telink_ioctl(HL_RF_SET_REMOTE_PAIR_INFO_CMD, &info, sizeof(info));
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
