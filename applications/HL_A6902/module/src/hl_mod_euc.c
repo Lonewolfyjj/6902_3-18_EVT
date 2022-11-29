@@ -63,16 +63,33 @@ typedef enum _hl_mod_extcom_hup_cmd_e
 
 #endif
 
+typedef enum _hl_euc_mod_dev_e
+{
+    HL_EUC_MOD_DEV_TX1 = 1,
+    HL_EUC_MOD_DEV_TX2 = 2,
+    HL_EUC_MOD_DEV_BOX = 3,
+} hl_euc_mod_dev_e;
+
 typedef struct _hl_mod_euc
 {
-    bool                    init_flag;
-    bool                    start_flag;
-    rt_thread_t             euc_thread;
-    int                     thread_exit_flag;
-    hl_util_hup_t           hup;
-    rt_mq_t                 msg_handle;
-    rt_device_t             uart_dev;
-    struct serial_configure uart_config;
+    bool                      init_flag;
+    bool                      start_flag;
+    uint8_t                   tx1_bat_info;
+    uint8_t                   tx2_bat_info;
+    uint8_t                   box_bat_info;
+    hl_mod_euc_charge_state_e tx1_charge_state;
+    hl_mod_euc_charge_state_e tx2_charge_state;
+    hl_mod_euc_charge_state_e box_charge_state;
+    bool                      tx1_in_box_flag;
+    bool                      tx2_in_box_flag;
+    bool                      tx1_pair_ok_flag;
+    bool                      tx2_pair_ok_flag;
+    rt_thread_t               euc_thread;
+    int                       thread_exit_flag;
+    hl_util_hup_t             hup;
+    rt_mq_t                   msg_handle;
+    rt_device_t               uart_dev;
+    struct serial_configure   uart_config;
 } hl_mod_euc_st;
 
 /* define --------------------------------------------------------------------*/
@@ -113,6 +130,9 @@ static uint8_t hup_buf[HL_MOD_EUC_HUP_BUFSZ] = { 0 };
 static uint8_t rx_mac_addr[6] = { 0 };
 
 #else
+
+static uint8_t tx1_mac_addr[6] = { 0 };
+static uint8_t tx2_mac_addr[6] = { 0 };
 
 #endif
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -198,9 +218,100 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
 
 static void hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
-    uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+    uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+    uint8_t  rx_num = 0;
+    uint8_t  result = 0;
 
     switch (hup_frame.cmd) {
+        case HL_HUP_CMD_PROBE: {
+            _uart_send_hup_data(HL_HUP_CMD_PROBE, &rx_num, sizeof(rx_num));
+            _mod_msg_send(HL_IN_BOX_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_GET_BAT_INFO: {
+            _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_SET_BAT_INFO: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                _euc_mod.tx1_bat_info = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX1_BAT_INFO_UPDATE_IND, &(_euc_mod.tx1_bat_info), sizeof(_euc_mod.tx1_bat_info));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                _euc_mod.tx2_bat_info = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX2_BAT_INFO_UPDATE_IND, &(_euc_mod.tx2_bat_info), sizeof(_euc_mod.tx2_bat_info));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_BOX) {
+                _euc_mod.box_bat_info = hup_frame.data_addr[1];
+                _mod_msg_send(HL_BOX_BAT_INFO_UPDATE_IND, &(_euc_mod.box_bat_info), sizeof(_euc_mod.box_bat_info));
+            } else {
+                break;
+            }
+        } break;
+        case HL_HUP_CMD_TX_IN_BOX_STATE: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                _euc_mod.tx1_in_box_flag = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX1_IN_BOX_STATE_IND, &(_euc_mod.tx1_in_box_flag), sizeof(_euc_mod.tx1_in_box_flag));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                _euc_mod.tx2_in_box_flag = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX2_IN_BOX_STATE_IND, &(_euc_mod.tx2_in_box_flag), sizeof(_euc_mod.tx2_in_box_flag));
+            } else {
+                break;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_TX_IN_BOX_STATE, hup_frame.data_addr, len);
+        } break;
+        case HL_HUP_CMD_SET_PAIR_INFO: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                rt_memcpy(tx1_mac_addr, hup_frame.data_addr + 1, sizeof(tx1_mac_addr));
+                _mod_msg_send(HL_SET_PAIR_MAC_TX1_REQ_IND, tx1_mac_addr, sizeof(tx1_mac_addr));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                rt_memcpy(tx2_mac_addr, hup_frame.data_addr + 1, sizeof(tx2_mac_addr));
+                _mod_msg_send(HL_SET_PAIR_MAC_TX2_REQ_IND, tx2_mac_addr, sizeof(tx2_mac_addr));
+            } else {
+                break;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_SET_PAIR_INFO, hup_frame.data_addr, 1);
+        } break;
+        case HL_HUP_CMD_GET_MAC_ADDR: {
+            _mod_msg_send(HL_GET_MAC_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_PAIR_START: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                _mod_msg_send(HL_TX1_PAIR_START_IND, NULL, 0);
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                _mod_msg_send(HL_TX2_PAIR_START_IND, NULL, 0);
+            } else {
+                break;
+            }
+        } break;
+        case HL_HUP_CMD_PAIR_STOP: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                _euc_mod.tx1_pair_ok_flag = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX1_PAIR_STOP_IND, &(_euc_mod.tx1_pair_ok_flag), sizeof(_euc_mod.tx1_pair_ok_flag));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                _euc_mod.tx2_pair_ok_flag = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX2_PAIR_STOP_IND, &(_euc_mod.tx2_pair_ok_flag), sizeof(_euc_mod.tx2_pair_ok_flag));
+            } else {
+                break;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_PAIR_STOP, hup_frame.data_addr, 1);
+        } break;
+        case HL_HUP_CMD_GET_CHARGE_STATE: {
+            _mod_msg_send(HL_GET_CHARGE_STATE_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_SET_CHARGE_STATE: {
+            if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
+                _euc_mod.tx1_charge_state = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX1_CHARGE_STATE_IND, &(_euc_mod.tx1_charge_state), sizeof(_euc_mod.tx1_charge_state));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX2) {
+                _euc_mod.tx2_charge_state = hup_frame.data_addr[1];
+                _mod_msg_send(HL_TX2_CHARGE_STATE_IND, &(_euc_mod.tx2_charge_state), sizeof(_euc_mod.tx2_charge_state));
+            } else if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_BOX) {
+                _euc_mod.box_charge_state = hup_frame.data_addr[1];
+                _mod_msg_send(HL_BOX_CHARGE_STATE_IND, &(_euc_mod.box_charge_state), sizeof(_euc_mod.box_charge_state));
+            } else {
+                break;
+            }
+        } break;
         default:
             break;
     }
@@ -469,6 +580,9 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 
 int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
+    uint8_t dev_num;
+    uint8_t charge_state;
+
     if (_euc_mod.init_flag == false) {
         LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -486,15 +600,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
                 return HL_MOD_EUC_FUNC_RET_ERR;
             }
 
-            _uart_send_hup_data(HL_HUP_CMD_GET_BAT_INFO, (char*)arg, sizeof(uint8_t));
-        } break;
-        case HL_SET_PAIR_MAC_CMD: {
-            if (arg_size != sizeof(uint8_t[6])) {
-                LOG_E("size err, ctrl arg need <uint8_t[6]> type pointer!");
-                return HL_MOD_EUC_FUNC_RET_ERR;
-            }
-
-            _uart_send_hup_data(HL_HUP_CMD_GET_PAIR_INFO, (char*)arg, sizeof(uint8_t[6]));
+            _uart_send_hup_data(HL_HUP_CMD_GET_BAT_INFO, (uint8_t*)arg, sizeof(uint8_t));
         } break;
         case HL_SET_MAC_CMD: {
             if (arg_size != sizeof(uint8_t[6])) {
@@ -503,6 +609,24 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             _uart_send_hup_data(HL_HUP_CMD_GET_MAC_ADDR, (char*)arg, sizeof(uint8_t[6]));
+        } break;
+        case HL_START_TX1_PAIR_CMD: {
+            dev_num = HL_EUC_MOD_DEV_TX1;
+            _uart_send_hup_data(HL_HUP_CMD_PAIR_START, &dev_num, sizeof(dev_num));
+        } break;
+        case HL_START_TX2_PAIR_CMD: {
+            dev_num = HL_EUC_MOD_DEV_TX2;
+            _uart_send_hup_data(HL_HUP_CMD_PAIR_START, &dev_num, sizeof(dev_num));
+        } break;
+        case HL_SET_CHARGE_STATE_CMD: {
+            if (arg_size != sizeof(hl_mod_euc_charge_state_e)) {
+                LOG_E("size err, ctrl arg need <hl_mod_euc_charge_state_e> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            charge_state = *(hl_mod_euc_charge_state_e*)arg;
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_CHARGE_STATE, &charge_state, sizeof(charge_state));
         } break;
         default:
             break;
