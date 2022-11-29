@@ -41,10 +41,11 @@
 #if HL_IS_TX_DEVICE()
 void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 {
-    uint8_t  bat_soc_temp     = 50;
-    uint8_t  pair_mac_temp[6] = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x34 };
-    uint8_t  dev_mac_temp[6]  = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x35 };
-    uint8_t* rx_mac_addr;
+    uint8_t                   bat_soc_temp     = 50;
+    uint8_t                   pair_mac_temp[6] = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x34 };
+    uint8_t                   dev_mac_temp[6]  = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x35 };
+    uint8_t*                  rx_mac_addr;
+    hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
@@ -53,16 +54,19 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_GET_SOC_REQ_IND: {
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
-        case HL_GET_PAIR_MAC_REQ_IND: {  // 获取已经配对的mac地址
+        case HL_GET_PAIR_MAC_REQ_IND: {  // 请求获取已经配对的mac地址
             hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
         } break;
-        case HL_SET_PAIR_MAC_REQ_IND: {  // 设置rx的mac地址，为有线配对的流程
+        case HL_SET_PAIR_MAC_REQ_IND: {  // 请求设置rx的mac地址，为有线配对的流程
             rx_mac_addr = (uint8_t*)p_msg->param.ptr;
             LOG_I("rx mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]\n", rx_mac_addr[0],
                   rx_mac_addr[1], rx_mac_addr[2], rx_mac_addr[3], rx_mac_addr[4], rx_mac_addr[5]);
         } break;
-        case HL_GET_MAC_REQ_IND: {  // 获取自己的mac地址
+        case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+        } break;
+        case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
+            hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

@@ -37,25 +37,28 @@
 
 typedef enum _hl_mod_extcom_hup_cmd_e
 {
-    HL_HUP_CMD_PROBE         = 0x01,
-    HL_HUP_CMD_GET_BAT_INFO  = 0x02,
-    HL_HUP_CMD_GET_PAIR_INFO = 0x05,
-    HL_HUP_CMD_SET_PAIR_INFO = 0x06,
-    HL_HUP_CMD_GET_MAC_ADDR  = 0x07,
+    HL_HUP_CMD_PROBE            = 0x01,
+    HL_HUP_CMD_GET_BAT_INFO     = 0x02,
+    HL_HUP_CMD_GET_PAIR_INFO    = 0x05,
+    HL_HUP_CMD_SET_PAIR_INFO    = 0x06,
+    HL_HUP_CMD_GET_MAC_ADDR     = 0x07,
+    HL_HUP_CMD_GET_CHARGE_STATE = 0x0A,
 } hl_mod_extcom_hup_cmd_e;
 
 #else
 
 typedef enum _hl_mod_extcom_hup_cmd_e
 {
-    HL_HUP_CMD_PROBE           = 0x01,
-    HL_HUP_CMD_GET_BAT_INFO    = 0x02,
-    HL_HUP_CMD_SET_BAT_INFO    = 0x03,
-    HL_HUP_CMD_TX_IN_BOX_STATE = 0x04,
-    HL_HUP_CMD_SET_PAIR_INFO   = 0x06,
-    HL_HUP_CMD_GET_MAC_ADDR    = 0x07,
-    HL_HUP_CMD_PAIR_START      = 0x08,
-    HL_HUP_CMD_PAIR_STOP       = 0x09,
+    HL_HUP_CMD_PROBE            = 0x01,
+    HL_HUP_CMD_GET_BAT_INFO     = 0x02,
+    HL_HUP_CMD_SET_BAT_INFO     = 0x03,
+    HL_HUP_CMD_TX_IN_BOX_STATE  = 0x04,
+    HL_HUP_CMD_SET_PAIR_INFO    = 0x06,
+    HL_HUP_CMD_GET_MAC_ADDR     = 0x07,
+    HL_HUP_CMD_PAIR_START       = 0x08,
+    HL_HUP_CMD_PAIR_STOP        = 0x09,
+    HL_HUP_CMD_GET_CHARGE_STATE = 0x0A,
+    HL_HUP_CMD_SET_CHARGE_STATE = 0x0B,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -182,6 +185,9 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case HL_HUP_CMD_GET_MAC_ADDR: {
             _mod_msg_send(HL_GET_MAC_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_GET_CHARGE_STATE: {
+            _mod_msg_send(HL_GET_CHARGE_STATE_REQ_IND, NULL, 0);
         } break;
         default:
             break;
@@ -405,6 +411,8 @@ int hl_mod_euc_stop(void)
 
 int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
+    uint8_t charge_state;
+
     if (_euc_mod.init_flag == false) {
         LOG_E("euc not init!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -439,6 +447,16 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             _uart_send_hup_data(HL_HUP_CMD_GET_MAC_ADDR, (char*)arg, sizeof(uint8_t[6]));
+        } break;
+        case HL_SET_CHARGE_STATE_CMD: {
+            if (arg_size != sizeof(hl_mod_euc_charge_state_e)) {
+                LOG_E("size err, ctrl arg need <hl_mod_euc_charge_state_e> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            charge_state = *(hl_mod_euc_charge_state_e*)arg;
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_CHARGE_STATE, &charge_state, sizeof(charge_state));
         } break;
         default:
             break;

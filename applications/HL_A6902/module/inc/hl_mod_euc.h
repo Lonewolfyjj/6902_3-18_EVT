@@ -44,6 +44,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_PAIR_MAC_CMD,
     /// 设置设备Mac地址，参数为<uint8_t[6]>
     HL_SET_MAC_CMD,
+    /// 设置设备充电状态，参数为<hl_mod_euc_charge_state_e *>
+    HL_SET_CHARGE_STATE_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -58,9 +60,11 @@ typedef enum _hl_mod_euc_ind_e
     HL_SET_PAIR_MAC_REQ_IND,
     /// 请求 app 获取设备mac地址，无参数。
     HL_GET_MAC_REQ_IND,
+    /// 请求 app 获取设备充电状态，无参数。
+    HL_GET_CHARGE_STATE_REQ_IND,
 } hl_mod_euc_ind_e;
 
-#else // rx
+#else  // rx
 
 typedef enum _hl_mod_euc_cmd_e
 {
@@ -77,6 +81,14 @@ typedef enum _hl_mod_euc_ind_e
 } hl_mod_euc_ind_e;
 
 #endif
+
+typedef enum _hl_mod_euc_charge_state_e
+{
+    HL_MOD_EUC_CHARGE_STATE_NO_CHARGE = 1,
+    HL_MOD_EUC_CHARGE_STATE_CHARGING,
+    HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL,
+} hl_mod_euc_charge_state_e;
+
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_EUC_FUNC_RET_ERR 1
