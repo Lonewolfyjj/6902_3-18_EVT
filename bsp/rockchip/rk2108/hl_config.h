@@ -1,4 +1,4 @@
-#define A6902_TX_HL 0
+#define A6902_TX_HL 1
 #define A6902_RX_HL_CH 1
 #define A6902_RX_HL_EN 0
 #define A6902_TX_JF 0

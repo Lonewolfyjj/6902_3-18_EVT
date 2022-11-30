@@ -1352,15 +1352,18 @@ int hl_drv_sy6971_init(void)
         sy_printf("cfg_opt %d read err !\n", SY_REG05_ADDR);
         goto INIT_ERR;
     }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG06_ADDR);
+        goto INIT_ERR;
+    }
     if (hl_i2c_read_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         sy_printf("cfg_opt %d read err !\n", SY_REG07_ADDR);
         goto INIT_ERR;
+    }    
+    if (hl_i2c_read_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG0E_ADDR);
+        goto INIT_ERR;
     }
-    // if (hl_i2c_read_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
-    //     sy_printf("cfg_opt %d read err !\n", SY_REG0E_ADDR);
-    //     goto INIT_ERR;
-    // }
-
     reg_all.reg00.IINLIM = 7;
     reg_all.reg01.SYS_MIN = 4;
 #if HL_IS_TX_DEVICE()
@@ -1371,7 +1374,9 @@ int hl_drv_sy6971_init(void)
     reg_all.reg05.VREG = 45;
     reg_all.reg07.NTC_JEITA = 1;
 
-    // reg_all.reg0E.TOPOFF_TIMER = 0;
+    reg_all.reg06.WATCHDOG = 0;
+
+    reg_all.reg0E.AICL_EN = 0;
 
     if (hl_i2c_write_reg(i2c_bus, SY_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG00_ADDR);
@@ -1388,15 +1393,19 @@ int hl_drv_sy6971_init(void)
     if (hl_i2c_write_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG05_ADDR);
         goto INIT_ERR;
+    }       
+    if (hl_i2c_write_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG06_ADDR);
+        goto INIT_ERR;
     }  
     if (hl_i2c_write_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG07_ADDR);
         goto INIT_ERR;
-    }  
-    // if (hl_i2c_write_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
-    //     sy_printf("cfg_opt %d write err !\n", SY_REG0E_ADDR);
-    //     goto INIT_ERR;
-    // }  
+    } 
+    if (hl_i2c_write_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG0E_ADDR);
+        goto INIT_ERR;
+    } 
 
     sy_printf("SY6971 init success !\n");
     return HL_SUCCESS;
