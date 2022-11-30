@@ -1364,6 +1364,7 @@ int hl_drv_sy6971_init(void)
         sy_printf("cfg_opt %d read err !\n", SY_REG0E_ADDR);
         goto INIT_ERR;
     }
+
     reg_all.reg00.IINLIM = 7;
     reg_all.reg01.SYS_MIN = 4;
 #if HL_IS_TX_DEVICE()
