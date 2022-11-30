@@ -1,6 +1,6 @@
 #include "hl_config.h"
 #if !HL_IS_TX_DEVICE()
-#if 0
+#if 1
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "lvgl.h"
@@ -19,7 +19,7 @@ static int hl_mod_lvgl_init(void)
 {
     lv_init();
     lv_port_disp_init();
-    lv_port_indev_init();
+    // lv_port_indev_init();
     return 0;
 }
 
@@ -30,8 +30,8 @@ void hl_mod_lvgl_style_1(void)
     // lv_style_set_width(&style_2, 50);
     // lv_style_set_height(&style_2, 80);
 
-    lv_style_set_bg_opa(&style_2, LV_OPA_100);
-    lv_style_set_bg_color(&style_2, lv_palette_lighten(LV_PALETTE_GREY, 1));
+    lv_style_set_bg_opa(&style_2, LV_OPA_20);
+    lv_style_set_bg_color(&style_2, lv_palette_lighten(LV_PALETTE_GREEN, 1));
     // lv_style_set_bg_grad_color(&style_2, lv_palette_main(LV_PALETTE_BLUE));
     // lv_style_set_bg_grad_dir(&style_2, LV_GRAD_DIR_VER);
 
@@ -45,28 +45,53 @@ static void hl_mod_lvgl_creat_btn(void)
 {
     btn_1 = lv_btn_create(scr);
     lv_obj_add_style(btn_1, &style_2, LV_PART_MAIN);
-    lv_obj_set_size(btn_1, 100, 50);
+    lv_obj_set_pos(btn_1,0,0);
+    lv_obj_set_size(btn_1, 126, 126);
     lv_obj_align(btn_1, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    btn_label = lv_label_create(btn_1);
-    // lv_obj_set_size(btn_label,80,20);
-    lv_label_set_text(btn_label, "This is the first btn !");
-    lv_label_set_long_mode(btn_label, LV_LABEL_LONG_DOT);
-    lv_obj_align(btn_label, LV_ALIGN_TOP_LEFT, 0, 0);
+    // btn_label = lv_label_create(btn_1);
+    // // lv_obj_set_size(btn_label,80,20);
+    // lv_label_set_text(btn_label, "btn1 !");
+    // // lv_label_set_long_mode(btn_label, LV_LABEL_LONG_DOT);
+    // lv_obj_align(btn_label, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    btn_label1 = lv_label_create(btn_1);
-    lv_obj_set_size(btn_label1, 80, 20);
-    lv_obj_add_style(btn_label1, &style_2, LV_PART_MAIN);
-    lv_label_set_text(btn_label1, "This is the second btn !");
-    lv_label_set_long_mode(btn_label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_align(btn_label1, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    // btn_label1 = lv_label_create(btn_1);
+    // lv_obj_set_size(btn_label1, 80, 20);
+    // lv_obj_add_style(btn_label1, &style_2, LV_PART_MAIN);
+    // lv_label_set_text(btn_label1, "btn2 !");
+    // lv_label_set_long_mode(btn_label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    // lv_obj_align(btn_label1, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+}
+
+static lv_obj_t* imga;
+static lv_disp_t* screen_ptr;
+// LV_IMG_DECLARE(ImgMountain);
+LV_IMG_DECLARE(red_60x60);
+static void hl_mod_lvgl_creat_btn_l(void)
+{
+    LV_IMG_DECLARE(red_60x60);
+    lv_obj_t * img1 = lv_img_create(lv_scr_act());
+    lv_img_set_src(img1, &red_60x60);
+    lv_obj_align(img1, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_set_size(img1, 100, 40);
+
+    lv_obj_t * img2 = lv_label_create(lv_scr_act());
+    // lv_img_set_src(img2, LV_SYMBOL_OK "Accept");
+    lv_label_set_text(img2,"Accept");
+    lv_obj_set_pos(img1, 0, 0);
+
+    lv_obj_t * img3 = lv_label_create(lv_scr_act());
+    lv_label_set_text(img3,"data");
+    lv_obj_set_pos(img3, 200, 0);
+    //lv_obj_align_to(img2, img1, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    screen_ptr = lv_disp_get_default();
 }
 
 static void hl_mod_lvgl_thread_fun(void* parameter)
 {
     scr = lv_scr_act();
-    hl_mod_lvgl_style_1();
-    hl_mod_lvgl_creat_btn();
+    // hl_mod_lvgl_style_1();
+    // hl_mod_lvgl_creat_btn();
     while (1) {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
@@ -87,18 +112,22 @@ static void hl_mod_lvgl_thread_picture(void* parameter)
     // test_f = lv_fs_get_drv(LV_FS_STDIO_LETTER);
     // f = fopen("/mnt/sdcard/lvgl/test.txt","w");
     // f = test_f->open_cb(RT_NULL,"test.txt",LV_FS_MODE_WR);
-    LV_IMG_DECLARE(test_pic);
-    lv_obj_t*  pic        = lv_img_create(scr);
-    lv_disp_t* screen_ptr = lv_disp_get_default();
-    lv_img_set_src(pic, &test_pic);
-    lv_obj_align(pic, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    // LV_IMG_DECLARE(test_pic);
+    // lv_obj_t*  pic        = lv_img_create(scr);
+    // lv_disp_t* screen_ptr = lv_disp_get_default();
+    // lv_img_set_src(pic, &test_pic);
+    // lv_obj_align(pic, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    hl_mod_lvgl_creat_btn_l();
     while (1) {
         // f = test_f.open_cb(RT_NULL,"./test.txt",LV_FS_MODE_WR | LV_FS_MODE_RD);
         // test_f.seek_cb(RT_NULL,f,0,LV_FS_SEEK_END);lv_disp_get_default
         rt_thread_mdelay(3000);
-        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_180);
+        rt_kprintf("testlvglstart\n");
+        lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+        rt_kprintf("testlvgl1\n");
         rt_thread_mdelay(3000);
         lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_NONE);
+        rt_kprintf("testlvgl2\n");
     }
 }
 
@@ -109,7 +138,7 @@ static int lvgl_test_thread(int argc, char** argv)
 
     lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x400, 11, 10);
 
-    lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
+    // lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
 
     if (lvgl_tid1 != RT_NULL) {
         rt_kprintf("Lvgl thread 1 init success !\n");
@@ -121,10 +150,10 @@ static int lvgl_test_thread(int argc, char** argv)
         rt_thread_startup(lvgl_tid2);
     }
 
-    if (lvgl_tid3 != RT_NULL) {
-        rt_kprintf("Lvgl thread 3 init success !\n");
-        rt_thread_startup(lvgl_tid3);
-    }
+    // if (lvgl_tid3 != RT_NULL) {
+    //     rt_kprintf("Lvgl thread 3 init success !\n");
+    //     rt_thread_startup(lvgl_tid3);
+    // }
     return RT_EOK;
 }
 

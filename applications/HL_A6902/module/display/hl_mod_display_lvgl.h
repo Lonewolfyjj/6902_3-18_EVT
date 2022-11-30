@@ -1,9 +1,9 @@
 /**
- * @file hl_drv_rm690a0.h
+ * @file hl_mod_display_lvgl.h
  * @author liujie (jie.liu@hollyland-tech.com)
  * @brief 
  * @version V1.0
- * @date 2022-11-02
+ * @date 2022-10-11
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,65 +16,63 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-11-02     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2022-10-11     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
- */
+ */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HL_DRV_MIPI_RM690A0__H_
-#define __HL_DRV_MIPI_RM690A0__H_
+#ifndef __HL_MOD_DISPLAY_LVGL_H__
+#define __HL_MOD_DISPLAY_LVGL_H__
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "hl_config.h"
-#include "rtdef.h"
-#include "drv_display.h"
+#include "rtconfig.h"
+#if  defined(RT_USING_LITTLEVGL2RTT) && (!HL_GET_DEVICE_TYPE)
+#include "lvgl.h"
 
-#if (!HL_IS_TX_DEVICE())
 /* typedef -------------------------------------------------------------------*/
-
-typedef struct _hl_drv_color_t
-{
-    uint8_t  r;
-    uint8_t  g;
-    uint8_t  b;
-    uint8_t  a;
-    uint32_t buf;
-    uint32_t win_size;
-    uint32_t format;
-} hl_drv_fill_pattern_t;
-
 /* define --------------------------------------------------------------------*/
-enum
-{
-    /// 设置背光
-    SET_MIPI_BACKLIGHT_CMD,
-    /// 设置屏幕显示纯色
-    DISPLAY_FULL_COLOR_CMD,
-    /// 申请缓冲区
-    FRAMEBUF_MALLOC_CMD,
-    /// 释放缓冲区
-    FRAMEBUF_FREE_CMD,
-};
-
-#define MIPI_OLED_DATA_FMT RTGRAPHIC_PIXEL_FORMAT_RGB565
-
-#define MIPI_OLED_WIDTH RT_LV_HOR_RES
-#define MIPI_OLED_HEIGHT RT_LV_VER_RES
+/*0 : 默认就是mipi屏幕,1：spi屏幕*/
+#define HL_DISPLAY_SCREEN_HARDWARE      1
+//#define __RTTHREAD__ // 开启lvgl的rtt线程创建
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-uint8_t hl_drv_rm690a0_init(void);
+/**
+ * @brief lvgl反初始化
+ * @return uint8_t 
+ * @date 2022-10-23
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-23      <td>liujie     <td>新建
+ * </table>
+ */
+uint8_t hl_mod_display_lvgl_init(void);
 
-uint8_t hl_drv_rm690a0_deinit(void);
+/**
+ * @brief lvgl初始化
+ * @return uint8_t 
+ * @date 2022-10-23
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-10-23      <td>liujie     <td>新建
+ * </table>
+ */
+uint8_t hl_mod_display_lvgl_deinit(void);
 
-uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic);
 
-uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len);
-#endif
+#endif /*defined(RT_USING_LITTLEVGL2RTT) && (!HL_GET_DEVICE_TYPE)*/
 
-#endif /*__HL_DRV_MIPI_RM690A0__H_*/
+#endif /*__HL_MOD_DISPLAY_LVGL_H__*/
 /*
  * EOF
  */

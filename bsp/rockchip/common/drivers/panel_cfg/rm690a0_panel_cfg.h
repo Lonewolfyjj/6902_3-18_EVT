@@ -1,5 +1,5 @@
-#ifndef __RM69030_PANEL_CFG_H__
-#define __RM69030_PANEL_CFG_H__
+#ifndef __RM690A0_PANEL_CFG_H__
+#define __RM690A0_PANEL_CFG_H__
 
 #define RT_HW_LCD_XRES 126         /* LCD PIXEL WIDTH             */
 #define RT_HW_LCD_YRES 294         /* LCD PIXEL HEIGHT            */
@@ -20,14 +20,28 @@
     DSI_MODE_VIDEO | VIDEO_MODE_FLAG_NHSYNC | VIDEO_MODE_FLAG_NVSYNC | DSI_MODE_VIDEO_BURST | DSI_MODE_EOT_PACKET \
         | DSI_MODE_LPM
 #define RT_HW_LCD_DISPLAY_MODE DISPLAY_VIDEO_MODE
-#define RT_HW_LCD_AREA_DISPLAY ENABLE_AREA_DISPLAY
+#define RT_HW_LCD_AREA_DISPLAY DISABLE_AREA_DISPLAY
 #define RT_HW_LCD_DCS_BACKLIGHT 1
 #define RT_HW_LCD_MAX_BRIGHTNESS 255
 
-#define RT_HW_LCD_XACT_ALIGN 2
-#define RT_HW_LCD_YACT_ALIGN 2
-#define RT_HW_LCD_XPOS_ALIGN 2
-#define RT_HW_LCD_YPOS_ALIGN 2
+#define RT_HW_LCD_XACT_ALIGN 1
+#define RT_HW_LCD_YACT_ALIGN 1
+#define RT_HW_LCD_XPOS_ALIGN 1
+#define RT_HW_LCD_YPOS_ALIGN 1
+
+
+/// RM690A0 INIT USED CODE
+#define RM690A0_CMD_COLMOD 0x3A
+
+/// RM69310_CMD_COLMOD = 0x3A：
+/// 24bit 屏幕接口默认只有24bit，因为RK硬件只输出RGB888
+#define COLOR_FORMAT_24BIT 0x77
+
+/// 背光设置
+#define RM690A0_CMD_WRDISBV 0x51
+
+///  默认背光值
+#define BRIGHTNESS_DEFAULT_VALUE 0x80
 
 const static struct rockchip_cmd cmd_on[] = {
     { 0x15, 0x00, 0x02, { 0xFE, 0x01 } },
@@ -36,13 +50,13 @@ const static struct rockchip_cmd cmd_on[] = {
     { 0x15, 0x00, 0x02, { 0xFE, 0x00 } },
     // {0x15, 0x00, 0x02, {0xC4, 0x80}},
     { 0x39, 0x00, 0x05, { 0x2A, 0x00, 0x00, 0x00, 0x7D } },
-    { 0x15, 0x00, 0x02, { 0x3A, 0x87 } },
+    { 0x15, 0x00, 0x02, { RM690A0_CMD_COLMOD, COLOR_FORMAT_24BIT } },
     { 0x15, 0x00, 0x02, { 0x35, 0x00 } },
-    { 0x15, 0x00, 0x02, { 0x51, 0x80 } },
+    { 0x15, 0x00, 0x02, { RM690A0_CMD_WRDISBV, BRIGHTNESS_DEFAULT_VALUE } },
     { 0x05, 0x78, 0x01, { 0x11 } },
     { 0x05, 0x50, 0x01, { 0x29 } },
 };
 
 const static struct rockchip_cmd cmd_off[] = {};
 
-#endif /* __RM69030_PANEL_CFG_H__ */
+#endif /* __RM690A0_PANEL_CFG_H__ */

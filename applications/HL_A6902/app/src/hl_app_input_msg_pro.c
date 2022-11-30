@@ -220,7 +220,7 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_SHORT:
             screen_color_ctrl++;
             screen_color_ctrl %= RGB888_COLOR_CNT;
-            hl_mod_display_io_ctrl(MSG_OLED_COLOR_CHANGE_CMD, &screen_color_ctrl, sizeof(screen_color_ctrl));
+            // hl_mod_display_io_ctrl(MSG_OLED_COLOR_CHANGE_CMD, &screen_color_ctrl, sizeof(screen_color_ctrl));
             break;
         case HL_KEY_EVENT_LONG:
             channel = 0x00;

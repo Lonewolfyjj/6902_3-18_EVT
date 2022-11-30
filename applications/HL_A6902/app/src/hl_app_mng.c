@@ -116,7 +116,7 @@ void hl_app_mng_init(void)
     }
 
 	hl_mod_input_init(&hl_app_mq);
-    hl_mod_display_init(&hl_app_mq);
+    // hl_mod_display_init(&hl_app_mq);
     hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();

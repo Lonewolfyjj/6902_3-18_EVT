@@ -37,10 +37,15 @@
 #include "hl_hal_gpio.h"
 #include <rtthread.h>
 
+#define HL_DISPLAY_IS_TEST_MOD 1
+
+#if HL_DISPLAY_IS_TEST_MOD
+// 测试代码
+
 #define HL_PRINT rt_kprintf
 
 #define DISPLAY_THREAD_PRIORITY 25
-#define DISPLAY_THREAD_STACK_SIZE 512
+#define DISPLAY_THREAD_STACK_SIZE 1024
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -90,6 +95,10 @@ typedef struct _hl_display_led_t
 static uint8_t now_color = RGB888_BLACK;
 static uint8_t last_now_color = RGB888_BLACK;
 
+static hl_drv_fill_pattern_t color_pattern;
+#define HL_DRV_RM690A0_COLOR_FORMAT_BYTE 3 
+
+
 typedef struct _hl_display_led_t
 {
     uint32_t last_led_mode;
@@ -98,7 +107,7 @@ typedef struct _hl_display_led_t
 
 } hl_display_led_t;
 
-
+static void hl_mod_display_fill_color_pattern(uint8_t color);
 #endif
 
 static hl_display_led_t hl_display_led;
@@ -496,7 +505,7 @@ static void hl_mod_display_screen_set(void)
 
     if (HL_DISPLAY_SUCCESS == hl_mod_display_screen_color_get(&now_screen_mode)) {
 
-        hl_drv_rm690a0_write(0, MIPI_OLED_WIDTH - 1, 0, MIPI_OLED_HEIGHT - 1, (const uint8_t*)&now_screen_mode);
+        hl_mod_display_fill_color_pattern(now_screen_mode);
 
     }
 }
@@ -609,10 +618,60 @@ uint8_t hl_mod_display_deinit(void)
 //TX
 #else
 //RX
+
+static void hl_mod_display_fill_color_pattern(uint8_t color)
+{
+    switch (color) {
+        case RGB888_BLACK:
+            color_pattern.r = 0;
+            color_pattern.g = 0;
+            color_pattern.b = 0;
+            color_pattern.a = 0;
+            break;
+        case RGB888_RED:
+            color_pattern.r = 31;
+            color_pattern.g = 0;
+            color_pattern.b = 0;
+            color_pattern.a = 0;
+            break;
+        case RGB888_GREEN:
+            color_pattern.r = 0;
+            color_pattern.g = 63;
+            color_pattern.b = 0;
+            color_pattern.a = 0;
+            break;
+        case RGB888_BLUE:
+            color_pattern.r = 0;
+            color_pattern.g = 0;
+            color_pattern.b = 31;
+            color_pattern.a = 0;
+            break;
+        case RGB888_WHITE:
+            color_pattern.r = 31;
+            color_pattern.g = 63;
+            color_pattern.b = 31;
+            color_pattern.a = 0;
+            break;
+        default:
+
+            break;
+    }
+    
+    if(color_pattern.buf == RT_NULL)
+    {
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, color_pattern.buf);
+        return;
+    }
+
+    hl_drv_rm690a0_io_ctrl(DISPLAY_FULL_COLOR_CMD, &color_pattern,sizeof(color_pattern));
+
+}
+
 #endif
 
 uint8_t hl_mod_display_init(void* display_msq)
 {
+    uint32_t frambufferaddr;
 
     if (display_msq == NULL) {
         HL_PRINT("msghander err!");
@@ -631,9 +690,14 @@ uint8_t hl_mod_display_init(void* display_msq)
 #else
     // RX
     hl_drv_rm690a0_init();
-    now_color = RGB888_BLACK;
-    last_now_color = RGB888_BLACK;
-    hl_drv_rm690a0_write(0, MIPI_OLED_WIDTH - 1, 0, MIPI_OLED_HEIGHT - 1, (const uint8_t*)&now_color);
+    now_color = RGB888_RED;
+    last_now_color = RGB888_RED;
+    color_pattern.format = RTGRAPHIC_PIXEL_FORMAT_RGB565;
+    color_pattern.win_size = 126*294;//MIPI_OLED_WIDTH*MIPI_OLED_HEIGHT;
+    hl_drv_rm690a0_io_ctrl(FRAMEBUF_MALLOC_CMD, (void *)&frambufferaddr,color_pattern.win_size*2);
+    color_pattern.buf = frambufferaddr;
+    rt_kprintf("a:=0x%x\r\n",frambufferaddr);
+    hl_mod_display_fill_color_pattern(now_color);
 #endif
 
 #if HL_IS_TX_DEVICE()
@@ -675,3 +739,8 @@ uint8_t hl_mod_display_init(void* display_msq)
 
     return HL_DISPLAY_FAILED;
 }
+
+#else 
+// EV版的新的显示模块
+
+#endif
