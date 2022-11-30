@@ -49,9 +49,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            LOG_I("in box!\n");
+            LOG_I("in box!");
         } break;
-        case HL_GET_SOC_REQ_IND: {
+        case HL_GET_SOC_REQ_IND: {  //请求获取电量
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
         case HL_GET_PAIR_MAC_REQ_IND: {  // 请求获取已经配对的mac地址
@@ -59,7 +59,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         } break;
         case HL_SET_PAIR_MAC_REQ_IND: {  // 请求设置rx的mac地址，为有线配对的流程
             rx_mac_addr = (uint8_t*)p_msg->param.ptr;
-            LOG_I("rx mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]\n", rx_mac_addr[0],
+            LOG_I("rx mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", rx_mac_addr[0],
                   rx_mac_addr[1], rx_mac_addr[2], rx_mac_addr[3], rx_mac_addr[4], rx_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
@@ -85,6 +85,8 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t                   dev_mac_temp[6] = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x33 };
     bool                      tx1_pair_result_temp;
     bool                      tx2_pair_result_temp;
+    bool                      tx1_in_box_flag_temp;
+    bool                      tx2_in_box_flag_temp;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     hl_mod_euc_charge_state_e tx1_charge_state_temp;
     hl_mod_euc_charge_state_e tx2_charge_state_temp;
@@ -92,7 +94,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            LOG_I("in box!\n");
+            LOG_I("in box!");
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
@@ -109,14 +111,22 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             box_bat_info_temp = *(uint8_t*)p_msg->param.ptr;
             LOG_I("Box bat soc update: %d", box_bat_info_temp);
         } break;
+        case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
+            tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
+            LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
+        } break;
+        case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
+            tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
+            LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
+        } break;
         case HL_SET_PAIR_MAC_TX1_REQ_IND: {  //请求设置tx1的mac地址来配对
             tx1_mac_addr = (uint8_t*)p_msg->param.ptr;
-            LOG_I("tx1 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]\n", tx1_mac_addr[0],
+            LOG_I("tx1 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", tx1_mac_addr[0],
                   tx1_mac_addr[1], tx1_mac_addr[2], tx1_mac_addr[3], tx1_mac_addr[4], tx1_mac_addr[5]);
         } break;
         case HL_SET_PAIR_MAC_TX2_REQ_IND: {  //请求设置tx2的mac地址来配对
             tx2_mac_addr = (uint8_t*)p_msg->param.ptr;
-            LOG_I("tx2 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]\n", tx2_mac_addr[0],
+            LOG_I("tx2 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", tx2_mac_addr[0],
                   tx2_mac_addr[1], tx2_mac_addr[2], tx2_mac_addr[3], tx2_mac_addr[4], tx2_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  //请求获取自己的Mac地址
