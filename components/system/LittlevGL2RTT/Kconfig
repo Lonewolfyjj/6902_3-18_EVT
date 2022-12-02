@@ -1,7 +1,0 @@
-# Kconfig file for LVGL v8.0
-
-menuconfig RT_USING_LITTLEVGL2RTT
-    bool "LittlevGL2RTT: The LittlevGl release v8.3.0 gui lib adapter RT-Thread"
-    default n
-    depends on !PKG_USING_LITTLEVGL2RTT
-

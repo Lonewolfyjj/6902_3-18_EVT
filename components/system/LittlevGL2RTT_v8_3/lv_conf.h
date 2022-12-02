@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include "rtconfig.h"
-
+#include "drv_display.h"
 /*====================
    COLOR SETTINGS
  *====================*/
