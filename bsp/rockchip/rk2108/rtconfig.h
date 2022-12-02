@@ -231,10 +231,149 @@
 /* AT commands */
 
 /* RT_USING_AT is not set */
+#define RT_USING_LITTLEVGL2RTT
+/* RT_USING_LITTLEVGL2RTT_V7 is not set */
+#define RT_USING_LITTLEVGL2RTT_V8
 
-/* System */
+/* LittlevGL2RTT Component Options */
 
-/* RT_USING_LITTLEVGL2RTT is not set */
+/* LV memory management config */
+
+/* RT_LV_MEM_STATIC is not set */
+#define RT_LV_MEM_DYNAMIC
+#define RT_LV_MEM_CUSTOM 1
+
+/* LV graphical config */
+
+/* RT_LV_COLOR_DEPTH_1 is not set */
+/* RT_LV_COLOR_DEPTH_8 is not set */
+#define RT_LV_COLOR_DEPTH_16
+/* RT_LV_COLOR_DEPTH_24 is not set */
+#define RT_LV_COLOR_DEPTH 16
+#define RT_LV_HOR_RES 126
+#define RT_LV_VER_RES 294
+#define RT_LV_DPI 50
+/* RT_LV_COLOR_16_SWAP is not set */
+/* RT_LV_COLOR_SCREEN_TRANSP is not set */
+#define RT_LV_INDEXED_CHROMA
+#define RT_LV_ANTIALIAS
+#define RT_LV_DISP_DEF_REFR_PERIOD 10
+#define RT_LV_DISP_SMALL_LIMIT 30
+#define RT_LV_DISP_MEDIUM_LIMIT 50
+#define RT_LV_DISP_LARGE_LIMIT 70
+
+/* LV Input device config */
+
+#define RT_LV_INDEV_DEF_READ_PERIOD 10
+#define RT_LV_INDEV_DEF_DRAG_LIMIT 10
+#define RT_LV_INDEV_DEF_DRAG_THROW 10
+#define RT_LV_INDEV_DEF_LONG_PRESS_TIME 400
+#define RT_LV_INDEV_DEF_LONG_PRESS_REP_TIME 100
+#define RT_LV_INDEV_DEF_GESTURE_LIMIT 50
+#define RT_LV_INDEV_DEF_GESTURE_MIN_VELOCITY 3
+
+/* LV Feature config */
+
+#define RT_LV_USE_ANIMATION
+#define RT_LV_USE_SHADOW
+#define RT_LV_USE_BLEND_MODES
+#define RT_LV_USE_OPA_SCALE
+#define RT_LV_USE_IMG_TRANSFORM
+#define RT_LV_USE_GROUP
+/* RT_LV_USE_GPU is not set */
+#define RT_LV_USE_FILESYSTEM
+/* RT_LV_USE_USER_DATA is not set */
+/* RT_LV_USE_PERF_MONITOR is not set */
+
+/* LV OBJECT config */
+
+#define RT_LV_USE_ARC
+#define RT_LV_USE_BAR
+#define RT_LV_USE_BTN
+/* RT_LV_USE_BTNMATRIX is not set */
+/* RT_LV_USE_CALENDAR is not set */
+/* RT_LV_USE_CANVAS is not set */
+#define RT_LV_USE_CHECKBOX
+#define RT_LV_USE_CHART
+#define RT_LV_USE_CONT
+/* RT_LV_USE_CPICKER is not set */
+#define RT_LV_USE_DROPDOWN
+/* RT_LV_USE_GAUGE is not set */
+#define RT_LV_USE_CLOCK
+#define RT_LV_USE_IMG
+#define RT_LV_USE_IMGBTN
+/* RT_LV_USE_KEYBOARD is not set */
+#define RT_LV_USE_LABEL
+/* RT_LV_USE_LED is not set */
+#define RT_LV_USE_LINE
+#define RT_LV_USE_LIST
+#define RT_LV_USE_LINEMETER
+#define RT_LV_USE_OBJMASK
+#define RT_LV_USE_MSGBOX
+#define RT_LV_USE_PAGE
+#define RT_LV_USE_SPINNER
+#define RT_LV_USE_ROLLER
+#define RT_LV_USE_SLIDER
+#define RT_LV_USE_SPINBOX
+#define RT_LV_USE_SWITCH
+#define RT_LV_USE_TEXTAREA
+/* RT_LV_USE_TABLE is not set */
+/* RT_LV_USE_TABVIEW is not set */
+/* RT_LV_USE_TILEVIEW is not set */
+/* RT_LV_USE_WIN is not set */
+
+/* LV FONTS config */
+
+/* RT_LV_FONT_MONTSERRAT_8 is not set */
+/* RT_LV_FONT_MONTSERRAT_10 is not set */
+/* RT_LV_FONT_MONTSERRAT_12 is not set */
+/* RT_LV_FONT_MONTSERRAT_14 is not set */
+/* RT_LV_FONT_MONTSERRAT_16 is not set */
+/* RT_LV_FONT_MONTSERRAT_18 is not set */
+#define RT_LV_FONT_MONTSERRAT_20
+/* RT_LV_FONT_MONTSERRAT_22 is not set */
+#define RT_LV_FONT_MONTSERRAT_24
+/* RT_LV_FONT_MONTSERRAT_26 is not set */
+/* RT_LV_FONT_MONTSERRAT_28 is not set */
+/* RT_LV_FONT_MONTSERRAT_30 is not set */
+/* RT_LV_FONT_MONTSERRAT_32 is not set */
+/* RT_LV_FONT_MONTSERRAT_34 is not set */
+#define RT_LV_FONT_MONTSERRAT_36
+/* RT_LV_FONT_MONTSERRAT_38 is not set */
+/* RT_LV_FONT_MONTSERRAT_40 is not set */
+/* RT_LV_FONT_MONTSERRAT_42 is not set */
+/* RT_LV_FONT_MONTSERRAT_44 is not set */
+/* RT_LV_FONT_MONTSERRAT_46 is not set */
+/* RT_LV_FONT_MONTSERRAT_48 is not set */
+
+/* LV_THEME_DEFAULT VALUEs config */
+
+#define RT_LV_THEME_DEFAULT_COLOR_PRIMARY 0x01a2b1
+#define RT_LV_THEME_DEFAULT_COLOR_SECONDARY 0x44d1b6
+#define RT_LV_THEME_DEFAULT_FONT_SMALL_NULL
+/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_20 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_24 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_36 is not set */
+#define RT_LV_THEME_DEFAULT_FONT_NORMAL_NULL
+/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_20 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_24 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_36 is not set */
+#define RT_LV_THEME_DEFAULT_FONT_SUBTITLE_NULL
+/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_20 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_24 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_36 is not set */
+#define RT_LV_THEME_DEFAULT_FONT_TITLE_NULL
+/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_20 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_24 is not set */
+/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_36 is not set */
+
+/* LittlevGL2RTT display buffer Options */
+
+#define RT_LV_DISP_USE_HEAP_BUF
+/* RT_LV_DISP_USE_LARGE_BUF is not set */
+/* RT_LV_DISP_DOUBLE_BUF is not set */
+#define RT_LV_DISP_BUF_LINES 40
+/* RT_LV_USING_DEMO is not set */
 
 /* VBUS(Virtual Software BUS) */
 

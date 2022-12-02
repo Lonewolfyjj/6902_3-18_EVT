@@ -87,24 +87,74 @@ static void hl_mod_lvgl_creat_btn_l(void)
     screen_ptr = lv_disp_get_default();
 }
 
+// void ddd(void)
+// {
+//     lv_btn_create()
+// }
+
+
+static void anim_x_cb(void * var, int32_t v)
+{
+    lv_obj_set_x(var, v);
+}
+
+static void anim_size_cb(void * var, int32_t v)
+{
+    lv_obj_set_size(var, v, v);
+}
+
+/**
+ * Create a playback animation
+ */
+void lv_example_anim_2(void)
+{
+
+    lv_obj_t * obj = lv_obj_create(lv_scr_act());
+    lv_obj_set_style_bg_color(obj, lv_palette_main(LV_PALETTE_RED), 0);
+    lv_obj_set_style_radius(obj, LV_RADIUS_CIRCLE, 0);
+
+    lv_obj_align(obj, LV_ALIGN_LEFT_MID, 10, 0);
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_values(&a, 10, 50);
+    lv_anim_set_time(&a, 1000);
+    lv_anim_set_playback_delay(&a, 100);
+    lv_anim_set_playback_time(&a, 300);
+    lv_anim_set_repeat_delay(&a, 500);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+
+    lv_anim_set_exec_cb(&a, anim_size_cb);
+    lv_anim_start(&a);
+    lv_anim_set_exec_cb(&a, anim_x_cb);
+    lv_anim_set_values(&a, 10, 240);
+    lv_anim_start(&a);
+}
+
 static void hl_mod_lvgl_thread_fun(void* parameter)
 {
     scr = lv_scr_act();
     // hl_mod_lvgl_style_1();
     // hl_mod_lvgl_creat_btn();
+
+    // lv_example_btn_1();
+lv_example_anim_2();
+
     while (1) {
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
     }
 }
 
-static void hl_mod_lvgl_thread_timer(void* parameter)
-{
-    while (1) {
-        lv_tick_inc(LV_INDEV_DEF_READ_PERIOD);
-        rt_thread_mdelay(LV_INDEV_DEF_READ_PERIOD);
-    }
-}
+// static void hl_mod_lvgl_thread_timer(void* parameter)
+// {
+//     while (1) {
+//         lv_tick_inc(LV_INDEV_DEF_READ_PERIOD);
+//         rt_thread_mdelay(LV_INDEV_DEF_READ_PERIOD);
+//     }
+// }
 
 static void hl_mod_lvgl_thread_picture(void* parameter)
 {
@@ -136,7 +186,7 @@ static int lvgl_test_thread(int argc, char** argv)
     hl_mod_lvgl_init();
     lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 0xB000, 11, 10);
 
-    lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 0x400, 11, 10);
+    // lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 20480, 11, 10);
 
     // lvgl_tid3 = rt_thread_create("lvgl_3", hl_mod_lvgl_thread_picture, RT_NULL, 0xB00, 18, 10);
 
@@ -145,10 +195,10 @@ static int lvgl_test_thread(int argc, char** argv)
         rt_thread_startup(lvgl_tid1);
     }
 
-    if (lvgl_tid2 != RT_NULL) {
-        rt_kprintf("Lvgl thread 2 init success !\n");
-        rt_thread_startup(lvgl_tid2);
-    }
+    // if (lvgl_tid2 != RT_NULL) {
+    //     rt_kprintf("Lvgl thread 2 init success !\n");
+    //     rt_thread_startup(lvgl_tid2);
+    // }
 
     // if (lvgl_tid3 != RT_NULL) {
     //     rt_kprintf("Lvgl thread 3 init success !\n");
