@@ -106,7 +106,7 @@ static void anim_size_cb(void * var, int32_t v)
 /**
  * Create a playback animation
  */
-void lv_example_anim_2(void)
+static void lv_example_anim_2(void)
 {
 
     lv_obj_t * obj = lv_obj_create(lv_scr_act());
@@ -140,7 +140,7 @@ static void hl_mod_lvgl_thread_fun(void* parameter)
     // hl_mod_lvgl_creat_btn();
 
     // lv_example_btn_1();
-lv_example_anim_2();
+// lv_example_anim_2();
 
     while (1) {
         lv_task_handler();
@@ -181,10 +181,10 @@ static void hl_mod_lvgl_thread_picture(void* parameter)
     }
 }
 
-static int lvgl_test_thread(int argc, char** argv)
+int lvgl_test_thread(int argc, char** argv)
 {
     hl_mod_lvgl_init();
-    lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 0xB000, 11, 10);
+    lvgl_tid1 = rt_thread_create("lvgl_1", hl_mod_lvgl_thread_fun, RT_NULL, 20480, 18, 10);
 
     // lvgl_tid2 = rt_thread_create("lvgl_2", hl_mod_lvgl_thread_timer, RT_NULL, 20480, 11, 10);
 
@@ -208,5 +208,6 @@ static int lvgl_test_thread(int argc, char** argv)
 }
 
 MSH_CMD_EXPORT(lvgl_test_thread, lvgl test thread);
+
 #endif
 #endif

@@ -510,44 +510,44 @@ uint8_t hl_drv_rm690a0_init(void)
 
     hl_drv_rm690a0_hardware_rst();
 
-    mipi_screen.g_display_dev = rt_device_find("lcd");
+    // mipi_screen.g_display_dev = rt_device_find("lcd");
 
-    if (mipi_screen.g_display_dev == RT_NULL) {
-        rt_kprintf("mipi init err 1!\r\n");
-        return RT_ERROR;
-    }
+    // if (mipi_screen.g_display_dev == RT_NULL) {
+    //     rt_kprintf("mipi init err 1!\r\n");
+    //     return RT_ERROR;
+    // }
 
-    ret = rt_device_open(mipi_screen.g_display_dev, RT_DEVICE_FLAG_RDWR);
+    // ret = rt_device_open(mipi_screen.g_display_dev, RT_DEVICE_FLAG_RDWR);
 
-    if (ret != RT_EOK) {
-        rt_kprintf("mipi init err 2!\r\n");
-        return RT_ERROR;
-    }
+    // if (ret != RT_EOK) {
+    //     rt_kprintf("mipi init err 2!\r\n");
+    //     return RT_ERROR;
+    // }
 
-    ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_AP_COP_MODE, (uint8_t*)0);
+    // ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_AP_COP_MODE, (uint8_t*)0);
 
-    ret |= rt_device_control(mipi_screen.g_display_dev, RTGRAPHIC_CTRL_POWERON, NULL);
+    // ret |= rt_device_control(mipi_screen.g_display_dev, RTGRAPHIC_CTRL_POWERON, NULL);
 
-    if (ret != RT_EOK) {
-        rt_kprintf("mipi init err 3!\r\n");
-        return RT_ERROR;
-    }
+    // if (ret != RT_EOK) {
+    //     rt_kprintf("mipi init err 3!\r\n");
+    //     return RT_ERROR;
+    // }
 
-    mipi_screen.win_config = (struct CRTC_WIN_STATE*)rt_calloc(1, sizeof(struct CRTC_WIN_STATE));
+    // mipi_screen.win_config = (struct CRTC_WIN_STATE*)rt_calloc(1, sizeof(struct CRTC_WIN_STATE));
 
-    if (mipi_screen.win_config == RT_NULL) {
-        rt_kprintf("mipi init err 6!\r\n");
-        return RT_ERROR;
-    }
+    // if (mipi_screen.win_config == RT_NULL) {
+    //     rt_kprintf("mipi init err 6!\r\n");
+    //     return RT_ERROR;
+    // }
 
-    mipi_screen.post_scale = (struct VOP_POST_SCALE_INFO*)rt_calloc(1, sizeof(struct VOP_POST_SCALE_INFO));
+    // mipi_screen.post_scale = (struct VOP_POST_SCALE_INFO*)rt_calloc(1, sizeof(struct VOP_POST_SCALE_INFO));
 
-    if (mipi_screen.post_scale == RT_NULL) {
-        rt_kprintf("mipi init err 7!\r\n");
-        return RT_ERROR;
-    }
+    // if (mipi_screen.post_scale == RT_NULL) {
+    //     rt_kprintf("mipi init err 7!\r\n");
+    //     return RT_ERROR;
+    // }
 
-    hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
+    // hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
 
     return RT_EOK;
 }

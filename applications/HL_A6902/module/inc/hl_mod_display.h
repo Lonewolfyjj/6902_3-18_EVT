@@ -121,6 +121,18 @@ typedef enum _hl_screen_color_e
     RGB888_COLOR_CNT,
 } HL_ENUM8(hl_screen_color_e);
 
+typedef enum _hl_screen_page_e
+{
+    PAGE_NONE,
+    PAGE_LOGO,
+    PAGE_HOME,
+    PAGE_MAIN_MENU,
+    PAGE_TX_CONF_MENU,
+    PAGE_TX_GAIN,
+    PAGE_FAST_MENU,
+    PAGE_MAX,  //  页面总数
+} HL_ENUM8(hl_screen_page_e);
+
 typedef enum _hl_cmd_e
 {
     /// RX状态指示灯状态变更命令，io_ctrl的参数参考<hl_led_mode>,参数为四字节
