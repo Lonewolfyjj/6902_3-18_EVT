@@ -51,6 +51,16 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_SET_REMOTE_PAIR_INFO_CMD = 0x11,
     /// 获取配对设备配对信息
     HL_RF_GET_REMOTE_PAIR_INFO_CMD = 0x12,
+    /// 透传mute静音状态 (CMD + 0x00左声道/0x01右声道 + 开/关mute)
+    HL_RF_BYPASS_MUTE_CMD = 0x20,
+    /// 透传降噪状态 (CMD + 0x00左声道/0x01右声道 + 开/关降噪)
+    HL_RF_BYPASS_DENOISE_CMD = 0x21,
+    /// 透传音量状态 (CMD + 0x00左声道/0x01右声道 + 音量档位)
+    HL_RF_BYPASS_VOLUME_CMD = 0x22,
+    /// 透传录音状态 (CMD + 0x00左声道/0x01右声道 + 开/关录音)
+    HL_RF_BYPASS_RECORD_CMD = 0x23,
+    /// 透传设置状态 (CMD + 0x00左声道/0x01右声道 + 设置状态)
+    HL_RF_BYPASS_SETTING_CMD = 0x24,
 } hl_mod_telink_ctrl_cmd;
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -69,6 +79,16 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_SET_REMOTE_PAIR_INFO_IND = 0x11,
     /// 返回配对设备配对信息
     HL_RF_GET_REMOTE_PAIR_INFO_IND = 0x12,
+    /// 返回mute静音状态
+    HL_RF_BYPASS_MUTE_IND = 0x20,
+    /// 返回降噪状态
+    HL_RF_BYPASS_DENOISE_IND = 0x21,
+    /// 返回音量状态
+    HL_RF_BYPASS_VOLUME_IND = 0x22,
+    /// 返回录音状态
+    HL_RF_BYPASS_RECORD_IND = 0x23,
+    /// 返回设置状态
+    HL_RF_BYPASS_SETTING_IND = 0x24,
 } hl_mod_telink_ctrl_ind;
 
 typedef enum
@@ -79,6 +99,18 @@ typedef enum
     HL_RF_LR_CONNECT,
     HL_RF_PAIRING,
 } hl_rf_pair_state_em;
+
+typedef enum
+{
+    HL_RF_LEFT_CHANNEL = 0x00,
+    HL_RF_RIGHT_CHANNEL,
+} hl_rf_channel_em;
+
+typedef enum
+{
+    HL_RF_OFF = 0x00,
+    HL_RF_ON,
+} hl_rf_onoff_em;
 
 typedef struct
 {

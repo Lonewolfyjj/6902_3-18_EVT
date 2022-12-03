@@ -141,19 +141,36 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_RF_GET_REMOTE_PAIR_INFO_IND:
-            rt_kprintf("\n\nTelink Remote MAC Addr:\nL: ");
+#if HL_IS_TX_DEVICE()
+            rt_kprintf("\n\nTelink Remote MAC Addr:\n[RX]: ");
+            for (int i = 0; i < 6; i++) {
+                rt_kprintf("%02X ", hup_frame.data_addr[i]);
+            }
+            rt_kprintf("\n\n\n");
+#else
+            rt_kprintf("\n\nTelink Remote MAC Addr:\n[TX_L]: ");
             for (int i = 0; i < 12; i++) {
                 rt_kprintf("%02X ", hup_frame.data_addr[i]);
                 if (i == 5) {
-                    rt_kprintf("\nR: ");
+                    rt_kprintf("\n[TX_R]: ");
                 }
             }
             rt_kprintf("\n\n\n");
+#endif
             app_msg_t.cmd       = HL_RF_GET_REMOTE_PAIR_INFO_IND;
             app_msg_t.len       = data_len;
             app_msg_t.param.ptr = hup_frame.data_addr;
             // 上报本地MAC地址
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            break;
+
+        case HL_RF_BYPASS_MUTE_IND:
+        case HL_RF_BYPASS_DENOISE_IND:
+        case HL_RF_BYPASS_VOLUME_IND:
+        case HL_RF_BYPASS_RECORD_IND:
+        case HL_RF_BYPASS_SETTING_IND:
+            rt_kprintf("\n\n[Telink Bypass Cmd]:%02X\n", hup_frame.cmd);
+            rt_kprintf("[Telink Bypass Info]:%s\n\n", hup_frame.data_addr);
             break;
 
         default:
@@ -395,11 +412,38 @@ void telink_send_cmd(int argc, char** argv)
     uint8_t data = (uint8_t)atoi(argv[2]);
     uint8_t len  = (uint8_t)atoi(argv[3]);
 
+    if (cmd == 7 && data < 5) {
+        rt_kprintf("\n[ERROR]telink set rf power too high!\n\n");
+        return;
+    }
+
     rt_kprintf("\nsend data = %d\n", data);
 
     hl_mod_telink_ioctl(cmd, &data, len);
 }
 MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
+
+void telink_bypass(int argc, char** argv)
+{
+    if(argc != 3){
+        rt_kprintf("\n[error]bypass send arg (telink_bypass + CMD + DATA)\n");
+        return;
+    }
+
+    uint8_t cmd          = (uint8_t)atoi(argv[1]);
+    uint8_t send_buf[50] = { 0 };
+
+#if HL_IS_TX_DEVICE()
+    rt_strncpy(send_buf, argv[2], rt_strlen(argv[2]));
+#else
+    rt_strncpy(&send_buf[1], argv[2], rt_strlen(argv[2]));
+    send_buf[0] = 0x02;
+#endif
+    hl_mod_telink_ioctl(cmd, send_buf, rt_strlen(send_buf));
+    rt_kprintf("\nbypass send data = %s\n", send_buf);
+    rt_kprintf("bypass send data len = %d\n", rt_strlen(send_buf));
+}
+MSH_CMD_EXPORT(telink_bypass, telink send bypass cmd);
 
 void telink_get_local_mac(void)
 {
@@ -441,22 +485,25 @@ static uint8_t _hl_str2hex(uint8_t* str)
 
 void telink_set_remote_mac(int argc, char** argv)
 {
+    if(argc != 3){
+        rt_kprintf("\n[error]set remote mac(telink_set_remote_mac + channel + MAC)\n");
+    }
     hl_rf_pair_info_t info;
 
     info.chn    = (uint8_t)atoi(argv[1]);
-    info.mac[0] = _hl_str2hex(argv[2]);
-    info.mac[1] = _hl_str2hex(argv[3]);
-    info.mac[2] = _hl_str2hex(argv[4]);
-    info.mac[3] = _hl_str2hex(argv[5]);
-    info.mac[4] = _hl_str2hex(argv[6]);
-    info.mac[5] = _hl_str2hex(argv[7]);
+    info.mac[0] = _hl_str2hex((uint8_t*)argv[2]);
+    info.mac[1] = _hl_str2hex((uint8_t*)argv[3]);
+    info.mac[2] = _hl_str2hex((uint8_t*)argv[4]);
+    info.mac[3] = _hl_str2hex((uint8_t*)argv[5]);
+    info.mac[4] = _hl_str2hex((uint8_t*)argv[6]);
+    info.mac[5] = _hl_str2hex((uint8_t*)argv[7]);
 
     rt_kprintf("\nSet MAC:");
     for (int i = 0; i < 6; i++) {
         rt_kprintf("%02X ", info.mac[i]);
     }
     rt_kprintf("\n");
-    hl_mod_telink_ioctl(HL_RF_SET_REMOTE_PAIR_INFO_CMD, &info, sizeof(info));
+    hl_mod_telink_ioctl(HL_RF_SET_REMOTE_PAIR_INFO_CMD, (uint8_t*)&info, sizeof(info));
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
