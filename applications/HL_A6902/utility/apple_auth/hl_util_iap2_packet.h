@@ -99,7 +99,7 @@ typedef struct _iap2_packet_header_
     uint8_t  SessionIdentif;
     /// 协议包头部异或校验
     uint8_t  HeaderCksum;
-} st_iap2_packet_header_t;
+} __attribute__((packed, aligned(1))) st_iap2_packet_header_t;
 
 typedef struct _iap2_sync_payload_
 {
@@ -125,7 +125,7 @@ typedef struct _iap2_sync_payload_
     uint8_t  SessionVer1;
     /// 
     uint8_t  PayloadCksum;
-} st_iap2_sync_payload_t;
+} __attribute__((packed, aligned(1))) st_iap2_sync_payload_t;
 
 typedef struct _iap2_ctrl_param_
 {
@@ -135,7 +135,7 @@ typedef struct _iap2_ctrl_param_
     uint16_t Id;
     /// 
     uint8_t* Data;
-} st_iap2_ctrl_param_t;
+} __attribute__((packed, aligned(1))) st_iap2_ctrl_param_t;
 
 typedef struct _iap2_ctrl_payload_
 {
@@ -153,7 +153,7 @@ typedef struct _iap2_ctrl_payload_
     uint8_t* ParamData;
     /// 
     uint8_t  PayloadCksum;
-} st_iap2_ctrl_payload_t;
+} __attribute__((packed, aligned(1))) st_iap2_ctrl_payload_t;
 
 typedef struct _iap2_sync_packet_
 {
@@ -161,7 +161,7 @@ typedef struct _iap2_sync_packet_
     st_iap2_packet_header_t packet_header;
     /// 
     st_iap2_sync_payload_t  sync_payload;
-} st_iap2_sync_packet_t;
+} __attribute__((packed, aligned(1))) st_iap2_sync_packet_t;
 
 typedef struct _iap2_ctrl_packet_
 {
@@ -169,7 +169,7 @@ typedef struct _iap2_ctrl_packet_
     st_iap2_packet_header_t packet_header;
     /// 
     st_iap2_ctrl_payload_t  ctrl_payload;
-} st_iap2_ctrl_packet_t;
+} __attribute__((packed, aligned(1))) st_iap2_ctrl_packet_t;
 /* define --------------------------------------------------------------------*/
 #define EXCHANGE_HIGH_LOW_BYTE(x) ((uint16_t)((((x) >> 8) & 0xFF) | (((x)&0xFF) << 8)))
 

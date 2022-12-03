@@ -21,7 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
-#include "hl_iap2_packet.h"
+#include "hl_util_iap2_packet.h"
 
 /* typedef -------------------------------------------------------------------*/
 typedef enum _iap2_challange_response_status_enum_
@@ -36,8 +36,8 @@ typedef enum _iap2_challange_response_status_enum_
 
 typedef struct _iap2_protocol_
 {
-    uint8_t* send_buffer;
-    uint8_t* recv_buffer;
+    volatile uint8_t* send_buffer;
+    volatile uint8_t* recv_buffer;
 
     st_packet_header_arg packet_arg;
     uint8_t              challenge_req_len;
@@ -53,6 +53,8 @@ typedef struct _iap2_protocol_
     int (*iap2_usb_write)(uint8_t* write_data_addr, uint16_t write_data_len);
     int (*iap2_iic_read)(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
     int (*iap2_iic_write)(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len);
+    /// 打印函数
+    void (*iap2_printf)(const char *fmt, ...);
 } st_iap2_protocol_t, *st_iap2_protocol_p;
 
 /* define --------------------------------------------------------------------*/

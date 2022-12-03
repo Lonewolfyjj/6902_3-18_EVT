@@ -21,8 +21,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
-#include "hl_iap2_packet.h"
-#include "hl_iap2_func.h"
+#include "hl_util_iap2_packet.h"
+#include "hl_util_iap2_func.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -38,6 +38,8 @@ typedef struct _iap2_func_handle_
     int (*iap2_iic_read)(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
     /// I2C写数据函数
     int (*iap2_iic_write)(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len);
+    /// 打印函数
+    void (*iap2_printf)(const char *fmt, ...);
 } func_handle;
 
 /* define --------------------------------------------------------------------*/

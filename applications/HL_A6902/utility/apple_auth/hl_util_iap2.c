@@ -1,4 +1,4 @@
-#include "hl_iap2.h"
+#include "hl_util_iap2.h"
 #include <stdlib.h>
 
 /**
@@ -33,10 +33,10 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
             iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
 
             if (result == 0) {
-                printf("[OK] [_hl_iap2_detect_process] receive detect message!\n");
+                iap2->iap2_printf("[OK] [_hl_iap2_detect_process] receive detect message!\n");
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_LINK;
             } else {
-                printf("[ERROR] [_hl_iap2_detect_process] receive detect message!\n");
+                iap2->iap2_printf("[ERROR] [_hl_iap2_detect_process] receive detect message!\n");
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
             }
             break;
@@ -77,11 +77,16 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_LINK_RECV_SYN_ACK:
             result = hl_iap2_link_recv_sync_ack(iap2);
 
+            while (result != 0) {
+                result = hl_iap2_link_recv_sync_ack(iap2);
+                iap2->delay_usec_func(1000);
+            }
+            
             if (result == 0) {
-                printf("[OK] [_hl_iap2_link_process] receive link message!\n");
+                iap2->iap2_printf("[OK] [_hl_iap2_link_process] receive link message!\n");
                 iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_ACK;
             } else {
-                printf("[ERROR] [_hl_iap2_link_process] receive link message!\n");
+                iap2->iap2_printf("[ERROR] [_hl_iap2_link_process] receive link message!\n");
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
                 iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_SYN;
             }
@@ -124,23 +129,29 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH:
             result = hl_iap2_identify_req_auth(iap2);
 
+            while (result != 0) {
+                result = hl_iap2_identify_req_auth(iap2);
+                // iap2->delay_usec_func(1000);
+            }
+
             if (result == 0) {
-                printf("[OK] [_hl_iap2_identify_process] receive req auth message!\n");
+                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive req auth message!\n");
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH;
             } else {
-                printf("[ERROR] [_hl_iap2_identify_process] receive req auth message!\n");
+                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive req auth message!\n");
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
             }
+            iap2->iap2_printf("[TEST] [_hl_iap2_identify_process]!\n");
             break;
 
         case EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH:
             result = hl_iap2_identify_ack_auth(iap2);
 
             if (result == 0) {
-                printf("[OK] [_hl_iap2_identify_process] receive ack auth message!\n");
+                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive ack auth message!\n");
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_CHALLENGE;
             } else {
-                printf("[ERROR] [_hl_iap2_identify_process] receive ack auth message!\n");
+                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive ack auth message!\n");
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
                 iap2->main_status     = EM_HL_IAP2_STM_MAIN_FAILED;
             }
@@ -150,10 +161,10 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
             result = hl_iap2_identify_req_challenge(iap2);
 
             if (result == 0) {
-                printf("[OK] [_hl_iap2_identify_process] receive req challenge message!\n");
+                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive req challenge message!\n");
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_CHALLENGE;
             } else {
-                printf("[ERROR] [_hl_iap2_identify_process] receive req challenge message!\n");
+                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive req challenge message!\n");
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
                 iap2->main_status     = EM_HL_IAP2_STM_MAIN_FAILED;
             }
@@ -179,7 +190,7 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
             iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED;
             break;
 
-        caseEM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED:
+        case EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED:
             result                = hl_iap2_identify_identification_accepted(iap2);
             iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
             iap2->main_status     = EM_HL_IAP2_STM_MAIN_POWER_UPDATE;
@@ -255,15 +266,16 @@ static int _hl_iap2_ea_session_process(st_iap2_protocol_p iap2)
 int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
-        printf("[_hl_iap2_process_main] error parameter!\n");
+        iap2->iap2_printf("[_hl_iap2_process_main] error parameter!\n");
         return -1;
     }
 
     uint8_t ret = 0;
+    // iap2->iap2_printf("[%s]state:%d\n", __func__);
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
-            _hl_check_usb_insert(iap2);
+            // _hl_check_usb_insert(iap2);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:
@@ -289,7 +301,7 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_MAIN_SUCCEED:
             /* code */
             break;
-            
+
         case EM_HL_IAP2_STM_MAIN_FAILED:
             /* code */
             break;
@@ -305,18 +317,18 @@ int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle)
 {
     if (handle.delay_usec_func == NULL || handle.iap2_usb_read == NULL || handle.iap2_usb_write == NULL
         || handle.iap2_iic_read == NULL || handle.iap2_iic_write == NULL) {
-        printf("[hl_iap2_protocol_init] error parameter!\n");
+        iap2->iap2_printf("[hl_iap2_protocol_init] error parameter!\n");
         return -1;
     }
 
-    iap2->packet_arg.seq_num    = 0x2B;
-    iap2->packet_arg.ack_num    = 0x00;
+    iap2->packet_arg.seq_num    = 0x00;
+    iap2->packet_arg.ack_num    = 0x2B;
     iap2->packet_arg.session_id = 0x00;
 
     iap2->send_buffer = (uint8_t*)malloc(sizeof(uint8_t) * SEND_BUFFER_SIZE);
     iap2->recv_buffer = (uint8_t*)malloc(sizeof(uint8_t) * RECV_BUFFER_SIZE);
     if (iap2->send_buffer == NULL || iap2->recv_buffer == NULL) {
-        printf("[hl_iap2_protocol_init] error malloc buffer!\n");
+        iap2->iap2_printf("[hl_iap2_protocol_init] error malloc buffer!\n");
         return -1;
     }
 
@@ -326,6 +338,9 @@ int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle)
     iap2->iap2_usb_write  = handle.iap2_usb_write;
     iap2->iap2_iic_read   = handle.iap2_iic_read;
     iap2->iap2_iic_write  = handle.iap2_iic_write;
+    iap2->iap2_printf     = handle.iap2_printf;
+
+    iap2->main_status = EM_HL_IAP2_STM_MAIN_DETECT;
 
     return 0;
 }

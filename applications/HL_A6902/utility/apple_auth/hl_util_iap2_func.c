@@ -1,8 +1,8 @@
-#include "hl_iap2_func.h"
-#include "hl_iap2_packet.h"
+#include "hl_util_iap2_func.h"
+#include "hl_util_iap2_packet.h"
 
 // 挑战请求的长度
-static uint8_t  challenge_req_len;
+static uint16_t  challenge_req_len;
 static uint16_t challenge_resp_len;
 
 /**
@@ -47,7 +47,7 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
                 // Read Authentication Status
                 iap2->iap2_iic_read(CP_AUTHENTICATION_CONTROL_STATUES, &val, sizeof(uint8_t), TIMEOUT_US);
                 if (!(val & 0x01)) {
-                    printf("[ERROR] [EM_HL_CHALLENGE_RESP_STM_READ_CTRL] receive status!\n");
+                    iap2->iap2_printf("[ERROR] [EM_HL_CHALLENGE_RESP_STM_READ_CTRL] receive status!\n");
                     status = EM_HL_CHALLENGE_RESP_STM_WRITE_DATA;
                 } else {
                     status = EM_HL_CHALLENGE_RESP_STM_READ_RESP_LEN;
@@ -103,10 +103,10 @@ int hl_iap2_detect_recv(st_iap2_protocol_p iap2)
 
 int hl_iap2_link_send_sync(st_iap2_protocol_p iap2)
 {
-    st_iap2_sync_packet_t iap2_sync_packet;
-    int                   result = 0;
-    uint8_t               ret    = 0;
-    uint8_t               len    = 0;
+    st_iap2_sync_packet_t iap2_sync_packet = { 0 };
+    int                   result           = 0;
+    uint8_t               ret              = 0;
+    uint8_t               len              = 0;
 
     uint8_t* ptr_packet  = (uint8_t*)&iap2_sync_packet;
     uint8_t* ptr_header  = (uint8_t*)&iap2_sync_packet.packet_header;
@@ -117,6 +117,8 @@ int hl_iap2_link_send_sync(st_iap2_protocol_p iap2)
 
     // packet header
     ret = hl_iap2_packet_header_encode(ptr_header, size_packet, LINK_CONTROL_SYN, iap2->packet_arg);
+    iap2->iap2_printf("\r\n%s->%02x:%02x:%02x\r\n", __func__, iap2->packet_arg.seq_num, iap2->packet_arg.ack_num,
+                      iap2->packet_arg.session_id);
     if (ret > 0) {
         len += ret;
     } else {
@@ -145,11 +147,14 @@ int hl_iap2_link_recv_sync_ack(st_iap2_protocol_p iap2)
     uint8_t len         = 0;
     uint8_t size_packet = sizeof(st_iap2_sync_packet_t);
 
-    ret = iap2->iap2_usb_read(iap2->recv_buffer, size_packet, TIMEOUT_US);
+    memset(iap2->recv_buffer, 0, RECV_BUFFER_SIZE);
+    ret = iap2->iap2_usb_read(iap2->recv_buffer, size_packet, 5000);
     if (ret == size_packet) {
         result = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
         iap2->packet_arg.ack_num -= 1;
     }
+    iap2->iap2_printf("%s->%02x:%02x:%02x:%02x", __func__, iap2->recv_buffer[4], LINK_CONTROL_ACK, iap2->recv_buffer[6],
+                      iap2->packet_arg.ack_num);
 
     return result;
 }
@@ -164,7 +169,9 @@ int hl_iap2_link_send_ack(st_iap2_protocol_p iap2)
     uint8_t* ptr_header = (uint8_t*)&iap2_packet_header;
 
     // packet header
-    ret = hl_iap2_packet_header_encode(&iap2_packet_header, PACKET_HEADER_SIZE, LINK_CONTROL_ACK, iap2->packet_arg);
+    ret = hl_iap2_packet_header_encode(&iap2_packet_header, PACKET_HEADER_SIZE + 1, LINK_CONTROL_ACK, iap2->packet_arg);
+    iap2->iap2_printf("\r\n%s->%02x:%02x:%02x\r\n", __func__, iap2->packet_arg.seq_num, iap2->packet_arg.ack_num,
+                      iap2->packet_arg.session_id);
     if (ret > 0) {
         len += ret;
     } else {
@@ -179,19 +186,30 @@ int hl_iap2_link_send_ack(st_iap2_protocol_p iap2)
 
 int hl_iap2_identify_req_auth(st_iap2_protocol_p iap2)
 {
-    int     result     = -1;
-    uint8_t ret        = 0;
-    uint8_t len        = 0;
-    uint8_t message_id = 0;
+    int      result     = -1;
+    uint8_t  ret        = 0;
+    uint8_t  len        = 0;
+    uint16_t message_id = 0;
 
-    ret = iap2->iap2_usb_read(iap2->recv_buffer, IDENTIFY_FRAME_SIZE, TIMEOUT_US);
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
+    ret   = iap2->iap2_usb_read(iap2->recv_buffer, IDENTIFY_FRAME_SIZE, TIMEOUT_US);
+    int i = 0;
+    for (i = 0; i < ret; i++) {
+        iap2->iap2_printf("%02x ", iap2->recv_buffer[i]);
+    }
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
     if (ret == IDENTIFY_FRAME_SIZE) {
         message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
-        ret        = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+        // st_iap2_ctrl_packet_t* ptr_packet = (st_iap2_ctrl_packet_t*)iap2->recv_buffer;
+        iap2->iap2_printf("\r\n%s:%d:0x%04x:%02x:%02x\r\n", __func__, __LINE__, message_id, iap2->packet_arg.ack_num,
+                          iap2->recv_buffer[6]);
+        ret = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+        iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
         if (!ret && message_id == SESSION_ID_REQUESTAUTHCERTIFICATE) {
             result = 0;
         }
     }
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, result);
     return result;
 }
 
@@ -199,28 +217,38 @@ int hl_iap2_identify_ack_auth(st_iap2_protocol_p iap2)
 {
     st_iap2_ctrl_packet_t iap2_ctrl_packet;
 
-    int      result            = -1;
-    uint8_t  ret               = 0;
+    int      result            = 0;
+    uint16_t ret               = 0;
     uint8_t  payload_check_sum = 0;
     uint16_t ctrl_packet_len   = 0;
     uint16_t ctrl_message_len  = 0;
     uint16_t ctrl_param_len    = 0;
     uint16_t certification_len = 0;
     uint16_t len               = 0;
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, result);
+
+    // Read Accessory Certificate Data Length
+    ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
+    while (ret != sizeof(uint16_t)) {
+        iap2->iap2_printf("error ret\n");
+        ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
+        iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
+        // return -1;
+    }
+
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
+
+    certification_len = *((uint16_t*)iap2->recv_buffer);
+    iap2->iap2_printf("%s: cer len  = %04x\r\n", __func__, certification_len);
+    certification_len = EXCHANGE_HIGH_LOW_BYTE(certification_len);
+    iap2->iap2_printf("%s: cer len  = %04x\r\n", __func__, certification_len);
 
     ctrl_packet_len =
         PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + certification_len + 1;
     ctrl_message_len = PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + certification_len;
     ctrl_param_len   = PACKET_PARAM_HEADER_SIZE + certification_len;
-
-    // Read Accessory Certificate Data Length
-    ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, sizeof(uint16_t), iap2->recv_buffer, TIMEOUT_US);
-    if (ret != sizeof(uint16_t)) {
-        printf("error ret\n");
-        return -1;
-    }
-
-    certification_len = EXCHANGE_HIGH_LOW_BYTE(*(uint16_t*)iap2->recv_buffer);
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ctrl_packet_len);
 
     // packet header
     ret = hl_iap2_packet_header_encode(&iap2_ctrl_packet.packet_header, ctrl_packet_len, LINK_CONTROL_ACK,
@@ -243,26 +271,32 @@ int hl_iap2_identify_ack_auth(st_iap2_protocol_p iap2)
     memcpy(iap2->send_buffer, &iap2_ctrl_packet, len);
 
     // Read Accessory Certificate Data
-    ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_1, certification_len, iap2->recv_buffer, TIMEOUT_US);
+    ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_1, iap2->recv_buffer, certification_len, TIMEOUT_US);
+    while (ret != certification_len) {
+        iap2->iap2_printf("error certification length = %d: %d\n", ret, certification_len);
+        ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_1, iap2->recv_buffer, certification_len, TIMEOUT_US);
+    }
     if (ret != certification_len) {
-        printf("error certification length\n");
         result = -1;
     }
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, len);
 
     // packet param
-    len += hl_iap2_ctrl_add_param(iap2->send_buffer + len, ctrl_param_len, 0x00, iap2->recv_buffer);
+    ret = hl_iap2_ctrl_add_param(iap2->send_buffer + len, ctrl_param_len, 0x00, iap2->recv_buffer);
     if (ret > 0) {
         len += ret;
     } else {
         result = -1;
     }
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, len);
 
     // payload checksum
     payload_check_sum =
         hl_checksum_calculation(iap2->send_buffer, PACKET_HEADER_SIZE + 1, ctrl_packet_len - PACKET_HEADER_SIZE - 2);
     iap2->send_buffer[len++] = payload_check_sum;
-
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, len);
     iap2->iap2_usb_write(iap2->send_buffer, len);
+    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, len);
 
     return result;
 }
@@ -272,18 +306,22 @@ int hl_iap2_identify_req_challenge(st_iap2_protocol_p iap2)
     int     result     = -1;
     uint8_t ret        = 0;
     uint8_t len        = 0;
-    uint8_t message_id = 0;
+    uint16_t message_id = 0;
 
     // Request Authentication Challenge Response
-    ret = iap2->iap2_usb_read(iap2->recv_buffer, RECV_BUFFER_SIZE, TIMEOUT_US);
+    ret = iap2->iap2_usb_read(iap2->recv_buffer, 64, TIMEOUT_US);
     if (ret >= 0) {
         message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
         ret        = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+        iap2->iap2_printf("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id, SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
         if (!ret && message_id == SESSION_ID_REQUEST_AUTH_CHALLENG_RESP) {
             challenge_req_len = hl_iap2_ctrl_packet_get_param_len(iap2->recv_buffer);
+            iap2->iap2_printf("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id, SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
             result            = 0;
         }
     }
+    iap2->iap2_printf("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id, SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
+    
 
     return result;
 }
@@ -308,7 +346,7 @@ int hl_iap2_identify_ack_challenge(st_iap2_protocol_p iap2)
     // request challenge response
     ret = hl_iap2_challange_response_process(iap2);
     if (ret != 0) {
-        printf("[error][hl_iap2_challange_response_process] ret val\n");
+        iap2->iap2_printf("[error][hl_iap2_challange_response_process] ret val\n");
         result = -1;
     }
 
@@ -390,7 +428,7 @@ int hl_iap2_identify_start_identification(st_iap2_protocol_p iap2)
     message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
 
     if (message_id != SESSION_ID_START_IDENTIFICATION) {
-        printf("[ERROR][start_identification] receive message id\n");
+        iap2->iap2_printf("[ERROR][start_identification] receive message id\n");
         result = -1;
     }
 
@@ -504,14 +542,14 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
     // packet header
     ret = hl_iap2_packet_header_encode(&iap2_ctrl_packet, ctrl_packet_len, LINK_CONTROL_ACK, iap2->packet_arg);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_identify_identification_info] packet header encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_identify_identification_info] packet header encode\n");
         result = -1;
     }
 
     // packet payload
     ret = hl_iap2_ctrl_payload_encode(&iap2_ctrl_packet.ctrl_payload, ctrl_message_len, SESSION_ID_IDENTIFICATION_INFO);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_identify_identification_info] packet payload encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_identify_identification_info] packet payload encode\n");
         result = -1;
     }
 
@@ -587,14 +625,14 @@ int hl_iap2_powerupdate_send_power(st_iap2_protocol_p iap2)
     // packet header
     ret = hl_iap2_packet_header_encode(&iap2_ctrl_packet, ctrl_packet_len, LINK_CONTROL_ACK, iap2->packet_arg);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_powerupdate_send_power] packet header encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_send_power] packet header encode\n");
         result = -1;
     }
 
     // packet payload
     ret = hl_iap2_ctrl_payload_encode(&iap2_ctrl_packet.ctrl_payload, ctrl_message_len, MESSAGE_ID_START_POWER_UPDATES);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_powerupdate_send_power] packet payload encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_send_power] packet payload encode\n");
         result = -1;
     }
 
@@ -624,7 +662,7 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
         param_id   = hl_iap2_ctrl_packet_get_param_id(iap2->recv_buffer);
         ret        = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
         if (ret != 0 || message_id != MESSAGE_ID_POWER_UPDATE || param_id != 0x0004) {
-            printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0004\n");
+            iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0004\n");
             result = -1;
         }
     }
@@ -636,7 +674,7 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
         param_id   = hl_iap2_ctrl_packet_get_param_id(iap2->recv_buffer);
         ret        = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
         if (ret != 0 || message_id != MESSAGE_ID_POWER_UPDATE || param_id != 0x0005) {
-            printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0005\n");
+            iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0005\n");
             result = -1;
         }
     }
@@ -648,7 +686,7 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
         param_id   = hl_iap2_ctrl_packet_get_param_id(iap2->recv_buffer);
         ret        = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
         if (ret != 0 || message_id != MESSAGE_ID_POWER_UPDATE || param_id != 0x0006) {
-            printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0006\n");
+            iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0006\n");
             result = -1;
         }
     }
@@ -686,14 +724,14 @@ int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2)
     // packet header
     ret = hl_iap2_packet_header_encode(&iap2_ctrl_packet, ctrl_packet_len, LINK_CONTROL_ACK, iap2->packet_arg);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_powerupdate_send_power_source] packet header encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_send_power_source] packet header encode\n");
         result = -1;
     }
 
     // packet payload
     ret = hl_iap2_ctrl_payload_encode(&iap2_ctrl_packet.ctrl_payload, ctrl_message_len, MESSAGE_ID_POWEERSOURCE_UPDATE);
     if (ret < 0) {
-        printf("[ERROR][hl_iap2_powerupdate_send_power_source] packet payload encode\n");
+        iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_send_power_source] packet payload encode\n");
         result = -1;
     }
 
@@ -711,7 +749,7 @@ int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2)
 int hl_iap2_eap_handle_msg(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
-        printf("[hl_iap2_eap_handle_msg] error parameter!\n");
+        iap2->iap2_printf("[hl_iap2_eap_handle_msg] error parameter!\n");
         return -1;
     }
 
@@ -759,7 +797,7 @@ int hl_iap2_eap_handle_msg(st_iap2_protocol_p iap2)
 int hl_iap2_eap_check_power_insert(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
-        printf("[hl_iap2_eap_check_power_insert] error parameter!\n");
+        iap2->iap2_printf("[hl_iap2_eap_check_power_insert] error parameter!\n");
         return -1;
     }
 

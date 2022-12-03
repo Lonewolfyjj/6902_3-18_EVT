@@ -1,4 +1,4 @@
-#include "hl_iap2_packet.h"
+#include "hl_util_iap2_packet.h"
 
 uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 {
@@ -15,7 +15,7 @@ uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 int hl_iap2_detect_packet_encode(uint8_t* write_data_addr)
 {
     if (write_data_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -32,7 +32,7 @@ int hl_iap2_detect_packet_encode(uint8_t* write_data_addr)
 int hl_iap2_detect_packet_decode(uint8_t* read_data_addr)
 {
     if (read_data_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -47,7 +47,7 @@ int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_
                                  st_packet_header_arg header_arg)
 {
     if (packet_header == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -66,14 +66,14 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
                                  st_packet_header_arg* header_arg)
 {
     if (packet_header == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
     st_iap2_packet_header_t* ptr_header = (st_iap2_packet_header_t*)packet_header;
     int                      result     = 0;
 
-    if (ptr_header->ControlByte == ctrl_byte && ptr_header->PacketAckNum == header_arg->seq_num) {
+    if ((ptr_header->ControlByte & ctrl_byte) && (ptr_header->PacketAckNum == (header_arg->ack_num + 1))) {
         *packet_len            = ptr_header->PacketLength;
         header_arg->seq_num    = ptr_header->PacketSeqNum;
         header_arg->ack_num    = ptr_header->PacketAckNum;
@@ -88,7 +88,7 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, uint8_t payload_len)
 {
     if (packet_payload == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -99,10 +99,10 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
     packet_payload->CumulativeAckTimeout      = EXCHANGE_HIGH_LOW_BYTE(0x03E8);
     packet_payload->MaxNumOfRetransmit        = 0x03;
     packet_payload->MaxCumulativeAckNum       = 0x03;
-    packet_payload->PayloadCksum              = hl_checksum_calculation(packet_payload, 0, payload_len - 1);
     packet_payload->SessionId1                = LINK_SESSION1_ID;
     packet_payload->SessionType1              = LINK_SESSION1_TYPE;
     packet_payload->SessionVer1               = LINK_SESSION1_VER;
+    packet_payload->PayloadCksum              = hl_checksum_calculation(packet_payload, 0, payload_len - 1);
 
     return payload_len;
 }
@@ -110,18 +110,19 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
 int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
     st_iap2_ctrl_packet_t* ptr_packet = (st_iap2_ctrl_packet_t*)data_addr;
-    return EXCHANGE_HIGH_LOW_BYTE(ptr_packet->ctrl_payload.MessageId);
+    uint16_t message_id = EXCHANGE_HIGH_LOW_BYTE(ptr_packet->ctrl_payload.MessageId);
+    return message_id;
 }
 
 int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -132,7 +133,7 @@ int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -142,7 +143,7 @@ int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t message_len, uint16_t message_id)
 {
     if (packet_payload == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -156,7 +157,7 @@ int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t
 uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_t param_id, uint8_t* write_data)
 {
     if (write_addr == NULL) {
-        printf("NULL Point\n");
+        // printf("NULL Point\n");
         return -1;
     }
 
@@ -164,7 +165,7 @@ uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_
     ptr_ctrl_param->Len                  = EXCHANGE_HIGH_LOW_BYTE(param_len);
     ptr_ctrl_param->Id                   = EXCHANGE_HIGH_LOW_BYTE(param_id);
     if (write_data != NULL) {
-        memcpy(ptr_ctrl_param->Data, write_data, param_len - 4);
+        memcpy(&ptr_ctrl_param->Data, write_data, param_len - 4);
     }
 
     return param_len;
