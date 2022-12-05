@@ -154,13 +154,19 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
 
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
+    uint32_t tmp;
 
     if (touchpad_switch == true) {
 
         /*Save the pressed coordinates and the state*/
         if (touchpad_is_pressed()) {
-            // rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
+            
             touchpad_get_xy(&last_x, &last_y);
+            tmp = last_x;
+            last_x = 294 - last_y;
+            last_y = tmp;
+            
+            rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
             data->state = LV_INDEV_STATE_PR;
         } else {
             data->state = LV_INDEV_STATE_REL;
@@ -186,7 +192,7 @@ static bool touchpad_is_pressed(void)
 #ifdef RT_USING_ZTW523A
     /*Your code comes here*/
     hl_drv_ztw523a_dev_read_info(&touch_pos);
-    if (touch_pos.type != 1) {
+    if (touch_pos.type != 0) {
         return true;
     }
     return false;
