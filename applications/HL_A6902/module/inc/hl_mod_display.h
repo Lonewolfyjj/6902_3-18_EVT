@@ -140,6 +140,17 @@ typedef enum _hl_cmd_e
     /// MIPI OLED 颜色变更命令，io_ctrl的参数参考<hl_screen_color_e*>
     MSG_OLED_COLOR_CHANGE_CMD,
 
+    /// 
+    MSG_INPUT_UPDATE_CMD,
+    MSG_RX_PWR_KEY_CMD,
+    // // MSG_RX_OK_VOL_CMD,
+    // // MSG_RX_A_VOL_CMD,
+    // // MSG_RX_B_VOL_CMD,
+    // // MSG_RX_VBUS_DET_CMD,
+    // // MSG_RX_HP_DET_CMD,
+    // // MSG_RX_CAM_DET_CMD,
+    /// 
+
     MSG_ID_CNT
 
 } hl_cmd_e;

@@ -348,6 +348,7 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_RX_OK_VOL:
             hl_app_rx_knob_key_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_OK_VOL:(%d) \r\n", p_msg->param.u32_param);
+            
             break;
 
         case MSG_RX_A_VOL:

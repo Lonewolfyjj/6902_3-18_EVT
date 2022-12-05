@@ -5,11 +5,11 @@
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
 
-#ifndef LV_ATTRIBUTE_IMG_MAIN_SINGLE_4
-#define LV_ATTRIBUTE_IMG_MAIN_SINGLE_4
+#ifndef LV_ATTRIBUTE_IMG_MAIN_SIGNAL_4
+#define LV_ATTRIBUTE_IMG_MAIN_SIGNAL_4
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_MAIN_SINGLE_4 uint8_t Main_single_4_map[] = {
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_MAIN_SIGNAL_4 uint8_t Main_signal_4_map[] = {
 #if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8
   /*Pixel format: Alpha 8 bit, Red: 3 bit, Green: 3 bit, Blue: 2 bit*/
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 
@@ -79,12 +79,12 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_MAIN_SING
 #endif
 };
 
-const lv_img_dsc_t Main_single_4 = {
+const lv_img_dsc_t Main_signal_4 = {
   .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
   .header.always_zero = 0,
   .header.reserved = 0,
   .header.w = 14,
   .header.h = 14,
   .data_size = 196 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .data = Main_single_4_map,
+  .data = Main_signal_4_map,
 };

@@ -36,6 +36,10 @@
 #include "hl_util_msg_type.h"
 #include "hl_hal_gpio.h"
 #include <rtthread.h>
+#include "lv_port_indev.h"
+#include "lv_port_disp.h"
+#include "hl_util_msg_type.h"
+
 
 #define HL_DISPLAY_IS_TEST_MOD 1
 
@@ -49,7 +53,7 @@
 #include <rtdbg.h>
 
 #define DISPLAY_THREAD_PRIORITY 18
-#define DISPLAY_THREAD_STACK_SIZE 8192
+#define DISPLAY_THREAD_STACK_SIZE 20480
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -508,6 +512,13 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     uint8_t res = HL_DISPLAY_SUCCESS;
 
     switch (cmd) {
+        case MSG_INPUT_UPDATE_CMD: {
+            mode_to_app_msg_t msg = { 0 };
+            msg = *(mode_to_app_msg_t*)ptr;
+            hl_mod_indev_val_get(&msg);
+
+            break;
+        }
         case MSG_STATE_LED_MODE_CMD: {
             hl_led_mode val = *(hl_led_mode*)ptr;
             if (val >= LED_MODE_ID_CNT) {
@@ -576,7 +587,9 @@ static void hl_mod_display_task(void* param)
         hl_mod_display_led_set();
         // hl_mod_display_scr_page_incmd();
         PageManager_Running();
-        rt_thread_mdelay(RTHEAD_DELAY_TIME);
+        // rt_thread_mdelay(RTHEAD_DELAY_TIME);
+        lv_task_handler();
+        rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
     }
 }
 
@@ -600,7 +613,7 @@ uint8_t hl_mod_display_deinit(void)
 
 
 #endif
-extern int lvgl_test_thread(int argc, char** argv);
+
 uint8_t hl_mod_display_init(void* display_msq)
 {
     uint32_t frambufferaddr;
@@ -622,6 +635,9 @@ uint8_t hl_mod_display_init(void* display_msq)
 #else
     // RX
     hl_drv_rm690a0_init();
+    lv_init();
+    lv_port_disp_init();
+    lv_port_indev_init();
 #endif
 
 #if HL_IS_TX_DEVICE()
@@ -648,8 +664,6 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_mod_display_led_fast_flash(HL_MOD_TX_STATE_LED, HL_BLUE_CHANNEL);
     hl_mod_display_led_color_set(HL_MOD_TX_STATE_LED, 0, 0, 15);
 
-
-    lvgl_test_thread(0,RT_NULL);
     PageManager_Init(PAGE_MAX,10);
 
     hl_mod_page_home_init();
@@ -659,6 +673,9 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_mod_display_scr_set_page(PAGE_HOME);
     // PageManager_PagePush(PAGE_HOME);
     PageManager_PagePush(PAGE_MAIN_MENU);
+
+    // keypad_knob_ok_update(hl_mod_rx_knob_key_pro);
+    encode_knob_update(hl_mod_rx_knob_val_pro);
 #endif
 
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
