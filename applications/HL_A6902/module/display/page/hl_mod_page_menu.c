@@ -80,8 +80,10 @@ static void      event_handler(lv_event_t* e)
     LV_LOG_USER("//////////////////\r\n");
 
 
-    if (obj == btn2 && code == LV_EVENT_CLICKED) {
+    if (obj == btn2 && code == LV_EVENT_KEY) {
       //  PageManager_PagePush(PAGE_HOME);
+      
+      LV_LOG_USER("key = %d\r\n", lv_indev_get_key(lv_indev_get_act()));
     }
 }
 // 创建主页 两个按键 一个滚动条

@@ -256,11 +256,14 @@ static void keypad_touchkey_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * d
 {
     static uint8_t last_key = 0;
 
-    // if () {
-
-    // } else {
-
-    // }
+    last_key = hl_drv_ztw523a_botton_status();
+    if (last_key != BUTTON_UP) {
+        data->state = LV_INDEV_STATE_PR;
+        last_key = LV_KEY_BACKSPACE;
+        LV_LOG_USER("touchkey_en");
+    } else {
+        data->state = LV_INDEV_STATE_REL;
+    }
     data->key = last_key;
 }
 /*------------------
