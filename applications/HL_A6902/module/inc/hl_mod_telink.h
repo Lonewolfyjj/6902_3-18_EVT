@@ -46,11 +46,11 @@ typedef enum _hl_mod_telink_ctrl_cmd
     /// (测试命令)设置RF射频发射功率 (0~23档位调节)
     HL_RF_SET_RF_POWER_CMD,
     /// 获取本地配对信息
-    HL_RF_GET_LOCAL_PAIR_INFO_CMD = 0x10,
+    HL_RF_GET_LOCAL_MAC_CMD = 0x10,
     /// 设置配对设备配对信息 (CMD + 0x00左声道/0x01右声道 + 6字节MAC地址)
-    HL_RF_SET_REMOTE_PAIR_INFO_CMD = 0x11,
+    HL_RF_SET_REMOTE_MAC_CMD = 0x11,
     /// 获取配对设备配对信息
-    HL_RF_GET_REMOTE_PAIR_INFO_CMD = 0x12,
+    HL_RF_GET_REMOTE_MAC_CMD = 0x12,
     /// 透传mute静音状态 (CMD + 0x00左声道/0x01右声道 + 开/关mute)
     HL_RF_BYPASS_MUTE_CMD = 0x20,
     /// 透传降噪状态 (CMD + 0x00左声道/0x01右声道 + 开/关降噪)
@@ -74,11 +74,11 @@ typedef enum _hl_mod_telink_ctrl_ind
     /// 无线透传数据 (CMD + 数据地址 + 数据长度)
     HL_RF_BY_PASS_IND,
     /// 返回本地配对信息
-    HL_RF_GET_LOCAL_PAIR_INFO_IND = 0x10,
+    HL_RF_GET_LOCAL_MAC_IND = 0x10,
     /// 设置配对设备配对信息
-    HL_RF_SET_REMOTE_PAIR_INFO_IND = 0x11,
+    HL_RF_SET_REMOTE_MAC_IND = 0x11,
     /// 返回配对设备配对信息
-    HL_RF_GET_REMOTE_PAIR_INFO_IND = 0x12,
+    HL_RF_GET_REMOTE_MAC_IND = 0x12,
     /// 返回mute静音状态
     HL_RF_BYPASS_MUTE_IND = 0x20,
     /// 返回降噪状态
