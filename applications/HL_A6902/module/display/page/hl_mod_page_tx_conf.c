@@ -36,6 +36,7 @@
 #include "hl_mod_display.h"
 #include "lvgl.h"
 #include "rtthread.h"
+#include "hl_mod_page.h"
 
 
 

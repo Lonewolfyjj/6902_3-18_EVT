@@ -39,6 +39,7 @@
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
 #include "hl_util_msg_type.h"
+#include "hl_mod_page.h"
 
 
 #define HL_DISPLAY_IS_TEST_MOD 1
