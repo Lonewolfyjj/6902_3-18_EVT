@@ -224,12 +224,12 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
     s_audio_header.fmt_id       = ID_FMT;
     s_audio_header.fmt_sz       = 16;
     s_audio_header.audio_format = FORMAT_PCM;
-    s_audio_header.num_channels = cap_config->channels;
+    s_audio_header.num_channels = 1;//cap_config->channels;
     s_audio_header.sample_rate  = cap_config->rate;
 
     s_audio_header.bits_per_sample = 24;  //cap_config->bits;
-    s_audio_header.byte_rate       = (s_audio_header.bits_per_sample / 8) * cap_config->channels * cap_config->rate;
-    s_audio_header.block_align     = cap_config->channels * (s_audio_header.bits_per_sample / 8);
+    s_audio_header.byte_rate       = (s_audio_header.bits_per_sample / 8) * 1 * cap_config->rate; //(s_audio_header.bits_per_sample / 8) * cap_config->channels * cap_config->rate;
+    s_audio_header.block_align     = 1 * (s_audio_header.bits_per_sample / 8);
     s_audio_header.data_id         = ID_DATA;
 
     lseek(p_file_audio, 0, SEEK_SET);
