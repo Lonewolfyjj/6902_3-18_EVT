@@ -154,7 +154,7 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
     video_mem_t.y1 = area->y1;
     video_mem_t.y2 = area->y2;
 
-    a = rt_tick_get();
+    // a = rt_tick_get();
     // rt_kprintf("s==%d\n",rt_tick_get());
     hl_mod_lvgl_video_memory(&video_mem_t);
     
@@ -174,8 +174,8 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 	// disp_ctx.scale->dstH = area->y2 - area->y1 + 1;
 
     lv_disp_refer();
-    b = rt_tick_get();
-    rt_kprintf("inc==%d\n",b-a);
+    // b = rt_tick_get();
+    // rt_kprintf("inc==%d\n",b-a);
     lv_disp_flush_ready(disp_drv);
 
     return;
