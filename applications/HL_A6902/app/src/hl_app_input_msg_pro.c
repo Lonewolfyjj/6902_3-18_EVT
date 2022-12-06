@@ -27,6 +27,7 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_app_audio_msg_pro.h"
 #include "hl_mod_input.h"
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
@@ -156,9 +157,11 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         tx_info.usb_plug = 0;
+        tx_info.uac_link_flag = 0;
     } else {
         tx_info.usb_plug = 1;
     }
+    hl_app_audio_stream_updata();
 }
 
 /// 外置mic状态处理
@@ -174,6 +177,7 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
         mic_select          = HL_MIC_INTERNAL;
     }
     hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+    hl_app_audio_stream_updata();
 }
 
 #else
@@ -272,9 +276,11 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         rx_info.usb_plug = 0;
+        rx_info.uac_link_flag = 0;
     } else {
         rx_info.usb_plug = 1;
     }
+    hl_app_audio_stream_updata();
 }
 
 /// 监听口状态处理

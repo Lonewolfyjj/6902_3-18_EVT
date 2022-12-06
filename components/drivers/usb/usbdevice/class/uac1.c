@@ -67,6 +67,8 @@
 #define C_MB_POOL_SIZE              (C_BUFFER_NUM + 8)
 #define C_TOTAL_SIZE                (C_AUDIO_PERIOD_SIZE * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3))
 
+#define NULL_BUFF_SIZE              512
+
 #define FREQ(f) { ((f) & 0xFF), ((f) >> 8 & 0xFF), ((f) >> 16 & 0xFF) }
 #define UAC_DT_AC_HEADER_LENGTH UAC_DT_AC_HEADER_SIZE(F_AUDIO_NUM_INTERFACES)
 #define UAC_DT_AC_HEADER_LENGTH_SINGLE UAC_DT_AC_HEADER_SIZE(F_AUDIO_NUM_INTERFACES_SINGLE)
@@ -111,9 +113,9 @@ typedef enum _hl_uac_type_e
 } hl_uac_type_e;
 
 /// @brief usb主机到设备uac音频流buff 
-struct rt_ringbuffer* g_host2dev_rb = RT_NULL;
+static struct rt_ringbuffer* g_host2dev_rb = RT_NULL;
 /// @brief usb 设备到主机uac音频流buff
-struct rt_ringbuffer* g_dev2host_rb = RT_NULL;
+static struct rt_ringbuffer* g_dev2host_rb = RT_NULL;
 /// @brief uac 设备类型字符串（"mic"、 "spk"、"mic&spk"）
 char uac_type[16] = "mic&spk";
 /// @brief uac设备类型（通过uac_type得出的类型值）
@@ -127,16 +129,16 @@ struct usb_audio_buf
 
 struct audio_play
 {
-    rt_bool_t enable;
+    // rt_bool_t enable;
     rt_uint32_t period_size;
     rt_uint32_t total_size;
     rt_uint8_t cur_mute;
-    rt_uint8_t set_mute;
+    // rt_uint8_t set_mute;
     rt_uint16_t cur_volume;
     rt_uint16_t set_volume;
     rt_uint16_t res_volume;
     rt_uint32_t sample_rate;
-    rt_uint32_t mb_pool[P_MB_POOL_SIZE];
+    // rt_uint32_t mb_pool[P_MB_POOL_SIZE];
     rt_size_t recv_size;
     rt_bool_t set_sample_rate;
     rt_list_t free_list;
@@ -144,19 +146,19 @@ struct audio_play
     struct rt_device *audio_dev;
     struct audio_buf abuf;
     struct usb_audio_buf pbuf[P_BUFFER_NUM];
-    struct rt_mailbox mb;
+    // struct rt_mailbox mb;
 };
 
 struct audio_capture
 {
     rt_uint8_t frame_cnt;
     rt_uint8_t cur_mute;
-    rt_uint8_t set_mute;
+    // rt_uint8_t set_mute;
     rt_uint16_t cur_volume;
     rt_uint16_t set_volume;
     rt_uint16_t res_volume;
     rt_uint32_t sample_rate;
-    rt_uint32_t mb_pool[C_MB_POOL_SIZE];
+    // rt_uint32_t mb_pool[C_MB_POOL_SIZE];
     rt_size_t send_size;
     rt_bool_t set_sample_rate;
     rt_list_t free_list;
@@ -164,7 +166,7 @@ struct audio_capture
     struct rt_device *audio_dev;
     struct audio_buf abuf;
     struct usb_audio_buf cbuf[C_BUFFER_NUM];
-    struct rt_mailbox mb;
+    // struct rt_mailbox mb;
 };
 
 struct uac1
@@ -180,8 +182,26 @@ struct uac1
     struct audio_capture c;
 };
 
-static struct uac1 *g_uac1 = RT_NULL;
+/// uac设备结构体
+struct _hl_uac_dev
+{
+    /// uac连接标志
+    rt_uint8_t        link_flag;
+    /// 播放使能标志
+    rt_uint8_t        p_enable;
+    /// 录制使能标志
+    rt_uint8_t        c_enable;
+    /// 邮箱环形缓存区
+    rt_uint32_t       mb_pool[C_MB_POOL_SIZE];
+    /// 消息邮箱(通过该邮箱往外发送消息)
+    struct rt_mailbox mb;
+    // uacd 设备本体               
+    struct rt_device  parent;     
+};
 
+static struct uac1        *g_uac1                 = RT_NULL;
+volatile static struct _hl_uac_dev uac_dev        = {0};
+static uint8_t null_buff[NULL_BUFF_SIZE]          = {0}; 
 ALIGN(4)
 const static char *_ustring[] =
 {
@@ -794,227 +814,227 @@ static rt_err_t _audio_get_endpoint_req(ufunction_t func, ureq_t setup)
     return RT_EOK;
 }
 
-static rt_err_t _audio_playback_card_enable(struct audio_play *p)
-{
-    struct AUDIO_PARAMS param;
-    rt_err_t ret;
+// static rt_err_t _audio_playback_card_enable(struct audio_play *p)
+// {
+//     struct AUDIO_PARAMS param;
+//     rt_err_t ret;
 
-    RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
+//     RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
 
-    if (!p->audio_dev)
-    {
-        p->audio_dev = rt_device_find(RT_USB_AUDIO_P_NAME);
+//     if (!p->audio_dev)
+//     {
+//         p->audio_dev = rt_device_find(RT_USB_AUDIO_P_NAME);
 
-        if (!p->audio_dev)
-        {
-            rt_kprintf("can't find audio dev: %s\n", RT_USB_AUDIO_P_NAME);
-            return -RT_ERROR;
-        }
-    }
+//         if (!p->audio_dev)
+//         {
+//             rt_kprintf("can't find audio dev: %s\n", RT_USB_AUDIO_P_NAME);
+//             return -RT_ERROR;
+//         }
+//     }
 
-    ret = rt_device_open(p->audio_dev, RT_DEVICE_OFLAG_WRONLY);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do open audio dev: %s\n", RT_USB_AUDIO_P_NAME);
-        return -RT_ERROR;
-    }
+//     ret = rt_device_open(p->audio_dev, RT_DEVICE_OFLAG_WRONLY);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do open audio dev: %s\n", RT_USB_AUDIO_P_NAME);
+//         return -RT_ERROR;
+//     }
 
-    p->period_size = p->sample_rate / 1000 * P_PERIOD_SIZE_MS;
-    if (p->period_size > P_AUDIO_PERIOD_SIZE)
-    {
-        rt_kprintf("play period_size %d greater than %d\n", p->period_size, P_AUDIO_PERIOD_SIZE);
-        return -RT_ERROR;
-    }
-    p->total_size = p->period_size * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3);
-    p->abuf.period_size = p->period_size;
-    p->abuf.buf_size = p->period_size * P_AUDIO_PERIOD_COUNT;
-    ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_PCM_PREPARE, &g_uac1->p.abuf);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do RK_AUDIO_CTL_PCM_PREPARE\n");
-        return -RT_ERROR;
-    }
-#ifdef RT_USB_AUDIO_PLL_COMPENSATION
-    if (p->sample_rate % 8000 == 0)
-    {
-        HAL_CRU_ClkSetFreq(PLL_CPLL, PLL_CPLL_8000);
-        HAL_CRU_ClkSetFreq(I2S1_MCLKOUT, I2S1_MCLKOUT_8000);
-    }
-    else if (p->sample_rate % 44100 == 0)
-    {
-        HAL_CRU_ClkSetFreq(PLL_CPLL, PLL_CPLL_44100);
-        HAL_CRU_ClkSetFreq(I2S1_MCLKOUT, I2S1_MCLKOUT_44100);
-    }
-    else
-    {
-        rt_kprintf("%s: sample rate: %u unsupported\n", __func__, p->sample_rate);
-        return -RT_ERROR;
-    }
-#endif
-    param.channels = P_NR_CHANNEL;
-    param.sampleRate = p->sample_rate;
-    param.sampleBits = P_AUDIO_SAMPLE_BITS;
-    ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_HW_PARAMS, &param);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do RK_AUDIO_CTL_HW_PARAMS\n");
-        return -RT_ERROR;
-    }
+//     p->period_size = p->sample_rate / 1000 * P_PERIOD_SIZE_MS;
+//     if (p->period_size > P_AUDIO_PERIOD_SIZE)
+//     {
+//         rt_kprintf("play period_size %d greater than %d\n", p->period_size, P_AUDIO_PERIOD_SIZE);
+//         return -RT_ERROR;
+//     }
+//     p->total_size = p->period_size * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3);
+//     p->abuf.period_size = p->period_size;
+//     p->abuf.buf_size = p->period_size * P_AUDIO_PERIOD_COUNT;
+//     ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_PCM_PREPARE, &g_uac1->p.abuf);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do RK_AUDIO_CTL_PCM_PREPARE\n");
+//         return -RT_ERROR;
+//     }
+// #ifdef RT_USB_AUDIO_PLL_COMPENSATION
+//     if (p->sample_rate % 8000 == 0)
+//     {
+//         HAL_CRU_ClkSetFreq(PLL_CPLL, PLL_CPLL_8000);
+//         HAL_CRU_ClkSetFreq(I2S1_MCLKOUT, I2S1_MCLKOUT_8000);
+//     }
+//     else if (p->sample_rate % 44100 == 0)
+//     {
+//         HAL_CRU_ClkSetFreq(PLL_CPLL, PLL_CPLL_44100);
+//         HAL_CRU_ClkSetFreq(I2S1_MCLKOUT, I2S1_MCLKOUT_44100);
+//     }
+//     else
+//     {
+//         rt_kprintf("%s: sample rate: %u unsupported\n", __func__, p->sample_rate);
+//         return -RT_ERROR;
+//     }
+// #endif
+//     param.channels = P_NR_CHANNEL;
+//     param.sampleRate = p->sample_rate;
+//     param.sampleBits = P_AUDIO_SAMPLE_BITS;
+//     ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_HW_PARAMS, &param);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do RK_AUDIO_CTL_HW_PARAMS\n");
+//         return -RT_ERROR;
+//     }
 
-    p->recv_size = 0;
-    p->enable = true;
+//     p->recv_size = 0;
+//     p->enable = true;
 
-    return RT_EOK;
-}
+//     return RT_EOK;
+// }
 
-static rt_err_t _audio_playback_card_disable(struct audio_play *p)
-{
-    rt_err_t ret = RT_EOK;
-    struct usb_audio_buf *pbuf;
-    rt_base_t level;
+// static rt_err_t _audio_playback_card_disable(struct audio_play *p)
+// {
+//     rt_err_t ret = RT_EOK;
+//     struct usb_audio_buf *pbuf;
+//     rt_base_t level;
 
-    RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
+//     RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
 
-    p->enable = false;
-    /* Clear ready list and insert to free list again */
-    level = rt_hw_interrupt_disable();
-    while (!rt_list_isempty(&p->ready_list))
-    {
-        pbuf = rt_list_first_entry(&p->ready_list, struct usb_audio_buf, list);
-        rt_list_remove(&pbuf->list);
-        rt_list_insert_before(&p->free_list, &pbuf->list);
-    }
-    rt_hw_interrupt_enable(level);
+//     p->enable = false;
+//     /* Clear ready list and insert to free list again */
+//     level = rt_hw_interrupt_disable();
+//     while (!rt_list_isempty(&p->ready_list))
+//     {
+//         pbuf = rt_list_first_entry(&p->ready_list, struct usb_audio_buf, list);
+//         rt_list_remove(&pbuf->list);
+//         rt_list_insert_before(&p->free_list, &pbuf->list);
+//     }
+//     rt_hw_interrupt_enable(level);
 
-    if (p->audio_dev)
-    {
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_STOP, NULL);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to do RK_AUDIO_CTL_STOP\n");
-            return -RT_ERROR;
-        }
+//     if (p->audio_dev)
+//     {
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_STOP, NULL);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to do RK_AUDIO_CTL_STOP\n");
+//             return -RT_ERROR;
+//         }
 
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_PCM_RELEASE, NULL);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to do RK_AUDIO_CTL_PCM_RELEASE\n");
-            return -RT_ERROR;
-        }
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_PCM_RELEASE, NULL);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to do RK_AUDIO_CTL_PCM_RELEASE\n");
+//             return -RT_ERROR;
+//         }
 
-        rt_device_close(p->audio_dev);
-        p->audio_dev = RT_NULL;
-    }
+//         rt_device_close(p->audio_dev);
+//         p->audio_dev = RT_NULL;
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
-static rt_err_t _audio_playback_card_set_mute(struct audio_play *p)
-{
-    rt_err_t ret = RT_EOK;
-    rt_int32_t volume = 0;
-    rt_int16_t v_db, v_max_db, v_min_db;
-    struct AUDIO_GAIN_INFO info;
-    struct AUDIO_DB_CONFIG db_config;
+// static rt_err_t _audio_playback_card_set_mute(struct audio_play *p)
+// {
+//     rt_err_t ret = RT_EOK;
+//     rt_int32_t volume = 0;
+//     rt_int16_t v_db, v_max_db, v_min_db;
+//     struct AUDIO_GAIN_INFO info;
+//     struct AUDIO_DB_CONFIG db_config;
 
-    if (p->audio_dev && p->cur_mute != p->set_mute)
-    {
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN_INFO, &info);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to get gain info\n");
-            return -RT_ERROR;
-        }
-        if (p->set_mute)
-        {
-            ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("fail to get gain\n");
-                return -RT_ERROR;
-            }
-            db_config.dB = info.mindB;
-            rt_kprintf("db_config.dB = %d\n", db_config.dB);
-            ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("fail to set gain\n");
-                return -RT_ERROR;
-            }
-        }
-        else if (!p->set_mute && p->cur_volume)
-        {
-            v_db = VOLUME_USB_TO_DB(p->cur_volume);
-            v_max_db = VOLUME_USB_TO_DB(VOLUME_MAX_USB);
-            v_min_db = VOLUME_USB_TO_DB(VOLUME_MIN_USB);
-            volume = VOLUME_DB_TO_PERCENT(v_db, v_max_db, v_min_db);
+//     if (p->audio_dev && p->cur_mute != p->set_mute)
+//     {
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN_INFO, &info);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to get gain info\n");
+//             return -RT_ERROR;
+//         }
+//         if (p->set_mute)
+//         {
+//             ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
+//             if (ret != RT_EOK)
+//             {
+//                 rt_kprintf("fail to get gain\n");
+//                 return -RT_ERROR;
+//             }
+//             db_config.dB = info.mindB;
+//             rt_kprintf("db_config.dB = %d\n", db_config.dB);
+//             ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
+//             if (ret != RT_EOK)
+//             {
+//                 rt_kprintf("fail to set gain\n");
+//                 return -RT_ERROR;
+//             }
+//         }
+//         else if (!p->set_mute && p->cur_volume)
+//         {
+//             v_db = VOLUME_USB_TO_DB(p->cur_volume);
+//             v_max_db = VOLUME_USB_TO_DB(VOLUME_MAX_USB);
+//             v_min_db = VOLUME_USB_TO_DB(VOLUME_MIN_USB);
+//             volume = VOLUME_DB_TO_PERCENT(v_db, v_max_db, v_min_db);
 
-            ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("fail to get gain\n");
-                return -RT_ERROR;
-            }
-            db_config.dB = info.mindB + volume * (info.maxdB - info.mindB) / 100;
-            db_config.dB = db_config.dB - db_config.dB % info.step;
-            rt_kprintf("db_config.dB = %d\n", db_config.dB);
-            ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("fail to set gain\n");
-                return -RT_ERROR;
-            }
-        }
+//             ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
+//             if (ret != RT_EOK)
+//             {
+//                 rt_kprintf("fail to get gain\n");
+//                 return -RT_ERROR;
+//             }
+//             db_config.dB = info.mindB + volume * (info.maxdB - info.mindB) / 100;
+//             db_config.dB = db_config.dB - db_config.dB % info.step;
+//             rt_kprintf("db_config.dB = %d\n", db_config.dB);
+//             ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
+//             if (ret != RT_EOK)
+//             {
+//                 rt_kprintf("fail to set gain\n");
+//                 return -RT_ERROR;
+//             }
+//         }
 
-        p->cur_mute = p->set_mute;
-    }
+//         p->cur_mute = p->set_mute;
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
-static rt_err_t _audio_playback_card_set_volume(struct audio_play *p)
-{
-    rt_err_t ret = RT_EOK;
-    rt_int16_t v_db, v_max_db, v_min_db;
-    rt_int32_t volume;
-    struct AUDIO_GAIN_INFO info;
-    struct AUDIO_DB_CONFIG db_config;
+// static rt_err_t _audio_playback_card_set_volume(struct audio_play *p)
+// {
+//     rt_err_t ret = RT_EOK;
+//     rt_int16_t v_db, v_max_db, v_min_db;
+//     rt_int32_t volume;
+//     struct AUDIO_GAIN_INFO info;
+//     struct AUDIO_DB_CONFIG db_config;
 
-    if (p->audio_dev && p->cur_volume != p->set_volume)
-    {
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN_INFO, &info);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to get gain info\n");
-            return -RT_ERROR;
-        }
+//     if (p->audio_dev && p->cur_volume != p->set_volume)
+//     {
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN_INFO, &info);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to get gain info\n");
+//             return -RT_ERROR;
+//         }
 
-        v_db = VOLUME_USB_TO_DB(p->set_volume);
-        v_max_db = VOLUME_USB_TO_DB(VOLUME_MAX_USB);
-        v_min_db = VOLUME_USB_TO_DB(VOLUME_MIN_USB);
-        volume = VOLUME_DB_TO_PERCENT(v_db, v_max_db, v_min_db);
+//         v_db = VOLUME_USB_TO_DB(p->set_volume);
+//         v_max_db = VOLUME_USB_TO_DB(VOLUME_MAX_USB);
+//         v_min_db = VOLUME_USB_TO_DB(VOLUME_MIN_USB);
+//         volume = VOLUME_DB_TO_PERCENT(v_db, v_max_db, v_min_db);
 
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to get gain\n");
-            return -RT_ERROR;
-        }
-        db_config.dB = info.mindB + volume * (info.maxdB - info.mindB) / 100;
-        db_config.dB = db_config.dB - db_config.dB % info.step;
-        rt_kprintf("db_config.dB = %d\n", db_config.dB);
-        ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to set gain\n");
-            return -RT_ERROR;
-        }
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_GET_GAIN, &db_config);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to get gain\n");
+//             return -RT_ERROR;
+//         }
+//         db_config.dB = info.mindB + volume * (info.maxdB - info.mindB) / 100;
+//         db_config.dB = db_config.dB - db_config.dB % info.step;
+//         rt_kprintf("db_config.dB = %d\n", db_config.dB);
+//         ret = rt_device_control(p->audio_dev, RK_AUDIO_CTL_SET_GAIN, &db_config);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to set gain\n");
+//             return -RT_ERROR;
+//         }
 
-        p->cur_volume = p->set_volume;
-    }
+//         p->cur_volume = p->set_volume;
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
 static void _audio_start_playback(ufunction_t func)
 {
@@ -1026,127 +1046,130 @@ static void _audio_start_playback(ufunction_t func)
     g_uac1->ep_out->request.buffer = g_uac1->ep_out->buffer;
     g_uac1->ep_out->request.size = EP_MAXPACKET(g_uac1->ep_out);
     g_uac1->ep_out->request.req_type = UIO_REQUEST_READ_BEST;
-
     rt_usbd_io_request(func->device, g_uac1->ep_out, &g_uac1->ep_out->request);
+    uac_dev.p_enable = true;
+    rt_kprintf("uac_dev.p_enable = true\n");
 }
 
 static void _audio_stop_playback(ufunction_t func)
 {
-    rt_uint32_t msg;
+    // rt_uint32_t msg;
 
     /* re-init playback mailbox before send MSG_STOP */
-    rt_mb_control(&g_uac1->p.mb, RT_IPC_CMD_RESET, RT_NULL);
+    // rt_mb_control(&g_uac1->p.mb, RT_IPC_CMD_RESET, RT_NULL);
 
-    msg = MSG_STOP;
-    if (rt_mb_send(&g_uac1->p.mb, msg) != RT_EOK)
-    {
-        rt_kprintf("%s: mb send fail\n", __func__);
-        return;
-    }
+    // msg = MSG_STOP;
+    // if (rt_mb_send(&g_uac1->p.mb, msg) != RT_EOK)
+    // {
+    //     rt_kprintf("%s: mb send fail\n", __func__);
+    //     return;
+    // }
 
     dcd_ep_disable(func->device->dcd, g_uac1->ep_out);
+    uac_dev.p_enable = false;
+    rt_kprintf("uac_dev.p_enable = false\n");
 }
 
-static rt_err_t _audio_capture_card_enable(struct audio_capture *c)
-{
-    struct AUDIO_PARAMS param;
-    rt_err_t ret;
+// static rt_err_t _audio_capture_card_enable(struct audio_capture *c)
+// {
+//     struct AUDIO_PARAMS param;
+//     rt_err_t ret;
 
-    RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
+//     RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
 
-    if (!c->audio_dev)
-    {
-        c->audio_dev = rt_device_find(RT_USB_AUDIO_C_NAME);
+//     if (!c->audio_dev)
+//     {
+//         c->audio_dev = rt_device_find(RT_USB_AUDIO_C_NAME);
 
-        if (!c->audio_dev)
-        {
-            rt_kprintf("can't find audio device: %s\n", RT_USB_AUDIO_C_NAME);
-            return -RT_ERROR;
-        }
-    }
+//         if (!c->audio_dev)
+//         {
+//             rt_kprintf("can't find audio device: %s\n", RT_USB_AUDIO_C_NAME);
+//             return -RT_ERROR;
+//         }
+//     }
 
-    ret = rt_device_open(c->audio_dev, RT_DEVICE_OFLAG_RDONLY);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do open audio dev: %s\n", RT_USB_AUDIO_C_NAME);
-        return -RT_ERROR;
-    }
+//     ret = rt_device_open(c->audio_dev, RT_DEVICE_OFLAG_RDONLY);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do open audio dev: %s\n", RT_USB_AUDIO_C_NAME);
+//         return -RT_ERROR;
+//     }
 
-    param.channels = C_NR_CHANNEL;
-    param.sampleRate = c->sample_rate;
-    param.sampleBits = C_AUDIO_SAMPLE_BITS;
+//     param.channels = C_NR_CHANNEL;
+//     param.sampleRate = c->sample_rate;
+//     param.sampleBits = C_AUDIO_SAMPLE_BITS;
 
-    ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_PCM_PREPARE, &c->abuf);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do RK_AUDIO_CTL_PCM_PREPARE\n");
-        return -RT_ERROR;
-    }
+//     ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_PCM_PREPARE, &c->abuf);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do RK_AUDIO_CTL_PCM_PREPARE\n");
+//         return -RT_ERROR;
+//     }
 
-    ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_HW_PARAMS, &param);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("fail to do RK_AUDIO_CTL_HW_PARAMS\n");
-        return -RT_ERROR;
-    }
+//     ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_HW_PARAMS, &param);
+//     if (ret != RT_EOK)
+//     {
+//         rt_kprintf("fail to do RK_AUDIO_CTL_HW_PARAMS\n");
+//         return -RT_ERROR;
+//     }
 
-    c->send_size = 0;
+//     c->send_size = 0;
 
-    return RT_EOK;
-}
+//     return RT_EOK;
+// }
 
-static rt_err_t _audio_capture_card_disable(struct audio_capture *c)
-{
-    rt_err_t ret = RT_EOK;
-    struct usb_audio_buf *cbuf;
-    rt_base_t level;
+// static rt_err_t _audio_capture_card_disable(struct audio_capture *c)
+// {
+//     rt_err_t ret = RT_EOK;
+//     struct usb_audio_buf *cbuf;
+//     rt_base_t level;
 
-    RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
+//     RT_DEBUG_LOG(RT_DEBUG_USB, ("%s\n", __func__));
 
-    /* Clear ready list and insert to free list again */
-    level = rt_hw_interrupt_disable();
-    while (!rt_list_isempty(&c->ready_list))
-    {
-        cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
-        rt_list_remove(&cbuf->list);
-        rt_list_insert_before(&c->free_list, &cbuf->list);
-    }
-    rt_hw_interrupt_enable(level);
+//     /* Clear ready list and insert to free list again */
+//     level = rt_hw_interrupt_disable();
+//     while (!rt_list_isempty(&c->ready_list))
+//     {
+//         cbuf = rt_list_first_entry(&c->ready_list, struct usb_audio_buf, list);
+//         rt_list_remove(&cbuf->list);
+//         rt_list_insert_before(&c->free_list, &cbuf->list);
+//     }
+//     rt_hw_interrupt_enable(level);
 
-    if (c->audio_dev != RT_NULL)
-    {
-        ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_STOP, NULL);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to do RK_AUDIO_CTL_STOP\n");
-            return -RT_ERROR;
-        }
+//     if (c->audio_dev != RT_NULL)
+//     {
+//         ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_STOP, NULL);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to do RK_AUDIO_CTL_STOP\n");
+//             return -RT_ERROR;
+//         }
 
-        ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_PCM_RELEASE, NULL);
-        if (ret != RT_EOK)
-        {
-            rt_kprintf("fail to do RK_AUDIO_CTL_PCM_RELEASE\n");
-            return -RT_ERROR;
-        }
+//         ret = rt_device_control(c->audio_dev, RK_AUDIO_CTL_PCM_RELEASE, NULL);
+//         if (ret != RT_EOK)
+//         {
+//             rt_kprintf("fail to do RK_AUDIO_CTL_PCM_RELEASE\n");
+//             return -RT_ERROR;
+//         }
 
-        rt_device_close(c->audio_dev);
-        c->audio_dev = RT_NULL;
-    }
+//         rt_device_close(c->audio_dev);
+//         c->audio_dev = RT_NULL;
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
-static rt_err_t _audio_capture_card_set_mute(struct audio_capture *c)
-{
-    /* TODO */
-    return RT_EOK;
-}
+// static rt_err_t _audio_capture_card_set_mute(struct audio_capture *c)
+// {
+//     /* TODO */
+//     return RT_EOK;
+// }
 
-static rt_err_t _audio_capture_card_set_volume(struct audio_capture *c)
-{
-    /* TODO */
-    return RT_EOK;
-}
+// static rt_err_t _audio_capture_card_set_volume(struct audio_capture *c)
+// {
+//     /* TODO */
+//     return RT_EOK;
+// }
 
 static void _audio_start_capture(ufunction_t func)
 {
@@ -1162,23 +1185,25 @@ static void _audio_start_capture(ufunction_t func)
     ep_in->request.size = g_uac1->c.sample_rate * framesize / interval;
     ep_in->request.req_type = UIO_REQUEST_WRITE;
     rt_usbd_io_request(func->device, ep_in, &ep_in->request);
+    uac_dev.c_enable = true;
 }
 
 static void _audio_stop_capture(ufunction_t func)
 {
-    rt_uint32_t msg;
+    // rt_uint32_t msg;
+    
+    // /* re-init capture mailbox before send MSG_STOP */
+    // rt_mb_control(&g_uac1->c.mb, RT_IPC_CMD_RESET, RT_NULL);
 
-    /* re-init capture mailbox before send MSG_STOP */
-    rt_mb_control(&g_uac1->c.mb, RT_IPC_CMD_RESET, RT_NULL);
-
-    msg = MSG_STOP;
-    if (rt_mb_send(&g_uac1->c.mb, msg) != RT_EOK)
-    {
-        rt_kprintf("%s: mb send fail\n", __func__);
-        return;
-    }
+    // msg = MSG_STOP;
+    // if (rt_mb_send(&g_uac1->c.mb, msg) != RT_EOK)
+    // {
+    //     rt_kprintf("%s: mb send fail\n", __func__);
+    //     return;
+    // }
 
     dcd_ep_disable(func->device->dcd, g_uac1->ep_in);
+    uac_dev.c_enable = false;
 }
 
 static rt_err_t _function_enable(ufunction_t func)
@@ -1210,6 +1235,8 @@ static rt_err_t _function_setup(ufunction_t func, ureq_t setup)
 
 static rt_err_t _function_set_alt(ufunction_t func, rt_uint8_t intf, rt_uint8_t alt)
 {
+    rt_uint32_t msg;
+
     /* No i/f has more than 2 alt settings */
     if (alt > 1)
     {
@@ -1265,6 +1292,15 @@ static rt_err_t _function_set_alt(ufunction_t func, rt_uint8_t intf, rt_uint8_t 
         return  -RT_EINVAL;
     }
 
+    if (uac_dev.link_flag == 0) {
+        msg = HL_UAC_LINK_IND;
+        if (rt_mb_send(&uac_dev.mb, msg) != RT_EOK) {
+            rt_kprintf("%s: mb send fail\n", __func__);
+        }
+        rt_kprintf("uac link \n");
+        uac_dev.link_flag = 1;
+    }
+
     return RT_EOK;
 }
 
@@ -1279,8 +1315,8 @@ static struct ufunction_ops ops =
 
 static rt_err_t _ep0_set_playback_mute_handler(udevice_t device, rt_size_t size)
 {
-    g_uac1->p.set_mute = g_uac1->ep0_buffer[0];
-
+    g_uac1->p.cur_mute = g_uac1->ep0_buffer[0];
+    rt_kprintf("g_uac1->p.cur_mute = %d\n", g_uac1->p.cur_mute);
     dcd_ep0_send_status(device->dcd);
 
     return RT_EOK;
@@ -1288,15 +1324,19 @@ static rt_err_t _ep0_set_playback_mute_handler(udevice_t device, rt_size_t size)
 
 static rt_err_t _ep0_set_playback_volume_handler(udevice_t device, rt_size_t size)
 {
+    rt_uint32_t msg;
+        
     switch (g_uac1->req)
     {
     case UAC_SET_CUR:
-        g_uac1->p.set_volume = g_uac1->ep0_buffer[0] +
-                               ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        g_uac1->p.set_volume = g_uac1->ep0_buffer[0] + ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        msg = HL_UAC_SET_P_VOL_IND;
+        if (rt_mb_send(&uac_dev.mb, msg) != RT_EOK) {
+            rt_kprintf("%s: mb send fail\n", __func__);
+        }
         break;
     case UAC_SET_RES:
-        g_uac1->p.res_volume = g_uac1->ep0_buffer[0] +
-                               ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        g_uac1->p.res_volume = g_uac1->ep0_buffer[0] + ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
         break;
     default:
         rt_kprintf("%s: no response to req %d\n", __func__, g_uac1->req);
@@ -1311,8 +1351,8 @@ static rt_err_t _ep0_set_playback_volume_handler(udevice_t device, rt_size_t siz
 
 static rt_err_t _ep0_set_capture_mute_handler(udevice_t device, rt_size_t size)
 {
-    g_uac1->c.set_mute = g_uac1->ep0_buffer[0];
-
+    g_uac1->c.cur_mute = g_uac1->ep0_buffer[0];
+    rt_kprintf("g_uac1->c.cur_mute = %d\n", g_uac1->c.cur_mute);
     dcd_ep0_send_status(device->dcd);
 
     return RT_EOK;
@@ -1320,15 +1360,19 @@ static rt_err_t _ep0_set_capture_mute_handler(udevice_t device, rt_size_t size)
 
 static rt_err_t _ep0_set_capture_volume_handler(udevice_t device, rt_size_t size)
 {
+    rt_uint32_t msg;
+
     switch (g_uac1->req)
     {
     case UAC_SET_CUR:
-        g_uac1->c.set_volume = g_uac1->ep0_buffer[0] +
-                               ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        g_uac1->c.set_volume = g_uac1->ep0_buffer[0] + ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        msg = HL_UAC_SET_C_VOL_IND;
+        if (rt_mb_send(&uac_dev.mb, msg) != RT_EOK) {
+            rt_kprintf("%s: mb send fail\n", __func__);
+        }
         break;
     case UAC_SET_RES:
-        g_uac1->c.res_volume = g_uac1->ep0_buffer[0] +
-                               ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
+        g_uac1->c.res_volume = g_uac1->ep0_buffer[0] + ((rt_uint16_t)g_uac1->ep0_buffer[1] << 8);
         break;
     default:
         rt_kprintf("%s: no response to req %d\n", __func__, g_uac1->req);
@@ -1471,6 +1515,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
                     rt_kprintf("playback volume: UAC_GET_RES ch %d fail!\n", ch);
                     rt_usbd_ep0_set_stall(func->device);
                 }
+                uac_dev.link_flag = 0;
                 break;
             default:
                 rt_usbd_ep0_set_stall(func->device);
@@ -1628,16 +1673,16 @@ static rt_err_t _ep0_set_sample_rate_handler(udevice_t device, rt_size_t size)
         RT_DEBUG_LOG(RT_DEBUG_USB,
                      ("set playback sample_rate: %u\n", g_uac1->p.sample_rate));
 
-        if (g_uac1->out_intf_alt)
-        {
-            msg = MSG_START;
-            ret = rt_mb_send(&g_uac1->p.mb, msg);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("%s: mb send fail\n", __func__);
-                return ret;
-            }
-        }
+        // if (g_uac1->out_intf_alt)
+        // {
+        //     msg = MSG_START;
+        //     ret = rt_mb_send(&g_uac1->p.mb, msg);
+        //     if (ret != RT_EOK)
+        //     {
+        //         rt_kprintf("%s: mb send fail\n", __func__);
+        //         return ret;
+        //     }
+        // }
     }
 
     if (g_uac1->c.set_sample_rate)
@@ -1649,16 +1694,16 @@ static rt_err_t _ep0_set_sample_rate_handler(udevice_t device, rt_size_t size)
         RT_DEBUG_LOG(RT_DEBUG_USB,
                      ("set capture sample_rate: %u\n", g_uac1->c.sample_rate));
 
-        if (g_uac1->in_intf_alt)
-        {
-            msg = MSG_START;
-            ret = rt_mb_send(&g_uac1->c.mb, msg);
-            if (ret != RT_EOK)
-            {
-                rt_kprintf("%s: mb send fail\n", __func__);
-                return ret;
-            }
-        }
+        // if (g_uac1->in_intf_alt)
+        // {
+        //     msg = MSG_START;
+        //     ret = rt_mb_send(&g_uac1->c.mb, msg);
+        //     if (ret != RT_EOK)
+        //     {
+        //         rt_kprintf("%s: mb send fail\n", __func__);
+        //         return ret;
+        //     }
+        // }
     }
 
     dcd_ep0_send_status(device->dcd);
@@ -1734,7 +1779,25 @@ static rt_err_t _ep0_set_sample_rate_handler(udevice_t device, rt_size_t size)
 // }
 static void _ep_out_data_handler(const void *buffer, const rt_size_t size, struct audio_play *p)
 {
-    rt_ringbuffer_put_force(g_host2dev_rb, buffer, size);
+    rt_size_t data_size;
+    rt_size_t put_size;
+
+    if (g_uac1->p.cur_mute != 0) {
+        data_size = size;
+        for (; data_size > 0;) {
+            put_size = data_size < NULL_BUFF_SIZE ? data_size : NULL_BUFF_SIZE;
+            rt_ringbuffer_put_force(g_host2dev_rb, null_buff, put_size);
+            data_size -= put_size;
+        }
+    } else {
+        rt_ringbuffer_put_force(g_host2dev_rb, buffer, size);
+    }
+#ifdef RT_USB_AUDIO_PLL_COMPENSATION
+    if () {
+        HAL_CRU_PllCompensation(PLL_CPLL, -CPLL_COMPENSATION);
+        rt_kprintf("[%u]: PLL_CPLL down %dppm\n", HAL_GetTick(), CPLL_COMPENSATION);        
+    }
+#endif
 }
 
 static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
@@ -1757,15 +1820,15 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
     }
 #endif
 
-    if (!g_uac1->out_intf_alt)
-    {
-        rt_kprintf("%s: stop usb io request\n", __func__);
-        return RT_EOK;
-    }
+    // if (!g_uac1->out_intf_alt)
+    // {
+    //     rt_kprintf("%s: stop usb io request\n", __func__);
+    //     return RT_EOK;
+    // }
 
-    // if (size != 0 && p->enable)
-    if (size != 0)
+    if ((size != 0) && (uac_dev.p_enable != 0)) {
         _ep_out_data_handler(g_uac1->ep_out->buffer, size, p);
+    }
 
     g_uac1->ep_out->request.buffer = g_uac1->ep_out->buffer;
     g_uac1->ep_out->request.size = EP_MAXPACKET(g_uac1->ep_out);
@@ -1834,9 +1897,13 @@ static void _ep_in_data_handler(void *buffer, const rt_size_t size, struct audio
 {
     rt_size_t data_size;
 
-    data_size = rt_ringbuffer_get(g_dev2host_rb, buffer, size);
+    data_size = rt_ringbuffer_get(g_dev2host_rb, buffer, size); 
     if (data_size < size) {
         // rt_kprintf("too few data, data_size = %d, expect size = %d \r\n", data_size, size);
+    }
+
+    if (g_uac1->c.cur_mute != 0) {
+        memset(buffer, 0x00, size);
     }
 }
 
@@ -2082,13 +2149,13 @@ static rt_err_t _audio_playback_setup(struct uac1 *uac1)
     //     rt_hw_interrupt_enable(level);
     // }
 
-    ret = rt_mb_init(&p->mb, "play_mb", p->mb_pool,
-                     P_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("%s: create play mb fail!\n", __func__);
-        goto err3;
-    }
+    // ret = rt_mb_init(&p->mb, "play_mb", p->mb_pool,
+    //                  P_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
+    // if (ret != RT_EOK)
+    // {
+    //     rt_kprintf("%s: create play mb fail!\n", __func__);
+    //     goto err3;
+    // }
 
     // play_thread = rt_thread_create("play_usb", playback_thread_entry, p, 2048, 0, 8);
     // if (play_thread != RT_NULL)
@@ -2104,20 +2171,20 @@ static rt_err_t _audio_playback_setup(struct uac1 *uac1)
 
     return ret;
 
-err4:
-    rt_mb_delete(&p->mb);
-err3:
-    for (i = 0; i < P_BUFFER_NUM; i++)
-    {
-        if (p->pbuf[i].buffer)
-            rt_free(p->pbuf[i].buffer);
-    }
-err2:
-#ifdef RT_USING_CACHE
-    rt_free_uncache(p->abuf.buf);
-#else
-    rt_free(p->abuf.buf);
-#endif
+// err4:
+//     rt_mb_delete(&p->mb);
+// err3:
+//     for (i = 0; i < P_BUFFER_NUM; i++)
+//     {
+//         if (p->pbuf[i].buffer)
+//             rt_free(p->pbuf[i].buffer);
+//     }
+// err2:
+// #ifdef RT_USING_CACHE
+//     rt_free_uncache(p->abuf.buf);
+// #else
+//     rt_free(p->abuf.buf);
+// #endif
 err1:
     rt_dma_free(uac1->ep_out->buffer);
 err0:
@@ -2251,13 +2318,13 @@ static rt_err_t _audio_capture_setup(struct uac1 *uac1)
     //     rt_hw_interrupt_enable(level);
     // }
 
-    ret = rt_mb_init(&c->mb, "capt_mb", c->mb_pool,
-                     C_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
-    if (ret != RT_EOK)
-    {
-        rt_kprintf("%s: create capture mb fail!\n", __func__);
-        goto err3;
-    }
+    // ret = rt_mb_init(&c->mb, "capt_mb", c->mb_pool,
+    //                  C_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
+    // if (ret != RT_EOK)
+    // {
+    //     rt_kprintf("%s: create capture mb fail!\n", __func__);
+    //     goto err3;
+    // }
 
     // cap_thread = rt_thread_create("capt_usb", capture_thread_entry, c, 2048, 0, 8);
     // if (cap_thread != RT_NULL)
@@ -2273,24 +2340,174 @@ static rt_err_t _audio_capture_setup(struct uac1 *uac1)
 
     return ret;
 
-err4:
-    rt_mb_delete(&c->mb);
-err3:
-    for (i = 0; i < C_BUFFER_NUM; i++)
-    {
-        if (c->cbuf[i].buffer)
-            rt_free(c->cbuf[i].buffer);
-    }
-err2:
-#ifdef RT_USING_CACHE
-    rt_free_uncache(c->abuf.buf);
-#else
-    rt_free(c->abuf.buf);
-#endif
+// err4:
+//     rt_mb_delete(&c->mb);
+// err3:
+//     for (i = 0; i < C_BUFFER_NUM; i++)
+//     {
+//         if (c->cbuf[i].buffer)
+//             rt_free(c->cbuf[i].buffer);
+//     }
+// err2:
+// #ifdef RT_USING_CACHE
+//     rt_free_uncache(c->abuf.buf);
+// #else
+//     rt_free(c->abuf.buf);
+// #endif
 err1:
     rt_dma_free(uac1->ep_in->buffer);
 err0:
     return ret;
+}
+
+static rt_size_t _uac_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size)
+{
+    rt_size_t read_size;
+
+    if (false == uac_dev.p_enable) {
+        memset(buffer, 0x00, size);
+        rt_ringbuffer_put_force(g_host2dev_rb, buffer, size);
+    }
+
+    read_size = rt_ringbuffer_get(g_host2dev_rb, buffer, size);
+
+    return read_size;
+}
+
+static rt_size_t _uac_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)
+{
+    rt_size_t data_size;
+    rt_size_t get_size;
+
+    rt_ringbuffer_put_force(g_dev2host_rb, buffer, size);
+
+    if (false == uac_dev.c_enable) {
+        data_size = size;
+        for (; data_size > 0;) {
+            get_size = data_size < NULL_BUFF_SIZE ? data_size : NULL_BUFF_SIZE;
+            rt_ringbuffer_get(g_dev2host_rb, null_buff, get_size);
+            data_size -= get_size;
+        }
+        memset(null_buff, 0x00, NULL_BUFF_SIZE);
+    }
+
+    return size;
+}
+
+static rt_err_t _uac_io_ctrl(rt_device_t dev, int cmd, void *args)
+{
+    rt_size_t data_size;
+    rt_size_t target_size;
+    rt_uint8_t temp8;
+
+    switch (cmd) {
+        case HL_GET_UAC_MB_CMD:
+            *((struct rt_mailbox **)args) = (void*)&uac_dev.mb;
+            break;
+
+        case HL_SET_UAC_C_VOL_CMD:
+            break;
+
+        case HL_GET_UAC_C_VOL_CMD:
+            break;
+
+        case HL_SET_UAC_P_VOL_CMD:
+            break;
+
+        case HL_GET_UAC_P_VOL_CMD:
+            break;
+
+        case HL_GET_UAC_P_STATE_CMD:
+            data_size = rt_ringbuffer_data_len(g_host2dev_rb);
+            target_size  = g_host2dev_rb->buffer_size / 2;
+            if (data_size < target_size) {
+                *((rt_uint8_t *)args) = 0;
+            } else if (data_size == target_size) {
+                *((rt_uint8_t *)args) = 1;
+            } else {
+                *((rt_uint8_t *)args) = 1;
+                if (g_host2dev_rb->write_index > target_size) {
+                    g_host2dev_rb->read_index = g_host2dev_rb->write_index - target_size;
+                } else {
+                    g_host2dev_rb->read_index = g_host2dev_rb->write_index + target_size;
+                }
+            }
+            break;
+
+        case HL_SET_UAC_C_START_CMD:
+            rt_ringbuffer_reset(g_dev2host_rb);
+            target_size = g_dev2host_rb->buffer_size / 2;                              // 缓存一半静音数据
+            g_dev2host_rb->write_index = target_size;
+            memset(g_dev2host_rb->buffer_ptr, 0x00, target_size);
+            break;
+
+        default:
+            return -RT_ERROR;
+            break;
+    }
+    return RT_EOK;
+}
+
+#ifdef RT_USING_DEVICE_OPS
+const static struct rt_device_ops uac_device_ops =
+{
+    RT_NULL,
+    RT_NULL,
+    RT_NULL,
+    _uac_read,
+    _uac_write,
+    _uac_io_ctrl,
+};
+#endif
+
+static rt_err_t rt_usb_uacd_init(void)
+{
+    rt_err_t ret;
+
+    ret = rt_mb_init(&uac_dev.mb, "uac_mb", uac_dev.mb_pool, P_MB_POOL_SIZE, RT_IPC_FLAG_FIFO);
+    if (ret != RT_EOK)
+    {
+        rt_kprintf("%s: create play mb fail!\n", __func__);
+        goto err0;
+    }
+
+    /* create ringbuffer */
+    g_host2dev_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 20) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
+    if (g_host2dev_rb == RT_NULL) {
+        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+        goto err1;
+    }
+
+    g_dev2host_rb = rt_ringbuffer_create((C_DEFAULT_SAMPLE_RATE / 20) * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
+    if (g_dev2host_rb == RT_NULL) {
+        rt_kprintf("err:create g_audio2uac_rb failed \r\n");
+        goto err2;
+    }
+
+    rt_memset(&uac_dev.parent, 0, sizeof(uac_dev.parent));
+
+#ifdef RT_USING_DEVICE_OPS
+    uac_dev.parent.ops   = &uac_device_ops;
+#else
+    uac_dev.parent.write   = _hid_write;
+    uac_dev.parent.read    = _hid_read;
+    uac_dev.parent.control = _hid_io_ctrl;
+#endif
+
+    ret = rt_device_register(&uac_dev.parent, "uacd", RT_DEVICE_FLAG_RDWR);
+    if(RT_EOK == ret) {
+        return RT_EOK;
+    }
+    rt_kprintf("err:uacd register failed \r\n");
+
+err3:
+    rt_ringbuffer_destroy(g_dev2host_rb);
+err2:
+    rt_ringbuffer_destroy(g_host2dev_rb);
+err1:
+    rt_mb_delete(&uac_dev.mb);
+err0:
+    return RT_ERROR;
 }
 
 ufunction_t rt_usbd_function_uac1_create(udevice_t device)
@@ -2304,23 +2521,6 @@ ufunction_t rt_usbd_function_uac1_create(udevice_t device)
 
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
-
-    /* create ringbuffer */
-    //if (HL_UAC_MIC != hl_uac_type) {
-        g_host2dev_rb = rt_ringbuffer_create((P_DEFAULT_SAMPLE_RATE / 20) * P_NR_CHANNEL * (P_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
-        if (g_host2dev_rb == RT_NULL) {
-            rt_kprintf("err:create g_audio2uac_rb failed \r\n");
-            return RT_NULL;
-        }
-    //}
-
-    //if (HL_UAC_SPK != hl_uac_type) {
-        g_dev2host_rb = rt_ringbuffer_create((C_DEFAULT_SAMPLE_RATE / 20) * C_NR_CHANNEL * (C_AUDIO_SAMPLE_BITS >> 3));     // 最大缓存50ms数据
-        if (g_dev2host_rb == RT_NULL) {
-            rt_kprintf("err:create g_audio2uac_rb failed \r\n");
-            return RT_NULL;
-        }
-    //}
 
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
@@ -2489,6 +2689,12 @@ int rt_usbd_uac1_class_register(void)
         hl_uac_type = HL_UAC_MIC_SPK;
         rt_kprintf("uac type: %s  hl_uac_type:%d \n", uac_type, hl_uac_type);
     }
+
+    if (RT_EOK != rt_usb_uacd_init()) {
+        rt_kprintf("uacd init failed!!! \n");
+        return -1;
+    }
+
     rt_usbd_class_register(&uac1_class);
     return 0;
 }

@@ -34,6 +34,8 @@ typedef struct _tx_app_info_t
 {
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// uac连接标志(1:连接 0：未连接)
+    uint8_t             uac_link_flag:1;
     /// 外置mic接口状态(1:连接 0：未连接)
     uint8_t             ex_mic_plug:1;
     /// 录制标志(1:录制中  0：没在录制)
@@ -51,6 +53,8 @@ typedef struct _rx_app_info_t
 {
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// uac连接标志(1:连接 0：未连接)
+    uint8_t             uac_link_flag:1;
     /// 耳机监听接口状态(1:连接 0：未连接)
     uint8_t             hp_spk_plug:1;
     /// 耳机监听接口状态(1:连接 0：未连接)

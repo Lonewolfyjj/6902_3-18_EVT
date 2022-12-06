@@ -82,4 +82,34 @@ struct uac1_interface_alt
 };
 typedef struct uac1_interface_alt *uac1_interface_alt_t;
 
+/// uac设备通知枚举
+enum _hl_uac_ind_e
+{
+    /// uac连接通知
+    HL_UAC_LINK_IND = 1,
+    /// uac设置播放音量通知（host设置dev音量）
+    HL_UAC_SET_P_VOL_IND,
+    /// uac设置录制音量通知（host设置dev音量）
+    HL_UAC_SET_C_VOL_IND,
+} hl_uac_ind_e;
+
+/// uac设备命令枚举
+enum _hl_uac_cmd_e
+{
+    /// 获取uac的邮箱指针，参数<struct rt_mailbox *>
+    HL_GET_UAC_MB_CMD = 1,
+    /// 设置uac capture音量，参数<rt_uint16_t *>
+    HL_SET_UAC_C_VOL_CMD,
+    /// 获取uac capture音量，参数<rt_uint16_t *>
+    HL_GET_UAC_C_VOL_CMD,
+    /// 设置uac play音量，参数<rt_uint16_t *>
+    HL_SET_UAC_P_VOL_CMD,
+    /// 获取uac play音量，参数<rt_uint16_t *>
+    HL_GET_UAC_P_VOL_CMD,
+    /// 获取uac play是否就绪，参数<rt_uint8_t*：0--未就绪  1--就绪>
+    HL_GET_UAC_P_STATE_CMD,
+    /// 启动uac capture，参数<RT_NULL>，备注：启动后会缓存一半静音数据
+    HL_SET_UAC_C_START_CMD,
+} hl_uac_cmd_e;
+
 #endif /* __UAC1_H__ */
