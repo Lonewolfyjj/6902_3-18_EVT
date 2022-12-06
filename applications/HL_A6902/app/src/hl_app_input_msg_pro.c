@@ -217,6 +217,22 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
 
 #else
 /// 电源键处理
+static void hl_app_rx_pwr_key_pro(hl_key_event_e event);
+/// 旋钮中间按键处理
+static void hl_app_rx_knob_key_pro(hl_key_event_e event);
+/// 旋钮转动处理
+static void hl_app_rx_knob_pro(hl_knob_dir_e dir, uint32_t value);
+/// usb连接状态处理
+static void hl_app_rx_usb_plug_pro(uint32_t value);
+/// 监听口状态处理
+static void hl_app_rx_hp_plug_pro(uint32_t value);
+/// 相机口状态处理
+static void hl_app_rx_cam_plug_pro(uint32_t value);
+/// 大容量状态处理
+static void hl_app_rx_mstorage_plug_pro(uint32_t value);
+
+
+/// 电源键处理
 static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 {
     HL_PMIC_INPUT_PARAM_T pm_crl;
@@ -311,6 +327,7 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         rx_info.usb_plug = 0;
+        hl_app_rx_mstorage_plug_pro(0);
     } else {
         rx_info.usb_plug = 1;
     }
@@ -338,6 +355,19 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
         rx_info.cam_spk_plug = 0;
     } else {
         rx_info.cam_spk_plug = 1;
+    }
+}
+
+/// 大容量状态处理
+static void hl_app_rx_mstorage_plug_pro(uint32_t value)
+{
+    hl_switch_e        record_switch;
+    
+    if (value == 0) {
+        rx_info.mstorage_plug = 0;
+    } else {
+        record_switch    = HL_SWITCH_OFF;
+        rx_info.mstorage_plug = 1;
     }
 }
 
@@ -416,6 +446,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_RX_CAM_DET:
             hl_app_rx_cam_plug_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case MSG_USB_MSTORAGE_DET:
+            hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
+			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
         default:

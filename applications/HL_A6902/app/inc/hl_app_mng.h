@@ -53,6 +53,8 @@ typedef struct _rx_app_info_t
 {
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// 大容量接口状态(1:连接 0：未连接)
+    uint8_t             mstorage_plug:1;
     /// 耳机监听接口状态(1:连接 0：未连接)
     uint8_t             hp_spk_plug:1;
     /// 耳机监听接口状态(1:连接 0：未连接)
