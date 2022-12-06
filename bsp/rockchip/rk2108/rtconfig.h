@@ -125,7 +125,7 @@
 /* RT_DFS_ELM_LFN_UNICODE_3 is not set */
 #define RT_DFS_ELM_LFN_UNICODE 0
 #define RT_DFS_ELM_MAX_LFN 255
-#define RT_DFS_ELM_DRIVES 2
+#define RT_DFS_ELM_DRIVES 3
 #define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
 /* RT_DFS_ELM_USE_ERASE is not set */
 #define RT_DFS_ELM_REENTRANT
@@ -191,18 +191,28 @@
 /* RT_USING_USB_HOST is not set */
 #define RT_USING_USB_DEVICE
 #define RT_USBD_THREAD_STACK_SZ 4096
-#define USB_VENDOR_ID 0x0FFE
-#define USB_PRODUCT_ID 0x0001
+#define USB_VENDOR_ID 0x3547
+#define USB_PRODUCT_ID 0x0003
 #define RT_USB_DEVICE_COMPOSITE
 /* RT_USB_DEVICE_CDC is not set */
 #define RT_USB_DEVICE_NONE
 #define RT_USB_DEVICE_MSTORAGE
-/* RT_USB_DEVICE_HID is not set */
-/* RT_USB_DEVICE_WINUSB is not set */
-/* RT_USB_DEVICE_UAC1 is not set */
+#define RT_USB_DEVICE_HID
+#define RT_USB_DEVICE_WINUSB
+#define RT_USB_DEVICE_UAC1
 /* RT_USB_DEVICE_UVC is not set */
+#define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
 #define RT_USB_MSTORAGE_DISK_NAME "sd0"
 #define RT_USB_MSTORAGE_BUFLEN 32768
+#define RT_USB_AUDIO_P_NAME "es8388p"
+#define RT_USB_AUDIO_C_NAME "pdmc"
+/* RT_USB_AUDIO_PLL_COMPENSATION is not set */
+/* RT_USB_DEVICE_HID_KEYBOARD is not set */
+/* RT_USB_DEVICE_HID_MOUSE is not set */
+#define RT_USB_DEVICE_HID_GENERAL
+#define RT_USB_DEVICE_HID_GENERAL_OUT_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_GENERAL_IN_REPORT_LENGTH 63
+/* RT_USB_DEVICE_HID_MEDIA is not set */
 
 /* POSIX layer and C standard library */
 
@@ -268,7 +278,14 @@
 
 /* RT_USING_BENCHMARK is not set */
 /* RT_USING_NET_HTTP is not set */
-/* RT_USING_OTA is not set */
+#define RT_USING_OTA
+
+/* OTA Component Options */
+
+/* RT_USING_OTA_RECOVERY is not set */
+#define RT_USING_OTA_FROM_LOCAL
+/* RT_USING_OTA_FROM_HTTP is not set */
+/* RT_SUPPORT_ROOT_AB is not set */
 /* RT_USING_AUPIPE is not set */
 
 /* RT-Thread third party package */
@@ -490,6 +507,7 @@
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
+/* RT_USING_USBAPP is not set */
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -526,6 +544,7 @@
 /* RT_USING_COMMON_TEST_WDT is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
+#define RT_USING_COMMON_TEST_OTA
 /* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
