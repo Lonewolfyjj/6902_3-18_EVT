@@ -77,6 +77,10 @@ void hl_mod_page_delete(lv_obj_t* obj);
 void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data);
 void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data);
 void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg);
+
+
+void hl_mod_page_all_init(void);
+void lvgl2rtt_init(void);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

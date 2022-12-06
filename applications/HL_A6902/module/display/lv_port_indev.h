@@ -40,6 +40,7 @@ void lv_port_indev_init(void);
 
 void keypad_knob_ok_update(keypad_knob_ok_callback c);
 void encode_knob_update(keypad_knob_ok_callback c);
+void hl_port_indev_lock_screen(bool en);
 /**********************
  *      MACROS
  **********************/

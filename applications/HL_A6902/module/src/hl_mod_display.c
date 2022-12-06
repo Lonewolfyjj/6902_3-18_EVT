@@ -36,10 +36,7 @@
 #include "hl_util_msg_type.h"
 #include "hl_hal_gpio.h"
 #include <rtthread.h>
-#include "lv_port_indev.h"
-#include "lv_port_disp.h"
 #include "hl_util_msg_type.h"
-#include "hl_mod_page.h"
 
 
 #define HL_DISPLAY_IS_TEST_MOD 1
@@ -636,9 +633,7 @@ uint8_t hl_mod_display_init(void* display_msq)
 #else
     // RX
     hl_drv_rm690a0_init();
-    lv_init();
-    lv_port_disp_init();
-    lv_port_indev_init();
+    lvgl2rtt_init();
 #endif
 
 #if HL_IS_TX_DEVICE()
@@ -665,18 +660,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_mod_display_led_fast_flash(HL_MOD_TX_STATE_LED, HL_BLUE_CHANNEL);
     hl_mod_display_led_color_set(HL_MOD_TX_STATE_LED, 0, 0, 15);
 
-    PageManager_Init(PAGE_MAX,10);
-
-    hl_mod_page_home_init();
-    hl_mod_page_menu_init();
-    
-    hl_mod_display_scr_set_page(PAGE_NONE);
-    hl_mod_display_scr_set_page(PAGE_HOME);
-    // PageManager_PagePush(PAGE_HOME);
-    PageManager_PagePush(PAGE_MAIN_MENU);
-
-    // keypad_knob_ok_update(hl_mod_rx_knob_key_pro);
-    encode_knob_update(hl_mod_rx_knob_val_pro);
+    hl_mod_page_all_init();
 #endif
 
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,

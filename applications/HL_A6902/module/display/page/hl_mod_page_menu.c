@@ -30,6 +30,7 @@
 #include "lvgl.h"
 #include "hl_mod_page_menu_frame.h"
 #include "hl_mod_page.h"
+#include "lv_port_indev.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -85,6 +86,7 @@ static void      event_handler(lv_event_t* e)
       //  PageManager_PagePush(PAGE_HOME);
       
       LV_LOG_USER("key = %d\r\n", lv_indev_get_key(lv_indev_get_act()));
+
     }
 }
 // 创建主页 两个按键 一个滚动条
@@ -112,18 +114,6 @@ void hl_app_gui_home_create()
     lv_obj_center(label);
 }
 
-static void hl_mod_page_setup(void)
-{
-    /*将此页面移到前台*/
-    //app_window = hl_app_gui_app_win_init(HOME);
-    // lv_obj_move_foreground(app_window);
-    // hl_app_gui_top_update("HOME");
-    rt_kprintf("pagemenu!\n");
-    rt_kprintf("pagemenu!=%d\n", lv_obj_get_width(lv_scr_act()));
-    rt_kprintf("pagemenu!=%d\n", lv_obj_get_height(lv_scr_act()));
-    hl_app_gui_home_create();
-}
-
 // static void hl_mod_page_setup(void)
 // {
 //     /*将此页面移到前台*/
@@ -131,8 +121,20 @@ static void hl_mod_page_setup(void)
 //     // lv_obj_move_foreground(app_window);
 //     // hl_app_gui_top_update("HOME");
 //     rt_kprintf("pagemenu!\n");
-//    page_7_test();
+//     rt_kprintf("pagemenu!=%d\n", lv_obj_get_width(lv_scr_act()));
+//     rt_kprintf("pagemenu!=%d\n", lv_obj_get_height(lv_scr_act()));
+//     hl_app_gui_home_create();
 // }
+
+static void hl_mod_page_setup(void)
+{
+    /*将此页面移到前台*/
+    //app_window = hl_app_gui_app_win_init(HOME);
+    // lv_obj_move_foreground(app_window);
+    // hl_app_gui_top_update("HOME");
+    rt_kprintf("pagemenu!\n");
+    page_7_test();
+}
 
 static void hl_mod_page_loop(void)
 {

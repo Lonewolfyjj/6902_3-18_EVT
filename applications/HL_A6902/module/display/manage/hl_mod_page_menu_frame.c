@@ -58,7 +58,7 @@ static lv_coord_t get_distance(lv_coord_t data)
     if(data > 128){
         return 0;
     }
-    return (128 - (data*2));
+    return (128 - (data));
 }
 
 static void icon_pos_changed(lv_coord_t current,lv_coord_t x,lv_coord_t y)
@@ -194,6 +194,7 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
     lv_img_set_zoom(picdata[0].obj,256);   
     // lv_event_send(cont_row, LV_EVENT_SCROLL, NULL); 
     lv_obj_scroll_to_view(lv_obj_get_child(cont_row, 0), LV_ANIM_OFF);
+    lv_obj_add_flag(cont_row, LV_OBJ_FLAG_SCROLL_ONE);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
 }

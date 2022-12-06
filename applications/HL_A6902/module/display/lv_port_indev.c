@@ -22,6 +22,8 @@ static lv_indev_t* indev_keypad_touchkey_p;
 static lv_indev_t* indev_keypad_knob_ok_p;
 static lv_indev_t* indev_encoder_knob_p;
 
+static lv_indev_t* indev_keypad_lock_screen_p;
+
 static lv_indev_drv_t indev_touchpad;
 static lv_indev_drv_t indev_keypad_touchkey;
 static lv_indev_drv_t indev_keypad_knob_ok;
@@ -29,7 +31,7 @@ static lv_indev_drv_t indev_encoder_knob;
 
 // static hl_indev_s hl_indev_callback;
 
-static bool keypad_touchkey_switch = false;
+
 static bool touchpad_switch        = false;
 
 // 触摸屏
@@ -123,9 +125,11 @@ void lv_port_indev_init(void)
 static void lv_add_all_indev_to_def_group(lv_group_t* group)
 {
     if (!group) {
+        LV_LOG_USER("group\n");
         group = lv_group_get_default();
         if (!group) {
             group = lv_group_create();
+            LV_LOG_USER("group\n");
             if (group) {
                 lv_group_set_default(group);
             }
@@ -133,9 +137,33 @@ static void lv_add_all_indev_to_def_group(lv_group_t* group)
     }
 
     // lv_indev_set_group(indev_touchpad_p, group);
+    //group只能添加按键和编码器
     lv_indev_set_group(indev_keypad_touchkey_p, group);
     lv_indev_set_group(indev_keypad_knob_ok_p, group);
     lv_indev_set_group(indev_encoder_knob_p, group);
+}
+
+void hl_port_indev_lock_screen(bool en)
+{
+    
+    if (en) {
+        // 禁用输入
+        lv_indev_enable(indev_touchpad_p, false);
+        lv_indev_enable(indev_keypad_touchkey_p, false);
+        lv_indev_enable(indev_keypad_knob_ok_p, false);
+        //有BUG
+        lv_indev_enable(indev_encoder_knob_p, false);
+
+
+    } else {
+        // 使能输入
+        lv_indev_enable(indev_touchpad_p, true);
+        lv_indev_enable(indev_keypad_touchkey_p, true);
+        lv_indev_enable(indev_keypad_knob_ok_p, true);
+        //有BUG
+        lv_indev_enable(indev_encoder_knob_p, true);
+
+    }
 }
 
 /*------------------
@@ -157,15 +185,15 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
     uint32_t tmp;
 
     if (touchpad_switch == true) {
-
+        touchpad_get_xy(&last_x, &last_y);
         /*Save the pressed coordinates and the state*/
         if (touchpad_is_pressed()) {
             
-            touchpad_get_xy(&last_x, &last_y);
-            tmp = last_x;
-            last_x = 294 - last_y;
-            last_y = tmp;
-            
+            // touchpad_get_xy(&last_x, &last_y);
+            // tmp = last_x;
+            // last_x = 294 - last_y;
+            // last_y = tmp;
+
             rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
             data->state = LV_INDEV_STATE_PR;
         } else {
@@ -234,7 +262,7 @@ void keypad_knob_ok_update(keypad_knob_ok_callback c)
 
 static void keypad_touchkey_init(void)
 {
-    keypad_touchkey_switch = true;
+    //设备，不用初始化
 }
 
 static void keypad_touchkey_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)

@@ -26,6 +26,9 @@
 #include "hl_mod_display_mng.h"
 #include "hl_mod_input.h"
 #include "lvgl.h"
+#include "hl_mod_page.h"
+#include "lv_port_indev.h"
+#include "lv_port_disp.h"
 
 #if !HL_IS_TX_DEVICE()
 /* typedef -------------------------------------------------------------------*/
@@ -217,6 +220,27 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
     }
 }
 
+void lvgl2rtt_init(void)
+{
+    lv_init();
+    lv_port_disp_init();
+    lv_port_indev_init();
+}
+void hl_mod_page_all_init(void)
+{
+    PageManager_Init(PAGE_MAX,10);
+
+    hl_mod_page_home_init();
+    hl_mod_page_menu_init();
+    
+    hl_mod_display_scr_set_page(PAGE_NONE);
+    hl_mod_display_scr_set_page(PAGE_HOME);
+    // PageManager_PagePush(PAGE_HOME);
+    PageManager_PagePush(PAGE_MAIN_MENU);
+
+    keypad_knob_ok_update(hl_mod_rx_knob_key_pro);
+    encode_knob_update(hl_mod_rx_knob_val_pro);
+}
 #endif
 /*
  * EOF

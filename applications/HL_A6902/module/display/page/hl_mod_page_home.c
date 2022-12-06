@@ -413,22 +413,40 @@ static void page_1_init(void)
     video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,16,6,1);
 }
 
+static void      event_handler(lv_event_t* e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t*       obj  = lv_event_get_target(e);
+    uint32_t key_num = lv_indev_get_key(lv_indev_get_act());
 
+    if (code > LV_EVENT_HIT_TEST) {
+        return;
+    }
+    LV_LOG_USER("code = %d\r\n", code);
+    LV_LOG_USER("obj = %d\r\n", obj);
+    LV_LOG_USER("//////////////////\r\n");
+
+
+    if (key_num == LV_KEY_ENTER && code == LV_EVENT_KEY) {
+       PageManager_PagePush(PAGE_MAIN_MENU);
+      
+      LV_LOG_USER("enterpage = %d\r\n", PAGE_MAIN_MENU);
+
+    } else if (key_num == LV_KEY_BACKSPACE && code == LV_EVENT_KEY) {
+        LV_LOG_USER("backpage = %d\r\n", PAGE_MAIN_MENU);
+    }
+}
+static lv_obj_t * menubtn;
 //测试接口
 void page_main_test(void)
 {
     lv_style_page1_init();
     page_1_init();
-}
-
-
-
-static void page_1_test(void)
-{
-    rt_kprintf("page1!\r\n");
-    lv_style_page1_init();
-    page_1_init();
-    // lv_example_anim_2();
+    menubtn = lv_btn_create(lv_scr_act());
+    lv_obj_set_size(menubtn, 5,5);
+    
+    // lv_obj_add_event_cb(menubtn,event_handler,LV_EVENT_ALL,NULL);
+    // rt_kprintf("liujie1\n");
 }
 
 static void hl_mod_page_setup(void)
@@ -439,11 +457,37 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_loop(void)
 {
+    
 }
 
 static void hl_mod_page_exit(void)
 {
-    hl_mod_page_delete(lv_scr_act());
+    // hl_mod_page_delete(lv_scr_act());
+    uint8_t i = 0;
+
+    lv_obj_del(area_tx1);
+    lv_obj_del(area_tx2);
+    lv_obj_del(voice_bar_tx1);
+    lv_obj_del(voice_bar_tx2);
+    lv_obj_del(power_bar_tx1);
+    lv_obj_del(power_bar_tx2);
+    lv_obj_del(voice_img_tx1);
+    lv_obj_del(voice_img_tx2);
+    lv_obj_del(power_img_tx1);
+    lv_obj_del(power_img_tx2);
+    lv_obj_del(voice_lab_tx1);
+    lv_obj_del(voice_lab_tx2);
+    lv_obj_del(power_lab_tx1);
+    lv_obj_del(power_lab_tx2);
+    lv_obj_del(device_lab_tx1);
+    lv_obj_del(device_lab_tx2);
+    lv_obj_del(video_dot_tx1);
+    lv_obj_del(video_dot_tx2);
+
+    for (i = 0; i < 5; i++) {
+        lv_obj_del(tx1_signal_obj[i]);
+        lv_obj_del(tx2_signal_obj[i]);
+    }
 }
 
 static void hl_mod_page_event(void* btn, int event)
