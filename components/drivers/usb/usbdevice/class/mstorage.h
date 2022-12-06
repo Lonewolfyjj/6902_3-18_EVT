@@ -50,4 +50,5 @@ struct request_sense_data
 
 #pragma pack()
 
+
 #endif
