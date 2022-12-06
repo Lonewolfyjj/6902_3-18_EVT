@@ -54,11 +54,13 @@ static void page_7_test(void)
 {
     menu_data_t pic_list[6] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, "单声道"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_config, "监听设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_tx_config, "TX设置"),
         // ADD_IMG_DATA(NULL,NULL,&Menu_tx_config,"TX设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_noise_config, "降噪设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_voice_config, "音量调节"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_tx_config, "TX设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_config, "监听设置"),
+        
+        
         ADD_IMG_DATA(NULL, NULL, &Menu_common_config, "通用设置"),
     };
     page_menu_init(pic_list, 6, page_7_test_cb);

@@ -189,12 +189,12 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
         lv_img_set_zoom(picdata[i].obj,128);
-        picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,0,1,picdata[i].ptr);
+        picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,-10,1,picdata[i].ptr);
     }    
     lv_img_set_zoom(picdata[0].obj,256);   
     // lv_event_send(cont_row, LV_EVENT_SCROLL, NULL); 
     lv_obj_scroll_to_view(lv_obj_get_child(cont_row, 0), LV_ANIM_OFF);
-    lv_obj_add_flag(cont_row, LV_OBJ_FLAG_SCROLL_ONE);
+    // lv_obj_add_flag(cont_row, LV_OBJ_FLAG_SCROLL_ONE);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
 }
