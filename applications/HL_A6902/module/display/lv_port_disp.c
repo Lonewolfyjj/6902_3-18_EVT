@@ -19,6 +19,8 @@
 // #if defined(RT_LV_DISP_USE_LARGE_BUF)
 #define RT_LV_DISP_BUF_MALLOC	rt_malloc_large
 #define RT_LV_DISP_BUF_FREE		rt_free_large
+
+#define BUF_HIGH_LEN         LV_HOR_RES_MAX
 // #elif defined(RT_LV_DISP_USE_DTCM_BUF)
 // #define RT_LV_DISP_BUF_MALLOC	rt_malloc_dtcm
 // #define RT_LV_DISP_BUF_FREE		rt_free_dtcm
@@ -130,7 +132,7 @@ void lv_disp_refer(void)
 static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     
-
+    uint32_t a,b;
     /*Return if the area is out the screen*/
     if (area->x2 < 0) return;
     if (area->y2 < 0) return;
@@ -152,10 +154,10 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
     video_mem_t.y1 = area->y1;
     video_mem_t.y2 = area->y2;
 
-
-
+    a = rt_tick_get();
+    // rt_kprintf("s==%d\n",rt_tick_get());
     hl_mod_lvgl_video_memory(&video_mem_t);
-
+    
     disp_ctx.cfg->yrgbAddr = (uint32_t)video_memory_g;
     // disp_ctx.cfg->yrgbAddr = (uint32_t)color_p;
     disp_ctx.cfg->yrgbLength = disp_ctx.dgi->height * disp_ctx.dgi->width * disp_ctx.dgi->bits_per_pixel / 8;
@@ -172,6 +174,8 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 	// disp_ctx.scale->dstH = area->y2 - area->y1 + 1;
 
     lv_disp_refer();
+    b = rt_tick_get();
+    rt_kprintf("inc==%d\n",b-a);
     lv_disp_flush_ready(disp_drv);
 
     return;
@@ -292,11 +296,12 @@ static rt_err_t disp_init(void)
 
     lv_init();
 
-	disp_ctx.buf_1 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC(LV_HOR_RES_MAX * LV_VER_RES_MAX * sizeof(lv_color_t));
+	disp_ctx.buf_1 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC( BUF_HIGH_LEN* LV_VER_RES_MAX * sizeof(lv_color_t));
 	RT_ASSERT(disp_ctx.buf_1 != RT_NULL);
 
+
 #ifdef RT_LV_DISP_DOUBLE_BUF
-    disp_ctx.buf_2 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC(LV_HOR_RES_MAX * LV_VER_RES_MAX * sizeof(lv_color_t));
+    disp_ctx.buf_2 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC(BUF_HIGH_LEN * LV_VER_RES_MAX * sizeof(lv_color_t));
     RT_ASSERT(disp_ctx.buf_2 != RT_NULL);
 #endif
 
@@ -305,7 +310,7 @@ static rt_err_t disp_init(void)
     rt_kprintf("video_mem = 0x%x\n", (int)video_memory_g);
 #endif
 
-	lv_disp_draw_buf_init(&disp_ctx.disp_buf, disp_ctx.buf_1, disp_ctx.buf_2, LV_HOR_RES_MAX * LV_VER_RES_MAX);
+	lv_disp_draw_buf_init(&disp_ctx.disp_buf, disp_ctx.buf_1, disp_ctx.buf_2, BUF_HIGH_LEN* LV_VER_RES_MAX);
 
 	printf("lvgl buf1 = 0x%x, buf2 = 0x%x", (int)disp_ctx.buf_1, (int)disp_ctx.buf_2);
     
