@@ -128,7 +128,7 @@ struct nau88l25b_priv* nau88l25b_test = NULL;
 //#define RT_CODEC_NAU88L21 1
 NAU88L25B_REG_T s_nau88l25b_param[] = {
 #if HL_IS_TX_DEVICE()
-    { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(TX)
+    // { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(TX)
     { 0x0001, 0x01BC }, { 0x0002, 0x0000 }, { 0x0003, 0x0050 }, { 0x0004, 0x0081 }, { 0x0005, 0x0000 },
     { 0x0006, 0x0408 }, { 0x0007, 0x0010 }, { 0x0008, 0x1000 }, { 0x0009, 0x6000 }, { 0x000A, 0xF13C },
     { 0x000C, 0x0048 }, { 0x000D, 0x0000 }, { 0x000F, 0x0000 }, { 0x0010, 0x0000 }, { 0x0011, 0x0000 },
@@ -146,7 +146,7 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0074, 0x0505 }, { 0x0076, 0x3140 }, { 0x0077, 0x0000 }, { 0x007F, 0x443F },  //0x433F }, 新链路 //0x413F }, 外置mic // 0x433F },内置mic 
     { 0x0080, 0x0420 }, { 0x0081, 0x0008 }, { 0x0082, 0x0460 },
 #else
-    { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(RX)
+    // { 0x0000, 0x0000 },  // nau88l25B配置--hl-mclk-20221018(RX)
     { 0x0001, 0x067C }, { 0x0002, 0x0000 }, { 0x0003, 0x0050 }, { 0x0004, 0x0081 }, { 0x0005, 0x0000 },
     { 0x0006, 0x0408 }, { 0x0007, 0x0010 }, { 0x0008, 0x1000 }, { 0x0009, 0x6000 }, { 0x000A, 0xF13C },
     { 0x000C, 0x0048 }, { 0x000D, 0x0000 }, { 0x000F, 0x0000 }, { 0x0010, 0x0000 }, { 0x0011, 0x0000 },
@@ -165,7 +165,6 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0068, 0xC300 }, { 0x0069, 0x0000 }, { 0x006A, 0x008F }, { 0x0071, 0x0011 }, { 0x0072, 0x0160 },
     { 0x0073, 0x332C }, { 0x0074, 0x4107 }, { 0x0076, 0x3140 }, { 0x0077, 0x0002 }, { 0x007F, 0x013F },
     { 0x0080, 0x0420 }, { 0x0081, 0x0008 }, { 0x0082, 0x0060 },
-
 #endif
 };
 
@@ -425,7 +424,7 @@ static rt_err_t nau88l25b_reg_init(struct nau88l25b_priv* nau88l25b)
         nau88l25b_param++;
     }
 
-#if 1
+#if 0
     nau88l25b_param = &s_nau88l25b_param[0];
     rt_kprintf("NAU88L25B read:");
     for (i = 0; i < array_size; i++) {
@@ -567,11 +566,19 @@ int rt_hw_codec_nau88l25b_init(void)
     }
 
     /* Vendor suggest  that after bclk output and init codec lx*/
+    ret |= es_wr_reg(nau88l25b->i2c_client, 0x0000, 0x0000);
+    if (ret != RT_EOK) {
+        rt_kprintf("NAU88L25B write reset cmd failed\r\n");
+        goto err;
+    }
+
     if (nau88l25b->work_cnt <= 0)
         ret |= nau88l25b_reg_init(nau88l25b);
-
-    rt_kprintf("TAG: register codec nau88l25b success\n");
-    return RT_EOK;
+    
+    if (ret == RT_EOK) {
+        rt_kprintf("TAG: register codec nau88l25b success\n");
+        return RT_EOK;
+    }
 
 err:
     rt_kprintf("ERR: %s, register codec nau88l25b failed: %d\n", __func__, ret);
