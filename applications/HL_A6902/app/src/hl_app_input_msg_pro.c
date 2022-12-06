@@ -410,10 +410,6 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
-        case MSG_USB_MSTORAGE_DET:
-            hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
-			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
-            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
