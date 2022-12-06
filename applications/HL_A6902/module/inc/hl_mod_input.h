@@ -83,6 +83,8 @@ typedef enum _input_mod_msg_cmd_e
     MSG_COMB_REC_PWR,
     /// 组合按键3的消息：录制和开关机
     MSG_COMB_PAIR_PWR,
+    /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
+    MSG_USB_MSTORAGE_DET,
 } input_mod_msg_cmd_e;
 #else
 //RX

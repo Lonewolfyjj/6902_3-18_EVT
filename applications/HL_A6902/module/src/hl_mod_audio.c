@@ -37,6 +37,8 @@
 
 #include "hl_drv_aw21009.h"
 #include "hl_hal_gpio.h"
+
+#include "hl_drv_pcf85063atl.h"
 /* typedef -------------------------------------------------------------------*/
 
 struct wav_header
@@ -144,6 +146,45 @@ static int  hl_mod_audio_record_switch(uint8_t record_switch);
 static uint8_t s_record_key_flag = 0;
 
 #if HL_IS_TX_DEVICE()
+
+// static void hl_mod_audio_rtc_set()
+// {
+//     rtc_time time;
+//     memset(&time, 0, sizeof(rtc_time));
+
+//     time.year   = atoi(argv[2]);
+//     time.month  = atoi(argv[3]);
+//     time.day    = atoi(argv[4]);
+//     time.hour   = atoi(argv[5]);
+//     time.minute = atoi(argv[6]);
+//     time.second = atoi(argv[7]);
+//     hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+// }
+
+// 获取时间 timer_name参数BUF大小需要大于24
+static void hl_mod_audio_rtc_get(char *timer_name)
+{
+    rtc_time time;
+    memset(&time, 0, sizeof(rtc_time));
+
+    hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    /*时间存储格式是按 BCD 码的格式来存储的。如果需要使用，需要转换成十六进制之后才能使用，时间年的范围：0~99，需要注意*/
+    rt_kprintf(" year:   20%2d\n", time.year);
+    rt_kprintf(" month:  %d\n", time.month&0x1f);
+    rt_kprintf(" day:    %d\n", time.day&0x3f);
+    rt_kprintf(" hour:   %d\n", time.hour&0x3f);
+    rt_kprintf(" minute: %d\n", time.minute&0x7f);
+    rt_kprintf(" second: %d\n", time.second&0x7f);
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);
+    if (timer_name != NULL) {
+        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);  
+    } else {
+        rt_kprintf("timer name get error (timer_name == NULL)\r\n");
+    }
+      
+}
+
+
 static void hl_hal_gpio_audio_record_irq_process(void* args)
 {
     s_record_key_flag = 1;
@@ -184,6 +225,8 @@ static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
     lseek(p_file_audio, 0, SEEK_SET);
     write(p_file_audio, &s_audio_header, sizeof(struct wav_header));
     close(p_file_audio);
+
+    fsync(p_file_audio);
 
     rt_kprintf("Auaio recoord stop (data_sz:(0x%08x),riff_sz:(0x%08x)) \n", s_audio_header.data_sz,
                s_audio_header.riff_sz);
@@ -263,12 +306,19 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
         return -1;
     }
 
+    static char timer_name[50] = {0};
+    static char timer_name_after[50] = {0};
+    static char timer_name_bypass[50] = {0};
+
     if (record_switch) {
         rt_ringbuffer_reset(s_record_after_rb);
         rt_ringbuffer_reset(s_record_bypass_rb);
 
-        cap_config->file_audio_after  = open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
-        cap_config->file_audio_bypass = open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        hl_mod_audio_rtc_get(timer_name);
+        rt_sprintf(timer_name_after, "/mnt/sdcard/%s-after.wav", timer_name); 
+        rt_sprintf(timer_name_bypass, "/mnt/sdcard/%s-bypass.wav", timer_name); 
+        cap_config->file_audio_after  = open(timer_name_after, O_WRONLY | O_CREAT | O_TRUNC);   //open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        cap_config->file_audio_bypass = open(timer_name_bypass, O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
 
         hl_mod_audio_record_start(cap_config->file_audio_after, &s_record_after_size);
         hl_mod_audio_record_start(cap_config->file_audio_bypass, &s_record_bypass_size);
@@ -634,6 +684,7 @@ uint8_t hl_mod_audio_init(void* p_msg_handle)
     card_capture[0] = NULL;
 
 #if HL_IS_TX_DEVICE()
+    hl_drv_rtc_pcf85063_init();
     // hl_drv_aw21009_init();
     //_hl_drv_key_init();
     s_record_switch = 0;
@@ -791,7 +842,7 @@ int hl_mod_audio_test(int argc, char** argv)
 
     if (argc <= 1) {
 #if HL_IS_TX_DEVICE()
-        rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | time | denoise | gain | mute | record | eq | micswitch] [param] \r\n");
+        rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | time | denoise | gain | mute | record | eq | micswitch | rtc] [param] \r\n");
 #else
         rt_kprintf("wrong parameter, please type: hl_mod_audio_test [info | denoise | gain | mute | eq ] [param] \r\n");
 #endif
@@ -831,6 +882,8 @@ int hl_mod_audio_test(int argc, char** argv)
         }
         audio_param = (int8_t) atoi(argv[3]);
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_param, 1);
+    } else if (!strcmp("rtc", argv[1])) {
+        hl_mod_audio_rtc_get(NULL);
     } else {
         rt_kprintf("wrong parameter, please type: hl_mod_audio_test cmd error\r\n");
         return 0;

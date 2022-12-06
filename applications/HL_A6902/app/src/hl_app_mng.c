@@ -138,9 +138,9 @@ void hl_app_mng_init(void)
     rt_thread_mdelay(2000);
     hl_app_info(0, NULL);
 #if HL_IS_TX_DEVICE()
-    if(tx_info.usb_plug == 0) {
+    if(tx_info.mstorage_plug == 0) {
 #else
-    if(rx_info.usb_plug == 0) {
+    if(rx_info.mstorage_plug == 0) {
 #endif
         hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     } 
