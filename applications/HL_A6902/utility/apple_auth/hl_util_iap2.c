@@ -22,6 +22,8 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
     uint8_t  result = -1;
     uint16_t len    = 0;
 
+    iap2->iap2_printf("\n_hl_iap2_detect_process %d\n", iap2->detect_status);
+
     switch (iap2->detect_status) {
         case EM_HL_IAP2_STM_DETECT_SEND:
             result              = hl_iap2_detect_send(iap2);
@@ -221,34 +223,34 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
  */
 static int _hl_iap2_power_update_process(st_iap2_protocol_p iap2)
 {
-    hl_iap2_powerupdate_send_power(iap2);
+    // hl_iap2_powerupdate_send_power(iap2);
 
-    iap2->main_status = EM_HL_IAP2_STM_MAIN_EAP;
-    // switch (iap2->powerupdate_status) {
-    //     case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER:
-    //         hl_iap2_powerupdate_send_power(iap2);
-    //         iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE;
-    //         break;
+    // iap2->main_status = EM_HL_IAP2_STM_MAIN_EAP;
+    switch (iap2->powerupdate_status) {
+        case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER:
+            hl_iap2_powerupdate_send_power(iap2);
+            iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE;
+            break;
 
-    //     case EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE:
-    //         hl_iap2_powerupdate_recv_update(iap2);
-    //         iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE;
-    //         break;
+        case EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE:
+            hl_iap2_powerupdate_recv_update(iap2);
+            iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE;
+            break;
 
-    //     case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE:
-    //         hl_iap2_powerupdate_send_power_source(iap2);
-    //         iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK;
-    //         break;
+        case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE:
+            hl_iap2_powerupdate_send_power_source(iap2);
+            iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK;
+            break;
 
-    //     case EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK:
-    //         hl_iap2_link_send_ack(iap2);
-    //         iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-    //         iap2->main_status        = EM_HL_IAP2_STM_MAIN_SUCCEED;
-    //         break;
+        case EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK:
+            hl_iap2_link_send_ack(iap2);
+            iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+            iap2->main_status        = EM_HL_IAP2_STM_MAIN_SUCCEED;
+            break;
 
-    //     default:
-    //         break;
-    // }
+        default:
+            break;
+    }
 
     return 0;
 }
@@ -295,7 +297,7 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
             break;
 
         case EM_HL_IAP2_STM_MAIN_EAP:
-            _hl_iap2_ea_session_process(iap2);
+            // _hl_iap2_ea_session_process(iap2);
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:

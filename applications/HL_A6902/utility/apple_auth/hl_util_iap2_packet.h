@@ -351,7 +351,7 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
  * hl_iap2_ctrl_packet_get_message_id
  * @brief  获取message id
  * @param  data_addr        协议包数据地址
- * @return int 成功 message id | 失败 <0
+ * @return uint16_t 成功 message id | 失败 <0
  * @author lisl (songlin.li@hollyland-tech.com)
  * @par 修改日志:
  * <table>
