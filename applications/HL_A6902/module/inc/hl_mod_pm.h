@@ -46,9 +46,9 @@ typedef enum _hl_mod_pm_ind_e
 {
     /// 通知 app 电量更新，参数为<uint8_t *>
     HL_SOC_UPDATE_IND,
-    /// 通知 app 当前温度超过最大温度设定值<50℃>，参数为<int8_t *>
+    /// 通知 app 当前温度超过最大温度设定值<45℃>，参数为<int8_t *>
     HL_MAX_TEMP_ALERT_IND,
-    /// 通知 app 当前温度超过最小温度设定值<10℃>，参数为<int8_t *>
+    /// 通知 app 当前温度超过最小温度设定值<-10℃>，参数为<int8_t *>
     HL_MIN_TEMP_ALERT_IND,
     /// 通知 app 当前的充电状态，参数为<hl_mod_pm_charge_state_e *>
     HL_CHARGE_STATE_IND,
@@ -75,7 +75,7 @@ typedef enum _hl_mod_pm_charge_state_e
  * 
  * @brief pm 模块初始化
  * @param [in] msg_hd 消息队列指针
- * @return int 
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
  * @date 2022-11-25
  * @author lilin (lin.li@hollyland-tech.com)
  * 
@@ -92,7 +92,7 @@ int hl_mod_pm_init(rt_mq_t msg_hd);
 /**
  * 
  * @brief pm 模块解初始化
- * @return int 
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
  * @date 2022-11-25
  * @author lilin (lin.li@hollyland-tech.com)
  * 
@@ -109,7 +109,7 @@ int hl_mod_pm_deinit(void);
 /**
  * 
  * @brief pm 模块启动，会拉起线程和使能中断
- * @return int 
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
  * @date 2022-11-25
  * @author lilin (lin.li@hollyland-tech.com)
  * 
@@ -126,7 +126,7 @@ int hl_mod_pm_start(void);
 /**
  * 
  * @brief pm 模块停止，会停止线程和失能中断
- * @return int 
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
  * @date 2022-11-25
  * @author lilin (lin.li@hollyland-tech.com)
  * 
@@ -146,7 +146,7 @@ int hl_mod_pm_stop(void);
  * @param [in] cmd 见<hl_mod_pm_cmd_e>
  * @param [in] arg 命令的参数指针
  * @param [in] arg_size 参数的大小
- * @return int 
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
  * @date 2022-11-25
  * @author lilin (lin.li@hollyland-tech.com)
  * 
