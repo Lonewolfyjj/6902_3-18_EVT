@@ -75,7 +75,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 #else
 void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 {
-    hl_led_mode     led_ctrl;
+    // hl_led_mode     led_ctrl;
     uint8_t         *p_param;
 
     LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);
@@ -87,16 +87,16 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             p_param  = *(uint8_t*)p_msg->param.ptr;
             LOG_D("\ntelink info(%02X)\r\n", p_param);
             if(HL_RF_UNCONNECT == p_param) {
-                led_ctrl = LED_MODE_RECONNECTION;
+                // led_ctrl = LED_MODE_RECONNECTION;
                 rx_info.rf_state = HL_RF_STATE_RELEASE;
             } else if(HL_RF_PAIRING == p_param) {
-                led_ctrl = LED_MODE_PAIR;
+                // led_ctrl = LED_MODE_PAIR;
                 rx_info.rf_state = HL_RF_STATE_PAIR;
             } else {
-                led_ctrl = LED_MODE_CONNECTED;
+                // led_ctrl = LED_MODE_CONNECTED;
                 rx_info.rf_state = HL_RF_STATE_CONNECT;
             }
-            hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
+            // hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
             break;
         case HL_MOD_TELINK_RSSI_IND:
             p_param  = (uint8_t*)p_msg->param.ptr;

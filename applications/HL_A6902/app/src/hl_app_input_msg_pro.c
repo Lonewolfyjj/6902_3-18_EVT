@@ -211,15 +211,15 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 /// 旋钮中间按键处理
 static void hl_app_rx_knob_key_pro(hl_key_event_e event)
 {
-    static hl_screen_color_e screen_color_ctrl = RGB888_BLACK;
+    // static hl_screen_color_e screen_color_ctrl = RGB888_BLACK;
     static uint8_t           channel           = 0;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
-            screen_color_ctrl++;
-            screen_color_ctrl %= RGB888_COLOR_CNT;
+            // screen_color_ctrl++;
+            // screen_color_ctrl %= RGB888_COLOR_CNT;
             // hl_mod_display_io_ctrl(MSG_OLED_COLOR_CHANGE_CMD, &screen_color_ctrl, sizeof(screen_color_ctrl));
             break;
         case HL_KEY_EVENT_LONG:
