@@ -30,13 +30,6 @@
 #include <ctype.h>
 
 /* typedef -------------------------------------------------------------------*/
-
-typedef struct
-{
-    uint16_t number;     //升级数据包序号
-    uint8_t  data[512];  //升级数据
-} hl_rf_upgrade_pack_t;
-
 /* define --------------------------------------------------------------------*/
 
 #define TELINK_THREAD_STACK_SIZE 1024
@@ -281,6 +274,8 @@ static void hl_mod_telink_thread_entry(void* parameter)
  */
 static rt_err_t _hl_mod_telink_serial_init(void)
 {
+    rt_err_t result;
+
     // 查找系统中的串口设备
     s_telink.serial = rt_device_find(TELINK_UART_DEV_NAME);
     if (RT_NULL == s_telink.serial) {
@@ -289,7 +284,11 @@ static rt_err_t _hl_mod_telink_serial_init(void)
     }
 
     // 以中断接收及轮询发送模式打开串口设备
-    rt_device_open(s_telink.serial, RT_DEVICE_FLAG_INT_RX);
+    result = rt_device_open(s_telink.serial, RT_DEVICE_FLAG_INT_RX);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] rt_device_open faild!!! \r\n", __FUNCTION__, __LINE__);
+        return RT_ERROR;
+    }
     // 设置接收回调函数
     rt_device_set_rx_indicate(s_telink.serial, _telink_uart_receive_cb);
 
@@ -301,7 +300,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 {
     if (NULL == input_msq) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
-        return -1;
+        return 1;
     }
 
     rt_err_t result;
@@ -327,7 +326,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     s_telink_fifo_buf = (uint8_t*)rt_malloc(sizeof(uint8_t) * TELINK_FIFO_BUF_SIZE);
     if ((NULL == s_telink_hup_buf) || (NULL == s_telink_fifo_buf)) {
         rt_kprintf("[%s][line:%d] rt_malloc failed!!! \r\n", __FUNCTION__, __LINE__);
-        return -1;
+        return 1;
     }
 
     // Telink获取并赋值APP层下发的消息队列指针
@@ -347,14 +346,10 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     hl_util_fifo_init(&s_telink.fifo, s_telink_fifo_buf, TELINK_FIFO_BUF_SIZE);
 
     // 初始化Telink模块串口设备
-    _hl_mod_telink_serial_init();
-
-    // 初始化Telink线程资源
-    result = rt_thread_init(&telink_thread, "telink", hl_mod_telink_thread_entry, RT_NULL, &telink_thread_stack[0],
-                            sizeof(telink_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
+    result = _hl_mod_telink_serial_init();
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return -1;
+        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
+        return 1;
     }
 
     return 0;
@@ -377,16 +372,35 @@ uint8_t hl_mod_telink_start(void)
 {
     rt_err_t result;
 
+    // 初始化Telink线程资源
+    result = rt_thread_init(&telink_thread, "telink", hl_mod_telink_thread_entry, RT_NULL, &telink_thread_stack[0],
+                            sizeof(telink_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
+        return 1;
+    }
+
+    // 启动Telink线程
     result = rt_thread_startup(&telink_thread);
     if (RT_EOK != result) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return -1;
+        return 1;
     }
+
     return 0;
 }
 
 uint8_t hl_mod_telink_stop(void)
 {
+    rt_err_t result;
+
+    // 脱离Telink线程
+    result = rt_thread_detach(&telink_thread);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] detach faild!!! \r\n", __FUNCTION__, __LINE__);
+        return 1;
+    }
+
     return 0;
 }
 
@@ -394,7 +408,7 @@ uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
     if (TELINK_UART_BUF_SIZE < data_len) {
         rt_kprintf("[%s][line:%d] data_len is too long!!! \r\n", __FUNCTION__, __LINE__);
-        return -1;
+        return 1;
     }
     uint8_t frame_buf[TELINK_UART_BUF_SIZE] = { 0 };
 
@@ -425,7 +439,7 @@ MSH_CMD_EXPORT(telink_send_cmd, telink io ctrl cmd);
 
 void telink_bypass(int argc, char** argv)
 {
-    if(argc != 3){
+    if (argc != 3) {
         rt_kprintf("\n[error]bypass send arg (telink_bypass + CMD + DATA)\n");
         return;
     }
@@ -485,7 +499,7 @@ static uint8_t _hl_str2hex(uint8_t* str)
 
 void telink_set_remote_mac(int argc, char** argv)
 {
-    if(argc != 3){
+    if (argc != 3) {
         rt_kprintf("\n[error]set remote mac(telink_set_remote_mac + channel + MAC)\n");
     }
     hl_rf_pair_info_t info;
