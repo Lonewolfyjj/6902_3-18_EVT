@@ -53,16 +53,6 @@ typedef enum _hl_led_net_mode
 
 } HL_ENUM8(hl_led_net_mode);
 
-typedef enum hl_led_record_state
-{
-    /// 
-    SWITCH_CLOSE = 0,
-    /// 
-    SWITCH_OPEN,
-    
-} HL_ENUM8(hl_led_record_state);
-
-
 typedef enum _hl_led_switch
 {
     /// 关闭/不充电/关闭降噪/正常/关闭MUTE/关闭录制
@@ -74,11 +64,13 @@ typedef enum _hl_led_switch
 
 typedef enum _hl_cmd_e
 {
+    /// 读取当前的模块故障状态，通过指针访问变量，值为 1表示 异常 0 表示正常
+    LED_FAULT_STATUS_READ_CMD,
     /// 连接状态变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_net_mode>,参数为四字节
     LED_NET_MODLE_CMD,
     /// 录制LED灯变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_record_state>,参数为四字节
     LED_RECORD_STATE_CMD,
-    /// 录制开关命令，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
+    /// 降噪开关命令，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
     LED_SWITCH_NOISE_REDUCTION_CMD,
     /// 充电开关标志，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
     LED_SWITCH_CHARGE_CMD,
@@ -97,9 +89,10 @@ typedef enum _hl_cmd_e
 
 } hl_cmd_e;
 
+
+
 #else
 // RX
-
 typedef enum _hl_screen_page_e
 {
     ///无页面
@@ -223,68 +216,11 @@ typedef enum _hl_display_fault_code_e
 
 }HL_ENUM8(hl_display_fault_code_e);
 
-typedef struct _hl_display_screen_s
-{
-    uint32_t display_fault_code:4;
-    uint32_t screen_lock:1;
-    uint32_t tx1_noise:1;
-    uint32_t tx2_noise:1;
-    uint32_t tx1_record_state:1;
-    uint32_t tx2_record_state:1;
-    uint32_t tx1_low_electricity:1;
-    uint32_t tx2_low_electricity:1;
-    uint32_t rx_low_electricity:1;
-    uint32_t case_low_electricity:1;
-    uint32_t tx1_charge_status:1;
-    uint32_t tx2_charge_status:1;
-    uint32_t rx_charge_status:1;
-    uint32_t box_charge_status:1;
-    uint32_t usb_in:1;
-    uint32_t line_out_in:1;
-    uint32_t monitor_in:1;
-    uint32_t auto_record:1;
-    uint32_t auto_record_portect:1;
-    uint32_t tx1_mute_switch:1;
-    uint32_t tx2_mute_switch:1;
-    uint32_t ota_update_state:2;
-    uint32_t screen_off_status:1;
-    uint32_t in_box_state:1;
-
-    uint8_t device_fault_code;
-    /// 监听类别
-    hl_display_voice_monitor_e monitor_category;
-    hl_display_vocie_mode_e voice_module;
-    hl_display_sound_module_e sound_module;
-    hl_display_low_cut_e low_cut;
-    hl_screen_page_e page_id;
-    uint8_t tx1_bat_val;
-    uint8_t tx2_bat_val;
-    uint8_t rx_bat_val;
-    uint8_t case_bat_val;
-    uint8_t tx1_vu;
-    uint8_t tx2_vu;
-    uint8_t tx1_signal;
-    uint8_t tx2_signal;
-    /// 降噪等级设置
-    uint8_t tx_noise_level;
-    int8_t tx1_line_out_volume;
-    int8_t tx2_line_out_volume;
-    int8_t uac_in_volume;
-    int8_t uac_out_volume;
-    uint8_t led_britness;
-    uint8_t tx1_remained_record_time;
-    uint8_t tx2_remained_record_time;
-    uint8_t tx1_ver[10];
-    uint8_t tx2_ver[10];
-    uint8_t rx_ver[10];
-    uint8_t sn[18];
-    hl_display_systime_s systime;
-    
-}hl_display_screen_s;
-
-
 typedef enum _hl_out_msg_e
 {
+    /// 是否恢复出厂设置 1:恢复出厂设置 0 ：不恢复出厂设置
+    RESTORE_SET_SWITCH_IND,
+
     ///自动录制状态 1：开启 0 ：关闭 uint8_t 
     AUTO_RECORD_SWITCH_IND,
 
@@ -307,8 +243,8 @@ typedef enum _hl_out_msg_e
     TX2_MUTE_SWITCH_SWITCH_IND,
 
     /// XT1/2 增益 int8_t
-    TX1_GAIN_SWITCH_IND,
-    TX2_GAIN_SWITCH_IND,
+    TX1_GAIN_VAL_IND,
+    TX2_GAIN_VAL_IND,
 
     /// TX1/2 格式化 1格式化
     TX1_FS_FORMAT_VAL_IND,
@@ -351,15 +287,25 @@ typedef enum _hl_out_msg_e
 
 typedef enum _hl_cmd_e
 {
-    /// 读取命令 ， 以READ_CMD结尾
-    /// 获取当前页面 <hl_screen_page_e>
+
+
+    /// 读取命令 ， 以READ_CMD结尾 获取当前页面 <hl_screen_page_e>
     NOW_PAGE_GET_READ_CMD,
 
-    /// 读取当前熄屏状态 ， 以READ_CMD结尾
-    /// 获取当前页面 <hl_screen_page_e> 1已经熄屏， 0未熄屏
+    /// 读取当前熄屏状态 ， 以READ_CMD结尾 1已经熄屏， 0未熄屏
     NOW_SCREEN_OFF_READ_CMD,
 
+    /// 读取显示模块系统的故障信息  错误码会返回指针<hl_display_fault_code_e>  
+    DISPLAY_FAULT_STATUS_READ_CMD,
+
+    /// 读取整个系统的故障信息(故障码) 传入访问BUF的指针，BUF长度16字节
+    DEVICE_FAULT_CODE_VAL_READ_CMD,
+
     /* *******************************命令相关******************/
+
+    /// 恢复出厂设置命令 1：恢复出厂设置
+    RESTORE_SET_SWITCH_CMD,
+
     /// TX12降噪开关  1： 开 0 ：关
     TX1_NOISE_SWITCH_CMD,
     TX2_NOISE_SWITCH_CMD,
@@ -367,12 +313,6 @@ typedef enum _hl_cmd_e
     TX1_RECORD_STATE_SWITCH_CMD,
     TX2_RECORD_STATE_SWITCH_CMD,
 
-    /// TX1/2/RX/CASE 低电状态 1： 地电 0 ：正常 uint8_t 
-    CASE_LOW_ELECTRICITY_SWITCH_CMD,
-    RX_LOW_ELECTRICITY_SWITCH_CMD,
-    
-    TX1_LOW_ELECTRICITY_SWITCH_CMD,
-    TX2_LOW_ELECTRICITY_SWITCH_CMD,
     
     /// TX1/2/RX/CASE 充电状态 1： 充电 0 ：正常 uint8_t 
     TX1_CHARGE_STATUS_SWITCH_CMD,
@@ -392,23 +332,30 @@ typedef enum _hl_cmd_e
     TX1_MUTE_SWITCH_SWITCH_CMD,
     TX2_MUTE_SWITCH_SWITCH_CMD,
 
-    /// 升级状态 1：升级中 0 ：正常 uint8_t 
+    /// 升级状态 <uint8_t>类型 1：升级中 0 ：正常
     OTA_UPDATE_STATE_SWITCH_CMD,
-    /// 熄屏命令 1：熄屏 0 ：正常 uint8_t 
+    /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
     /// 放入盒子状态 1：盒子中 0 ：正常 uint8_t 
     IN_BOX_STATE_SWITCH_CMD,
 
-    /* *******************************参数相关******************/
+    /// 自动录制状态 1：开启  0：关闭 ，
+    AUTO_RECORD_SWITCH_CMD,
 
-    /// 显示的故障信息(故障码) uint32_t 
+    ///录制保护状态 1：开启  0：关闭 ，
+    AUTO_RECORD_PORTECT_SWITCH_CMD,
+    /* *******************************参数相关******************/
+    /// 升级进度下发 0-100 <uint8_t>
+    OTA_UPDATE_REMAINED_VAL_CMD,
+
+    /// 整个系统的故障信息(故障码) 单个故障信息传入，<uint8_t>
     DEVICE_FAULT_CODE_VAL_CMD,
 
-    ///  音效模式 （）见枚举<hl_display_voice_monitor_e>
+    ///  音效模式 （）见枚举<hl_display_vocie_mode_e>
     VOICE_MODULE_VAL_CMD,
 
-    /// 低切模式 见枚举<hl_display_voice_monitor_e>
+    /// 低切模式 见枚举<hl_display_low_cut_e>
     LOW_CUT_VAL_CMD,
 
     /// 电量更新命令： 值uint8_t 0-100
@@ -417,22 +364,32 @@ typedef enum _hl_cmd_e
     RX_BAT_VAL_VAL_CMD,
     CASE_BAT_VAL_VAL_CMD,
 
-    /// UV值更新
+    /// TX1 UV值更新  uint8_t 
     TX1_VU_VAL_CMD,
-    ///
+    /// TX2 UV值更新  uint8_t 
     TX2_VU_VAL_CMD,
 
-    /// 信号强度新
+    /// TX1信号强度新 uint8_t
     TX1_SIGNAL_VAL_CMD,
-    ///
+    /// 信号强度新 uint8_t
     TX2_SIGNAL_VAL_CMD,
     
     /// 降噪等级
     TX_NOISE_LEVEL_VAL_CMD,
 
+    /// XT1/2 增益设置 int8_t
+    TX1_GAIN_VAL_CMD,
+    TX2_GAIN_VAL_CMD,
+
     /// TX lineout音量   int8_t
     TX1_LINE_OUT_VOLUME_VAL_CMD,
     TX2_LINE_OUT_VOLUME_VAL_CMD,
+
+    /// LINE_OUT音频音量设置 int8_t
+    LINE_OUT_VOLUME_VAL_CMD,
+
+    ///监听口音量设置 int8_t
+    MONITOR_VOLUME_VAL_CMD,
 
     /// 监听设置 见枚举：hl_display_voice_monitor_e
     MONITOR_CATEGORY_VAL_CMD, 
@@ -451,20 +408,26 @@ typedef enum _hl_cmd_e
 
 
     /* *******************************字符相关******************/
-    /// 版本信息 ASCII码 10字节的共享内存
+    /// TX1版本信息 ASCII码 10字节的BUF<char*>
     TX1_VER_STRING_CMD,
-    ///
+    /// TX2版本信息 ASCII码 10字节的BUF<char*>
     TX2_VER_STRING_CMD,
-    ///
+    /// RX版本信息 ASCII码 10字节的BUF<char*>
     RX_VER_STRING_CMD,
-    /// SN号 ASCII码 16字节的共享内存
-    SN_STRING_CMD,
+    /// 盒子版本 （盒子中显示）ASCII码 10字节的BUF<char*>
+    CASE_VER_STRING_CMD,
+    /// SN号 ASCII码 32字节的BUF<char*>
+    RX_SN_STRING_CMD,
 
-    /// 输入事件更新（按键、旋钮）
+
+    /// 输入事件更新（按键、旋钮、插入）<mode_to_app_msg_t>
     MSG_INPUT_UPDATE_CMD,
 
-    ///  <hl_display_systime_s> 系统时间设置
+    ///  系统时间设置 <hl_display_systime_s> 
     SYSTIME_SET_VAL_CMD,
+
+    /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
+    POWEROFF_SET_VAL_CMD,
 
     MSG_ID_CNT
     
