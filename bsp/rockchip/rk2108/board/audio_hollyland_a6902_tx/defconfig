@@ -258,11 +258,11 @@ CONFIG_RT_USING_POSIX=y
 # AT commands
 #
 # CONFIG_RT_USING_AT is not set
-
-#
-# System
-#
 # CONFIG_RT_USING_LITTLEVGL2RTT is not set
+# CONFIG_RT_USING_LITTLEVGL2RTT_V7 is not set
+# CONFIG_RT_USING_LITTLEVGL2RTT_V8 is not set
+# CONFIG_RT_LV_DISP_USE_HEAP_BUF is not set
+# CONFIG_RT_LV_DISP_USE_LARGE_BUF is not set
 
 #
 # VBUS(Virtual Software BUS)
