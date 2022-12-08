@@ -164,10 +164,10 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
     if (area->x1 > LV_HOR_RES_MAX  - 1) return;
     if (area->y1 > LV_VER_RES_MAX - 1) return;
 
-    rt_kprintf("x1 = %d\n",area->x1);
-    rt_kprintf("x2 = %d\n",area->x2);
-    rt_kprintf("y1 = %d\n",area->y1);
-    rt_kprintf("y2 = %d\n",area->y2);
+    // rt_kprintf("x1 = %d\n",area->x1);
+    // rt_kprintf("x2 = %d\n",area->x2);
+    // rt_kprintf("y1 = %d\n",area->y1);
+    // rt_kprintf("y2 = %d\n",area->y2);
 
     video_mem_t.format_byte = disp_ctx.dgi->bits_per_pixel / 8;
     video_mem_t.hor_max = LV_HOR_RES_MAX;
@@ -184,9 +184,7 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
     hl_mod_lvgl_video_memory(&video_mem_t);
     
     disp_ctx.cfg->yrgbAddr = (uint32_t)video_memory_g;
-    // disp_ctx.cfg->yrgbAddr = (uint32_t)color_p;
     disp_ctx.cfg->yrgbLength = disp_ctx.dgi->height * disp_ctx.dgi->width * disp_ctx.dgi->bits_per_pixel / 8;
-//    disp_ctx.cfg->yrgbLength = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1) * disp_ctx.dgi->bits_per_pixel / 8;
     // rt_kprintf("w = %d\n",area->x2 - area->x1 + 1);
     // rt_kprintf("h = %d\n",(area->y2 - area->y1 + 1));
 
@@ -198,6 +196,8 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 	// disp_ctx.scale->dstW = area->x2 - area->x1 + 1;
 	// disp_ctx.scale->dstH = area->y2 - area->y1 + 1;
 
+    // disp_ctx.cfg->yrgbAddr = (uint32_t)color_p;
+    // disp_ctx.cfg->yrgbLength = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1) * disp_ctx.dgi->bits_per_pixel / 8;
     lv_disp_refer();
     // b = rt_tick_get();
     // rt_kprintf("inc==%d\n",b-a);
@@ -209,8 +209,8 @@ static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_col
 void lv_dgi_init(void)
 {
     disp_ctx.dgi->bits_per_pixel = LV_COLOR_DEPTH;
-    disp_ctx.dgi->width          = LV_HOR_RES_MAX;
-    disp_ctx.dgi->height         = LV_VER_RES_MAX;
+    disp_ctx.dgi->width          = RT_LV_HOR_RES;
+    disp_ctx.dgi->height         = RT_LV_VER_RES;
     disp_ctx.dgi->framebuffer    = (rt_uint8_t *)disp_ctx.buf_1;
 }
 
@@ -228,17 +228,17 @@ static void lv_win_cfg_init(struct CRTC_WIN_STATE *win_config)
     win_config->cbcrAddr = 0;
     win_config->yrgbLength = 0;
     win_config->cbcrLength = 0;
-    win_config->xVir = LV_HOR_RES_MAX;
+    win_config->xVir = RT_LV_HOR_RES;
 
     win_config->srcX = 0;
     win_config->srcY = 0;
-    win_config->srcW = LV_HOR_RES_MAX;
-    win_config->srcH = LV_VER_RES_MAX;
+    win_config->srcW = RT_LV_HOR_RES;
+    win_config->srcH = RT_LV_VER_RES;
 
     win_config->crtcX = 0;
     win_config->crtcY = 0;
-    win_config->crtcW = LV_HOR_RES_MAX;
-    win_config->crtcH = LV_VER_RES_MAX;
+    win_config->crtcW = RT_LV_HOR_RES;
+    win_config->crtcH = RT_LV_VER_RES;
 
     win_config->xLoopOffset = 0;
     win_config->yLoopOffset = 0;
