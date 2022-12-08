@@ -372,6 +372,9 @@ uint8_t hl_mod_telink_start(void)
 {
     rt_err_t result;
 
+    // 清空fifo等资源
+    hl_util_fifo_clear(&s_telink.fifo);
+
     // 初始化Telink线程资源
     result = rt_thread_init(&telink_thread, "telink", hl_mod_telink_thread_entry, RT_NULL, &telink_thread_stack[0],
                             sizeof(telink_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
@@ -389,6 +392,7 @@ uint8_t hl_mod_telink_start(void)
 
     return 0;
 }
+MSH_CMD_EXPORT(hl_mod_telink_start, telink start cmd);
 
 uint8_t hl_mod_telink_stop(void)
 {
@@ -403,6 +407,7 @@ uint8_t hl_mod_telink_stop(void)
 
     return 0;
 }
+MSH_CMD_EXPORT(hl_mod_telink_stop, telink stop cmd);
 
 uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
