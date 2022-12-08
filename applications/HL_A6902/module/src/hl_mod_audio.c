@@ -37,7 +37,9 @@
 
 #include "hl_drv_aw21009.h"
 #include "hl_hal_gpio.h"
+#ifdef RT_USB_DEVICE_UAC1
 #include "./class/uac1.h"
+#endif
 #include "hl_util_msg_type.h"
 
 #define DBG_SECTION_NAME "mod_aud"
@@ -160,8 +162,10 @@ volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_CAP2PL
 volatile static hl_card_param_t        play_info;
 /// 捕获声卡参数信息
 volatile static hl_card_param_t        cap_info;
+#ifdef RT_USB_DEVICE_UAC1
 /// uac声卡参数信息
 volatile static hl_uacd_param_t        uac_info;
+#endif
 /// 录制参数信息
 volatile static hl_record_param_t      record_info;
 /// 录制线程id
@@ -349,6 +353,7 @@ static void hl_mod_audio_param_deconfig(void)
     LOG_D("audio codec deconfig!");
 }
 
+#ifdef RT_USB_DEVICE_UAC1
 // uac声卡内存申请
 static rt_err_t hl_mod_audio_uac_config(void)
 {
@@ -408,6 +413,7 @@ static rt_err_t hl_mod_audio_uac_deconfig(void)
     LOG_I("uac param deconfig succeed!");
     return RT_EOK;
 }
+#endif
 
 #if HL_IS_TX_DEVICE()
 // 录制内存申请
@@ -491,9 +497,14 @@ err0:
 // 声卡去配置
 static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
 {
+    if (p_param->card == RT_NULL) {
+        LOG_I("audio card param deconfig repeated!");
+        return;
+    }
     rt_device_control(p_param->card, RK_AUDIO_CTL_STOP, NULL);
     rt_device_control(p_param->card, RK_AUDIO_CTL_PCM_RELEASE, NULL);
     rt_device_close(p_param->card);
+    p_param->card = RT_NULL;
 
     LOG_I("audio card param deconfig succeed!");
     return RT_EOK;
@@ -733,6 +744,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 }
 
+#ifdef RT_USB_DEVICE_UAC1
 static void _hl_cap2uac_thread_entry(void* arg)
 {
     LOG_D("audio cap2uac thread run");
@@ -805,6 +817,7 @@ static void _hl_uac2play_thread_entry(void* arg)
         }
     }
 }
+#endif
 
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
@@ -820,10 +833,12 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)<= 0) {
             LOG_E("write %s failed", play_info.card->parent.name);
         }
+#ifdef RT_USB_DEVICE_UAC1        
 #if (!HL_IS_TX_DEVICE())
         if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
+#endif
 #endif
     }
 }
@@ -962,7 +977,7 @@ static void _hl_audio_stream_thread_ctrl(hl_stream_mode_e mode, hl_switch_e stat
                     LOG_E("cap2play thread create failed!");
                 }
                 break;
-
+#ifdef RT_USB_DEVICE_UAC1
             case HL_STREAM_UAC2PLAY:
                 uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 0, 3);
                 if (uac2play_thread_id != RT_NULL) {
@@ -986,6 +1001,7 @@ static void _hl_audio_stream_thread_ctrl(hl_stream_mode_e mode, hl_switch_e stat
                     LOG_E("uac2play thread create failed!");
                 }
                 break;
+#endif
 
             case HL_STREAM_CAP2PLAY_CAP2UAC:
                 cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 0, 3);
@@ -1010,6 +1026,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
 
     LOG_D("audio ctrl thread run");
     while (1) {
+        #ifdef RT_USB_DEVICE_UAC1
         msg = 0;
         while (RT_EOK == rt_mb_recv(uac_info.p_mailbox, &msg, 0)) {
             switch (msg) {
@@ -1028,6 +1045,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                     break;
             }
         }
+        #endif
 
         if (s_stream_mode_cur != s_stream_mode_next) {
             _hl_audio_stream_thread_ctrl(s_stream_mode_cur, HL_SWITCH_OFF);
@@ -1069,11 +1087,13 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
         goto err1;
     }
 
+#ifdef RT_USB_DEVICE_UAC1
     ret = hl_mod_audio_uac_config();
     if (RT_EOK != ret) {
         LOG_E("hl_mod_audio_uac_config failed");
         goto err2;
     }
+#endif
 
 #if HL_IS_TX_DEVICE()
     ret = hl_mod_audio_record_param_config();
@@ -1108,8 +1128,10 @@ err4:
     hl_mod_audio_record_param_deconfig();
 err3:
 #endif
+#ifdef RT_USB_DEVICE_UAC1
     hl_mod_audio_uac_deconfig();
 err2:
+#endif
     hl_mod_audio_dsp_deconfig();
 err1:
     hl_mod_audio_param_deconfig();
@@ -1134,7 +1156,9 @@ uint8_t hl_mod_audio_deinit(void)
     rt_thread_delete(record_thread_id);
     hl_mod_audio_record_param_deconfig();
 #endif
+#ifdef RT_USB_DEVICE_UAC1
     hl_mod_audio_uac_deconfig();
+#endif
     hl_mod_audio_dsp_deconfig();
     hl_mod_audio_param_deconfig();
 
