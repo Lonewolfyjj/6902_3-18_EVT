@@ -1,0 +1,31 @@
+Import('RTT_ROOT')
+Import('rtconfig')
+from building import *
+
+cwd     = GetCurrentDir()
+
+inc_path = [cwd]
+src = Glob('*.c')
+
+if GetDepend('RT_USING_LITTLEVGL2RTT'):
+    inc_path += [cwd + '/font']
+    inc_path += [cwd + '/img']
+    inc_path += [cwd + '/manage']
+    inc_path += [cwd + '/page']
+    src += Glob('font/*.c')
+    src += Glob('img/*.c')
+    src += Glob('manage/*.c')
+    src += Glob('page/*.c')
+
+
+CPPPATH = inc_path
+
+group = DefineGroup('HL_A6902', src, depend = [''], CPPPATH = CPPPATH)
+
+list = os.listdir(cwd)
+for d in list:
+    path = os.path.join(cwd, d)
+    if os.path.isfile(os.path.join(path, 'SConscript')):
+        group = group + SConscript(os.path.join(d, 'SConscript'))
+
+Return('group')

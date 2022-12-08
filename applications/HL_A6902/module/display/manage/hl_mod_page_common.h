@@ -67,7 +67,71 @@ typedef struct _hl_scr_in_data_t
     hl_scr_indev_msg_t in_inputdev;
 } hl_scr_in_data_t;
 
+typedef struct _hl_display_screen_s
+{
+    uint32_t display_fault_code:4;
+    uint32_t screen_lock:1;
+    uint32_t tx1_noise:1;
+    uint32_t tx2_noise:1;
+    uint32_t tx1_record_state:1;
+    uint32_t tx2_record_state:1;
+    uint32_t tx1_low_electricity:1;
+    uint32_t tx2_low_electricity:1;
+    uint32_t rx_low_electricity:1;
+    uint32_t case_low_electricity:1;
+    uint32_t tx1_charge_status:1;
+    uint32_t tx2_charge_status:1;
+    uint32_t rx_charge_status:1;
+    uint32_t box_charge_status:1;
+    uint32_t usb_in:1;
+    uint32_t line_out_in:1;
+    uint32_t monitor_in:1;
+    uint32_t auto_record:1;
+    uint32_t auto_record_portect:1;
+    uint32_t tx1_mute_switch:1;
+    uint32_t tx2_mute_switch:1;
+    
+    uint32_t screen_off_status:1;
+    uint32_t in_box_state:1;
+    /// @brief 恢复出厂设置
+    uint32_t restore_state:1;
+    /// 监听类别
 
+    hl_display_voice_monitor_e monitor_category;
+    hl_display_vocie_mode_e voice_module;
+    hl_display_sound_module_e sound_module;
+    hl_display_low_cut_e low_cut;
+    hl_screen_page_e page_id;
+
+    uint8_t tx1_bat_val;
+    uint8_t tx2_bat_val;
+    uint8_t rx_bat_val;
+    uint8_t case_bat_val;
+    uint8_t tx1_vu;
+    uint8_t tx2_vu;
+    uint8_t tx1_signal;
+    uint8_t tx2_signal;
+    /// 降噪等级设置
+    uint8_t tx_noise_level;
+    int8_t tx1_line_out_volume;
+    int8_t tx2_line_out_volume;
+    int8_t uac_in_volume;
+    int8_t uac_out_volume;
+    int8_t tx1_gain_volume;
+    int8_t tx2_gain_volume;
+    uint8_t led_britness;
+    uint8_t tx1_remained_record_time;
+    uint8_t tx2_remained_record_time;
+    uint8_t ota_upgrade_progress;
+
+    uint8_t tx1_ver[10];
+    uint8_t tx2_ver[10];
+    uint8_t rx_ver[10];
+    uint8_t sn[36];
+    uint8_t device_fault_code[20];
+    hl_display_systime_s systime;
+
+}hl_display_screen_s;
 
 uint8_t          hl_mod_display_scr_page_incmd(void);
 void             hl_mod_display_scr_set_page(uint32_t now_page);

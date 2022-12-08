@@ -1,13 +1,38 @@
+/**
+ * @file lv_port_disp.c
+ * @author liujie (jie.liu@hollyland-tech.com)
+ * @brief 
+ * @version V1.0
+ * @date 2022-12-08
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2022 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2022-12-08     <td>v1.0     <td>liujie     <td>内容
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
 /*
- * Copyright (c) 2022 Rockchip Electronics Co., Ltd.
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Change Logs:
- * Date           Author       Notes
- * 2022-10-10     Chris Zhong      First version
-*/
+ * EOF
+ */
+#include "hl_config.h"
 
+#if !HL_IS_TX_DEVICE()
 #include "lv_port_disp.h"
 
 // #if LV_USE_FULL_SCREEN == 0
@@ -406,5 +431,5 @@ struct rt_device_graphic_info* lv_port_dgi_get(void)
 	 return disp_ctx.dgi;
 }
 
-
+#endif
 

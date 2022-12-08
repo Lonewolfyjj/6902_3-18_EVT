@@ -1,11 +1,13 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "hl_mod_page_common.h"
+
 #include "hl_config.h"
-#include "rtconfig.h"
+
 #if !HL_IS_TX_DEVICE()
 
+#include "hl_mod_page_common.h"
+#include "rtconfig.h"
 #include "lv_port_indev.h"
 #include "../../lvgl.h"
 #ifdef RT_USING_FT3169

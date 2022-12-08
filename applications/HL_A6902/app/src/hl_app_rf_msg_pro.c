@@ -42,7 +42,7 @@
 #if HL_IS_TX_DEVICE()
 void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 {
-    hl_led_mode     led_ctrl;
+    // hl_led_mode     led_ctrl;
     uint8_t         p_param;
 
     LOG_D("get telink msg(%d)!!! \r\n", p_msg->cmd);

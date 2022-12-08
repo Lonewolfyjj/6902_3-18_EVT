@@ -121,7 +121,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
     hl_switch_e        record_switch;
-    hl_record_led_mode record_led_ctrl;
+    // hl_record_led_mode record_led_ctrl;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
@@ -130,14 +130,14 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             if (tx_info.rec_flag == 0) {
                 record_switch    = HL_SWITCH_ON;
                 tx_info.rec_flag = 1;
-                record_led_ctrl  = RECORD_LED_MODE_OPEN;
+                // record_led_ctrl  = RECORD_LED_MODE_OPEN;
             } else {
                 record_switch    = HL_SWITCH_OFF;
                 tx_info.rec_flag = 0;
-                record_led_ctrl  = RECORD_LED_MODE_CLOSE;
+                // record_led_ctrl  = RECORD_LED_MODE_CLOSE;
             }
             hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
-            hl_mod_display_io_ctrl(MSG_RECORD_LED_MODE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
+       
             break;
         case HL_KEY_EVENT_LONG:
             break;

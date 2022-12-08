@@ -49,51 +49,51 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
 
 void hl_app_disp_state_led_set(void)
 {
-    hl_led_mode     led_ctrl;
+    // hl_led_mode     led_ctrl;
 
     if (tx_info.denoise_flag == 0) {
-        switch (tx_info.rf_state) {
-            case HL_RF_STATE_IDLE:
-                led_ctrl = LED_MODE_RECONNECTION;
-                break;
-            case HL_RF_STATE_RELEASE:
-                led_ctrl = LED_MODE_RECONNECTION;
-                break;
-            case HL_RF_STATE_PAIR:
-                led_ctrl = LED_MODE_PAIR;
-                break;
-            case HL_RF_STATE_CONNECT:
-                led_ctrl = LED_MODE_CONNECTED;
-                break;
-            case HL_RF_STATE_STOP:
-                led_ctrl = LED_MODE_RECONNECTION;
-                break;
-            default:
-                break;
-        }
+        // switch (tx_info.rf_state) {
+        //     case HL_RF_STATE_IDLE:
+        //         led_ctrl = LED_MODE_RECONNECTION;
+        //         break;
+        //     case HL_RF_STATE_RELEASE:
+        //         led_ctrl = LED_MODE_RECONNECTION;
+        //         break;
+        //     case HL_RF_STATE_PAIR:
+        //         led_ctrl = LED_MODE_PAIR;
+        //         break;
+        //     case HL_RF_STATE_CONNECT:
+        //         led_ctrl = LED_MODE_CONNECTED;
+        //         break;
+        //     case HL_RF_STATE_STOP:
+        //         led_ctrl = LED_MODE_RECONNECTION;
+        //         break;
+        //     default:
+        //         break;
+        // }
     } else {
         switch (tx_info.rf_state) {
             case HL_RF_STATE_IDLE:
-                led_ctrl = LED_MODE_DENOISE_RECONNECTION;
+                // led_ctrl = LED_MODE_DENOISE_RECONNECTION;
                 break;
             case HL_RF_STATE_RELEASE:
-                led_ctrl = LED_MODE_DENOISE_RECONNECTION;
+                // led_ctrl = LED_MODE_DENOISE_RECONNECTION;
                 break;
             case HL_RF_STATE_PAIR:
-                led_ctrl = LED_MODE_PAIR;
+                // led_ctrl = LED_MODE_PAIR;
                 break;
             case HL_RF_STATE_CONNECT:
-                led_ctrl = LED_MODE_DENOISE_CONNECTED;
+                // led_ctrl = LED_MODE_DENOISE_CONNECTED;
                 break;
             case HL_RF_STATE_STOP:
-                led_ctrl = LED_MODE_DENOISE_RECONNECTION;
+                // led_ctrl = LED_MODE_DENOISE_RECONNECTION;
                 break;
             default:
                 break;
         }
     }
 
-    hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
+    // hl_mod_display_io_ctrl(MSG_STATE_LED_MODE_CMD, &led_ctrl, sizeof(led_ctrl));
 }
 
 #else
