@@ -120,6 +120,7 @@ void hl_mod_page_delete(lv_obj_t* obj)
     }
 }
 
+static int8_t now_knob_data;
 void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
 {
     static int8_t encoder_knob_diff = 0;
@@ -130,9 +131,21 @@ void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
         LV_LOG_USER("-now=%d\r\n", encoder_knob_diff);
 
         data->enc_diff    = in_data.in_inputdev.encoder_knob_diff - encoder_knob_diff;
+now_knob_data = data->enc_diff;
         encoder_knob_diff = in_data.in_inputdev.encoder_knob_diff;
     }
 }
+
+
+int8_t hl_mod_get_rx_knob_val(void)
+{
+    int8_t data;
+    data = now_knob_data;
+    now_knob_data = 0;
+    return data;
+}
+
+
 
 void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
 {

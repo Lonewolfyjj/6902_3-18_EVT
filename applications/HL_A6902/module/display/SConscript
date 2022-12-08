@@ -12,10 +12,12 @@ if GetDepend('RT_USING_LITTLEVGL2RTT'):
     inc_path += [cwd + '/img']
     inc_path += [cwd + '/manage']
     inc_path += [cwd + '/page']
+    inc_path += [cwd + '/ui']
     src += Glob('font/*.c')
     src += Glob('img/*.c')
     src += Glob('manage/*.c')
     src += Glob('page/*.c')
+    src += Glob('ui/*.c')
 
 
 CPPPATH = inc_path

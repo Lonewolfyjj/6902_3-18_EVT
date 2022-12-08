@@ -40,40 +40,40 @@
 
 
 
-//Tx菜单界面
-LV_IMG_DECLARE(Menu_tx_gain);//TX增益
-LV_IMG_DECLARE(Menu_low_qie);//低切
-LV_IMG_DECLARE(Menu_auto_recording);//自动录制
-LV_IMG_DECLARE(Menu_recording_protection);//录制保护
-LV_IMG_DECLARE(Menu_storage);//存储
-LV_IMG_DECLARE(Menu_auto_poweroff);//自动关机
-LV_IMG_DECLARE(Menu_status_led);//状态灯调节
+// //Tx菜单界面
+// LV_IMG_DECLARE(Menu_tx_gain);//TX增益
+// LV_IMG_DECLARE(Menu_low_qie);//低切
+// LV_IMG_DECLARE(Menu_auto_recording);//自动录制
+// LV_IMG_DECLARE(Menu_recording_protection);//录制保护
+// LV_IMG_DECLARE(Menu_storage);//存储
+// LV_IMG_DECLARE(Menu_auto_poweroff);//自动关机
+// LV_IMG_DECLARE(Menu_status_led);//状态灯调节
 
-static void page_8_test_cb(uint32_t current)
-{
-    printf("Page_8 check centre icon event :%d\n",current);
-}
+// static void page_8_test_cb(uint32_t current)
+// {
+//     printf("Page_8 check centre icon event :%d\n",current);
+// }
 
-static void page_8_test(void)
-{
-    menu_data_t pic_list[7] = {
-        ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,"TX增益"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,"低切"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,"自动录制"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,"录制保护"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_storage,"存储"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,"自动关机"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_status_led,"状态灯调节"),
-    };
-    page_menu_init(pic_list,7,page_8_test_cb);
-}
+// static void page_8_test(void)
+// {
+//     menu_data_t pic_list[7] = {
+//         ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,"TX增益"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,"低切"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,"自动录制"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,"录制保护"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_storage,"存储"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,"自动关机"),
+//         ADD_IMG_DATA(NULL,NULL,&Menu_status_led,"状态灯调节"),
+//     };
+//     page_menu_init(pic_list,7,page_8_test_cb);
+// }
 
 
 
 static void hl_mod_page_setup(void)
 {
-    LV_LOG_USER("PAGE_TX_CONF_MENU\n");
-    page_8_test();
+    // LV_LOG_USER("PAGE_TX_CONF_MENU\n");
+    // page_8_test();
 }
 
 static void hl_mod_page_loop(void)

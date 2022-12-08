@@ -24,22 +24,27 @@
 #ifndef _HL_MMOD_PAGE_MAIN_FRAME_H_
 #define _HL_MMOD_PAGE_MAIN_FRAME_H_
 
-#include "lvgl/examples/lv_examples.h"
-#include "stdio.h"
+// #include "lvgl/examples/lv_examples.h"
+// #include "stdio.h"
 
-#define MAX_MENU_NUMBER     12
-#define ADD_IMG_DATA(OBJ,LAB,SRC,PTR) {.obj = OBJ,.lab = LAB,.pic_src = SRC,.ptr = PTR}
+// #define MAX_MENU_NUMBER     12
+// #define ADD_IMG_DATA(OBJ,LAB,SRC,PTR) {.obj = OBJ,.lab = LAB,.pic_src = SRC,.ptr = PTR}
 
-typedef struct _menu_data_t{
-    lv_obj_t *obj;
-    lv_obj_t *lab;
-    const lv_img_dsc_t *pic_src;
-    const char *ptr;
-}menu_data_t;
+// typedef struct _menu_data_t{
+//     lv_obj_t *obj;
+//     lv_obj_t *lab;
+//     const lv_img_dsc_t *pic_src;
+//     const char *ptr;
+// }menu_data_t;
 
-typedef void(*event_cb)(uint32);
+// typedef void(*event_cb)(uint32);
 
-void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func_cb);
+// void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func_cb);
+
+
+// void lv_set_icon_postion(uint8_t pos);
+
+// lv_obj_t * hl_menu_obj_get(uint8_t num);
 
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/

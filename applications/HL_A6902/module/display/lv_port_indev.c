@@ -142,7 +142,7 @@ static void lv_add_all_indev_to_def_group(lv_group_t* group)
     //group只能添加按键和编码器
     lv_indev_set_group(indev_keypad_touchkey_p, group);
     lv_indev_set_group(indev_keypad_knob_ok_p, group);
-    lv_indev_set_group(indev_encoder_knob_p, group);
+    // lv_indev_set_group(indev_encoder_knob_p, group);
 }
 
 void hl_port_indev_lock_screen(bool en)
@@ -166,6 +166,11 @@ void hl_port_indev_lock_screen(bool en)
         lv_indev_enable(indev_encoder_knob_p, true);
 
     }
+}
+
+lv_indev_t * hl_mod_get_knob_indev()
+{
+    return indev_encoder_knob_p;
 }
 
 /*------------------

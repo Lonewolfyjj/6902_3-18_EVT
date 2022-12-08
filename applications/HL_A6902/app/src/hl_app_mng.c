@@ -74,7 +74,7 @@ void hl_app_msg_thread(void* parameter)
             switch (msg.sender) {
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
-                    // hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg,0);
+                    hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg,0);
                     break;
                 case DISPLAY_MODE:
                     hl_app_disp_msg_pro(&msg);
