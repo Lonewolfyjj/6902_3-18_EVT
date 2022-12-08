@@ -105,7 +105,7 @@
 #define RT_USING_DFS
 #define DFS_USING_WORKDIR
 #define DFS_FILESYSTEMS_MAX 4
-#define DFS_FILESYSTEM_TYPES_MAX 4
+#define DFS_FILESYSTEM_TYPES_MAX 2
 #define DFS_FD_MAX 16
 #define RT_USING_DFS_MNTTABLE
 #define RT_USING_DFS_ELMFAT
@@ -159,15 +159,7 @@
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
 /* RT_USING_RTC is not set */
-#define RT_USING_SDIO
-#define RT_SDIO_STACK_SIZE 512
-#define RT_SDIO_THREAD_PRIORITY 15
-#define RT_MMCSD_STACK_SIZE 1536
-#define RT_MMCSD_THREAD_PREORITY 22
-#define RT_MMCSD_MAX_PARTITION 16
-#define RT_SDCARD_MOUNT_POINT "/mnt/sdcard"
-/* RT_SDIO_DEBUG is not set */
-#define RT_EMMC_USE_DDR_MOD
+/* RT_USING_SDIO is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */
@@ -180,7 +172,7 @@
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
-/* RT_USING_TOUCH is not set */
+#define RT_USING_TOUCH
 
 /* Using WiFi */
 
@@ -191,18 +183,28 @@
 /* RT_USING_USB_HOST is not set */
 #define RT_USING_USB_DEVICE
 #define RT_USBD_THREAD_STACK_SZ 4096
-#define USB_VENDOR_ID 0x0FFE
-#define USB_PRODUCT_ID 0x0001
+#define USB_VENDOR_ID 0x3547
+#define USB_PRODUCT_ID 0x0002
 #define RT_USB_DEVICE_COMPOSITE
 /* RT_USB_DEVICE_CDC is not set */
 #define RT_USB_DEVICE_NONE
 #define RT_USB_DEVICE_MSTORAGE
-/* RT_USB_DEVICE_HID is not set */
-/* RT_USB_DEVICE_WINUSB is not set */
-/* RT_USB_DEVICE_UAC1 is not set */
+#define RT_USB_DEVICE_HID
+#define RT_USB_DEVICE_WINUSB
+#define RT_USB_DEVICE_UAC1
 /* RT_USB_DEVICE_UVC is not set */
-#define RT_USB_MSTORAGE_DISK_NAME "sd0"
-#define RT_USB_MSTORAGE_BUFLEN 32768
+#define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
+#define RT_USB_AUDIO_P_NAME "codecp"
+#define RT_USB_AUDIO_C_NAME "pdmc"
+/* RT_USB_AUDIO_PLL_COMPENSATION is not set */
+/* RT_USB_DEVICE_HID_KEYBOARD is not set */
+/* RT_USB_DEVICE_HID_MOUSE is not set */
+#define RT_USB_DEVICE_HID_GENERAL
+#define RT_USB_DEVICE_HID_GENERAL_OUT_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_GENERAL_IN_REPORT_LENGTH 63
+#define RT_USB_DEVICE_HID_MEDIA
 
 /* POSIX layer and C standard library */
 
@@ -1134,7 +1136,7 @@
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
+#define RT_BOARD_NAME "audio_hollyland_a6902_rx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -1146,7 +1148,6 @@
 #define RT_USING_RESET
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
-/* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
 /* RT_USING_PWM_REGULATOR is not set */
@@ -1158,6 +1159,18 @@
 #define RT_LARGE_HEAP_SIZE 262144
 /* RT_USING_DTCM_HEAP is not set */
 /* RT_USING_PSRAM_HEAP is not set */
+/* RT_USING_PANEL_FPGA_LVDS is not set */
+/* RT_USING_PANEL_SS is not set */
+/* RT_USING_PANEL_S6E3FC2X01 is not set */
+/* RT_USING_PANEL_S6E3HC2_X1 is not set */
+/* RT_USING_PANEL_S6E3HC2_X4 is not set */
+/* RT_USING_PANEL_ST7703_DS is not set */
+/* RT_USING_PANEL_ST7796H2 is not set */
+/* RT_USING_PANEL_AM018RT90211 is not set */
+/* RT_USING_PANEL_AM014RT90327V0 is not set */
+/* RT_USING_PANEL_H245QBN02 is not set */
+#define RT_USING_PANEL_HL_RM690A0
+/* RT_USING_BACKLIGHT is not set */
 
 /* Enable Fault Dump Hook */
 
@@ -1216,6 +1229,16 @@
 /* RT-Thread rockchip buffer_manage driver */
 
 /* RT_USING_BUFFER_MANAGE is not set */
+#define RT_USING_TOUCH_DRIVERS
+/* RT_USING_TOUCH_GTXX is not set */
+/* RT_USING_TOUCH_S3706 is not set */
+/* RT_USING_CSTXX is not set */
+/* RT_USING_CYTTSP5 is not set */
+/* RT_USING_IT7259 is not set */
+/* RT_USING_FT3169 is not set */
+#define RT_USING_ZTW523A
+#define RT_TOUCH_X_RANGE 126
+#define RT_TOUCH_Y_RANGE 294
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
@@ -1267,7 +1290,11 @@
 #define RT_USING_DMA_PL330
 #define RT_USING_DMA0
 #define RT_USING_PMU
-/* RT_USING_DISPLAY is not set */
+#define RT_USING_DISPLAY
+#define RT_USING_VOP
+/* RT_USING_SPI_SCREEN is not set */
+/* RT_USING_VOP_MCU is not set */
+#define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
 #define RT_USING_PWM0
 
@@ -1285,7 +1312,7 @@
 
 #define RT_USING_UART
 #define RT_USING_UART0
-/* RT_USING_UART1 is not set */
+#define RT_USING_UART1
 #define RT_USING_UART2
 
 /* Enable I2C */
@@ -1299,16 +1326,14 @@
 #define RT_USING_SPI2APB
 #define RT_USING_SPI1
 #define RT_USING_SPI2
-
-/* Enable SDIO/SDMMC/eMMC */
-
-#define RT_USING_SDIO0
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
+#define RT_USING_USBAPP
+#define RT_USING_HIDTEST
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -1329,6 +1354,7 @@
 /* RT_USING_COMMON_TEST_CPU_USAGE is not set */
 /* RT_USING_COMMON_TEST_DCACHE is not set */
 /* RT_USING_COMMON_TEST_ICACHE is not set */
+#define RT_USING_COMMON_TEST_DISPLAY
 /* RT_USING_COMMON_TEST_DSP is not set */
 /* RT_USING_DSP_OPUS_CODEC_TEST is not set */
 /* RT_USING_COMMON_TEST_GPIO is not set */
