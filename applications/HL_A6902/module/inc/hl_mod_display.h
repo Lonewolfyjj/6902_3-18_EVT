@@ -53,6 +53,16 @@ typedef enum _hl_led_net_mode
 
 } HL_ENUM8(hl_led_net_mode);
 
+typedef enum _hl_charge_mode
+{
+    /// 未充电
+    NOT_CHARGE = 0,
+    /// 充电中
+    CHARGING,
+    /// 已充满
+    FULL_CHARGE,
+} HL_ENUM8(hl_charge_mode);
+
 typedef enum _hl_led_switch
 {
     /// 关闭/不充电/关闭降噪/正常/关闭MUTE/关闭录制
@@ -72,8 +82,8 @@ typedef enum _hl_cmd_e
     LED_RECORD_STATE_CMD,
     /// 降噪开关命令，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
     LED_SWITCH_NOISE_REDUCTION_CMD,
-    /// 充电开关标志，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
-    LED_SWITCH_CHARGE_CMD,
+    /// 充电状态标志，hl_mod_display_io_ctrl的参数参考<hl_charge_mode>,参数为四字节 
+    LED_CHARGE_STATUS_CMD,
     /// 故障标志，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
     LED_SWITCH_FAULT_CMD,
     /// MUTE状态，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
@@ -82,7 +92,7 @@ typedef enum _hl_cmd_e
     LED_SWITCH_UPDATE_CMD,
     ///电量状态，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
     LED_SWITCH_BATTERY_CMD,
-    ///LED亮度调节，hl_mod_display_io_ctrl的参数参考<uint8_t (0-255)>,参数为1字节 
+    ///LED亮度调节(两个灯一起)，hl_mod_display_io_ctrl的参数参考<uint8_t (0-255)>,参数为1字节 
     LED_BRIGHT_SET_CMD,
     /// 命令个数统计
     MSG_ID_CNT
@@ -143,15 +153,18 @@ typedef enum _hl_screen_page_e
     /// 恢复出厂设置
     PAGE_RESTORE,
 
-
+    /// 通用设置
+    PAGE_OTHER_SET,
     /// TX快捷配置页面
     PAGE_FAST_TX_CONFIG,
-    /// 快捷LINE OUT输出音量页面(安全音轨)
-    PAGE_LINE_OUT_SAFE_TRACK,
-    /// 快捷LINE OUT输出音量页面(立体声)
-    PAGE_LINE_OUT_STEREO,
-    /// 快捷LINE OUT输出音量页面(单声道)
-    PAGE_LINE_OUT_MONO,
+    /// 单声道 立体声选择界面
+    PAGE_SOUND_MODULE,
+    // //// 快捷LINE OUT输出音量页面(安全音轨)
+    // PAGE_LINE_OUT_SAFE_TRACK,
+    // /// 快捷LINE OUT输出音量页面(立体声)
+    // PAGE_LINE_OUT_STEREO,
+    // /// 快捷LINE OUT输出音量页面(单声道)
+    // PAGE_LINE_OUT_MONO,
     ///  页面总数
     PAGE_MAX,  
 
