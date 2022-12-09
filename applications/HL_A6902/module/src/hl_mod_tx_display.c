@@ -42,7 +42,7 @@ typedef enum _hl_mod_display_state_e
     HL_DISPLAY_IDLE,
     HL_DISPLAY_CHARGING,
     HL_DISPLAY_CHARGE_FULL,
-    HL_DISPLAY_NORMAL_SOC,
+    HL_DISPLAY_CHARGE_STOP,
     HL_DISPLAY_FAULT,
     HL_DISPLAY_UPDATE,
     HL_DISPLAY_PAIR,
@@ -117,6 +117,10 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_CONNECTED;
     } else if (_display_mod.net_mode == LED_NET_MODE_RECONNECTION) {
         state = HL_DISPLAY_RECONNECT;
+    } else if (_display_mod.bat_soc >= 95 && _display_mod.charge_state != NOT_CHARGE) {  //此处开始是关机的情况
+        state = HL_DISPLAY_CHARGE_FULL;
+    } else if (_display_mod.charge_state == NOT_CHARGE) {
+        state = HL_DISPLAY_CHARGE_STOP;
     } else {
         state = HL_DISPLAY_IDLE;
     }
@@ -180,9 +184,13 @@ static void _display_update_1(void)
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
             led.color       = HL_DRV_AW2016A_COLOR_ORANGE;
         } break;
+        case HL_DISPLAY_CHARGE_STOP: {
+            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
+            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
+        } break;
         default: {
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_SKIP;
-            led.color       = HL_DRV_AW2016A_COLOR_SKIP;
+            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
         } break;
     }
 
@@ -234,7 +242,7 @@ static void _display_update_2(void)
         } break;
         default: {
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_SKIP;
-            led.color       = HL_DRV_AW2016A_COLOR_SKIP;
+            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
         } break;
     }
 
@@ -277,7 +285,7 @@ uint8_t hl_mod_display_init(void* display_msq)
 
     _display_mod.display_update_flag_1 = false;
     _display_mod.display_update_flag_2 = false;
-    _display_mod.net_mode              = LED_NET_MODE_RECONNECTION;
+    _display_mod.net_mode              = LED_NET_MODE_ID_CNT;
     _display_mod.record_state          = SWITCH_CLOSE;
     _display_mod.record_fault_state    = SWITCH_CLOSE;
     _display_mod.denoise_state         = SWITCH_CLOSE;
