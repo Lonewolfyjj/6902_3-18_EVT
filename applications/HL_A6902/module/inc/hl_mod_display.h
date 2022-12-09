@@ -78,8 +78,10 @@ typedef enum _hl_cmd_e
     LED_FAULT_STATUS_READ_CMD,
     /// 连接状态变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_net_mode>,参数为四字节
     LED_NET_MODLE_CMD,
-    /// 录制LED灯变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_record_state>,参数为四字节
+    /// 录制LED灯变更命令，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
     LED_RECORD_STATE_CMD,
+    /// 录制是否异常LED灯，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
+    LED_RECORD_FAULT_CMD,
     /// 降噪开关命令，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节
     LED_SWITCH_NOISE_REDUCTION_CMD,
     /// 充电状态标志，hl_mod_display_io_ctrl的参数参考<hl_charge_mode>,参数为四字节 
@@ -90,8 +92,8 @@ typedef enum _hl_cmd_e
     LED_SWITCH_MUTE_CMD,
     ///升级状态，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
     LED_SWITCH_UPDATE_CMD,
-    ///电量状态，hl_mod_display_io_ctrl的参数参考<hl_led_switch>,参数为四字节 
-    LED_SWITCH_BATTERY_CMD,
+    ///电量值，hl_mod_display_io_ctrl的参数参考<uint8_t>,参数为四字节 
+    LED_BATTERY_VAL_CMD,
     ///LED亮度调节(两个灯一起)，hl_mod_display_io_ctrl的参数参考<uint8_t (0-255)>,参数为1字节 
     LED_BRIGHT_SET_CMD,
     /// 命令个数统计
