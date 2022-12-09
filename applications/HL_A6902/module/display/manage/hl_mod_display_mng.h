@@ -36,12 +36,13 @@ extern "C" {
 
 
 // 注册页面的通用操作的宏定义
-// #define PAGE_REG(name)\
-// do{\
-//     hl_mod_##name();\
-// }while(0)
+#define PAGE_REG(name)\
+do{\
+    hl_mod_##name##_init();\
+}while(0)
 
-// #define PAGE_DEC(name)   void hl_mod_##name##_init(void)
+
+#define PAGE_DEC(name)   void hl_mod_##name##_init(void)
 
 
 typedef void(*CallbackFunction_t)(void);

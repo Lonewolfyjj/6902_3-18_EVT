@@ -25,13 +25,15 @@
 #include "hl_mod_page_common.h"
 #include "hl_mod_display_mng.h"
 #include "hl_mod_input.h"
-#include "lvgl.h"
+
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
 
 #if !HL_IS_TX_DEVICE()
 /* typedef -------------------------------------------------------------------*/
+#include "page_menu.h"
+#include "lvgl.h"
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -121,7 +123,7 @@ void hl_mod_page_delete(lv_obj_t* obj)
 }
 
 static int8_t now_knob_data;
-void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
+void          hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
 {
     static int8_t encoder_knob_diff = 0;
 
@@ -131,35 +133,88 @@ void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
         LV_LOG_USER("-now=%d\r\n", encoder_knob_diff);
 
         data->enc_diff    = in_data.in_inputdev.encoder_knob_diff - encoder_knob_diff;
-now_knob_data = data->enc_diff;
+        now_knob_data     = data->enc_diff;
         encoder_knob_diff = in_data.in_inputdev.encoder_knob_diff;
     }
 }
 
-
 int8_t hl_mod_get_rx_knob_val(void)
 {
     int8_t data;
-    data = now_knob_data;
+    data          = now_knob_data;
     now_knob_data = 0;
     return data;
 }
 
-
-
-void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
+void hl_mod_menu_knob_icon_change(uint8_t* center, uint8_t maxnum)
 {
-    static uint32_t keypad_knob_ok = HL_KEY_EVENT_IDLE;
-    static uint32_t last_key       = 0;
+    int8_t now  = *center;
+    int8_t data = hl_mod_get_rx_knob_val();
+    if (data != 0) {
+        now += data;
+        if (now >= maxnum) {
+            now = maxnum - 1;
+        } else if (now < 0) {
+            now = 0;
+        }
+
+        lv_set_icon_postion(now);
+        *center = now;
+    }
+}
+
+void hl_mod_page_event_btn_init(lv_event_cb_t event_cb)
+{
+    lv_obj_t* btn = lv_btn_create(lv_scr_act());
+    // lv_obj_add_flag(btn,LV_OBJ_FLAG_HIDDEN);
+    lv_group_add_obj(btn, lv_group_get_default());
+    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_KEY, NULL);
+}
+
+uint8_t hl_mod_get_knob_okkey_val(void)
+{
+    static uint8_t keypad_knob_ok = HL_KEY_EVENT_IDLE;
+    uint8_t        data;
 
     if (keypad_knob_ok != in_data.in_inputdev.keypad_knob_ok) {
 
         LV_LOG_USER("keypad_knob_ok=%d\r\n", keypad_knob_ok);
-        LV_LOG_USER("-now=%d\r\n", in_data.in_inputdev.keypad_knob_ok);
-
         keypad_knob_ok = in_data.in_inputdev.keypad_knob_ok;
 
+        data = keypad_knob_ok;
         switch (keypad_knob_ok) {
+
+            case HL_KEY_EVENT_SHORT:
+
+                LV_LOG_USER("LV_KEY_ENTER\n");
+                break;
+            case HL_KEY_EVENT_LONG:
+
+                LV_LOG_USER("LV_KEY_NEXT\n");
+
+                break;
+            default:
+                data = HL_KEY_EVENT_IDLE;
+                LV_LOG_USER("def\n");
+                break;
+        }
+    } else {
+        data = HL_KEY_EVENT_IDLE;
+    }
+
+    return data;
+}
+
+void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
+{
+
+    static uint32_t last_key = 0;
+    uint8_t         key_event;
+
+    key_event = hl_mod_get_knob_okkey_val();
+    if (key_event) {
+
+        switch (key_event) {
 
             case HL_KEY_EVENT_SHORT:
                 last_key = LV_KEY_ENTER;
@@ -184,6 +239,15 @@ void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
     } else {
         data->state = LV_INDEV_STATE_REL;
         data->key   = last_key;
+    }
+}
+
+bool hl_mod_next_menu_enter(uint8_t* tab, uint8_t num, uint8_t max_num)
+{
+    if (num < max_num) {
+        return PageManager_PagePush(tab[num]);
+    } else {
+        return false;
     }
 }
 
@@ -233,6 +297,34 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
     }
 }
 
+void hl_mod_page_cb_reg(void)
+{
+    PAGE_REG(PAGE_SOUND_MODULE);
+    PAGE_REG(PAGE_HOME);
+    PAGE_REG(PAGE_MAIN_MENU);
+    PAGE_REG(PAGE_TX_CONF_MENU);
+    PAGE_REG(PAGE_AUTO_POWEROFF);
+    PAGE_REG(PAGE_AUTO_RECORD);
+    PAGE_REG(PAGE_FAST_TX_CONFIG);
+    PAGE_REG(PAGE_TX_LED_BRIGHT);
+    PAGE_REG(PAGE_TX_LOW_CUT);
+    PAGE_REG(PAGE_MONITOR_SET);
+    PAGE_REG(PAGE_NOISE_REDUCTION_INTENSITY);
+    PAGE_REG(PAGE_OTHER_SET);
+    PAGE_REG(PAGE_PAIR);
+    PAGE_REG(PAGE_RECORD_FORMAT);
+    PAGE_REG(PAGE_RECORD_PROTECT);
+    PAGE_REG(PAGE_RESTORE);
+    PAGE_REG(PAGE_SOUND_EFFECT_MODE);
+    PAGE_REG(PAGE_SOUND_MODULE);
+    PAGE_REG(PAGE_SYS_TIME_SET);
+    PAGE_REG(PAGE_TX_CONF_MENU);
+    PAGE_REG(PAGE_TX_GAIN_CONF);
+    PAGE_REG(PAGE_TX_GAIN_CONF);
+    PAGE_REG(PAGE_VERSION);
+    PAGE_REG(PAGE_VOLUME_CONTROL);
+}
+
 void lvgl2rtt_init(void)
 {
     lv_init();
@@ -241,18 +333,12 @@ void lvgl2rtt_init(void)
 }
 void hl_mod_page_all_init(void)
 {
-    PageManager_Init(PAGE_MAX,10);
+    PageManager_Init(PAGE_MAX, 8);
+    hl_mod_page_cb_reg();
 
-    hl_mod_page_home_init();
-    hl_mod_page_menu_init();
-    
     hl_mod_display_scr_set_page(PAGE_NONE);
     hl_mod_display_scr_set_page(PAGE_HOME);
-    // PageManager_PagePush(PAGE_HOME);
-    PageManager_PagePush(PAGE_MAIN_MENU);
-
-    keypad_knob_ok_update(hl_mod_rx_knob_key_pro);
-    encode_knob_update(hl_mod_rx_knob_val_pro);
+    PageManager_PagePush(PAGE_HOME);
 }
 #endif
 /*

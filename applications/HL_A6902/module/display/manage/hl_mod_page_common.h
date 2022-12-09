@@ -138,12 +138,14 @@ void             hl_mod_display_scr_set_page(uint32_t now_page);
 hl_screen_page_e hl_mod_display_scr_get_page(void);
 
 void hl_mod_page_delete(lv_obj_t* obj);
-void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data);
-void hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data);
 void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg);
-
+uint8_t hl_mod_get_knob_okkey_val(void);
 int8_t hl_mod_get_rx_knob_val(void);
+void hl_mod_menu_knob_icon_change(uint8_t *center, uint8_t maxnum);
 
+bool hl_mod_next_menu_enter(uint8_t * tab, uint8_t num,uint8_t max_num);
+
+void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
 void hl_mod_page_all_init(void);
 void lvgl2rtt_init(void);
 #ifdef __cplusplus
