@@ -43,16 +43,41 @@
 #include "hl_mod_input.h"
 
 
-
+//自动关机界面
+static void hl_autopoweroff_test_cb(hl_three_in_one_check_t event_num)
+{
+    printf("event_num = %d\n", event_num);
+}
 
 static void hl_mod_page_setup(void)
 {
+    hl_lvgl_three_in_one_init_t three_in_one_test = 
+    {
+        .func_cb = hl_autopoweroff_test_cb,
+        .ptr_lift = "永不",
+        .ptr_mid = "15min",
+        .ptr_right = "30min",
+        .ptr_top = "自动关机",
+        .three_in_one_choose = HL_THREE_ONE_CHOOSE_LEFT,
+    };
+    hl_mod_three_in_one_init(&three_in_one_test);
 
+    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl = 
+    {
+        .three_in_one_choose = HL_THREE_ONE_CHOOSE_LEFT,
+    };
+
+    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl = 
+    {
+        .three_in_one_choose = HL_THREE_ONE_CHOOSE_EXIT,
+    };
+
+    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

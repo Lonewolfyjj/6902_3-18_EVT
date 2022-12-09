@@ -143,24 +143,25 @@ LV_IMG_DECLARE(Menu_common_config);   //通用设置
 #define MENU_ICON_NUM 6
 static uint8_t now_center_icon = 0;
 // 下级菜单表
-static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {0};
-    // PAGE_SOUND_MODULE, PAGE_NOISE_REDUCTION_INTENSITY, PAGE_VOLUME_CONTROL, PAGE_TX_CONF_MENU, PAGE_MONITOR_SET,
-    // PAGE_OTHER_SET\
+static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
+     PAGE_SOUND_MODULE, PAGE_NOISE_REDUCTION_INTENSITY, PAGE_VOLUME_CONTROL, PAGE_TX_CONF_MENU, PAGE_MONITOR_SET,\
+     PAGE_OTHER_SET\
 };
 
 static void page_7_test_cb(uint32_t current)
 {
     printf("Page_7 check centre icon event :%d\n", current);
-    if (current != 0)
+
+    if (!(current & 0x80))
     {
-        hl_mod_next_menu_enter(next_level_menu_tab, current, MENU_ICON_NUM);
+        hl_mod_next_menu_enter(next_level_menu_tab, current & 0x7F, MENU_ICON_NUM);
     }
     
 }
 
 static void hl_mod_page_setup(void)
 {
-    // rt_kprintf("pagemenu!\n");
+    LV_LOG_USER("PAGE_MAIN_MENU\n");
     menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, "单声道"),
         // ADD_IMG_DATA(NULL,NULL,&Menu_tx_config,"TX设置"),
@@ -185,6 +186,7 @@ static void hl_mod_page_loop(void)
     key_event  = hl_mod_get_knob_okkey_val();
     
     if (key_event == HL_KEY_EVENT_SHORT) {
+        LV_LOG_USER("knob_click\n");
         lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
     }
     hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);

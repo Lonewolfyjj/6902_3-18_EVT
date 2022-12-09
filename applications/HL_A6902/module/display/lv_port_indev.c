@@ -173,6 +173,13 @@ lv_indev_t * hl_mod_get_knob_indev()
     return indev_encoder_knob_p;
 }
 
+
+
+lv_indev_t * hl_mod_get_okkey_indev()
+{
+    return indev_keypad_knob_ok_p;
+}
+
 /*------------------
  * Touchpad
  * -----------------*/
@@ -251,7 +258,7 @@ static void keypad_knob_ok_init(void)
 
 static void keypad_knob_ok_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
 {
-    hl_mod_rx_knob_key_pro(indev_drv, data);
+    hl_mod_rx_knob_val_pro(indev_drv, data);
 }
 void keypad_knob_ok_update(keypad_knob_ok_callback c)
 {

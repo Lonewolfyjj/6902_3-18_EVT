@@ -11,16 +11,39 @@
 #include "hl_mod_input.h"
 
 
-
+static void hl_recodeprotect_test_cb(hl_two_in_one_check_t event_num)
+{
+    printf("event_num = %d\n", event_num);
+}
 
 static void hl_mod_page_setup(void)
 {
+    hl_lvgl_two_in_one_init_t two_in_one_test = 
+    {
+        .func_cb = hl_recodeprotect_test_cb,
+        .ptr_lift = "ON",
+        .ptr_right = "OFF",
+        .ptr_top = "录制保护",
+        .two_in_one_choose = HL_TWO_ONE_CHOOSE_LEFT,
+    };
+    hl_mod_two_in_one_init(&two_in_one_test);
 
+    hl_lvgl_two_in_one_ioctl_t two_in_one_test_ctl = 
+    {
+        .two_in_one_choose = HL_TWO_ONE_CHOOSE_LEFT,
+    };
+
+    hl_mod_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_two_in_one_ioctl_t two_in_one_test_ctl = 
+    {
+        .two_in_one_choose = HL_TWO_ONE_CHOOSE_EXIT,
+    };
+
+    hl_mod_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

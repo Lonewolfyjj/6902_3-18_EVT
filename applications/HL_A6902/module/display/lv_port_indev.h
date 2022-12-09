@@ -48,6 +48,7 @@ void keypad_knob_ok_update(keypad_knob_ok_callback c);
 void encode_knob_update(keypad_knob_ok_callback c);
 void hl_port_indev_lock_screen(bool en);
 lv_indev_t * hl_mod_get_knob_indev();
+lv_indev_t * hl_mod_get_okkey_indev();
 /**********************
  *      MACROS
  **********************/

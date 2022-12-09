@@ -81,6 +81,7 @@ static void hl_mod_page_loop(void)
     key_event  = hl_mod_get_knob_okkey_val();
     
     if (key_event == HL_KEY_EVENT_SHORT) {
+        LV_LOG_USER("knob_click\n");
         lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
     }
     hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);

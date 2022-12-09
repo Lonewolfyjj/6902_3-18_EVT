@@ -157,7 +157,7 @@ void hl_mod_menu_knob_icon_change(uint8_t* center, uint8_t maxnum)
         } else if (now < 0) {
             now = 0;
         }
-
+        LV_LOG_USER("knob=%d\n",now);
         lv_set_icon_postion(now);
         *center = now;
     }

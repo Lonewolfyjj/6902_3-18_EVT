@@ -37,52 +37,62 @@
 #include "lvgl.h"
 #include "rtthread.h"
 #include "hl_mod_page.h"
+#include "hl_mod_input.h"
+#include "page_menu.h"
+
+#define MENU_ICON_NUM 7
+static uint8_t now_center_icon = 0;
+// 下级菜单表
+static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
+     PAGE_TX_GAIN_CONF,PAGE_TX_LOW_CUT ,PAGE_AUTO_RECORD, PAGE_RECORD_PROTECT,PAGE_RECORD_FORMAT ,PAGE_AUTO_POWEROFF,
+     PAGE_TX_LED_BRIGHT
+};
 
 
+//Tx菜单界面
+LV_IMG_DECLARE(Menu_tx_gain);//TX增益
+LV_IMG_DECLARE(Menu_low_qie);//低切
+LV_IMG_DECLARE(Menu_auto_recording);//自动录制
+LV_IMG_DECLARE(Menu_recording_protection);//录制保护
+LV_IMG_DECLARE(Menu_storage);//存储
+LV_IMG_DECLARE(Menu_auto_poweroff);//自动关机
+LV_IMG_DECLARE(Menu_status_led);//状态灯调节
 
-// //Tx菜单界面
-// LV_IMG_DECLARE(Menu_tx_gain);//TX增益
-// LV_IMG_DECLARE(Menu_low_qie);//低切
-// LV_IMG_DECLARE(Menu_auto_recording);//自动录制
-// LV_IMG_DECLARE(Menu_recording_protection);//录制保护
-// LV_IMG_DECLARE(Menu_storage);//存储
-// LV_IMG_DECLARE(Menu_auto_poweroff);//自动关机
-// LV_IMG_DECLARE(Menu_status_led);//状态灯调节
-
-// static void page_8_test_cb(uint32_t current)
-// {
-//     printf("Page_8 check centre icon event :%d\n",current);
-// }
-
-// static void page_8_test(void)
-// {
-//     menu_data_t pic_list[7] = {
-//         ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,"TX增益"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,"低切"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,"自动录制"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,"录制保护"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_storage,"存储"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,"自动关机"),
-//         ADD_IMG_DATA(NULL,NULL,&Menu_status_led,"状态灯调节"),
-//     };
-//     page_menu_init(pic_list,7,page_8_test_cb);
-// }
-
-
+static void page_8_test_cb(uint32_t current)
+{
+    printf("Page_8 check centre icon event :%d\n",current);
+}
 
 static void hl_mod_page_setup(void)
 {
     // LV_LOG_USER("PAGE_TX_CONF_MENU\n");
-    // page_8_test();
+    menu_data_t pic_list[7] = {
+        ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,"TX增益"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,"低切"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,"自动录制"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,"录制保护"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_storage,"存储"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,"自动关机"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_status_led,"状态灯调节"),
+    };
+    page_menu_init(pic_list,7,page_8_test_cb);
 }
 
 static void hl_mod_page_loop(void)
 {
+    uint8_t key_event;
+
+    key_event  = hl_mod_get_knob_okkey_val();
+    
+    if (key_event == HL_KEY_EVENT_SHORT) {
+        lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
+    }
+    hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);
 }
 
 static void hl_mod_page_exit(void)
 {
-    
+    lv_menu_exit();
 }
 
 static void hl_mod_page_event(void* btn, int event)

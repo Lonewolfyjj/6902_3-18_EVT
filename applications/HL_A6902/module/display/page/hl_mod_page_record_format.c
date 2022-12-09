@@ -44,16 +44,39 @@
 #include "hl_mod_input.h"
 
 
-
+//格式化界面
+static void hl_storage_test_cb(hl_storage_check_t event_num)
+{
+    printf("event_num = %d\n", event_num);
+}
 
 static void hl_mod_page_setup(void)
 {
+    hl_lvgl_storage_init_t data = 
+    {
+        .func_cb = hl_storage_test_cb,
+        .ptr_time_tx1 = "9h可用",
+        .ptr_time_tx2 = "3h可用",
+        .storage_choose = HL_STORAGE_CHOOSE_RIGHT,
+        .used_tx1 = 15,
+        .used_tx2 = 68,
+    };
+    hl_mod_storage_init(&data);
 
+    hl_lvgl_storage_ioctl_t storage_ctl = 
+    {
+        .storage_choose = HL_STORAGE_CHOOSE_RIGHT,
+    };
+    hl_mod_storage_ioctl(&storage_ctl);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_storage_ioctl_t storage_ctl = 
+    {
+        .storage_choose = HL_STORAGE_CHOOSE_EXIT,
+    };
+    hl_mod_storage_ioctl(&storage_ctl);
 }
 
 static void hl_mod_page_loop(void)

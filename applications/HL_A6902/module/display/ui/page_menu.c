@@ -86,6 +86,12 @@ static void lv_icon_event_cb(lv_event_t * e)
     static lv_coord_t cont_x_center = 0;
     lv_event_code_t code = lv_event_get_code(e);
     void * param = lv_event_get_param(e);
+
+    if (code < LV_EVENT_HIT_TEST) {
+        LV_LOG_USER("code= \n",code);
+    }
+    
+
     if(code == LV_EVENT_SCROLL){
         if(!cont_x_center){
             lv_obj_get_coords(cont_row, &cont_a);//复制对象
@@ -102,12 +108,12 @@ static void lv_icon_event_cb(lv_event_t * e)
             lv_img_set_zoom(child,128 + get_distance(diff_y));
             if(diff_y < 10){//中心图标
                 lv_lab_hide_set(i);
-                func_cb(i);
+                func_cb(i | 0x80);
             }
         }  
     }
-    if(code == LV_EVENT_CLICKED){    
-        // printf("current = %d  check_pos = %d\n",0,0);    
+    if (code == LV_EVENT_CLICKED) {    
+        printf("current = %d  check_pos = %d\n",0,0);    
         lv_indev_get_point(param, &pos);        
         for(i = 0; i < child_cnt; i++) {
             child = lv_obj_get_child(cont_row, i);        
@@ -173,6 +179,9 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
         lv_img_set_zoom(picdata[i].obj,128);
+        lv_obj_add_flag(picdata[i].obj,LV_OBJ_FLAG_EVENT_BUBBLE);
+        lv_group_add_obj(lv_group_get_default() ,picdata[i].obj);
+
         picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,0,1,picdata[i].ptr);
     }    
     lv_img_set_zoom(picdata[0].obj,256);   

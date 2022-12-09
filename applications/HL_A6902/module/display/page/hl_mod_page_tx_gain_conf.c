@@ -43,16 +43,35 @@
 #include "hl_mod_input.h"
 
 
+LV_IMG_DECLARE(Other_mic_black);
+LV_IMG_DECLARE(Other_voice);
 
+static void hl_bar_test_cb(int16_t bar_num)
+{
+    printf("bar_num = %d\n", bar_num);
+}
 
 static void hl_mod_page_setup(void)
 {
-
+    hl_lvgl_barset_init_t bar_test = 
+    {
+        .func_cb = hl_bar_test_cb,
+        .icontyp = HL_NO_ICON,
+        .init_value = -16,
+        .ptr = "TX1",
+        .range_max = 40,
+        .range_min = -60,
+        .src = &Other_mic_black,
+    };
+    hl_mod_barset_init(&bar_test);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_barset_ioctl_t ctl = {
+        .barset_value          = HL_EXTI,
+    };
+    hl_mod_barset_ioctl(&ctl);
 }
 
 static void hl_mod_page_loop(void)
