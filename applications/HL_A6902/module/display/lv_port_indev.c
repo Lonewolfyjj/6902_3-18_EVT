@@ -105,11 +105,11 @@ void lv_port_indev_init(void)
      *and assign this input device to group to navigate in it:
      *`lv_indev_set_group(indev_keypad, group);`*/
 
-    keypad_touchkey_init();
-    lv_indev_drv_init(&indev_keypad_touchkey);
-    indev_keypad_touchkey.type    = LV_INDEV_TYPE_KEYPAD;
-    indev_keypad_touchkey.read_cb = keypad_touchkey_read;
-    indev_keypad_touchkey_p       = lv_indev_drv_register(&indev_keypad_touchkey);
+    // keypad_touchkey_init();
+    // lv_indev_drv_init(&indev_keypad_touchkey);
+    // indev_keypad_touchkey.type    = LV_INDEV_TYPE_KEYPAD;
+    // indev_keypad_touchkey.read_cb = keypad_touchkey_read;
+    // indev_keypad_touchkey_p       = lv_indev_drv_register(&indev_keypad_touchkey);
 
     encoder_knob_init();
     lv_indev_drv_init(&indev_encoder_knob);
@@ -140,8 +140,8 @@ static void lv_add_all_indev_to_def_group(lv_group_t* group)
 
     // lv_indev_set_group(indev_touchpad_p, group);
     //group只能添加按键和编码器
-    lv_indev_set_group(indev_keypad_touchkey_p, group);
-    lv_indev_set_group(indev_keypad_knob_ok_p, group);
+    // lv_indev_set_group(indev_keypad_touchkey_p, group);
+    // lv_indev_set_group(indev_keypad_knob_ok_p, group);
     // lv_indev_set_group(indev_encoder_knob_p, group);
 }
 
@@ -208,7 +208,7 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
             // last_x = 294 - last_y;
             // last_y = tmp;
 
-            rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
+            // rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
             data->state = LV_INDEV_STATE_PR;
         } else {
             data->state = LV_INDEV_STATE_REL;

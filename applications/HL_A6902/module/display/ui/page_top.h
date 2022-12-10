@@ -5,17 +5,35 @@
 #include "lvgl.h"
 #include "stdio.h"
 
-#define POSTION_IS_NULL 0xFF
-
- typedef struct __icon_pos_t
+typedef enum _hl_top_icon_t
 {
-    uint8_t duf_pos;//默认位置
-    uint8_t cur_pos;//当前位置
-    lv_align_t align;// 对齐方式
-    lv_obj_t * icon;//图片对象
-    const lv_img_dsc_t * icon_data;//图片数据指针
-}icon_pos_t;
+    HL_TOP_ICON_VOICE_MOD = 0,
+    HL_TOP_ICON_NOISE,
+    HL_TOP_ICON_LOCK,
+    HL_TOP_ICON_LINEOUT,
+    HL_TOP_ICON_TYPEC,
+    HL_TOP_ICON_HEATSET
+}hl_top_icon_t;
 
-void page_top_test(void);
+typedef enum _hl_top_cmd_t
+{
+    HL_TOP_ADD_ICON_CMD = 0,
+    HL_TOP_DELETE_ICON_CMD
+}hl_top_cmd_t;
+
+typedef struct _hl_lvgl_top_ioctl_t
+{
+    hl_top_cmd_t top_cmd;
+    hl_top_icon_t top_param;
+}hl_lvgl_top_ioctl_t;
+
+typedef struct _hl_lvgl_top_init_t
+{
+    int16_t electric_top;//电量 0 - 100 %
+}hl_lvgl_top_init_t;
+
+// void page_top_test(void);
+void hl_mod_top_ioctl(void * ctl_data);
+void hl_mod_top_init(void * init_data);
 
 #endif

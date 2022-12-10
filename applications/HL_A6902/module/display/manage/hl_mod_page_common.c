@@ -34,6 +34,7 @@
 /* typedef -------------------------------------------------------------------*/
 #include "page_menu.h"
 #include "lvgl.h"
+#include "hl_drv_ztw523a.h"
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -88,52 +89,47 @@ uint8_t hl_mod_display_scr_page_incmd(void)
 
     return HL_DISPLAY_SUCCESS;
 }
-
-static void delete (lv_obj_t* obj, bool obj_typ)
+// 表示按下
+uint8_t hl_mod_keypad_touchkey_read()
 {
-    uint32_t child_cnt = 0, i;
-    child_cnt          = lv_obj_get_child_cnt(obj);
-    if (child_cnt == 0) {
-        lv_obj_del(obj);
-    } else {
-        for (i = 0; i < child_cnt; i++) {
-            delete (lv_obj_get_child(obj, i), true);
-        }
-        if (obj_typ) {
-            lv_obj_del(obj);
-        }
+    static uint8_t last_key = 0;
+    uint8_t res;
+
+    res = hl_drv_ztw523a_botton_status();
+    if (last_key != res) {
+        LV_LOG_USER("touchkey_en");
+        last_key = res;
+        return 1;
+    } else {    
+        return 0;
     }
+
+
 }
-//使用方法
 
-// // 递归删除子控件
 
-void hl_mod_page_delete(lv_obj_t* obj)
+// 返回按键扫描
+void hl_mod_menu_backbtn_scan()
 {
-    uint32_t  child_cnt = 0, i;
-    lv_obj_t* obj1;
-    // delete (obj, false);
-    child_cnt = lv_obj_get_child_cnt(obj);
-    LV_LOG_USER("child_cnt=%d\n", child_cnt);
-    for (i = 0; i < child_cnt; i++) {
-        obj1 = lv_obj_get_child(obj, i);
-        LV_LOG_USER("obj1=%x\n", obj1);
-        lv_obj_del(obj1);
+    if( 1  == hl_mod_keypad_touchkey_read() )
+    {
+        PageManager_PagePop();
     }
 }
 
-static int8_t now_knob_data;
+static int8_t now_knob_data = 0;
 void          hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
 {
     static int8_t encoder_knob_diff = 0;
 
     if (in_data.in_inputdev.encoder_knob_diff != encoder_knob_diff) {
 
-        LV_LOG_USER("encoder_knob=%d\r\n", in_data.in_inputdev.encoder_knob_diff);
-        LV_LOG_USER("-now=%d\r\n", encoder_knob_diff);
+        // LV_LOG_USER("encoder_knob=%d\r\n", in_data.in_inputdev.encoder_knob_diff);
+        // LV_LOG_USER("-now=%d\r\n", encoder_knob_diff);
 
         data->enc_diff    = in_data.in_inputdev.encoder_knob_diff - encoder_knob_diff;
         now_knob_data     = data->enc_diff;
+        LV_LOG_USER("-knob_val=%d\r\n", now_knob_data);
         encoder_knob_diff = in_data.in_inputdev.encoder_knob_diff;
     }
 }
@@ -150,6 +146,7 @@ void hl_mod_menu_knob_icon_change(uint8_t* center, uint8_t maxnum)
 {
     int8_t now  = *center;
     int8_t data = hl_mod_get_rx_knob_val();
+    // LV_LOG_USER("knob1=%d\n",data);
     if (data != 0) {
         now += data;
         if (now >= maxnum) {
@@ -157,8 +154,8 @@ void hl_mod_menu_knob_icon_change(uint8_t* center, uint8_t maxnum)
         } else if (now < 0) {
             now = 0;
         }
-        LV_LOG_USER("knob=%d\n",now);
-        lv_set_icon_postion(now);
+        LV_LOG_USER("icon_pos=%d\n",now);
+        lv_set_icon_postion(now, false);
         *center = now;
     }
 }
@@ -178,7 +175,7 @@ uint8_t hl_mod_get_knob_okkey_val(void)
 
     if (keypad_knob_ok != in_data.in_inputdev.keypad_knob_ok) {
 
-        LV_LOG_USER("keypad_knob_ok=%d\r\n", keypad_knob_ok);
+        // LV_LOG_USER("keypad_knob_ok=%d\r\n", keypad_knob_ok);
         keypad_knob_ok = in_data.in_inputdev.keypad_knob_ok;
 
         data = keypad_knob_ok;
@@ -203,6 +200,26 @@ uint8_t hl_mod_get_knob_okkey_val(void)
     }
 
     return data;
+}
+
+void hl_mod_menu_enterbtn_scan(uint8_t num)
+{
+    uint8_t key_event;
+
+    key_event  = hl_mod_get_knob_okkey_val();
+
+    //菜单点击按键   
+    if (key_event == HL_KEY_EVENT_SHORT) {
+        LV_LOG_USER("icon_enter\n");
+        lv_event_send(hl_menu_obj_get(num),LV_EVENT_KEY,NULL);
+    }
+}
+
+
+void hl_mod_menu_goto_home_page(void)
+{
+    PageManager_PageStackClear();
+    PageManager_PagePush(PAGE_HOME);
 }
 
 void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
@@ -267,12 +284,14 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
 
         case MSG_RX_A_VOL:
+            // + 左
             in_data.in_inputdev.encoder_knob_diff += p_msg->param.u32_param;
             LOG_D("MSG_RX_L_VOL_KEY:(%d) \r\n", in_data.in_inputdev.encoder_knob_diff);
             break;
 
         case MSG_RX_B_VOL:
-            in_data.in_inputdev.encoder_knob_diff += p_msg->param.u32_param;
+            // - 右
+            in_data.in_inputdev.encoder_knob_diff -= p_msg->param.u32_param;
             LOG_D("MSG_RX_R_VOL_KEY:(%d) \r\n", in_data.in_inputdev.encoder_knob_diff);
             break;
 
@@ -302,7 +321,6 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_SOUND_MODULE);
     PAGE_REG(PAGE_HOME);
     PAGE_REG(PAGE_MAIN_MENU);
-    PAGE_REG(PAGE_TX_CONF_MENU);
     PAGE_REG(PAGE_AUTO_POWEROFF);
     PAGE_REG(PAGE_AUTO_RECORD);
     PAGE_REG(PAGE_FAST_TX_CONFIG);
@@ -316,10 +334,8 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_RECORD_PROTECT);
     PAGE_REG(PAGE_RESTORE);
     PAGE_REG(PAGE_SOUND_EFFECT_MODE);
-    PAGE_REG(PAGE_SOUND_MODULE);
     PAGE_REG(PAGE_SYS_TIME_SET);
     PAGE_REG(PAGE_TX_CONF_MENU);
-    PAGE_REG(PAGE_TX_GAIN_CONF);
     PAGE_REG(PAGE_TX_GAIN_CONF);
     PAGE_REG(PAGE_VERSION);
     PAGE_REG(PAGE_VOLUME_CONTROL);

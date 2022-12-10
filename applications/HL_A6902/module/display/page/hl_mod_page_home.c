@@ -31,6 +31,7 @@
 #include "rtthread.h"
 #include "hl_mod_page.h"
 #include "page_test.h"
+#include "page_top.h"
 #include "hl_mod_input.h"
 #include "lv_port_indev.h"
 /* typedef -------------------------------------------------------------------*/
@@ -106,11 +107,23 @@ static void hl_mod_page_setup(void)
         .cmd                = HL_CHANGE_TX2_SIGNAL,
         .tx_device_2.signal = HL_FOUR_SIGNAL,
     };
-    
+
     // keypad_knob_ok_update(hl_mod_rx_knob_key_pro);
     // encode_knob_update(hl_mod_rx_knob_val_pro);
 
     hl_mod_main_ioctl(&main_ctl);
+
+    hl_lvgl_top_init_t top_init = {
+        .electric_top = 50,
+    };
+    hl_mod_top_init(&top_init);
+
+    hl_lvgl_top_ioctl_t ioctl_top = {
+        .top_cmd = HL_TOP_ADD_ICON_CMD,
+        .top_param = HL_TOP_ICON_NOISE,
+    };
+
+    hl_mod_top_ioctl(&ioctl_top);
     // hl_mod_page_event_btn_init(eventbtn_cb);
 }
 

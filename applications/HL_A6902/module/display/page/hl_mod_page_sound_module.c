@@ -56,7 +56,15 @@ LV_IMG_DECLARE(Menu_saft_track);//安全音轨
 
 static void page_10_test_cb(uint32_t current)
 {
-    printf("Page_10 check centre icon event :%x\n",current);
+    rt_kprintf("Page_s:%x\n",current);
+
+    //未锁屏回主界面
+    if(! (current & 0x80) )  {
+        hl_mod_menu_goto_home_page();
+    } else {
+        now_center_icon = current & 0x7F;
+    }
+    
 }
 
 static void hl_mod_page_setup(void)
@@ -66,7 +74,7 @@ static void hl_mod_page_setup(void)
         ADD_IMG_DATA(NULL,NULL,&Menu_stereo,"立体声"),
         ADD_IMG_DATA(NULL,NULL,&Menu_saft_track,"安全音轨"),
     };
-    page_menu_init(pic_list,MENU_ICON_NUM,page_10_test_cb);
+    page_menu_init(&pic_list,MENU_ICON_NUM,page_10_test_cb);
 }
 
 static void hl_mod_page_exit(void)
@@ -76,14 +84,13 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
 
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-        LV_LOG_USER("knob_click\n");
-        lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
-    }
+    //菜单点击按键   
+    hl_mod_menu_enterbtn_scan(now_center_icon);
+
+    // 返回按键
+    hl_mod_menu_backbtn_scan();
+
     hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);
 }
 

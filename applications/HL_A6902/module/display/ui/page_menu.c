@@ -87,9 +87,9 @@ static void lv_icon_event_cb(lv_event_t * e)
     lv_event_code_t code = lv_event_get_code(e);
     void * param = lv_event_get_param(e);
 
-    if (code < LV_EVENT_HIT_TEST) {
-        LV_LOG_USER("code= \n",code);
-    }
+    // if (code < LV_EVENT_HIT_TEST) {
+    //     LV_LOG_USER("menu_event=%d\n",code);
+    // }
     
 
     if(code == LV_EVENT_SCROLL){
@@ -113,7 +113,7 @@ static void lv_icon_event_cb(lv_event_t * e)
         }  
     }
     if (code == LV_EVENT_CLICKED) {    
-        printf("current = %d  check_pos = %d\n",0,0);    
+        // rt_kprintf("LV_EVENT_CLICKED:current = %d  check_pos = %d\n",0,0);    
         lv_indev_get_point(param, &pos);        
         for(i = 0; i < child_cnt; i++) {
             child = lv_obj_get_child(cont_row, i);        
@@ -124,6 +124,22 @@ static void lv_icon_event_cb(lv_event_t * e)
             diff_y = LV_ABS(diff_y);//取绝对值
             if(diff_y == 0){//中心图标
                 icon_pos_changed(i,pos.x,pos.y);
+                break;
+            }
+        }
+    }
+    if (code == LV_EVENT_KEY) {    
+        // rt_kprintf("LV_EVENT_KEY:current = %d  check_pos = %d\n",0,0);    
+        lv_indev_get_point(param, &pos);        
+        for(i = 0; i < child_cnt; i++) {
+            child = lv_obj_get_child(cont_row, i);        
+            lv_obj_get_coords(child, &child_a);//复制子对象
+
+            child_x_center = child_a.x1 + lv_area_get_width(&child_a) / 2;//获取子对象Y方向中心轴坐标
+            diff_y = cont_x_center - child_x_center;//获取子对象与父对象中心轴坐标差值
+            diff_y = LV_ABS(diff_y);//取绝对值
+            if(diff_y == 0){//中心图标
+                func_cb(i);
                 break;
             }
         }
@@ -179,8 +195,8 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
         lv_img_set_zoom(picdata[i].obj,128);
-        lv_obj_add_flag(picdata[i].obj,LV_OBJ_FLAG_EVENT_BUBBLE);
-        lv_group_add_obj(lv_group_get_default() ,picdata[i].obj);
+        // lv_obj_add_flag(picdata[i].obj,LV_OBJ_FLAG_EVENT_BUBBLE);
+        // lv_group_add_obj(lv_group_get_default() ,picdata[i].obj);
 
         picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,0,1,picdata[i].ptr);
     }    
@@ -207,14 +223,22 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
-void lv_set_icon_postion(uint8_t pos)
+void lv_set_icon_postion(uint8_t pos, bool en)
 {
-    lv_obj_scroll_to_view(lv_obj_get_child(cont_row, pos), LV_ANIM_ON);
-    lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
+    if (en == true) {
+
+        lv_event_send(cont_row, LV_EVENT_KEY, NULL);
+    }    else {
+        lv_obj_scroll_to_view(lv_obj_get_child(cont_row, pos), LV_ANIM_ON);
+        lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
+    }
+
+    
 }
 
 void lv_menu_exit(void)
 {
+    lv_obj_remove_event_cb(cont_row, lv_icon_event_cb);
     hl_obj_delete(lv_scr_act(),false);
 }
 
@@ -228,7 +252,7 @@ void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func)
     for(i=0;i<ICON_NUMBER;i++){
         lab_obj[i] = data[i].lab;
     }
-    lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
+    // lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
 }
 
 lv_obj_t * hl_menu_obj_get(uint8_t num)

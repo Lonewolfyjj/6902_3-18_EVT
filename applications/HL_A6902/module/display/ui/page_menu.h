@@ -18,7 +18,7 @@ typedef struct _menu_data_t{
 typedef void(*event_cb)(uint32);
 
 lv_obj_t * hl_menu_obj_get(uint8_t num);
-void lv_set_icon_postion(uint8_t pos);
+void lv_set_icon_postion(uint8_t pos, bool en);
 void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func_cb);
 void lv_menu_exit(void);
 

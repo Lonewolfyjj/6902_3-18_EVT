@@ -187,9 +187,15 @@ static void hl_mod_page_loop(void)
     
     if (key_event == HL_KEY_EVENT_SHORT) {
         LV_LOG_USER("knob_click\n");
-        lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
+        //lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
+
+
+            lv_set_icon_postion(0, true);
+
+
     }
-    hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);
+    hl_mod_menu_backbtn_scan();
+    hl_mod_menu_knob_icon_change(&now_center_icon,MENU_ICON_NUM);
 }
 
 // void hl_mod_page_menu_init(void)
