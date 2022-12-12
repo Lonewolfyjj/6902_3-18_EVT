@@ -76,13 +76,8 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    // 返回按键
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_TX_GAIN_CONF)

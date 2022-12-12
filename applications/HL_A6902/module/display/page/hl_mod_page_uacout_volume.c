@@ -1,9 +1,9 @@
 /**
- * @file hl_mod_page_noise_level.c
+ * @file hl_mod_page_uacout_volume.c
  * @author liujie (jie.liu@hollyland-tech.com)
  * @brief 
  * @version V1.0
- * @date 2022-12-09
+ * @date 2022-12-12
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,7 +16,7 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-12-09     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2022-12-12     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
  */ 
@@ -36,6 +36,7 @@
 #if (!HL_IS_TX_DEVICE())
 #include "hl_mod_display.h"
 #include "lvgl.h"
+
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "page_test.h"
@@ -43,41 +44,41 @@
 #include "hl_mod_input.h"
 
 
-//自动关机界面
-static void hl_autopoweroff_test_cb(hl_three_in_one_check_t event_num)
+LV_IMG_DECLARE(Other_mic_black);
+
+static void hl_bar_test_cb(int16_t bar_num)
 {
-    printf("event_num = %d\n", event_num);
+    printf("bar_num = %d\n", bar_num);
 }
+
+//UAC输入音量设置界面
+static void page_uac_out_init(void)
+{
+    hl_lvgl_barset_init_t bar_test = 
+    {
+        .func_cb = hl_bar_test_cb,
+        .icontyp = HL_NO_ICON,
+        .init_value = -16,
+        .ptr = "UAC输出音量",
+        .range_max = 40,
+        .range_min = -60,
+        .src = &Other_mic_black,
+    };
+    hl_mod_barset_init(&bar_test);
+}
+
 
 static void hl_mod_page_setup(void)
 {
-    hl_lvgl_three_in_one_init_t three_in_one_test = 
-    {
-        .func_cb = hl_autopoweroff_test_cb,
-        .ptr_lift = "永不",
-        .ptr_mid = "15min",
-        .ptr_right = "30min",
-        .ptr_top = "自动关机",
-        .three_in_one_choose = HL_THREE_ONE_CHOOSE_LEFT,
-    };
-    hl_mod_three_in_one_init(&three_in_one_test);
-
-    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl = 
-    {
-        .three_in_one_choose = HL_THREE_ONE_CHOOSE_LEFT,
-    };
-
-    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
+    page_uac_out_init();
 }
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl = 
-    {
-        .three_in_one_choose = HL_THREE_ONE_CHOOSE_EXIT,
+    hl_lvgl_barset_ioctl_t ctl = {
+        .barset_value = HL_EXTI,
     };
-
-    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
+    hl_mod_barset_ioctl(&ctl);
 }
 
 static void hl_mod_page_loop(void)
@@ -86,15 +87,15 @@ static void hl_mod_page_loop(void)
     hl_mod_menu_backbtn_scan();
 }
 
-PAGE_DEC(PAGE_AUTO_POWEROFF)
+PAGE_DEC(PAGE_UACOUT_VOLUME_SET)
 {
     bool result;
 
-    result     = PageManager_PageRegister(PAGE_AUTO_POWEROFF, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
+    result     = PageManager_PageRegister(PAGE_UACOUT_VOLUME_SET, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
                                       NULL);
 
     if (result == false) {
-        LV_LOG_USER("PAGE_AUTO_POWEROFF init fail\n");
+        LV_LOG_USER("PAGE_UACOUT_VOLUME_SET init fail\n");
     }
 }
 

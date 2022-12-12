@@ -44,7 +44,33 @@
 /* Exported functions --------------------------------------------------------*/
 
 static hl_scr_in_data_t in_data = { 0 };
+
+static uint8_t now_center_icon = 0;
 // static hl_scr_indev_msg_t  in_inputdev = {0};
+
+uint8_t hl_mod_menu_icon_event(uint32_t current)
+{
+    rt_kprintf("Page:%x\n",current);
+
+    //未锁屏回主界面
+    if(! (current & 0x80) )  {
+       return 1;
+    } else {
+        now_center_icon = current & 0x7F;
+        return 0;
+    }
+    return 0;
+}
+
+void hl_mod_menu_icon_init()
+{
+    now_center_icon = 0;
+}
+uint32_t hl_mod_menu_get_icon()
+{
+    return now_center_icon;
+}
+
 
 void hl_mod_display_scr_set_page(uint32_t now_page)
 {
@@ -141,22 +167,25 @@ int8_t hl_mod_get_rx_knob_val(void)
     now_knob_data = 0;
     return data;
 }
-
-void hl_mod_menu_knob_icon_change(uint8_t* center, uint8_t maxnum)
+void hl_mod_menu_icon_set(uint32_t num)
 {
-    int8_t now  = *center;
+    now_center_icon = num;
+}
+
+void hl_mod_menu_knob_icon_change(uint8_t center, uint8_t maxnum)
+{
     int8_t data = hl_mod_get_rx_knob_val();
     // LV_LOG_USER("knob1=%d\n",data);
     if (data != 0) {
-        now += data;
-        if (now >= maxnum) {
-            now = maxnum - 1;
-        } else if (now < 0) {
-            now = 0;
+        center += data;
+        if (center >= maxnum) {
+            center = maxnum - 1;
+        } else if (center < 0) {
+            center = 0;
         }
-        LV_LOG_USER("icon_pos=%d\n",now);
-        lv_set_icon_postion(now, false);
-        *center = now;
+        LV_LOG_USER("icon_pos=%d\n",center);
+        lv_set_icon_postion(center, false);
+        hl_mod_menu_icon_set(center);
     }
 }
 
@@ -211,7 +240,8 @@ void hl_mod_menu_enterbtn_scan(uint8_t num)
     //菜单点击按键   
     if (key_event == HL_KEY_EVENT_SHORT) {
         LV_LOG_USER("icon_enter\n");
-        lv_event_send(hl_menu_obj_get(num),LV_EVENT_KEY,NULL);
+        //lv_event_send(hl_menu_obj_get(num),LV_EVENT_KEY,NULL);
+        lv_set_icon_postion(num,true);
     }
 }
 
@@ -338,7 +368,10 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_TX_CONF_MENU);
     PAGE_REG(PAGE_TX_GAIN_CONF);
     PAGE_REG(PAGE_VERSION);
-    PAGE_REG(PAGE_VOLUME_CONTROL);
+    PAGE_REG(PAGE_VOLUME_MENU);
+    PAGE_REG(PAGE_MONITOR_VOLUME_SET);
+    PAGE_REG(PAGE_UACIN_VOLUME_SET);
+    PAGE_REG(PAGE_UACOUT_VOLUME_SET);
 }
 
 void lvgl2rtt_init(void)

@@ -137,8 +137,15 @@ typedef enum _hl_screen_page_e
     
     /// 降噪强度
     PAGE_NOISE_REDUCTION_INTENSITY,
-    /// 音量调节
-    PAGE_VOLUME_CONTROL,
+
+    /// 音量调节选择菜单
+    PAGE_VOLUME_MENU,
+    /// 监听音量配置界面
+    PAGE_MONITOR_VOLUME_SET,
+    /// UAC输入音量设置界面
+    PAGE_UACIN_VOLUME_SET,
+    /// UAC输出音量设置界面
+    PAGE_UACOUT_VOLUME_SET,
 
     ////监听设置
     PAGE_MONITOR_SET,

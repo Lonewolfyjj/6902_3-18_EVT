@@ -1,9 +1,9 @@
 /**
- * @file hl_mod_page_volume_set.c
+ * @file hl_mod_page_volume_menu.c
  * @author liujie (jie.liu@hollyland-tech.com)
  * @brief 
  * @version V1.0
- * @date 2022-12-09
+ * @date 2022-12-12
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,7 +16,7 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-12-09     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2022-12-12     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
  */ 
@@ -43,12 +43,14 @@
 #include "page_menu.h"
 #include "hl_mod_input.h"
 
+#define MENU_ICON_NUM 3
+
 
 
 
 static void hl_mod_page_setup(void)
 {
-
+    
 }
 
 static void hl_mod_page_exit(void)
@@ -58,24 +60,24 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
+    //菜单点击按键   
+    hl_mod_menu_enterbtn_scan(hl_mod_menu_get_icon());
 
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    // 返回按键
+    hl_mod_menu_backbtn_scan();
+
+    hl_mod_menu_knob_icon_change(hl_mod_menu_get_icon(),MENU_ICON_NUM);
 }
 
-PAGE_DEC(PAGE_VOLUME_CONTROL)
+PAGE_DEC(PAGE_VOLUME_MENU)
 {
     bool result;
 
-    result     = PageManager_PageRegister(PAGE_VOLUME_CONTROL, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
+    result     = PageManager_PageRegister(PAGE_VOLUME_MENU, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
                                       NULL);
 
     if (result == false) {
-        LV_LOG_USER("PAGE_VOLUME_CONTROL init fail\n");
+        LV_LOG_USER("PAGE_VOLUME_MENU init fail\n");
     }
 }
 

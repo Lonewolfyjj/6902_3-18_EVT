@@ -44,26 +44,58 @@
 #include "hl_mod_input.h"
 
 
+//音效模式界面
+LV_IMG_DECLARE(Other_high_true_black);//高保真
+LV_IMG_DECLARE(Other_high_true_white);//高保真
+LV_IMG_DECLARE(Other_sound_black);//声音增强
+LV_IMG_DECLARE(Other_sound_white);//声音增强
 
+static void hl_soundeffect_test_cb(hl_two_in_one_check_t event_num)
+{
+    printf("event_num = %d\n", event_num);
+}
+static void soundeffect_test(void)
+{
+    hl_lvgl_b_two_in_one_init_t two_in_one_test = 
+    {
+        .func_cb = hl_soundeffect_test_cb,
+        .src11 = &Other_high_true_black,
+        .src12 = &Other_high_true_white,
+        .src21 = &Other_sound_black,
+        .src22 = &Other_sound_white,
+        .ptr_lift = "高保真",
+        .ptr_right = "声音增强",
+        .ptr_top = "音效模式",
+        .b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_LEFT,
+    };
+    hl_mod_b_two_in_one_init(&two_in_one_test);
+
+    hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl = 
+    {
+        .b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_LEFT,
+    };
+
+    hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
+}
 
 static void hl_mod_page_setup(void)
 {
-
+    soundeffect_test();
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl = 
+    {
+        .b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_EXIT,
+    };
+
+    hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
+    hl_mod_menu_backbtn_scan();
   
 }
 

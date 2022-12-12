@@ -41,7 +41,7 @@
 #include "page_menu.h"
 
 #define MENU_ICON_NUM 7
-static uint8_t now_center_icon = 0;
+
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
      PAGE_TX_GAIN_CONF,PAGE_TX_LOW_CUT ,PAGE_AUTO_RECORD, PAGE_RECORD_PROTECT,PAGE_RECORD_FORMAT ,PAGE_AUTO_POWEROFF,
@@ -61,6 +61,10 @@ LV_IMG_DECLARE(Menu_status_led);//状态灯调节
 static void page_8_test_cb(uint32_t current)
 {
     printf("Page_8 check centre icon event :%d\n",current);
+    
+    if (hl_mod_menu_icon_event(current)) {
+        hl_mod_next_menu_enter(next_level_menu_tab, current & 0x7F, MENU_ICON_NUM);
+    }
 }
 
 static void hl_mod_page_setup(void)
@@ -80,14 +84,9 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-        lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
-    }
-    hl_mod_menu_knob_icon_change(now_center_icon,MENU_ICON_NUM);
+    hl_mod_menu_enterbtn_scan(hl_mod_menu_get_icon());
+    hl_mod_menu_backbtn_scan();
+    hl_mod_menu_knob_icon_change(hl_mod_menu_get_icon(),MENU_ICON_NUM);
 }
 
 static void hl_mod_page_exit(void)
@@ -95,17 +94,14 @@ static void hl_mod_page_exit(void)
     lv_menu_exit();
 }
 
-static void hl_mod_page_event(void* btn, int event)
-{
 
-}
 
 PAGE_DEC(PAGE_TX_CONF_MENU)
 {
     bool result;
 
     result =
-        PageManager_PageRegister(PAGE_TX_CONF_MENU, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, hl_mod_page_event);
+        PageManager_PageRegister(PAGE_TX_CONF_MENU, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
 
     if (result == false) {
         LV_LOG_USER("PAGE_TX_CONF_MENU init fail\n");
