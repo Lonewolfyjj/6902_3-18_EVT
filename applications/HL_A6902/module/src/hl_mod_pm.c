@@ -191,12 +191,45 @@ static inline void _pm_update_bat_info_check(void)
     }
 }
 
+static void _hl_mod_pmwdg(void)
+{
+    HL_SY_INPUT_PARAM_T wdg = 
+    {
+        .cfg_opt = E_WD_RST,
+        .param = 0,
+    };
+    pm_ioctl(SY_WRITE_CMD,&wdg,1);
+}
+
+static void _hl_mod_pm_input_check(void)
+{
+    HL_SY_INPUT_PARAM_T input_stat = 
+    {
+        .cfg_opt = E_IDPM_STAT,
+    };
+    HL_SY_INPUT_PARAM_T input_data = 
+    {
+        .cfg_opt = E_FORCE_AICL,
+        .param = 1,
+    };
+    pm_ioctl(SY_READ_CMD,&input_stat,1);
+    if(input_stat.param == 1){
+        pm_ioctl(SY_WRITE_CMD,&input_data,1);
+    }
+}
+
 static void _pm_thread_entry(void* arg)
 {
+    uint16_t delay_time = 0;
     while (_pm_mod.thread_exit_flag == 0) {
         _pm_update_bat_info_check();
 
         rt_thread_mdelay(10);
+        if(delay_time++ > 500){
+            delay_time = 0;
+            _hl_mod_pmwdg();
+            _hl_mod_pm_input_check();
+        }
     }
 
     _pm_mod.thread_exit_flag = -1;

@@ -1348,14 +1348,18 @@ int hl_drv_sy6971_init(void)
         sy_printf("cfg_opt %d read err !\n", SY_REG02_ADDR);
         goto INIT_ERR;
     }
+    if (hl_i2c_read_reg(i2c_bus, SY_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG04_ADDR);
+        goto INIT_ERR;
+    }
     if (hl_i2c_read_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         sy_printf("cfg_opt %d read err !\n", SY_REG05_ADDR);
         goto INIT_ERR;
     }
-    if (hl_i2c_read_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        sy_printf("cfg_opt %d read err !\n", SY_REG06_ADDR);
-        goto INIT_ERR;
-    }
+    // if (hl_i2c_read_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+    //     sy_printf("cfg_opt %d read err !\n", SY_REG06_ADDR);
+    //     goto INIT_ERR;
+    // }
     if (hl_i2c_read_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         sy_printf("cfg_opt %d read err !\n", SY_REG07_ADDR);
         goto INIT_ERR;
@@ -1368,15 +1372,17 @@ int hl_drv_sy6971_init(void)
     reg_all.reg00.IINLIM = 7;
     reg_all.reg01.SYS_MIN = 4;
 #if HL_IS_TX_DEVICE()
-    reg_all.reg02.ICHG = 13; //Tx
+    reg_all.reg02.ICHG = 14; //Tx
 #else
     reg_all.reg02.ICHG = 22; //Rx
 #endif
+    reg_all.reg04.ITERM = 1;
+
     reg_all.reg05.VREG = 45;
     reg_all.reg07.NTC_JEITA = 1;
     reg_all.reg07.VINDPM = 2;
 
-    reg_all.reg06.WATCHDOG = 0;
+    // reg_all.reg06.WATCHDOG = 0;
 
     // reg_all.reg0E.AICL_EN = 1;
     // reg_all.reg0E.FORCE_AICL = 1;
@@ -1393,14 +1399,18 @@ int hl_drv_sy6971_init(void)
         sy_printf("cfg_opt %d write err !\n", SY_REG02_ADDR);
         goto INIT_ERR;
     }  
+    if (hl_i2c_write_reg(i2c_bus, SY_REG04_ADDR, (uint8_t*)&reg_all.reg04)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG04_ADDR);
+        goto INIT_ERR;
+    } 
     if (hl_i2c_write_reg(i2c_bus, SY_REG05_ADDR, (uint8_t*)&reg_all.reg05)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG05_ADDR);
         goto INIT_ERR;
     }       
-    if (hl_i2c_write_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
-        sy_printf("cfg_opt %d write err !\n", SY_REG06_ADDR);
-        goto INIT_ERR;
-    }  
+    // if (hl_i2c_write_reg(i2c_bus, SY_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
+    //     sy_printf("cfg_opt %d write err !\n", SY_REG06_ADDR);
+    //     goto INIT_ERR;
+    // }  
     if (hl_i2c_write_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG07_ADDR);
         goto INIT_ERR;
@@ -1446,39 +1456,39 @@ int hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
     return HL_SUCCESS;
 }
 
-static uint8_t get_buf[24];
-static uint8_t com_buf[24];
+// static uint8_t get_buf[24];
+// static uint8_t com_buf[24];
 
-void sy6971_get_data(int argc, char** argv)
-{
-    uint8_t i = 0;
-    for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
-        if(hl_i2c_read_reg(i2c_bus, i, &get_buf[i])){
-            sy_printf("sy6971_get_data read fail ! %d\n",i);
-            return ;
-        }
-    }
-    sy_printf("sy6971_get_data success !\n");
-}
+// void sy6971_get_data(int argc, char** argv)
+// {
+//     uint8_t i = 0;
+//     for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
+//         if(hl_i2c_read_reg(i2c_bus, i, &get_buf[i])){
+//             sy_printf("sy6971_get_data read fail ! %d\n",i);
+//             return ;
+//         }
+//     }
+//     sy_printf("sy6971_get_data success !\n");
+// }
 
-void sy6971_com_data(int argc, char** argv)
-{
-    uint8_t i = 0;
-    for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
-        if(hl_i2c_read_reg(i2c_bus, i, &com_buf[i])){
-            sy_printf("sy6971_com_data read fail ! %d\n",i);
-            return ;
-        }
-    }
-    for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
-        if(get_buf[i] != com_buf[i]){
-            sy_printf("get_buf[%d] = %X   com_buf[%d] = %X\n",i,get_buf[i],i,com_buf[i]);
-        }
-    }
-}
+// void sy6971_com_data(int argc, char** argv)
+// {
+//     uint8_t i = 0;
+//     for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
+//         if(hl_i2c_read_reg(i2c_bus, i, &com_buf[i])){
+//             sy_printf("sy6971_com_data read fail ! %d\n",i);
+//             return ;
+//         }
+//     }
+//     for(i = SY_REG00_ADDR;i<SY_REG_NUM;i++){
+//         if(get_buf[i] != com_buf[i]){
+//             sy_printf("get_buf[%d] = %X   com_buf[%d] = %X\n",i,get_buf[i],i,com_buf[i]);
+//         }
+//     }
+// }
 
-MSH_CMD_EXPORT(sy6971_get_data, run sy6971_get_data);
-MSH_CMD_EXPORT(sy6971_com_data, run sy6971_com_data);
+// MSH_CMD_EXPORT(sy6971_get_data, run sy6971_get_data);
+// MSH_CMD_EXPORT(sy6971_com_data, run sy6971_com_data);
 
 void hl_drv_sy6971_test(int argc, char** argv)
 {
