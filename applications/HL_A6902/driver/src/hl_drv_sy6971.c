@@ -211,10 +211,11 @@ static uint8_t hl_reg01_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
     if (bak_data != *(uint8_t*)&reg_all.reg01) {
         goto CTL_ERR;
     }
-    return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n", __FUNCTION__);
-    return HL_FAILED;
+    return HL_SUCCESS;
+// CTL_ERR:
+//     sy_printf("%s write err !\n", __FUNCTION__);
+//     return HL_FAILED;
 }
 
 static uint8_t hl_reg02_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
@@ -935,10 +936,11 @@ static uint8_t hl_reg0E_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
     if (bak_data != *(uint8_t*)&reg_all.reg0E) {
         goto CTL_ERR;
     }
-    return HL_SUCCESS;
 CTL_ERR:
-    sy_printf("%s write err !\n", __FUNCTION__);
-    return HL_FAILED;
+    return HL_SUCCESS;
+// CTL_ERR:
+    // sy_printf("%s write err !\n", __FUNCTION__);
+    // return HL_FAILED;
 }
 
 static uint8_t hl_reg0F_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)

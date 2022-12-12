@@ -31,7 +31,6 @@
 
 /* typedef -------------------------------------------------------------------*/
 typedef int (*pm_io_ctl)(uint8_t cmd, void* ptr, uint8_t len);
-typedef int (*pm_ic_init)(void);
 
 typedef struct _hl_mod_pm_bat_info_st
 {
@@ -90,7 +89,6 @@ static hl_mod_pm_st _pm_mod = { .init_flag        = false,
                                 } };
 
 static pm_io_ctl pm_ioctl = RT_NULL;
-static pm_ic_init pm_icinit = RT_NULL;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -198,7 +196,7 @@ static void _hl_mod_pmwdg(void)
     HL_SY_INPUT_PARAM_T wdg = 
     {
         .cfg_opt = E_WD_RST,
-        .param = 0,
+        .param = 1,
     };
     pm_ioctl(SY_WRITE_CMD,&wdg,1);
 }
@@ -216,8 +214,8 @@ static void _hl_mod_pm_input_check(void)
     };
     pm_ioctl(SY_READ_CMD,&input_stat,1);
     if(input_stat.param == 1){
-        pm_ioctl(SY_WRITE_CMD,&input_data,1);
-        pm_icinit();
+        rt_kprintf("err\n");
+        // pm_ioctl(SY_WRITE_CMD,&input_data,1);
     }
 }
 
@@ -250,11 +248,9 @@ int hl_mod_pm_init(void* msg_hd)
     }
     if (hl_drv_sy6971_init() == HL_SUCCESS) {
         pm_ioctl = hl_drv_sy6971_io_ctrl;
-        pm_icinit = hl_drv_sy6971_init;
     }
     else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
         pm_ioctl = hl_drv_sgm41518_io_ctrl;
-        pm_icinit = hl_drv_sgm41518_init;
     }
     if (pm_ioctl == RT_NULL) {
         DBG_LOG("pm init fail! Not find pm IC !\n");
