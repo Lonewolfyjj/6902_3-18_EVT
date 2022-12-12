@@ -152,11 +152,14 @@ static void page_7_test_cb(uint32_t current)
 {
     printf("Page_7 check centre icon event :%d\n", current);
 
-    if (!(current & 0x80))
-    {
-        hl_mod_next_menu_enter(next_level_menu_tab, current & 0x7F, MENU_ICON_NUM);
-    }
     
+    //未锁屏回主界面
+    if(! (current & 0x80) )  {
+        hl_mod_next_menu_enter(next_level_menu_tab, current & 0x7F, MENU_ICON_NUM);
+    } else {
+        now_center_icon = current & 0x7F;
+    }
+
 }
 
 static void hl_mod_page_setup(void)
@@ -181,19 +184,7 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-        LV_LOG_USER("knob_click\n");
-        //lv_event_send(hl_menu_obj_get(now_center_icon),LV_EVENT_CLICKED,NULL);
-
-
-            lv_set_icon_postion(0, true);
-
-
-    }
+    hl_mod_menu_enterbtn_scan(now_center_icon);
     hl_mod_menu_backbtn_scan();
     hl_mod_menu_knob_icon_change(&now_center_icon,MENU_ICON_NUM);
 }
