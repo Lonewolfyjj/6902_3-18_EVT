@@ -78,6 +78,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_START_TX2_PAIR_CMD,
     /// 设置设备充电状态，参数为<hl_mod_euc_charge_state_e *>
     HL_SET_CHARGE_STATE_CMD,
+    /// 设置设备RTC时间，参数为<hl_mod_euc_rtc_st>
+    HL_SET_RTC_TIME_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -118,6 +120,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_TX2_CHARGE_STATE_IND,
     /// 通知 app 收到BOX设备的充电状态更新，参数为<hl_mod_euc_charge_state_e *>。
     HL_BOX_CHARGE_STATE_IND,
+    /// 请求 app 获取设备的RTC时间，无参数。
+    HL_GET_RTC_TIME_REQ_IND,
 } hl_mod_euc_ind_e;
 
 #endif
@@ -128,6 +132,23 @@ typedef enum _hl_mod_euc_charge_state_e
     HL_MOD_EUC_CHARGE_STATE_CHARGING,
     HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL,
 } hl_mod_euc_charge_state_e;
+
+typedef struct _hl_mod_euc_rtc_st {
+    /// 秒  后7bit有效
+    uint8_t second;   
+    /// 分  后7bit有效
+    uint8_t minute;   
+    /// 时  12h制 后5bit有效 24h制 后6bit有效
+    uint8_t hour;     
+    /// 天  后6bit有效
+    uint8_t day;      
+    /// 周几    后3bit有效
+    uint8_t weekday;  
+    ///月   后5bit有效
+    uint8_t month;    
+    ///年
+    uint8_t year;
+} hl_mod_euc_rtc_st;
 
 /* define --------------------------------------------------------------------*/
 

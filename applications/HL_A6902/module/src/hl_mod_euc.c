@@ -49,16 +49,18 @@ typedef enum _hl_mod_extcom_hup_cmd_e
 
 typedef enum _hl_mod_extcom_hup_cmd_e
 {
-    HL_HUP_CMD_PROBE            = 0x01,
-    HL_HUP_CMD_GET_BAT_INFO     = 0x02,
-    HL_HUP_CMD_SET_BAT_INFO     = 0x03,
-    HL_HUP_CMD_TX_IN_BOX_STATE  = 0x04,
-    HL_HUP_CMD_SET_PAIR_INFO    = 0x06,
-    HL_HUP_CMD_GET_MAC_ADDR     = 0x07,
-    HL_HUP_CMD_PAIR_START       = 0x08,
-    HL_HUP_CMD_PAIR_STOP        = 0x09,
-    HL_HUP_CMD_GET_CHARGE_STATE = 0x0A,
-    HL_HUP_CMD_SET_CHARGE_STATE = 0x0B,
+    HL_HUP_CMD_PROBE             = 0x01,
+    HL_HUP_CMD_GET_BAT_INFO      = 0x02,
+    HL_HUP_CMD_SET_BAT_INFO      = 0x03,
+    HL_HUP_CMD_TX_IN_BOX_STATE   = 0x04,
+    HL_HUP_CMD_SET_PAIR_INFO     = 0x06,
+    HL_HUP_CMD_GET_MAC_ADDR      = 0x07,
+    HL_HUP_CMD_PAIR_START        = 0x08,
+    HL_HUP_CMD_PAIR_STOP         = 0x09,
+    HL_HUP_CMD_GET_CHARGE_STATE  = 0x0A,
+    HL_HUP_CMD_SET_CHARGE_STATE  = 0x0B,
+    HL_HUP_CMD_SET_RTC_TIME      = 0x0C,
+    HL_HUP_CMD_SET_RTC_TIME_BACK = 0x0D,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -133,6 +135,9 @@ static uint8_t rx_mac_addr[6] = { 0 };
 
 static uint8_t tx1_mac_addr[6] = { 0 };
 static uint8_t tx2_mac_addr[6] = { 0 };
+
+static hl_mod_euc_rtc_st _rtc_time_box = { 0 };
+static hl_mod_euc_rtc_st _rtc_time_rx  = { 0 };
 
 #endif
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -311,6 +316,19 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
             } else {
                 break;
             }
+        } break;
+        case HL_HUP_CMD_SET_RTC_TIME: {
+            _rtc_time_box.second  = hup_frame.data_addr[0];
+            _rtc_time_box.minute  = hup_frame.data_addr[1];
+            _rtc_time_box.hour    = hup_frame.data_addr[2];
+            _rtc_time_box.day     = hup_frame.data_addr[3];
+            _rtc_time_box.weekday = hup_frame.data_addr[4];
+            _rtc_time_box.month   = hup_frame.data_addr[5];
+            _rtc_time_box.year    = hup_frame.data_addr[6];
+
+            result = 0;
+
+            _uart_send_hup_data(HL_HUP_CMD_SET_RTC_TIME, &result, sizeof(result));
         } break;
         default:
             break;
@@ -627,6 +645,14 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             charge_state = *(hl_mod_euc_charge_state_e*)arg;
 
             _uart_send_hup_data(HL_HUP_CMD_GET_CHARGE_STATE, &charge_state, sizeof(charge_state));
+        } break;
+        case HL_SET_RTC_TIME_CMD: {
+            if (arg_size != sizeof(hl_mod_euc_rtc_st)) {
+                LOG_E("size err, ctrl arg need <hl_mod_euc_rtc_st> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            rt_memcpy(&_rtc_time_rx, arg, arg_size);
         } break;
         default:
             break;

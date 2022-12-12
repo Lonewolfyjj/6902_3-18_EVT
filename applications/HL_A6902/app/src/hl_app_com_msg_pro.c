@@ -91,6 +91,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_charge_state_e tx1_charge_state_temp;
     hl_mod_euc_charge_state_e tx2_charge_state_temp;
     hl_mod_euc_charge_state_e box_charge_state_temp;
+    hl_mod_euc_rtc_st         rtc_time_temp = { 0 };
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
@@ -158,11 +159,14 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_TX2_CHARGE_STATE_IND: {  //更新Tx2的充电状态
             tx2_charge_state_temp = *(hl_mod_euc_charge_state_e*)p_msg->param.ptr;
             LOG_I("Tx2 charge state:%d", tx2_charge_state_temp);
-        } break;        
+        } break;
         case HL_BOX_CHARGE_STATE_IND: {  //更新Box的充电状态
             box_charge_state_temp = *(hl_mod_euc_charge_state_e*)p_msg->param.ptr;
             LOG_I("Box charge state:%d", box_charge_state_temp);
-        } break;    
+        } break;
+        case HL_GET_RTC_TIME_REQ_IND: {  //请求设置RTC时间
+            hl_mod_euc_ctrl(HL_SET_RTC_TIME_CMD, &rtc_time_temp, sizeof(rtc_time_temp));
+        } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
