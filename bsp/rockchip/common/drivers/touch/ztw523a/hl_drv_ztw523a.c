@@ -364,7 +364,7 @@ static int hl_drv_ztw523a_dev_init(void)
 rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos)
 {
     rt_device_read(touch_dev, 0, touch_pos, 1);
-    // ztw_printf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
+    // rt_kprintf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
     return 0;
 }
 
