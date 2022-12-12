@@ -27,6 +27,7 @@
 #include <stdbool.h>
 
 #include "hl_drv_aw2016a.h"
+#include "hl_hal_gpio.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_INFO
@@ -225,30 +226,57 @@ static void _display_update_2(void)
         return;
     }
 
-    hl_drv_aw2016a_led_ctrl_st led;
-
-    switch (_display_mod.display_state_1) {
+    switch (_display_mod.display_state_2) {
         case HL_DISPLAY_RECORD_ERR: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_FAST;
-            led.color       = HL_DRV_AW2016A_COLOR_RED;
+
         } break;
         case HL_DISPLAY_RECORD: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
-            led.color       = HL_DRV_AW2016A_COLOR_RED;
+            hl_hal_gpio_high(GPIO_REC_LED_EN);
         } break;
         case HL_DISPLAY_RECORD_STOP: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
-            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
+            hl_hal_gpio_low(GPIO_REC_LED_EN);
         } break;
         default: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_SKIP;
-            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
+            hl_hal_gpio_low(GPIO_REC_LED_EN);
         } break;
     }
 
-    hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED1, HL_DRV_AW2016A_LED_CTRL, &led, sizeof(led));
-
     _display_mod.display_update_flag_2 = false;
+}
+
+static int _set_brightness(void)
+{
+    int                         ret;
+    hl_drv_aw2016a_pwm_level_st br;
+
+    br.led_chan  = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    br.pwm_level = _display_mod.led_brightness;
+
+    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL, &br, sizeof(br));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return HL_DISPLAY_FAILED;
+    }
+
+    return HL_DISPLAY_SUCCESS;
+}
+
+static void _record_led_flash_ctrl(void)
+{
+    uint8_t count = 0;
+
+    if (_display_mod.display_state_2 == HL_DISPLAY_RECORD_ERR) {
+        if (count == 0) {
+            hl_hal_gpio_high(GPIO_REC_LED_EN);
+        } else if (count == 5) {
+            hl_hal_gpio_low(GPIO_REC_LED_EN);
+        } else if (count == 10) {
+            count = 0;
+        }
+
+        count++;
+    } else {
+        count = 0;
+    }
 }
 
 static void _display_thread_entry(void* arg)
@@ -259,6 +287,8 @@ static void _display_thread_entry(void* arg)
 
         _display_state_check_2();
         _display_update_2();  //录制灯
+
+        _record_led_flash_ctrl();
 
         rt_thread_mdelay(100);
     }
@@ -282,6 +312,8 @@ uint8_t hl_mod_display_init(void* display_msq)
     } else {
         _display_mod.aw2016a_init_flag = true;
     }
+
+    hl_hal_gpio_init(GPIO_REC_LED_EN);
 
     _display_mod.display_update_flag_1 = false;
     _display_mod.display_update_flag_2 = false;
@@ -350,6 +382,8 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         LOG_W("display mod not init!");
         return HL_DISPLAY_FAILED;
     }
+
+    int ret;
 
     switch (cmd) {
         case LED_FAULT_STATUS_READ_CMD: {
@@ -440,6 +474,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             }
 
             _display_mod.led_brightness = *(uint8_t*)ptr;
+
+            ret = _set_brightness();
+            if (ret == HL_DISPLAY_FAILED) {
+                return HL_DISPLAY_FAILED;
+            }
         } break;
         case LED_RECORD_FAULT_CMD: {
             if (len != sizeof(hl_led_switch)) {
