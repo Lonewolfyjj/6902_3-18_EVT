@@ -77,17 +77,16 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_A5,  PIN_MODE_INPUT_PULLUP},     // GPIO_CAM_DET
     {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_GSENSOR_INT
     {GPIO1_C0,  PIN_MODE_INPUT},            // GPIO_OLED_TE
+    {GPIO1_C1,  PIN_MODE_INPUT},            // GPIO_TP_INT
     // OUT
-    {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
     {GPIO0_C0,  PIN_MODE_OUTPUT},           // GPIO_OLED_RST
     {GPIO1_A7,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
     {GPIO1_B0,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
-    {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_ATS_PWR_EN
-    {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_AMP_EN
+    {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_TP_RST
+    {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_CODEC_EN
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
-    {GPIO1_C1,  PIN_MODE_OUTPUT },          // GPIO_OLED_SWIRE
+    {GPIO0_D5,  PIN_MODE_OUTPUT},           // GPIO_OLED_SWIRE
     {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_PWR
-    {GPIO0_C6,  PIN_MODE_OUTPUT},           // GPIO_OLED_POWER
 };
 #endif
 

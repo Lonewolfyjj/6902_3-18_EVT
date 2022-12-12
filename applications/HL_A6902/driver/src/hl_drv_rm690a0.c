@@ -58,10 +58,8 @@ static int32_t AlignDown(int32_t value, int32_t align)
 
 static void hl_drv_rm690a0_gpio_init(void)
 {
-    hl_hal_gpio_init(GPIO_OLED_POWER);
     hl_hal_gpio_init(GPIO_OLED_RST);
 
-    hl_hal_gpio_high(GPIO_OLED_POWER);
     hl_hal_gpio_high(GPIO_OLED_RST);
 }
 
@@ -88,10 +86,8 @@ static uint32_t get_stride(uint32_t format, uint32_t width)
 }
 static void hl_drv_rm690a0_gpio_deinit(void)
 {
-    hl_hal_gpio_init(GPIO_OLED_POWER);
     hl_hal_gpio_init(GPIO_OLED_RST);
 
-    hl_hal_gpio_low(GPIO_OLED_POWER);
     hl_hal_gpio_low(GPIO_OLED_RST);
 }
 
