@@ -109,6 +109,7 @@ static uint8_t HL_drv_get_i2c_handle_init(void)
 static rt_err_t HL_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t addr, rt_uint8_t reg, rt_uint8_t* data,
                           rt_uint8_t len)
 {
+    int16_t ret = 0;
     if(RT_NULL == bus){
         rt_kprintf("QMA6100P  HL_i2c_write_reg  bus is null\n");
         return -2;
@@ -128,10 +129,11 @@ static rt_err_t HL_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t addr,
     msgs.len   = buf_size;
 
     /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 1) == 1) {
+    ret = rt_i2c_transfer(bus, &msgs, 1);
+    if (ret == 1) {
         return RT_EOK;
     } else {
-        rt_kprintf("HL_i2c_write_reg  error \n");
+        rt_kprintf("HL_i2c_write_reg  error ret : %d\n",ret);
         return -RT_ERROR;
     }
 }
