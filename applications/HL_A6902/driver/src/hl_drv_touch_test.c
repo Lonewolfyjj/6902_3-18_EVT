@@ -33,13 +33,20 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "touch.h"
+#include "hl_hal_gpio.h"
 #include "hl_drv_touch_test.h"
+#ifdef RT_USING_FT3169
 #include "hl_drv_ft3169.h"
+#endif
+#ifdef RT_USING_ZTW523A
+#include "hl_drv_ztw523a.h"
+#endif
 
 static rt_thread_t         touch_tid1 = RT_NULL, touch_tid2 = RT_NULL;
 static rt_device_t         touch_dev = RT_NULL;
 static struct rt_semaphore touch_sem;
 
+#ifdef RT_USING_FT3169
 /**
  * 
  * @brief 获取触控屏数据
@@ -59,7 +66,6 @@ static void touch_thread_fun(void* parameter)
 {
     struct fts_ts_event touch_pos;
     while (1) {
-        // rt_sem_take(&touch_sem, (1 << 31));
         rt_thread_mdelay(500);
         rt_device_read(touch_dev, 0, &touch_pos, 1);
         rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
@@ -164,10 +170,6 @@ static void touch_dev_init(void)
         rt_kprintf("open touch device failed!");
         return;
     }
-    // if (rt_device_set_rx_indicate(touch_dev, touch_rx_int_callback) != RT_EOK) {
-    //     rt_kprintf("Touch device int failed!");
-    //     return;
-    // }
 }
 
 /**
@@ -187,7 +189,7 @@ static void touch_dev_init(void)
  * <tr><td>2022-10-19      <td>dujunjie     <td>新建
  * </table>
  */
-static int touch_test_thread(int argc, char** argv)
+static int ft3169_touch_test_thread(int argc, char** argv)
 {
     touch_sem_init();
     touch_dev_init();
@@ -207,8 +209,59 @@ static int touch_test_thread(int argc, char** argv)
     return RT_EOK;
 }
 
-MSH_CMD_EXPORT(touch_test_thread, touch test thread);
+MSH_CMD_EXPORT(ft3169_touch_test_thread, ft3169_touch_test_thread);
 
+
+#endif
+
+
+#ifdef RT_USING_ZTW523A
+
+
+static void ztw523a_thread_fun(void* parameter)
+{
+    hl_hal_gpio_init(GPIO_OLED_TE);
+    struct ztw523a_ts_event touch_pos;
+    while (1) {
+        rt_thread_mdelay(500);
+        rt_device_read(touch_dev, 0, &touch_pos, 1);
+        rt_kprintf("touch_pos.type = %d\ttouch_pos.x = %d\ttouch_pos.y = %d\n", touch_pos.type, touch_pos.x, touch_pos.y);
+    }
+}
+
+static int hl_drv_ztw523a_dev_init(void)
+{
+    touch_dev = rt_device_find("ZTW523A");
+
+    if (touch_dev == RT_NULL) {
+        rt_kprintf("Can't find touch device ZTW523A\n");
+        return HL_FAILED;
+    }
+    if (rt_device_init(touch_dev) != RT_EOK) {
+        rt_kprintf("open touch device init failed!");
+        return HL_FAILED;
+    }
+    if (rt_device_open(touch_dev, RT_DEVICE_FLAG_RDONLY) != RT_EOK) {
+        rt_kprintf("open touch device failed!");
+        return HL_FAILED;
+    }
+    return HL_SUCCESS;
+}
+
+static int ztw523a_touch_test_thread(int argc, char** argv)
+{
+    hl_drv_ztw523a_dev_init();
+    touch_tid1 = rt_thread_create("touch_thread", ztw523a_thread_fun, RT_NULL, 4096, 18, 10);
+
+    if (touch_tid1 != RT_NULL) {
+        rt_kprintf("Touch thread 1 init success !\n");
+        rt_thread_startup(touch_tid1);
+    }
+    return RT_EOK;
+}
+
+MSH_CMD_EXPORT(ztw523a_touch_test_thread, ztw523a_touch_test_thread);
+#endif
 #endif
 /*
  * EOF

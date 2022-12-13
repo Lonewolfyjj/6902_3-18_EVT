@@ -33,8 +33,8 @@
 
 #if (!HL_IS_TX_DEVICE())
 
-#define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
-#define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
+#define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_POWER)
+#define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_POWER)
 
 #define OLED_RST_H() hl_hal_gpio_high(GPIO_OLED_RST)
 #define OLED_RST_L() hl_hal_gpio_low(GPIO_OLED_RST)
@@ -701,7 +701,7 @@ static void hl_drv_rm69310_gpio_init(void)
 static void hl_drv_rm69310_gpio_deinit(void)
 {
     hl_util_delay_sys_ms(20);
-    hl_hal_gpio_low(GPIO_OLED_SWIRE);
+    hl_hal_gpio_low(GPIO_OLED_POWER);
     hl_util_delay_sys_ms(50);
 
     hl_hal_gpio_deinit(GPIO_OLED_DCX);
