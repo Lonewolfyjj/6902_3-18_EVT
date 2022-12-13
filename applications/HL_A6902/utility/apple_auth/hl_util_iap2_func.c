@@ -3,7 +3,7 @@
 
 // 挑战请求的长度
 static uint8_t *challenge_resp_data;
-static uint16_t  challenge_req_len;
+static uint16_t challenge_req_len;
 static uint16_t challenge_resp_len;
 
 /**
@@ -104,13 +104,10 @@ int hl_check_usb_insert(st_iap2_protocol_p iap2)
 int hl_iap2_detect_send(st_iap2_protocol_p iap2)
 {
     uint8_t len = 0;
-    len         = hl_iap2_detect_packet_encode(iap2->send_buffer);
-    iap2->iap2_printf("detect packet\n");
-    for(int i = 0;i<6;i++){
-        iap2->iap2_printf("%02X ", iap2->send_buffer[i]);
-    }
-    iap2->iap2_printf("\n");
+    
+    len = hl_iap2_detect_packet_encode(iap2->send_buffer);
     iap2->iap2_usb_write(iap2->send_buffer, len);
+
     return 0;
 }
 
@@ -257,7 +254,7 @@ int hl_iap2_identify_ack_auth(st_iap2_protocol_p iap2)
     ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
     iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
     while (ret != sizeof(uint16_t)) {
-        iap2->iap2_printf("error ret\n");
+        iap2->iap2_printf("error ret = %d\n", ret);
         ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
         iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
         // return -1;

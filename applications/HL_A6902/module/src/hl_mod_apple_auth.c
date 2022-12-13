@@ -1,24 +1,12 @@
-#include "rtdevice.h"
 #include "hl_mod_apple_auth.h"
-#include "hl_util_iap2.h"
 #include "hl_drv_usb_vendor_class_com.h"
 
 /// IAP2线程句柄
-static struct rt_thread hl_mod_apple_auth_iap2_thread;
+static rt_thread_t hl_mod_apple_auth_iap2_thread;
 /// EAP线程句柄
-static struct rt_thread hl_mod_apple_auth_eap_thread;
-
-/// IAP2线程栈数组
-static char iap2_thread_stack[IAP2_THREAD_STACK_SIZE];
-/// EAP线程栈数组
-static char eap_thread_stack[EAP_THREAD_STACK_SIZE];
-
-/// iap2 util功能句柄
-static st_iap2_protocol_p iap2_handle;
-/// iap2 util功能句柄
-static func_handle iap2_func_handle;
-/// iap2 IIC chips
-static struct rt_i2c_bus_device *apple_auth_chip_iic = NULL;
+static rt_thread_t hl_mod_apple_auth_eap_thread;
+/// appleauth控制句柄
+hl_mod_apple_auth_t s_apple_auth;
 
 static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
@@ -72,10 +60,10 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = &reg_addr;
     msgs[0].len   = 1;
-    size = rt_i2c_transfer(apple_auth_chip_iic, &msgs[0], 1);
+    size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[0], 1);
     rt_kprintf("i2c read msg[0] = %d \r\n", size);
     while ( size != 1 && test_time--) {
-        size = rt_i2c_transfer(apple_auth_chip_iic, &msgs[0], 1);
+        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[0], 1);
         rt_kprintf("i2c read msg[0] = %d \r\n", size);
     }
 
@@ -98,11 +86,11 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
     msgs[1].buf   = read_data_addr;
     msgs[1].len   = read_data_len;
 
-    size = rt_i2c_transfer(apple_auth_chip_iic, &msgs[1], 1);
+    size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[1], 1);
     rt_kprintf("i2c read msg[1] = %d \r\n", size);
     test_time  = 3;
     while ( size != 1 && test_time--) {
-        size = rt_i2c_transfer(apple_auth_chip_iic, &msgs[1], 1);
+        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[1], 1);
         rt_kprintf("i2c read msg[1] = %d \r\n", size);
     } 
     
@@ -137,13 +125,13 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
     msgs.buf   = buffer;
     msgs.len   = write_data_len + 1;
     
-    size = rt_i2c_transfer(apple_auth_chip_iic, &msgs, 1);
+    size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs, 1);
     
     rt_kprintf("i2c write msg[0] size = %d \r\n", size);
 
     while (size != 1) {
         rt_kprintf("i2c write err!\n");
-        size = rt_i2c_transfer(apple_auth_chip_iic, &msgs, 1);
+        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs, 1);
     }
 
     if ( size == 1) {
@@ -163,7 +151,6 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
 static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
 {
     rt_thread_mdelay(usec / 1000);
-    // return 0;
 }
 
 /**
@@ -183,7 +170,17 @@ static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
  */
 static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
 {
-    // -----------------
+    int result = 0;
+
+    rt_kprintf("\n---> eap_thread enter!\n");
+    rt_thread_mdelay(200);
+
+    while (s_apple_auth.eap_thread_flag == RT_TRUE) {
+        result = hl_iap2_process_main_oneshot(s_apple_auth.iap2_handle);
+        rt_thread_mdelay(1);
+    }
+
+    rt_kprintf("\n---> eap_thread quit!\n");
 }
 
 /**
@@ -203,79 +200,93 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
  */
 static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
 {
-    // -----------------
-    rt_kprintf("\neap_thread enter\n");
-    while (1) {
-        // rt_kprintf("\nwhile eap_thread enter\n");
-        hl_iap2_process_main_oneshot(iap2_handle);
-        rt_thread_mdelay(1);
-    }
 }
 
-int hl_mod_apple_auth_init()
+int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 {
-    int i = 5;
-    // while(i--) {
-    //     rt_thread_mdelay(1000);
-    // }
-    rt_err_t result;
-    int      ret = 0;
-
-    apple_auth_chip_iic = (struct rt_i2c_bus_device *)rt_device_find("i2c1");
-    RT_ASSERT(apple_auth_chip_iic);
-
-    ret         = hl_drv_usb_vendor_class_com_init();
-    rt_kprintf("\nhl_drv_usb_vendor_class_com_init ret = %d\n", ret);
-    iap2_handle = rt_malloc(sizeof(st_iap2_protocol_t));
-    rt_memset(iap2_handle, 0, sizeof(st_iap2_protocol_t));
-
-    iap2_func_handle.delay_usec_func = _hl_mod_apple_auth_iap2_delay;
-    iap2_func_handle.iap2_usb_read   = _hl_mod_apple_auth_iap2_usb_read;
-    iap2_func_handle.iap2_usb_write  = _hl_mod_apple_auth_iap2_usb_write;
-    iap2_func_handle.iap2_iic_read   = _hl_mod_apple_auth_iap2_cp_read;
-    iap2_func_handle.iap2_iic_write  = _hl_mod_apple_auth_iap2_cp_write;
-    iap2_func_handle.iap2_printf     = rt_kprintf;
-
-    hl_iap2_protocol_init(iap2_handle, iap2_func_handle);
-
-    result =
-        rt_thread_init(&hl_mod_apple_auth_iap2_thread, "apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL,
-                       &iap2_thread_stack[0], sizeof(iap2_thread_stack), IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
-
-    result =
-        rt_thread_init(&hl_mod_apple_auth_eap_thread, "apple_auth_eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL,
-                       &eap_thread_stack[0], sizeof(eap_thread_stack), EAP_THREAD_PRIORITY, EAP_THREAD_TIMESLICE);
-
-    hl_mod_apple_auth_start();
-
-    if (result == RT_EOK) {
-        rt_kprintf("hl_mod_apple_auth_thread init succeed!\n");
-    } else {
-        rt_kprintf("hl_mod_apple_auth_thread init faild!\n");
+    if (NULL == input_msq) {
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
+        return 1;
     }
+
+    uint8_t ret = 0;
+
+    // 获取并赋值APP层下发的消息队列指针
+    s_apple_auth.app_msq          = input_msq;
+    s_apple_auth.iap2_thread_flag = RT_TRUE;
+    s_apple_auth.eap_thread_flag  = RT_TRUE;
+
+    s_apple_auth.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
+    RT_ASSERT(s_apple_auth.mfi_chip_iic);
+
+    ret = hl_drv_usb_vendor_class_com_init();
+    rt_kprintf("\nhl_drv_usb_vendor_class_com_init ret = %d\n", ret);
+
+    s_apple_auth.iap2_handle = rt_malloc(sizeof(st_iap2_protocol_t));
+    rt_memset(s_apple_auth.iap2_handle, 0, sizeof(st_iap2_protocol_t));
+
+    s_apple_auth.iap2_func_handle.delay_usec_func = _hl_mod_apple_auth_iap2_delay;
+    s_apple_auth.iap2_func_handle.iap2_usb_read   = _hl_mod_apple_auth_iap2_usb_read;
+    s_apple_auth.iap2_func_handle.iap2_usb_write  = _hl_mod_apple_auth_iap2_usb_write;
+    s_apple_auth.iap2_func_handle.iap2_iic_read   = _hl_mod_apple_auth_iap2_cp_read;
+    s_apple_auth.iap2_func_handle.iap2_iic_write  = _hl_mod_apple_auth_iap2_cp_write;
+    s_apple_auth.iap2_func_handle.iap2_printf     = rt_kprintf;
+
+    hl_iap2_protocol_init(s_apple_auth.iap2_handle, s_apple_auth.iap2_func_handle);
 
     return 0;
 }
 
 int hl_mod_apple_auth_deinit()
 {
-    if (iap2_handle) {
-        rt_free(iap2_handle);
+    if (s_apple_auth.iap2_handle) {
+        rt_free(s_apple_auth.iap2_handle);
     }
+
     return 0;
 }
 
 int hl_mod_apple_auth_start()
 {
-    rt_thread_startup(&hl_mod_apple_auth_iap2_thread);
-    rt_thread_startup(&hl_mod_apple_auth_eap_thread);
+    rt_err_t result;
+
+    s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
+    s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
+    s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
+    s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
+    s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+
+    hl_mod_apple_auth_iap2_thread =
+        rt_thread_create("apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
+                         IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
+    if (RT_NULL == hl_mod_apple_auth_iap2_thread) {
+        rt_kprintf("hl_mod_apple_auth_iap2_thread create faild!\n");
+        return 1;
+    }
+
+    hl_mod_apple_auth_eap_thread = rt_thread_create("apple_auth_eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL,
+                                                    EAP_THREAD_STACK_SIZE, EAP_THREAD_PRIORITY, EAP_THREAD_TIMESLICE);
+    if (RT_NULL == hl_mod_apple_auth_eap_thread) {
+        rt_kprintf("hl_mod_apple_auth_eap_thread create faild!\n");
+        return 1;
+    }
+
+    rt_thread_startup(hl_mod_apple_auth_iap2_thread);
+    rt_thread_startup(hl_mod_apple_auth_eap_thread);
 
     return 0;
 }
 
 int hl_mod_apple_auth_stop()
 {
+    rt_err_t result;
+
+    // 脱离Telink线程
+    result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_iap2_thread detach faild!!! \r\n", __FUNCTION__, __LINE__);
+        return 1;
+    }
+
     return 0;
 }
-
-INIT_APP_EXPORT(hl_mod_apple_auth_init);

@@ -20,9 +20,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <rtthread.h>
+#include <rtdevice.h>
+#include <stdint.h>
+#include "hl_util_iap2.h"
+#include "hl_config.h"
+#include "stdbool.h"
 
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
+
+#define MFI_IC_IIC_ADDR 0x10
 #define IAP2_THREAD_STACK_SIZE 1024
 #define IAP2_THREAD_PRIORITY 6
 #define IAP2_THREAD_TIMESLICE 20
@@ -31,6 +38,23 @@
 #define EAP_THREAD_TIMESLICE 20
 
 /* variables -----------------------------------------------------------------*/
+
+typedef struct
+{
+    /// 线程运行状态标志
+    rt_bool_t iap2_thread_flag;
+    /// 线程运行状态标志
+    rt_bool_t eap_thread_flag;
+    /// APP层消息队列
+    rt_mq_t* app_msq;
+    /// iap2 util功能句柄
+    st_iap2_protocol_p iap2_handle;
+    /// iap2 util功能句柄
+    func_handle iap2_func_handle;
+    /// iap2 IIC chips
+    struct rt_i2c_bus_device* mfi_chip_iic;
+} hl_mod_apple_auth_t;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 /**
@@ -48,7 +72,7 @@
  * <tr><td>2022-09-02      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_mod_apple_auth_init();
+int hl_mod_apple_auth_init(rt_mq_t* input_msq);
 
 /**
  * hl_mod_apple_auth_deinit

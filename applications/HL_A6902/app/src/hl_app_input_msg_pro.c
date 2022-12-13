@@ -31,6 +31,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 
 #define DBG_SECTION_NAME "app_input"
@@ -272,8 +273,10 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         rx_info.usb_plug = 0;
+        hl_mod_apple_auth_stop();
     } else {
         rx_info.usb_plug = 1;
+        hl_mod_apple_auth_start();
     }
 }
 

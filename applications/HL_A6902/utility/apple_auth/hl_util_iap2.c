@@ -1,6 +1,8 @@
 #include "hl_util_iap2.h"
 #include <stdlib.h>
 
+static uint8_t try_time = 3;
+
 /**
  * _hl_iap2_detect_process
  * @brief detect状态机处理
@@ -22,8 +24,6 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
     uint8_t  result = -1;
     uint16_t len    = 0;
 
-    iap2->iap2_printf("\n_hl_iap2_detect_process %d\n", iap2->detect_status);
-
     switch (iap2->detect_status) {
         case EM_HL_IAP2_STM_DETECT_SEND:
             result              = hl_iap2_detect_send(iap2);
@@ -39,7 +39,13 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_LINK;
             } else {
                 iap2->iap2_printf("[ERROR] [_hl_iap2_detect_process] receive detect message!\n");
-                iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                if(try_time){
+                    iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
+                    try_time--;
+                }else{
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                    try_time = 3;
+                }
             }
             break;
 
@@ -272,12 +278,11 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
         return -1;
     }
 
-    uint8_t ret = 0;
-    // iap2->iap2_printf("[%s]state:%d\n", __func__);
+    int result = 0;
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
-            // _hl_check_usb_insert(iap2);
+            iap2->delay_usec_func(1000);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:
@@ -301,18 +306,22 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:
-            /* code */
+            iap2->iap2_printf("\n\n\n*********iAP2 SUCCEED*********\n\n\n");
+            iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            result = 1;
             break;
 
         case EM_HL_IAP2_STM_MAIN_FAILED:
-            /* code */
+            iap2->iap2_printf("\n\n\n**********iAP2 FAILD**********\n\n\n");
+            iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            result = 1;
             break;
 
         default:
             break;
     }
 
-    return 0;
+    return result;
 }
 
 int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle)

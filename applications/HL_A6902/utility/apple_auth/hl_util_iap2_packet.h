@@ -183,8 +183,8 @@ typedef struct _iap2_ctrl_packet_
 #define LINK_CONTROL_RST (1UL << (4))
 #define LINK_CONTROL_SLP (1UL << (3))
 
-#define IAP2_DEVICE_NAME "LARK M1 IOS"
-#define IAP2_MODEID "v1.0.0"
+#define IAP2_DEVICE_NAME "LARK 150 Pro"
+#define IAP2_MODEID "A6902"
 #define IAP2_MANUFATORY "Hollyland"
 #define IAP2_SERIAL_NAME "0123456789AB"
 #define IAP2_FIRMWAREVERSION "v1.0.0.1"
