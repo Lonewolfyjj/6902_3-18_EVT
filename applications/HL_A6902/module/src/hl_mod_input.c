@@ -751,7 +751,9 @@ uint8_t hl_mod_input_init(void* msg_hander)
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
 
+#ifdef RT_USB_DEVICE_MSTORAGE
     rt_usbd_msc_state_register(mstorage_switch_cb);
+#endif
 
     if (hl_input_msg.msg_hander == NULL) {
         HL_PRINT("msghander err!");

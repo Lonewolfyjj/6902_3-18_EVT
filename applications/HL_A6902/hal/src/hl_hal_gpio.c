@@ -56,7 +56,7 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_C4,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
     {GPIO1_C6,  PIN_MODE_OUTPUT},           // GPIO_MIC_SW
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
-    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_PWR
+    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
 };
 #else
 // RX
@@ -68,26 +68,22 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO0_A6,  PIN_MODE_INPUT},            // GPIO_L_VOL_A
     {GPIO0_A5,  PIN_MODE_INPUT},            // GPIO_L_VOL_B
     {GPIO0_A7,  PIN_MODE_INPUT},            // GPIO_L_VOL_KEY
-    {GPIO0_C4,  PIN_MODE_INPUT},            // GPIO_R_VOL_A
-    {GPIO0_C5,  PIN_MODE_INPUT},            // GPIO_R_VOL_B
-    {GPIO0_C6,  PIN_MODE_INPUT},            // GPIO_R_VOL_KEY
     {GPIO0_A3,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
     {GPIO0_C1,  PIN_MODE_INPUT_PULLUP},     // GPIO_HP_DET
     {GPIO1_A5,  PIN_MODE_INPUT_PULLUP},     // GPIO_CAM_DET
     {GPIO1_B2,  PIN_MODE_INPUT},            // GPIO_GSENSOR_INT
     {GPIO1_C0,  PIN_MODE_INPUT},            // GPIO_OLED_TE
+    {GPIO1_C1,  PIN_MODE_INPUT},            // GPIO_TP_INT
     // OUT
-    {GPIO0_B0,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
     {GPIO0_C0,  PIN_MODE_OUTPUT},           // GPIO_OLED_RST
     {GPIO1_A7,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
     {GPIO1_B0,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
-    {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_ATS_PWR_EN
-    {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_AMP_EN
+    {GPIO1_C2,  PIN_MODE_OUTPUT},           // GPIO_TP_RST
+    {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_CODEC_EN
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
-    {GPIO1_C1,  PIN_MODE_OUTPUT },          // GPIO_OLED_SWIRE
-    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_PWR
-    {GPIO0_C6,  PIN_MODE_OUTPUT},           // GPIO_OLED_POWER
+    {GPIO0_D5,  PIN_MODE_OUTPUT},           // GPIO_OLED_SWIRE
+    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
 };
 #endif
 
