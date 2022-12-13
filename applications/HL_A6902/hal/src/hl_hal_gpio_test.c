@@ -106,7 +106,7 @@ void hl_hal_gpio_pwr_on(void)
 #else
     hl_hal_gpio_init(GPIO_OLED_SWIRE);
     hl_hal_gpio_low(GPIO_OLED_SWIRE);
-    hl_hal_gpio_init(GPIO_PWR_EN);
+    // hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     // hl_hal_gpio_init(GPIO_ATS_PWR_EN);
     // hl_hal_gpio_init(GPIO_AMP_EN);
