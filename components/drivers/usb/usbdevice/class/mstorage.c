@@ -1008,12 +1008,14 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
  *
  * @return RT_EOK on successful.
  */
+static ufunction_t temp = NULL;
 static rt_err_t _function_enable(ufunction_t func)
 {
     struct mstorage *data;
     RT_ASSERT(func != RT_NULL);
     RT_DEBUG_LOG(RT_DEBUG_USB, ("Mass storage function enabled\n"));
     data = (struct mstorage*)func->user_data;
+    temp = func;
 
     if(s_p_metorage_switch_cb != NULL) {
         s_p_metorage_switch_cb(1);
@@ -1207,6 +1209,18 @@ INIT_PREV_EXPORT(rt_usbd_msc_class_register);
 void rt_usbd_msc_state_register(mstorage_switch_cb_t mstorage_cb_func)
 {
     s_p_metorage_switch_cb = mstorage_cb_func;
+}
+
+void rt_usbd_msc_disable(void)
+{
+    struct mstorage *data;
+    if(temp == NULL) {
+        rt_kprintf("rt_usbd_msc_disable error\n");
+        return;
+    }  
+
+    _function_disable(temp);
+    rt_kprintf("rt_usbd_msc_disable \n");
 }
 
 #endif

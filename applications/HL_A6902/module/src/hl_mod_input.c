@@ -26,8 +26,6 @@
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
 
-#include "drivers/usb_device.h"
-
 
 /* define --------------------------------------------------------------------*/
 
@@ -735,14 +733,6 @@ static uint8_t hl_mod_input_insert_deinit()
     return HL_SUCCESS;
 }
 
-static void mstorage_switch_cb(uint8_t mstorage_state)
-{
-    if(mstorage_state != 0) {
-        hl_mod_input_send_msg(MSG_USB_MSTORAGE_DET, 1);
-    } else {
-        hl_mod_input_send_msg(MSG_USB_MSTORAGE_DET, 0);
-    }
-}
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -750,8 +740,6 @@ uint8_t hl_mod_input_init(void* msg_hander)
 {
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
-
-    rt_usbd_msc_state_register(mstorage_switch_cb);
 
     if (hl_input_msg.msg_hander == NULL) {
         HL_PRINT("msghander err!");

@@ -82,9 +82,7 @@ typedef enum _input_mod_msg_cmd_e
     /// 组合按键2的消息：降噪和开关机
     MSG_COMB_REC_PWR,
     /// 组合按键3的消息：录制和开关机
-    MSG_COMB_PAIR_PWR,
-    /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
-    MSG_USB_MSTORAGE_DET,
+    MSG_COMB_PAIR_PWR,    
 } input_mod_msg_cmd_e;
 #else
 //RX
@@ -108,8 +106,6 @@ typedef enum _input_mod_msg_cmd_e
     MSG_RX_HP_DET,
     /// 组合按键1的消息：左按和右按
     MSG_COMB_L_R_VOL,    
-    /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
-    MSG_USB_MSTORAGE_DET,
 } input_mod_msg_cmd_e;
 #endif
 

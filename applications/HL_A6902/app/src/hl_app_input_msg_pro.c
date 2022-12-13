@@ -179,7 +179,8 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.usb_plug = 0;
         tx_info.uac_link_flag = 0;
-        hl_app_tx_mstorage_plug_pro(0);
+        hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
+        tx_info.mstorage_plug = 0;               
     } else {
         tx_info.usb_plug = 1;        
     }
@@ -202,22 +203,7 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
     hl_app_audio_stream_updata();
 }
 
-/// 大容量状态处理
-static void hl_app_tx_mstorage_plug_pro(uint32_t value)
-{
-    hl_switch_e        record_switch;
-    hl_record_led_mode record_led_ctrl;
-    
-    if (value == 0) {
-        tx_info.mstorage_plug = 0;
-    } else {
-        record_switch    = HL_SWITCH_OFF;
-        tx_info.mstorage_plug = 1;
-        record_led_ctrl  = RECORD_LED_MODE_CLOSE;
-        hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
-        hl_mod_display_io_ctrl(MSG_RECORD_LED_MODE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
-    }
-}
+
 
 #else
 /// 电源键处理
@@ -332,7 +318,7 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         rx_info.usb_plug = 0;
         rx_info.uac_link_flag = 0;
-        hl_app_rx_mstorage_plug_pro(0);
+        rx_info.mstorage_plug = 0;
     } else {
         rx_info.usb_plug = 1;
     }
@@ -364,18 +350,7 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
     }
 }
 
-/// 大容量状态处理
-static void hl_app_rx_mstorage_plug_pro(uint32_t value)
-{
-    hl_switch_e        record_switch;
-    
-    if (value == 0) {
-        rx_info.mstorage_plug = 0;
-    } else {
-        record_switch    = HL_SWITCH_OFF;
-        rx_info.mstorage_plug = 1;
-    }
-}
+
 
 #endif
 
@@ -405,11 +380,7 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_TX_MIC_DET:
             hl_app_tx_ex_mic_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_TX_MIC_DET:(%d) \r\n", p_msg->param.u32_param);
-            break;            
-        case MSG_USB_MSTORAGE_DET:
-            hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
-			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
-            break;
+            break;                
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -452,11 +423,7 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_RX_CAM_DET:
             hl_app_rx_cam_plug_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
-            break;
-        case MSG_USB_MSTORAGE_DET:
-            hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
-			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
-            break;
+            break;      
 
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

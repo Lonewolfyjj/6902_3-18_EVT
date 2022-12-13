@@ -56,13 +56,17 @@ typedef enum _hl_mod_audio_ctrl_cmd
     /// uint8_t(0=OFF, 1=ON)
     HL_AUDIO_RECORD_CMD,
     /// uint8_t(0=External Mic, 1=Internal Mic)
-    HL_AUDIO_MIC_SWITCH_CMD,
+    HL_AUDIO_MIC_SWITCH_CMD,    
+    /// 无
+    HL_USB_MSTORAGE_DISABLE_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 
 typedef enum _hl_mod_audio_indicate
 {
     /// UAC连接通知，参数<空>
     HL_AUDIO_UAC_LINK_IND = 1,
+    /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
+    MSG_USB_MSTORAGE_DET,
 
 } HL_ENUM8(hl_mod_audio_indicate);
 
@@ -72,6 +76,8 @@ typedef enum _hl_mod_audio_indicate
 {
     /// UAC连接通知，参数<空>
     HL_AUDIO_UAC_LINK_IND = 1,
+    /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
+    MSG_USB_MSTORAGE_DET,
 
 } HL_ENUM8(hl_mod_audio_indicate);
 
