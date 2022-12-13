@@ -19,13 +19,15 @@
  * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 #include <rtdevice.h>
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
+
+#include "hl_mod_pm.h"
 
 #define DBG_SECTION_NAME "app_pm"
 #define DBG_LEVEL DBG_LOG
@@ -37,18 +39,70 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
-void hl_app_pm_msg_pro(mode_to_app_msg_t *p_msg)
+void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
+    uint8_t                  soc_temp;
+    int8_t                   temperature_temp;
+    hl_mod_pm_charge_state_e charge_state_temp;
+
     switch (p_msg->cmd) {
+        case HL_SOC_UPDATE_IND: {
+            soc_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("current soc:%d", soc_temp);
+        } break;
+        case HL_MAX_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("max temp alert:%d", temperature_temp);
+        } break;
+        case HL_MIN_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("min temp alert:%d", temperature_temp);
+        } break;
+        case HL_CHARGE_STATE_IND: {
+            charge_state_temp = *(hl_mod_pm_charge_state_e*)p_msg->param.ptr;
+            if (charge_state_temp == HL_CHARGE_STATE_NO_CHARGE) {
+                LOG_I("no charge!");
+            } else if (charge_state_temp == HL_CHARGE_STATE_CHARGING) {
+                LOG_I("charging!");
+            } else if (charge_state_temp == HL_CHARGE_STATE_CHARGE_DONE) {
+                LOG_I("charge done!");
+            }
+        } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }
 #else
-void hl_app_pm_msg_pro(mode_to_app_msg_t *p_msg)
+void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
+    uint8_t                  soc_temp;
+    int8_t                   temperature_temp;
+    hl_mod_pm_charge_state_e charge_state_temp;
+
     switch (p_msg->cmd) {
+        case HL_SOC_UPDATE_IND: {
+            soc_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("current soc:%d", soc_temp);
+        } break;
+        case HL_MAX_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("max temp alert:%d", temperature_temp);
+        } break;
+        case HL_MIN_TEMP_ALERT_IND: {
+            temperature_temp = *(int8_t*)p_msg->param.ptr;
+            LOG_I("min temp alert:%d", temperature_temp);
+        } break;
+        case HL_CHARGE_STATE_IND: {
+            charge_state_temp = *(hl_mod_pm_charge_state_e*)p_msg->param.ptr;
+            if (charge_state_temp == HL_CHARGE_STATE_NO_CHARGE) {
+                LOG_I("no charge!");
+            } else if (charge_state_temp == HL_CHARGE_STATE_CHARGING) {
+                LOG_I("charging!");
+            } else if (charge_state_temp == HL_CHARGE_STATE_CHARGE_DONE) {
+                LOG_I("charge done!");
+            }
+        } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;

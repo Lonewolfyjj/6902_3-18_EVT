@@ -19,10 +19,12 @@
 
 #include "hl_drv_aw2016a.h"
 
+#define DBG_SECTION_NAME "aw2016"
+#define DBG_LEVEL DBG_INFO
+#include "rtdbg.h"
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
-
-#define DBG_LOG rt_kprintf
 
 #if HL_IS_TX_DEVICE() == 1
 #define AW2016_IIC_BUS_0_NAME "i2c0"
@@ -83,7 +85,7 @@ static inline int aw_read(struct rt_i2c_bus_device* p_i2c_bus, uint8_t PointReg,
     if (rt_i2c_transfer(p_i2c_bus, msgs, 2) == 2) {
         return AW2016A_FUNC_RET_OK;
     } else {
-        DBG_LOG("i2c read err!\n");
+        LOG_E("i2c read err!");
         return AW2016A_FUNC_RET_ERR;
     }
 }
@@ -104,7 +106,7 @@ static inline int aw_write(struct rt_i2c_bus_device* p_i2c_bus, uint8_t PointReg
     if (rt_i2c_transfer(p_i2c_bus, msgs, 1) == 1) {
         return AW2016A_FUNC_RET_OK;
     } else {
-        DBG_LOG("i2c write err!\n");
+        LOG_E("i2c write err!");
         return AW2016A_FUNC_RET_ERR;
     }
 }
@@ -528,7 +530,7 @@ static int dump_register_value(struct rt_i2c_bus_device* p_i2c_bus, uint8_t* reg
         return AW2016A_FUNC_RET_ERR;
     }
 
-    DBG_LOG("reg:%02x,value:%02x\n", *reg_addr, reg_val);
+    LOG_D("reg:%02x,value:%02x", *reg_addr, reg_val);
 
     return AW2016A_FUNC_RET_OK;
 }
@@ -701,28 +703,911 @@ static int set_fade_in_enable(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016
     return AW2016A_FUNC_RET_OK;
 }
 
+static int _breath_mode_slow(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = led_chan;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 0;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_fast(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = led_chan;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 0;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_keep(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rgb_slow(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 8;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 6;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 8;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 8;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 8;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rgb_fast(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 4;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 6;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rg_slow(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 6;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rg_fast(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 4;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rb_slow(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 6;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_rb_fast(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 4;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_gb_slow(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 6;
+    pattern_param.t1       = 9;
+    pattern_param.t2       = 3;
+    pattern_param.t3       = 9;
+    pattern_param.t4       = 6;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _breath_mode_gb_fast(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                            ret;
+    uint8_t                        led_chan;
+    hl_drv_aw2016a_breath_param_st pattern_param;
+
+    led_chan = 0xFF;
+
+    ret = close_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = set_manual_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 0;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pattern_param.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    pattern_param.repeat   = 0;
+    pattern_param.t0       = 4;
+    pattern_param.t1       = 5;
+    pattern_param.t2       = 2;
+    pattern_param.t3       = 5;
+    pattern_param.t4       = 4;
+
+    ret = set_pattern_mode_param(p_i2c_bus, &pattern_param);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2;
+
+    ret = set_pattern_mode(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(p_i2c_bus, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_red(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 15;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_green(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    current_st.current  = 15;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_blue(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    current_st.current  = 15;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_white(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 15;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_orange(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 12;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    current_st.current  = 1;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _set_color_black(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
+static int _user_func_led_ctrl(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_led_ctrl_st* p_param)
+{
+    int ret;
+
+    switch (p_param->breath_mode) {
+        case HL_DRV_AW2016A_BREATH_MODE_SKIP: {
+
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_SLOW: {
+            ret = _breath_mode_slow(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_FAST: {
+            ret = _breath_mode_fast(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_KEEP: {
+            ret = _breath_mode_keep(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RGB_SLOW: {
+            ret = _breath_mode_rgb_slow(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RGB_FAST: {
+            ret = _breath_mode_rgb_fast(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RG_SLOW: {
+            ret = _breath_mode_rg_slow(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RG_FAST: {
+            ret = _breath_mode_rg_fast(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RB_SLOW: {
+            ret = _breath_mode_rb_slow(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_RB_FAST: {
+            ret = _breath_mode_rb_fast(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_GB_SLOW: {
+            ret = _breath_mode_gb_slow(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_BREATH_MODE_GB_FAST: {
+            ret = _breath_mode_gb_fast(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        default:
+            break;
+    }
+
+    switch (p_param->color) {
+        case HL_DRV_AW2016A_COLOR_SKIP: {
+
+        } break;
+        case HL_DRV_AW2016A_COLOR_RED: {
+            ret = _set_color_red(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_GREEN: {
+            ret = _set_color_green(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_BLUE: {
+            ret = _set_color_blue(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_WHITE: {
+            ret = _set_color_white(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_ORANGE: {
+            ret = _set_color_orange(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_BLACK: {
+            ret = _set_color_black(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        default:
+            break;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
 /* Exported functions --------------------------------------------------------*/
 
 int hl_drv_aw2016a_init(void)
 {
-    int     ret;
-    uint8_t chip_id;
-    uint8_t flag;
+    int                         ret;
+    uint8_t                     chip_id;
+    uint8_t                     flag;
+    uint8_t                     work_mode;
+    uint8_t                     current;
+    uint8_t                     led_chan;
+    hl_drv_aw2016a_pwm_level_st pwm_level;
 
     if (_init_flag == 1) {
-        DBG_LOG("LED is already inited!\n");
+        LOG_W("LED is already inited!");
         return AW2016A_FUNC_RET_ERR;
     }
 
     _p_i2c_bus_0 = (struct rt_i2c_bus_device*)rt_device_find(AW2016_IIC_BUS_0_NAME);
     if (_p_i2c_bus_0 == NULL) {
-        DBG_LOG("i2c dev not found!:%s", AW2016_IIC_BUS_0_NAME);
+        LOG_E("i2c dev not found!:%s", AW2016_IIC_BUS_0_NAME);
         return AW2016A_FUNC_RET_ERR;
     }
 
     _p_i2c_bus_1 = (struct rt_i2c_bus_device*)rt_device_find(AW2016_IIC_BUS_1_NAME);
     if (_p_i2c_bus_1 == NULL) {
-        DBG_LOG("i2c dev not found!:%s", AW2016_IIC_BUS_1_NAME);
+        LOG_E("i2c dev not found!:%s", AW2016_IIC_BUS_1_NAME);
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -732,7 +1617,7 @@ int hl_drv_aw2016a_init(void)
     }
 
     if (chip_id != AW2016A_CHIP_ID) {
-        DBG_LOG("aw2016a chip0 id err: %02x!", chip_id);
+        LOG_E("aw2016a chip0 id err: %02x!", chip_id);
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -742,7 +1627,7 @@ int hl_drv_aw2016a_init(void)
     }
 
     if (chip_id != AW2016A_CHIP_ID) {
-        DBG_LOG("aw2016a chip1 id err: %02x!", chip_id);
+        LOG_E("aw2016a chip1 id err: %02x!", chip_id);
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -758,7 +1643,56 @@ int hl_drv_aw2016a_init(void)
         return AW2016A_FUNC_RET_ERR;
     }
 
-    DBG_LOG("LED init success!\n");
+    work_mode = HL_DRV_AW2016A_ACTIVE_MODE;
+
+    ret = set_work_mode(_p_i2c_bus_0, &work_mode);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_work_mode(_p_i2c_bus_1, &work_mode);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current = HL_DRV_AW2016A_IMAX_5MA;
+
+    ret = set_global_max_output_current(_p_i2c_bus_0, &current);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_global_max_output_current(_p_i2c_bus_1, &current);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+
+    ret = open_led_channel(_p_i2c_bus_0, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = open_led_channel(_p_i2c_bus_1, &led_chan);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    pwm_level.led_chan  = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
+    pwm_level.pwm_level = 30;
+
+    ret = set_pwm_level(_p_i2c_bus_0, &pwm_level);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    ret = set_pwm_level(_p_i2c_bus_1, &pwm_level);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_D("LED init success!");
 
     _init_flag = 1;
 
@@ -771,7 +1705,7 @@ int hl_drv_aw2016a_deinit(void)
     uint8_t work_mode;
 
     if (_init_flag == 0) {
-        DBG_LOG("LED is not inited!\n");
+        LOG_W("LED is not inited!");
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -787,20 +1721,20 @@ int hl_drv_aw2016a_deinit(void)
         return AW2016A_FUNC_RET_ERR;
     }
 
-    DBG_LOG("LED deinit success!\n");
+    LOG_D("LED deinit success!");
 
     _init_flag = 0;
 
     return AW2016A_FUNC_RET_OK;
 }
 
-int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size)
+int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op, void* arg, int32_t arg_size)
 {
     int                       ret;
     struct rt_i2c_bus_device* p_i2c_bus;
 
     if (_init_flag == 0) {
-        DBG_LOG("LED is not inited!\n");
+        LOG_E("LED is not inited!");
         return AW2016A_FUNC_RET_ERR;
     }
 
@@ -809,14 +1743,14 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
     } else if (led_num == HL_DRV_AW2016A_LED1) {
         p_i2c_bus = _p_i2c_bus_1;
     } else {
-        DBG_LOG("LED NUM is not 0 or 1!\n");
+        LOG_E("LED NUM is not 0 or 1!");
         return AW2016A_FUNC_RET_ERR;
     }
 
     switch (op) {
         case HL_DRV_AW2016A_GET_CHIP_ID: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -827,7 +1761,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_WORK_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -838,7 +1772,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -849,7 +1783,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_OPEN_LED_CHANNEL: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -860,7 +1794,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_CLOSE_LED_CHANNEL: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -871,7 +1805,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_PATTERN_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -882,7 +1816,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_BREATH_PARAM: {
             if (arg_size != sizeof(hl_drv_aw2016a_breath_param_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_breath_param_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_breath_param_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -893,7 +1827,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_MANUAL_MODE: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -904,7 +1838,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT: {
             if (arg_size != sizeof(hl_drv_aw2016a_output_current_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_output_current_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_output_current_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -915,7 +1849,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL: {
             if (arg_size != sizeof(hl_drv_aw2016a_pwm_level_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_pwm_level_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_pwm_level_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -926,7 +1860,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_DUMP_REGISTER_VALUE: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -937,7 +1871,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_LED_LIGHT_EFFECT: {
             if (arg_size != sizeof(hl_drv_aw2016a_light_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_light_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_light_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -948,7 +1882,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_SYNC_CONTROL_MODE: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -959,7 +1893,7 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_FADE_OUT_ENABLE: {
             if (arg_size != sizeof(hl_drv_aw2016a_set_fade_in_out_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_set_fade_in_out_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_set_fade_in_out_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
@@ -970,11 +1904,22 @@ int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW2016A_SET_FADE_IN_ENABLE: {
             if (arg_size != sizeof(hl_drv_aw2016a_set_fade_in_out_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw2016a_set_fade_in_out_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_set_fade_in_out_st> type pointer!");
                 return AW2016A_FUNC_RET_ERR;
             }
 
             ret = set_fade_in_enable(p_i2c_bus, (hl_drv_aw2016a_set_fade_in_out_st*)arg);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_LED_CTRL: {
+            if (arg_size != sizeof(hl_drv_aw2016a_led_ctrl_st)) {
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_led_ctrl_st> type pointer!");
+                return AW2016A_FUNC_RET_ERR;
+            }
+
+            ret = _user_func_led_ctrl(p_i2c_bus, (hl_drv_aw2016a_led_ctrl_st*)arg);
             if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
