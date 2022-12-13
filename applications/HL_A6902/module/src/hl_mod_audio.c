@@ -966,27 +966,19 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     // }
 }
 
+#if HL_IS_TX_DEVICE()
 // 设置输入声卡静音状态
 static void hl_mod_audio_set_mute(uint8_t mute)
 {
     int8_t ret = 0;
-    struct AUDIO_DB_CONFIG db_config = {0};
 
-    if (mute == 0) {
-        db_config.dB = 20;
-        db_config.ch = 0x66;
-    } else {
-        db_config.dB = -120;
-        db_config.ch = 0x66;
-    }
-    
-
-    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mute\n");
         return -RT_ERROR;
     }
 }
+#endif
 
 // 音频流模式设置
 static void hl_mod_audio_stream_set(void *ptr) 
@@ -1328,10 +1320,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_SET_MUTE_CMD:
             if(((char*)ptr)[0] != 0) {
                 hl_mod_audio_set_mute(1);
-                LOG_I("[%s][line:%d] mic mute !!!\r\n", __FUNCTION__, __LINE__);
+                LOG_I("[%s][line:%d] mic open mute !!!\r\n", __FUNCTION__, __LINE__);
             } else {
                 hl_mod_audio_set_mute(0);
-                LOG_I("[%s][line:%d] mic mute !!!\r\n", __FUNCTION__, __LINE__);
+                LOG_I("[%s][line:%d] mic close mute !!!\r\n", __FUNCTION__, __LINE__);
             }
             
             
