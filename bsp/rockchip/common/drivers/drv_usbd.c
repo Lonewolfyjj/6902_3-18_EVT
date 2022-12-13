@@ -29,7 +29,7 @@
 #include "board.h"
 
 #define WORK_QUEUE_STACK_SIZE   512
-#define WORK_QUEUE_PRIORITY     0
+#define WORK_QUEUE_PRIORITY     1
 
 struct rockchip_usbd
 {

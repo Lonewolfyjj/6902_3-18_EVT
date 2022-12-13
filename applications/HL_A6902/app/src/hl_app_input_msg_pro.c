@@ -27,6 +27,7 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_app_audio_msg_pro.h"
 #include "hl_mod_input.h"
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
@@ -49,8 +50,23 @@ typedef enum _hl_knob_dir_e
 #define VOLUME_MIN       -104
 
 /* variables -----------------------------------------------------------------*/
+
 /* Private function(only *.c)  -----------------------------------------------*/
 #if HL_IS_TX_DEVICE()
+
+/// 电源键处理
+static void hl_app_tx_pwr_key_pro(hl_key_event_e event);
+/// 配对键处理
+static void hl_app_tx_pair_key_pro(hl_key_event_e event);
+/// 录制键处理
+static void hl_app_tx_rec_key_pro(hl_key_event_e event);
+/// usb连接状态处理
+static void hl_app_tx_usb_plug_pro(uint32_t value);
+/// 外置mic状态处理
+static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
+/// 大容量状态处理
+static void hl_app_tx_mstorage_plug_pro(uint32_t value);
+
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
@@ -127,6 +143,12 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
+
+            if(tx_info.mstorage_plug == 1) {
+                LOG_I("USB insert(%d) !!! \r\n", tx_info.mstorage_plug);
+                break;
+            }
+
             if (tx_info.rec_flag == 0) {
                 record_switch    = HL_SWITCH_ON;
                 tx_info.rec_flag = 1;
@@ -156,9 +178,12 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         tx_info.usb_plug = 0;
+        tx_info.uac_link_flag = 0;
+        hl_app_tx_mstorage_plug_pro(0);
     } else {
-        tx_info.usb_plug = 1;
+        tx_info.usb_plug = 1;        
     }
+    hl_app_audio_stream_updata();
 }
 
 /// 外置mic状态处理
@@ -174,9 +199,43 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
         mic_select          = HL_MIC_INTERNAL;
     }
     hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+    hl_app_audio_stream_updata();
+}
+
+/// 大容量状态处理
+static void hl_app_tx_mstorage_plug_pro(uint32_t value)
+{
+    hl_switch_e        record_switch;
+    hl_record_led_mode record_led_ctrl;
+    
+    if (value == 0) {
+        tx_info.mstorage_plug = 0;
+    } else {
+        record_switch    = HL_SWITCH_OFF;
+        tx_info.mstorage_plug = 1;
+        record_led_ctrl  = RECORD_LED_MODE_CLOSE;
+        hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
+        hl_mod_display_io_ctrl(MSG_RECORD_LED_MODE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
+    }
 }
 
 #else
+/// 电源键处理
+static void hl_app_rx_pwr_key_pro(hl_key_event_e event);
+/// 旋钮中间按键处理
+static void hl_app_rx_knob_key_pro(hl_key_event_e event);
+/// 旋钮转动处理
+static void hl_app_rx_knob_pro(hl_knob_dir_e dir, uint32_t value);
+/// usb连接状态处理
+static void hl_app_rx_usb_plug_pro(uint32_t value);
+/// 监听口状态处理
+static void hl_app_rx_hp_plug_pro(uint32_t value);
+/// 相机口状态处理
+static void hl_app_rx_cam_plug_pro(uint32_t value);
+/// 大容量状态处理
+static void hl_app_rx_mstorage_plug_pro(uint32_t value);
+
+
 /// 电源键处理
 static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 {
@@ -272,9 +331,12 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         rx_info.usb_plug = 0;
+        rx_info.uac_link_flag = 0;
+        hl_app_rx_mstorage_plug_pro(0);
     } else {
         rx_info.usb_plug = 1;
     }
+    hl_app_audio_stream_updata();
 }
 
 /// 监听口状态处理
@@ -299,6 +361,19 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
         rx_info.cam_spk_plug = 0;
     } else {
         rx_info.cam_spk_plug = 1;
+    }
+}
+
+/// 大容量状态处理
+static void hl_app_rx_mstorage_plug_pro(uint32_t value)
+{
+    hl_switch_e        record_switch;
+    
+    if (value == 0) {
+        rx_info.mstorage_plug = 0;
+    } else {
+        record_switch    = HL_SWITCH_OFF;
+        rx_info.mstorage_plug = 1;
     }
 }
 
@@ -330,6 +405,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_TX_MIC_DET:
             hl_app_tx_ex_mic_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_TX_MIC_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;            
+        case MSG_USB_MSTORAGE_DET:
+            hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
+			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -374,6 +453,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_RX_CAM_DET:
             hl_app_rx_cam_plug_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case MSG_USB_MSTORAGE_DET:
+            hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
+			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
         default:

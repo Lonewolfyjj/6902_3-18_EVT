@@ -31,6 +31,7 @@
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_pm.h"
+#include "hl_mod_upgrade.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_app_com_msg_pro.h"
 #include "hl_app_disp_msg_pro.h"
@@ -62,6 +63,7 @@ rx_app_info_t rx_info = {0};
 #endif
 
 /* Private function(only *.c)  -----------------------------------------------*/
+int hl_app_info(int argc, char** argv);
 /* Exported functions --------------------------------------------------------*/
 void hl_app_msg_thread(void* parameter)
 {
@@ -105,6 +107,7 @@ void hl_app_msg_thread(void* parameter)
     }
 }
 
+
 void hl_app_mng_init(void)
 {
     rt_err_t    ret;
@@ -124,12 +127,24 @@ void hl_app_mng_init(void)
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 
+    hl_mod_upgrade_init(&hl_app_mq);       
+
 	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 20, 2);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
         LOG_E("thread create err!!! \r\n");
     }
+
+    rt_thread_mdelay(2000);
+    hl_app_info(0, NULL);
+#if HL_IS_TX_DEVICE()
+    if(tx_info.mstorage_plug == 0) {
+#else
+    if(rx_info.mstorage_plug == 0) {
+#endif
+        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
+    } 
 }
 
 // hl_app_info [no param]

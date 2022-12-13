@@ -80,12 +80,12 @@ int hl_mod_test_rx_init(void)
 
 
     // 2831p初始化
-    hl_hal_gpio_init(GPIO_ATS_PWR_EN);
+    // hl_hal_gpio_init(GPIO_ATS_PWR_EN);
 
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
 
 
-    hl_hal_gpio_high(GPIO_ATS_PWR_EN);
+    // hl_hal_gpio_high(GPIO_ATS_PWR_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
 
     return RT_EOK;
