@@ -1216,6 +1216,10 @@ err0:
 
 uint8_t hl_mod_audio_deinit(void)
 {
+#if HL_IS_TX_DEVICE()
+    hl_mod_audio_record_switch(0);
+#endif
+
     hl_mod_audio_codec_deconfig(&cap_info);
     hl_mod_audio_codec_deconfig(&play_info);
 
