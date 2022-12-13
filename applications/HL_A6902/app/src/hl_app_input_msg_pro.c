@@ -318,6 +318,7 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         rx_info.usb_plug = 0;
         rx_info.uac_link_flag = 0;
+        hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
         rx_info.mstorage_plug = 0;
     } else {
         rx_info.usb_plug = 1;

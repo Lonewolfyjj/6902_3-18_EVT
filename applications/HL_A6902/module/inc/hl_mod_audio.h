@@ -91,6 +91,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_HP_AMP_CMD, 
     /// 音频流设置命令，hl_mod_audio_io_ctrl的参数参考<hl_stream_mode_e>
     HL_AUDIO_STREAM_SET_CMD,
+    /// 无
+    HL_USB_MSTORAGE_DISABLE_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 
