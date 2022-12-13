@@ -104,17 +104,17 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_high(GPIO_ALL_POWER);
     rt_kprintf("A6902 Tx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #else
-    hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
-    hl_hal_gpio_init(GPIO_ATS_PWR_EN);
-    hl_hal_gpio_init(GPIO_AMP_EN);
+    // hl_hal_gpio_init(GPIO_ATS_PWR_EN);
+    // hl_hal_gpio_init(GPIO_AMP_EN);
     hl_hal_gpio_init(GPIO_ALL_POWER);
+    hl_hal_gpio_init(GPIO_CODEC_EN);
 
-    hl_hal_gpio_high(GPIO_PWR_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
-    hl_hal_gpio_high(GPIO_ATS_PWR_EN);
-    hl_hal_gpio_low(GPIO_AMP_EN);
+    // hl_hal_gpio_high(GPIO_ATS_PWR_EN);
+    // hl_hal_gpio_low(GPIO_AMP_EN);
     hl_hal_gpio_high(GPIO_ALL_POWER);
+    hl_hal_gpio_high(GPIO_CODEC_EN);
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #endif
     rt_thread_mdelay(10);

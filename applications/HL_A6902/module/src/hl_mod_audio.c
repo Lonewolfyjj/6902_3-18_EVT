@@ -1139,8 +1139,8 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     hl_hal_gpio_low(GPIO_MIC_SW);
     hl_drv_rtc_pcf85063_init();
 #else
-    hl_hal_gpio_init(GPIO_AMP_EN);
-    hl_hal_gpio_high(GPIO_AMP_EN);
+    // hl_hal_gpio_init(GPIO_AMP_EN);
+    // hl_hal_gpio_high(GPIO_AMP_EN);
 #endif
    
     ret = hl_mod_audio_param_config();
@@ -1317,10 +1317,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 
         case HL_AUDIO_SET_HP_AMP_CMD:
             if(((char*)ptr)[0] != 0) {
-                hl_hal_gpio_high(GPIO_AMP_EN);
+                // hl_hal_gpio_high(GPIO_AMP_EN);
                 LOG_I("enable hp amp!!!");
             } else {
-                hl_hal_gpio_low(GPIO_AMP_EN);
+                // hl_hal_gpio_low(GPIO_AMP_EN);
                 LOG_I("disable hp amp!!!");
             }
             break;

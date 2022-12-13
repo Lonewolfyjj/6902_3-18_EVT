@@ -105,7 +105,7 @@
 #define RT_USING_DFS
 #define DFS_USING_WORKDIR
 #define DFS_FILESYSTEMS_MAX 4
-#define DFS_FILESYSTEM_TYPES_MAX 4
+#define DFS_FILESYSTEM_TYPES_MAX 2
 #define DFS_FD_MAX 16
 #define RT_USING_DFS_MNTTABLE
 #define RT_USING_DFS_ELMFAT
@@ -159,15 +159,7 @@
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
 /* RT_USING_RTC is not set */
-#define RT_USING_SDIO
-#define RT_SDIO_STACK_SIZE 512
-#define RT_SDIO_THREAD_PRIORITY 15
-#define RT_MMCSD_STACK_SIZE 1536
-#define RT_MMCSD_THREAD_PREORITY 22
-#define RT_MMCSD_MAX_PARTITION 16
-#define RT_SDCARD_MOUNT_POINT "/mnt/sdcard"
-/* RT_SDIO_DEBUG is not set */
-#define RT_EMMC_USE_DDR_MOD
+/* RT_USING_SDIO is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */
@@ -180,7 +172,7 @@
 #define RT_USING_AUDIO
 #define RT_USING_HL_AUDIO
 /* RT_USING_SENSOR is not set */
-/* RT_USING_TOUCH is not set */
+#define RT_USING_TOUCH
 
 /* Using WiFi */
 
@@ -192,7 +184,7 @@
 #define RT_USING_USB_DEVICE
 #define RT_USBD_THREAD_STACK_SZ 4096
 #define USB_VENDOR_ID 0x3547
-#define USB_PRODUCT_ID 0x0003
+#define USB_PRODUCT_ID 0x0002
 #define RT_USB_DEVICE_COMPOSITE
 /* RT_USB_DEVICE_CDC is not set */
 #define RT_USB_DEVICE_NONE
@@ -202,9 +194,9 @@
 #define RT_USB_DEVICE_UAC1
 /* RT_USB_DEVICE_UVC is not set */
 #define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
-#define RT_USB_MSTORAGE_DISK_NAME "sd0"
-#define RT_USB_MSTORAGE_BUFLEN 32768
-#define RT_USB_AUDIO_P_NAME "es8388p"
+#define RT_USB_MSTORAGE_DISK_NAME "root"
+#define RT_USB_MSTORAGE_BUFLEN 4096
+#define RT_USB_AUDIO_P_NAME "codecp"
 #define RT_USB_AUDIO_C_NAME "pdmc"
 /* RT_USB_AUDIO_PLL_COMPENSATION is not set */
 /* RT_USB_DEVICE_HID_KEYBOARD is not set */
@@ -212,7 +204,7 @@
 #define RT_USB_DEVICE_HID_GENERAL
 #define RT_USB_DEVICE_HID_GENERAL_OUT_REPORT_LENGTH 63
 #define RT_USB_DEVICE_HID_GENERAL_IN_REPORT_LENGTH 63
-/* RT_USB_DEVICE_HID_MEDIA is not set */
+#define RT_USB_DEVICE_HID_MEDIA
 
 /* POSIX layer and C standard library */
 
@@ -244,7 +236,262 @@
 
 /* System */
 
-/* RT_USING_LITTLEVGL2RTT is not set */
+#define RT_USING_LITTLEVGL2RTT
+
+/* LVGL configuration */
+
+/* LV_CONF_SKIP is not set */
+/* LV_CONF_MINIMAL is not set */
+
+/* Color settings */
+
+/* LV_COLOR_DEPTH_32 is not set */
+#define LV_COLOR_DEPTH_16
+/* LV_COLOR_DEPTH_8 is not set */
+/* LV_COLOR_DEPTH_1 is not set */
+#define LV_COLOR_DEPTH 16
+/* LV_COLOR_16_SWAP is not set */
+/* LV_COLOR_SCREEN_TRANSP is not set */
+#define LV_COLOR_MIX_ROUND_OFS 128
+#define LV_COLOR_CHROMA_KEY_HEX 0x00FF00
+
+/* Memory settings */
+
+/* LV_MEM_CUSTOM is not set */
+#define LV_MEM_SIZE_KILOBYTES 32
+#define LV_MEM_ADDR 0x0
+#define LV_MEM_BUF_MAX_NUM 16
+/* LV_MEMCPY_MEMSET_STD is not set */
+
+/* HAL Settings */
+
+#define LV_DISP_DEF_REFR_PERIOD 30
+#define LV_INDEV_DEF_READ_PERIOD 30
+/* LV_TICK_CUSTOM is not set */
+#define LV_DPI_DEF 130
+
+/* Feature configuration */
+
+/* Drawing */
+
+#define LV_DRAW_COMPLEX
+#define LV_SHADOW_CACHE_SIZE 0
+#define LV_CIRCLE_CACHE_SIZE 4
+#define LV_LAYER_SIMPLE_BUF_SIZE 24576
+#define LV_IMG_CACHE_DEF_SIZE 0
+#define LV_GRADIENT_MAX_STOPS 2
+#define LV_GRAD_CACHE_DEF_SIZE 0
+/* LV_DITHER_GRADIENT is not set */
+#define LV_DISP_ROT_MAX_BUF 10240
+
+/* GPU */
+
+/* LV_USE_GPU_ARM2D is not set */
+/* LV_USE_GPU_STM32_DMA2D is not set */
+/* LV_USE_GPU_SWM341_DMA2D is not set */
+/* LV_USE_GPU_NXP_PXP is not set */
+/* LV_USE_GPU_NXP_VG_LITE is not set */
+/* LV_USE_GPU_SDL is not set */
+
+/* Logging */
+
+/* LV_USE_LOG is not set */
+
+/* Asserts */
+
+#define LV_USE_ASSERT_NULL
+#define LV_USE_ASSERT_MALLOC
+/* LV_USE_ASSERT_STYLE is not set */
+/* LV_USE_ASSERT_MEM_INTEGRITY is not set */
+/* LV_USE_ASSERT_OBJ is not set */
+#define LV_ASSERT_HANDLER_INCLUDE "assert.h"
+
+/* Others */
+
+/* LV_USE_PERF_MONITOR is not set */
+/* LV_USE_MEM_MONITOR is not set */
+/* LV_USE_REFR_DEBUG is not set */
+/* LV_SPRINTF_CUSTOM is not set */
+/* LV_SPRINTF_USE_FLOAT is not set */
+#define LV_USE_USER_DATA
+/* LV_ENABLE_GC is not set */
+
+/* Compiler settings */
+
+/* LV_BIG_ENDIAN_SYSTEM is not set */
+#define LV_ATTRIBUTE_MEM_ALIGN_SIZE 1
+/* LV_ATTRIBUTE_FAST_MEM_USE_IRAM is not set */
+/* LV_USE_LARGE_COORD is not set */
+
+/* Font usage */
+
+/* Enable built-in fonts */
+
+/* LV_FONT_MONTSERRAT_8 is not set */
+/* LV_FONT_MONTSERRAT_10 is not set */
+/* LV_FONT_MONTSERRAT_12 is not set */
+#define LV_FONT_MONTSERRAT_14
+/* LV_FONT_MONTSERRAT_16 is not set */
+/* LV_FONT_MONTSERRAT_18 is not set */
+/* LV_FONT_MONTSERRAT_20 is not set */
+/* LV_FONT_MONTSERRAT_22 is not set */
+/* LV_FONT_MONTSERRAT_24 is not set */
+/* LV_FONT_MONTSERRAT_26 is not set */
+/* LV_FONT_MONTSERRAT_28 is not set */
+/* LV_FONT_MONTSERRAT_30 is not set */
+/* LV_FONT_MONTSERRAT_32 is not set */
+/* LV_FONT_MONTSERRAT_34 is not set */
+/* LV_FONT_MONTSERRAT_36 is not set */
+/* LV_FONT_MONTSERRAT_38 is not set */
+/* LV_FONT_MONTSERRAT_40 is not set */
+/* LV_FONT_MONTSERRAT_42 is not set */
+/* LV_FONT_MONTSERRAT_44 is not set */
+/* LV_FONT_MONTSERRAT_46 is not set */
+/* LV_FONT_MONTSERRAT_48 is not set */
+/* LV_FONT_MONTSERRAT_12_SUBPX is not set */
+/* LV_FONT_MONTSERRAT_28_COMPRESSED is not set */
+/* LV_FONT_DEJAVU_16_PERSIAN_HEBREW is not set */
+/* LV_FONT_SIMSUN_16_CJK is not set */
+/* LV_FONT_UNSCII_8 is not set */
+/* LV_FONT_UNSCII_16 is not set */
+/* LV_FONT_CUSTOM is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_8 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_12 is not set */
+#define LV_FONT_DEFAULT_MONTSERRAT_14
+/* LV_FONT_DEFAULT_MONTSERRAT_16 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_18 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_20 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_22 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_24 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_26 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_28 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_30 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_32 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_34 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_36 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_38 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_40 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_42 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_44 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_46 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_48 is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_12_SUBPX is not set */
+/* LV_FONT_DEFAULT_MONTSERRAT_28_COMPRESSED is not set */
+/* LV_FONT_DEFAULT_DEJAVU_16_PERSIAN_HEBREW is not set */
+/* LV_FONT_DEFAULT_SIMSUN_16_CJK is not set */
+/* LV_FONT_DEFAULT_UNSCII_8 is not set */
+/* LV_FONT_DEFAULT_UNSCII_16 is not set */
+/* LV_FONT_FMT_TXT_LARGE is not set */
+/* LV_USE_FONT_COMPRESSED is not set */
+/* LV_USE_FONT_SUBPX is not set */
+#define LV_USE_FONT_PLACEHOLDER
+
+/* Text Settings */
+
+#define LV_TXT_ENC_UTF8
+/* LV_TXT_ENC_ASCII is not set */
+#define LV_TXT_BREAK_CHARS " ,.;:-_"
+#define LV_TXT_LINE_BREAK_LONG_LEN 0
+#define LV_TXT_COLOR_CMD "#"
+/* LV_USE_BIDI is not set */
+/* LV_USE_ARABIC_PERSIAN_CHARS is not set */
+
+/* Widget usage */
+
+#define LV_USE_ARC
+#define LV_USE_BAR
+#define LV_USE_BTN
+#define LV_USE_BTNMATRIX
+#define LV_USE_CANVAS
+#define LV_USE_CHECKBOX
+#define LV_USE_DROPDOWN
+#define LV_USE_IMG
+#define LV_USE_LABEL
+#define LV_LABEL_TEXT_SELECTION
+#define LV_LABEL_LONG_TXT_HINT
+#define LV_USE_LINE
+#define LV_USE_ROLLER
+#define LV_ROLLER_INF_PAGES 7
+#define LV_USE_SLIDER
+#define LV_USE_SWITCH
+#define LV_USE_TEXTAREA
+#define LV_TEXTAREA_DEF_PWD_SHOW_TIME 1500
+#define LV_USE_TABLE
+
+/* Extra Widgets */
+
+#define LV_USE_ANIMIMG
+#define LV_USE_CALENDAR
+/* LV_CALENDAR_WEEK_STARTS_MONDAY is not set */
+#define LV_USE_CALENDAR_HEADER_ARROW
+#define LV_USE_CALENDAR_HEADER_DROPDOWN
+#define LV_USE_CHART
+#define LV_USE_COLORWHEEL
+#define LV_USE_IMGBTN
+#define LV_USE_KEYBOARD
+#define LV_USE_LED
+#define LV_USE_LIST
+#define LV_USE_MENU
+#define LV_USE_METER
+#define LV_USE_MSGBOX
+#define LV_USE_SPAN
+#define LV_SPAN_SNIPPET_STACK_SIZE 64
+#define LV_USE_SPINBOX
+#define LV_USE_SPINNER
+#define LV_USE_TABVIEW
+#define LV_USE_TILEVIEW
+#define LV_USE_WIN
+
+/* Themes */
+
+#define LV_USE_THEME_DEFAULT
+/* LV_THEME_DEFAULT_DARK is not set */
+#define LV_THEME_DEFAULT_GROW
+#define LV_THEME_DEFAULT_TRANSITION_TIME 80
+#define LV_USE_THEME_BASIC
+/* LV_USE_THEME_MONO is not set */
+
+/* Layouts */
+
+#define LV_USE_FLEX
+#define LV_USE_GRID
+
+/* 3rd Party Libraries */
+
+/* LV_USE_FS_STDIO is not set */
+/* LV_USE_FS_POSIX is not set */
+/* LV_USE_FS_WIN32 is not set */
+/* LV_USE_FS_FATFS is not set */
+/* LV_USE_PNG is not set */
+/* LV_USE_BMP is not set */
+/* LV_USE_SJPG is not set */
+/* LV_USE_GIF is not set */
+/* LV_USE_QRCODE is not set */
+/* LV_USE_FREETYPE is not set */
+/* LV_USE_RLOTTIE is not set */
+/* LV_USE_FFMPEG is not set */
+
+/* Others */
+
+#define LV_USE_SNAPSHOT
+/* LV_USE_MONKEY is not set */
+/* LV_USE_GRIDNAV is not set */
+/* LV_USE_FRAGMENT is not set */
+/* LV_USE_IMGFONT is not set */
+/* LV_USE_MSG is not set */
+/* LV_USE_IME_PINYIN is not set */
+
+/* Examples */
+
+#define LV_BUILD_EXAMPLES
+
+/* Demos */
+
+/* LV_USE_DEMO_WIDGETS is not set */
+/* LV_USE_DEMO_KEYPAD_AND_ENCODER is not set */
+/* LV_USE_DEMO_BENCHMARK is not set */
+/* LV_USE_DEMO_STRESS is not set */
+/* LV_USE_DEMO_MUSIC is not set */
 
 /* VBUS(Virtual Software BUS) */
 
@@ -328,11 +575,11 @@
 /* RT_USING_EXT_CODEC is not set */
 /* AUDIO_ENABLE_PLAYER_TEST is not set */
 /* AUDIO_ENABLE_RECORDER_TEST is not set */
-/* RT_USING_PKGS is not set */
+#define RT_USING_PKGS
 
 /* RT-Thread board config */
 
-#define RT_BOARD_NAME "audio_hollyland_a6902_tx"
+#define RT_BOARD_NAME "audio_hollyland_a6902_rx"
 #define RK_SRAM_END 0x200C0000
 /* M4_JTAG_ENABLE is not set */
 /* DSP_JTAG_ENABLE is not set */
@@ -344,7 +591,6 @@
 #define RT_USING_RESET
 /* RT_USING_CRU_DUMP is not set */
 /* RT_USING_REGULATOR_DUMP is not set */
-/* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
 /* RT_USING_PWM_REGULATOR is not set */
@@ -356,6 +602,18 @@
 #define RT_LARGE_HEAP_SIZE 262144
 /* RT_USING_DTCM_HEAP is not set */
 /* RT_USING_PSRAM_HEAP is not set */
+/* RT_USING_PANEL_FPGA_LVDS is not set */
+/* RT_USING_PANEL_SS is not set */
+/* RT_USING_PANEL_S6E3FC2X01 is not set */
+/* RT_USING_PANEL_S6E3HC2_X1 is not set */
+/* RT_USING_PANEL_S6E3HC2_X4 is not set */
+/* RT_USING_PANEL_ST7703_DS is not set */
+/* RT_USING_PANEL_ST7796H2 is not set */
+/* RT_USING_PANEL_AM018RT90211 is not set */
+/* RT_USING_PANEL_AM014RT90327V0 is not set */
+/* RT_USING_PANEL_H245QBN02 is not set */
+#define RT_USING_PANEL_HL_RM690A0
+/* RT_USING_BACKLIGHT is not set */
 
 /* Enable Fault Dump Hook */
 
@@ -414,6 +672,15 @@
 /* RT-Thread rockchip buffer_manage driver */
 
 /* RT_USING_BUFFER_MANAGE is not set */
+#define RT_USING_TOUCH_DRIVERS
+/* RT_USING_TOUCH_GTXX is not set */
+/* RT_USING_TOUCH_S3706 is not set */
+/* RT_USING_CSTXX is not set */
+/* RT_USING_CYTTSP5 is not set */
+/* RT_USING_IT7259 is not set */
+#define RT_USING_FT3169
+#define RT_TOUCH_X_RANGE 720
+#define RT_TOUCH_Y_RANGE 1280
 /* RT_USING_SENSOR_HUB is not set */
 /* RT_USING_WDT_DUMP is not set */
 /* RT_USING_QPIPSRAM is not set */
@@ -435,6 +702,7 @@
 
 #define RT_USING_CODEC
 #define RT_USING_CODEC_NAU88L25B
+#define RT_USING_CODEC_NAU88L25B_HP
 #define RT_USING_I2STDM
 #define RT_USING_I2STDM1
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
@@ -445,7 +713,7 @@
 /* RT_USING_AUDIO_CARD_ACDCDIG is not set */
 /* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
 /* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-#define RT_USING_AUDIO_CARD_PDM_MIC
+/* RT_USING_AUDIO_CARD_PDM_MIC is not set */
 /* RT_USING_AUDIO_CARD_PCM_BT is not set */
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
@@ -455,19 +723,22 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
+#define RT_USING_AUDIO_CARD_NAU88L25B_HP
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
-#define RT_USING_PDM
-#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
 #define RT_USING_DMA_PL330
 #define RT_USING_DMA0
 #define RT_USING_PMU
-/* RT_USING_DISPLAY is not set */
+#define RT_USING_DISPLAY
+#define RT_USING_VOP
+/* RT_USING_SPI_SCREEN is not set */
+/* RT_USING_VOP_MCU is not set */
+#define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
 #define RT_USING_PWM0
 
@@ -485,7 +756,7 @@
 
 #define RT_USING_UART
 #define RT_USING_UART0
-/* RT_USING_UART1 is not set */
+#define RT_USING_UART1
 #define RT_USING_UART2
 
 /* Enable I2C */
@@ -499,17 +770,14 @@
 #define RT_USING_SPI2APB
 #define RT_USING_SPI1
 #define RT_USING_SPI2
-
-/* Enable SDIO/SDMMC/eMMC */
-
-#define RT_USING_SDIO0
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-/* RT_USING_USBAPP is not set */
+#define RT_USING_USBAPP
+#define RT_USING_HIDTEST
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -530,6 +798,7 @@
 /* RT_USING_COMMON_TEST_CPU_USAGE is not set */
 /* RT_USING_COMMON_TEST_DCACHE is not set */
 /* RT_USING_COMMON_TEST_ICACHE is not set */
+#define RT_USING_COMMON_TEST_DISPLAY
 /* RT_USING_COMMON_TEST_DSP is not set */
 /* RT_USING_DSP_OPUS_CODEC_TEST is not set */
 /* RT_USING_COMMON_TEST_GPIO is not set */

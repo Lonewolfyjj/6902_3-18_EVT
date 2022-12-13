@@ -190,6 +190,15 @@ menu "Enable Audio"
         default n
         help
           Say Y if you want to use Everest Semi NAU88L25B audio card.
+    
+    config RT_USING_AUDIO_CARD_NAU88L25B_HP
+        bool "Enable Everest Semi NAU88L25B HP audio card"
+        depends on RT_USING_AUDIO_CARD
+        select RT_USING_I2STDM1
+        select RT_USING_CODEC_NAU88L25B_HP
+        default n
+        help
+          Say Y if you want to use Everest Semi NAU88L25B HP audio card.
 
     config RT_USING_I2STDM
         bool "Enable I2S 0"
