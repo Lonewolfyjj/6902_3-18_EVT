@@ -208,6 +208,35 @@ static void mstorage_switch_cb(uint8_t mstorage_state)
     }
 }
 
+int hl_mod_audio_rtc_set(void)
+{    
+    // rtc_time time1;
+    // time_t now;
+    // rt_err_t ret = RT_EOK; 
+    
+    // hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    // rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month&0x1f, time1.day&0x3f, time1.hour&0x3f, time1.minute&0x7f, time1.second&0x7f);
+    
+    // ret = set_date((time1.year + 2000), (time1.month&0x1f), (time1.day&0x3f)); 
+    // if(ret != RT_EOK)
+    // {
+    //     rt_kprintf("[RTC Test]Set RTC Date failed\n"); 
+    //     return RT_ERROR;
+    // }
+    
+    // ret = set_time((time1.hour&0x3f), (time1.minute&0x7f), (time1.second&0x7f)); 
+    // if(ret != RT_EOK)
+    // {
+    //     rt_kprintf("[RTC Test]Set RTC Time failed\n"); 
+    //     return RT_ERROR;
+    // }
+    
+    // now = time(RT_NULL);
+    // rt_kprintf("[RTC Test]Read RTC Date and Time: %s \r\n", ctime(&now)); 
+
+    return RT_EOK;
+}
+
 #if HL_IS_TX_DEVICE()
 static void hl_mod_audio_dfs()
 {
@@ -937,6 +966,28 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     // }
 }
 
+// 设置输入声卡静音状态
+static void hl_mod_audio_set_mute(uint8_t mute)
+{
+    int8_t ret = 0;
+    struct AUDIO_DB_CONFIG db_config = {0};
+
+    if (mute == 0) {
+        db_config.dB = 20;
+        db_config.ch = 0x66;
+    } else {
+        db_config.dB = -120;
+        db_config.ch = 0x66;
+    }
+    
+
+    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    if (ret != RT_EOK) {
+        LOG_E("fail to set mute\n");
+        return -RT_ERROR;
+    }
+}
+
 // 音频流模式设置
 static void hl_mod_audio_stream_set(void *ptr) 
 {
@@ -1275,6 +1326,15 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
+            if(((char*)ptr)[0] != 0) {
+                hl_mod_audio_set_mute(1);
+                LOG_I("[%s][line:%d] mic mute !!!\r\n", __FUNCTION__, __LINE__);
+            } else {
+                hl_mod_audio_set_mute(0);
+                LOG_I("[%s][line:%d] mic mute !!!\r\n", __FUNCTION__, __LINE__);
+            }
+            
+            
             break;
         case HL_AUDIO_SET_EQ_CMD:
             break;
@@ -1413,6 +1473,12 @@ int hl_mod_audio_test(int argc, char** argv)
         case 0x06:
             rt_usbd_msc_disable(); //hl_mod_audio_dfs();
             break;
+        case 0x07:
+            hl_mod_audio_set_mute(1);
+            break;
+        case 0x08:
+            hl_mod_audio_set_mute(0);
+            break;            
 #endif
         default:
             LOG_E("Bad <size> value '%s'", argv[3]);
