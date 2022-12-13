@@ -597,7 +597,7 @@
 /* RT_USING_AUDIO_CARD_ACDCDIG is not set */
 /* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
 /* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-/* RT_USING_AUDIO_CARD_PDM_MIC is not set */
+#define RT_USING_AUDIO_CARD_PDM_MIC
 /* RT_USING_AUDIO_CARD_PCM_BT is not set */
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
@@ -607,10 +607,13 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
+/* RT_USING_AUDIO_CARD_NAU88L25B_HP is not set */
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
+#define RT_USING_PDM
+#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
@@ -698,7 +701,7 @@
 /* RT_USING_COMMON_TEST_WDT is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
-#define RT_USING_COMMON_TEST_OTA
+/* RT_USING_COMMON_TEST_OTA is not set */
 /* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
