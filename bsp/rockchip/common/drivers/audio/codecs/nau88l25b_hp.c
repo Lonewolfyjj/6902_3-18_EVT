@@ -16,7 +16,6 @@
 #include <rtthread.h>
 
 
-#define RT_USING_CODEC_NAU88L25B_HP
 #ifdef RT_USING_CODEC_NAU88L25B_HP
 
 #include "board.h"

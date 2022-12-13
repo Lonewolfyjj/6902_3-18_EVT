@@ -361,14 +361,23 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
     static char timer_name[50] = {0};
     static char timer_name_after[50] = {0};
     static char timer_name_bypass[50] = {0};
+    static char timer_name_file[50] = {0};
 
     if (record_switch) {
         rt_ringbuffer_reset(record_info.record_after_rb);
         rt_ringbuffer_reset(record_info.record_bypass_rb);
 
         hl_mod_audio_rtc_get(timer_name);
-        rt_sprintf(timer_name_after, "/mnt/sdcard/%s-after.wav", timer_name); 
-        rt_sprintf(timer_name_bypass, "/mnt/sdcard/%s-bypass.wav", timer_name); 
+        memcpy(&timer_name_file[0], "/mnt/sdcard/", 12); 
+        memcpy(&timer_name_file[12], timer_name, 10); 
+
+        if (access(timer_name_file, 0) < 0)
+        {
+            LOG_I("create record mkdir %s.", timer_name_file);
+            mkdir(timer_name_file, 0); //此处添加异常处理<
+        }
+        rt_sprintf(timer_name_after, "%s/%s-after.wav", timer_name_file, &timer_name[11]); 
+        rt_sprintf(timer_name_bypass, "%s/%s-bypass.wav", timer_name_file, &timer_name[11]); 
         record_info.file_audio_after  = open(timer_name_after, O_WRONLY | O_CREAT | O_TRUNC);   //open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
         record_info.file_audio_bypass = open(timer_name_bypass, O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
 
@@ -1291,7 +1300,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_stream_set(ptr);
             break;
         case HL_USB_MSTORAGE_DISABLE_CMD:
-            rt_usbd_msc_disable();;
+            rt_usbd_msc_disable();
             break;
 
         default:
