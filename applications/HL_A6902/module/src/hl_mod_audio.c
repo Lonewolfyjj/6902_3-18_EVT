@@ -1257,7 +1257,9 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
+#ifdef RT_USB_DEVICE_MSTORAGE
     rt_usbd_msc_state_register(mstorage_switch_cb);
+#endif
 
 #if HL_IS_TX_DEVICE()
     ret = hl_mod_audio_record_param_config();

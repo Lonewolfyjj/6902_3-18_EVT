@@ -64,8 +64,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event);
 static void hl_app_tx_usb_plug_pro(uint32_t value);
 /// 外置mic状态处理
 static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
-/// 大容量状态处理
-static void hl_app_tx_mstorage_plug_pro(uint32_t value);
+
 
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
@@ -216,8 +215,6 @@ static void hl_app_rx_usb_plug_pro(uint32_t value);
 static void hl_app_rx_hp_plug_pro(uint32_t value);
 /// 相机口状态处理
 static void hl_app_rx_cam_plug_pro(uint32_t value);
-/// 大容量状态处理
-static void hl_app_rx_mstorage_plug_pro(uint32_t value);
 
 
 /// 电源键处理
