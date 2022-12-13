@@ -36,6 +36,12 @@
 
 #if (!HL_IS_TX_DEVICE())
 
+#define OLED_PWR_ON() hl_hal_gpio_high(GPIO_OLED_SWIRE)
+#define OLED_PWR_OFF() hl_hal_gpio_low(GPIO_OLED_SWIRE)
+
+#define OLED_RST_H() hl_hal_gpio_high(GPIO_OLED_RST)
+#define OLED_RST_L() hl_hal_gpio_low(GPIO_OLED_RST)
+
 #define MAKE_RGB_INFO(rl, ro, gl, go, bl, bo, al, ao) \
     .rgb = { { (rl), (ro) }, { (gl), (go) }, { (bl), (bo) }, { (al), (ao) } }
 
@@ -197,11 +203,21 @@ static int32_t AlignDown(int32_t value, int32_t align)
 
 static void hl_drv_rm690a0_gpio_init(void)
 {
-    hl_hal_gpio_init(GPIO_OLED_POWER);
     hl_hal_gpio_init(GPIO_OLED_RST);
 
-    hl_hal_gpio_high(GPIO_OLED_POWER);
-    hl_hal_gpio_high(GPIO_OLED_RST);
+    OLED_RST_H();
+
+    rt_thread_mdelay(10);
+    OLED_PWR_ON(); // 延时不要去，1线去掉延时容易被识别成脉冲
+
+    rt_thread_mdelay(10);
+
+    OLED_RST_L();
+    rt_thread_mdelay(100);  // 10ms
+
+    OLED_RST_H();
+    rt_thread_mdelay(500);  // 400ms
+
 }
 
 static void hl_drv_rm690a0_hardware_rst(void)
@@ -239,13 +255,12 @@ static uint8_t get_color_format_byte(uint8_t format)
 
     return res;
 }
-
 static void hl_drv_rm690a0_gpio_deinit(void)
 {
-    hl_hal_gpio_init(GPIO_OLED_POWER);
+    hl_hal_gpio_init(GPIO_OLED_SWIRE);
     hl_hal_gpio_init(GPIO_OLED_RST);
 
-    hl_hal_gpio_low(GPIO_OLED_POWER);
+    hl_hal_gpio_low(GPIO_OLED_SWIRE);
     hl_hal_gpio_low(GPIO_OLED_RST);
 }
 

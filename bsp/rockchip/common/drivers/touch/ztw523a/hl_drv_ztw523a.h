@@ -18,7 +18,7 @@
 #define HL_FAILED 1
 
 /* 使用I2C */
-#define ZTW523A_IIC_NAME "i2c1"
+#define ZTW523A_IIC_NAME "i2c0"
 #define ZTW523A_DEVICE_ADDRESS 0x20
 
 
