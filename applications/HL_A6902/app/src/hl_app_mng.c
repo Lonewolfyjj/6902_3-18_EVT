@@ -76,7 +76,9 @@ void hl_app_msg_thread(void* parameter)
             switch (msg.sender) {
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
+#if !HL_IS_TX_DEVICE()                    
                     hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg,0);
+#endif                
                     break;
                 case DISPLAY_MODE:
                     hl_app_disp_msg_pro(&msg);

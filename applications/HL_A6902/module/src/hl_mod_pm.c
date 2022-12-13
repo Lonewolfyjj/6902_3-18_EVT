@@ -38,6 +38,13 @@
 /* typedef -------------------------------------------------------------------*/
 typedef int (*pm_io_ctl)(uint8_t cmd, void* ptr, uint8_t len);
 
+typedef enum _hl_mod_pm_charger_e
+{
+    HL_MOD_PM_CHARGER_UNKNOWN,
+    HL_MOD_PM_CHARGER_SY6971,
+    HL_MOD_PM_CHARGER_SGM41518,
+} hl_mod_pm_charger_e;
+
 typedef struct _hl_mod_pm_bat_info_st
 {
     hl_st_drv_guage_soc_t  soc;
@@ -93,6 +100,7 @@ static hl_mod_pm_st _pm_mod = { .init_flag             = false,
                                     .voltage     = 0,
                                 } };
 
+static pm_io_ctl pm_ioctl = RT_NULL;
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
