@@ -30,6 +30,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 #include "hl_mod_upgrade.h"
 #include "hl_app_audio_msg_pro.h"
@@ -126,6 +127,7 @@ void hl_app_mng_init(void)
     hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
+    hl_mod_apple_auth_init(&hl_app_mq);
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 
