@@ -324,13 +324,11 @@ static void hl_mod_display_led_set(void)
     if (HL_DISPLAY_SUCCESS == hl_mod_display_record_led_mode_get(&now_record_led_mode)) {
         switch (now_record_led_mode) {
             case RECORD_LED_MODE_OPEN:
-                hl_mod_display_led_long_bright(HL_MOD_TX_RECORD_LED, HL_RED_CHANNEL);
-                hl_mod_display_led_color_set(HL_MOD_TX_RECORD_LED, 15, 0, 0);
+                hl_hal_gpio_high(GPIO_REC_LED_EN);
 
                 break;
             case RECORD_LED_MODE_CLOSE:
-                hl_mod_display_led_long_bright(HL_MOD_TX_RECORD_LED, HL_ALL_CHANNEL);
-                hl_mod_display_led_color_set(HL_MOD_TX_RECORD_LED, 0, 0, 0);
+                hl_hal_gpio_low(GPIO_REC_LED_EN);
 
                 break;
             default:
@@ -572,8 +570,8 @@ uint8_t hl_mod_display_deinit(void)
     hl_drv_aw2016a_deinit();
 
     // TX
-    hl_hal_gpio_init(GPIO_PWR_EN);
-    hl_hal_gpio_low(GPIO_PWR_EN);
+    hl_hal_gpio_init(GPIO_REC_LED_EN);
+    hl_hal_gpio_high(GPIO_REC_LED_EN);
 
     return HL_DISPLAY_SUCCESS;
 }
@@ -625,9 +623,11 @@ uint8_t hl_mod_display_init(void* display_msq)
     hl_drv_aw2016a_init();
 
 #if HL_IS_TX_DEVICE()
-    // TX
-    hl_hal_gpio_init(GPIO_PWR_EN);
-    hl_hal_gpio_high(GPIO_PWR_EN);
+    // // TX
+    hl_hal_gpio_init(GPIO_REC_LED_EN);
+    hl_hal_gpio_low(GPIO_REC_LED_EN);
+    // hl_hal_gpio_init(GPIO_PWR_EN);
+    // hl_hal_gpio_high(GPIO_PWR_EN);
 #else
     // RX
     hl_drv_rm690a0_init();

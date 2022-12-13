@@ -89,15 +89,15 @@ void hl_hal_gpio_pwr_on(void)
 {
 
 #if HL_IS_TX_DEVICE()
-    hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
-    hl_hal_gpio_init(GPIO_PWR_EN);
+    // hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
+    // hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);
     hl_hal_gpio_init(GPIO_2831P_EN);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
     hl_hal_gpio_init(GPIO_ALL_POWER);
 
-    hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
-    hl_hal_gpio_high(GPIO_PWR_EN);
+    // hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
+    // hl_hal_gpio_high(GPIO_PWR_EN);
     hl_hal_gpio_high(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);

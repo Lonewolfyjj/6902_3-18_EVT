@@ -45,9 +45,9 @@ typedef enum _hl_gpio_port_e
     /// (EMMC复位脚，无外部上下拉，低电平有效)
     GPIO_EMMC_RST,
     /// (EMMC电源使能，无外部上下拉，高电平有效)
-    GPIO_EMMC_PWR_EN,
-    /// (电源使能，无外部上下拉，高电平有效)
-    GPIO_PWR_EN,
+    // GPIO_EMMC_PWR_EN,
+    // /// (电源使能，无外部上下拉，高电平有效)
+    // GPIO_PWR_EN,
     /// (3.3V使能，无外部上下拉，高电平有效)
     GPIO_DC3V3_EN,
     /// (无线模块电源使能，无外部上下拉，高电平有效)
@@ -60,6 +60,8 @@ typedef enum _hl_gpio_port_e
     GPIO_ATS_RESET,
     /// (电源总开关，外部下拉，高电平有效)
     GPIO_ALL_POWER,
+    /// (录制灯开关 0：ON 1： OFF)
+    GPIO_REC_LED_EN,
 
     // GPIO 总数
     USER_GPIO_COUNT

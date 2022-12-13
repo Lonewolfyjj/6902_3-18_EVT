@@ -651,7 +651,7 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
             }
             break;
         case MIC_DET:
-            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_HIGH) {
+            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_LOW) {
                 return LINE_INSERT;
             }
             break;
