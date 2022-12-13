@@ -45,16 +45,16 @@
 static void hl_app_tx_mstorage_plug_pro(uint32_t value)
 {
     hl_switch_e        record_switch;
-    //hl_record_led_mode record_led_ctrl;
+    hl_led_switch record_led_ctrl;
     
     if (value == 0) {
         tx_info.mstorage_plug = 0;
     } else {
         record_switch    = HL_SWITCH_OFF;
         tx_info.mstorage_plug = 1;
-        //record_led_ctrl  = RECORD_LED_MODE_CLOSE;
+        record_led_ctrl  = SWITCH_CLOSE;
         hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
-        //hl_mod_display_io_ctrl(MSG_RECORD_LED_MODE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
+        hl_mod_display_io_ctrl(LED_RECORD_STATE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
     }
 }
 

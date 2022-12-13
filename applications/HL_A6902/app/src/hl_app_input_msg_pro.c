@@ -142,7 +142,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_SHORT:
 
             if(tx_info.mstorage_plug == 1) {
-                LOG_I("USB insert(%d) !!! \r\n", tx_info.mstorage_plug);
+                LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
                 break;
             }
 
@@ -156,6 +156,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
                 // record_led_ctrl  = RECORD_LED_MODE_CLOSE;
             }
             hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
+            hl_app_disp_state_led_set();
        
             break;
         case HL_KEY_EVENT_LONG:
