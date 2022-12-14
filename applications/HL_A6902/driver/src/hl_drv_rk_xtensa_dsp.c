@@ -562,7 +562,7 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
 
     // DSP io control
     if (sg_dsp_io_ctrl.io_ctrl_notify) {
-        sg_dsp_io_ctrl.io_ctrl_notify   = 0;
+        // sg_dsp_io_ctrl.io_ctrl_notify   = 0;
         sg_tx_dsp_param->io_ctrl_notify = 1;
         sg_tx_dsp_param->io_ctrl_op     = sg_dsp_io_ctrl.io_ctrl_op;
         sg_tx_dsp_param->io_ctrl_param  = sg_dsp_io_ctrl.io_ctrl_param;
@@ -587,9 +587,25 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         HL_DRV_DSP_LOG("dsp pop work error\r\n");
         return ret;
     }
+
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        sg_dsp_io_ctrl.io_ctrl_notify = 0;
+        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_tx_dsp_param->io_ctrl_op,
+                       sg_tx_dsp_param->io_ctrl_param, sg_tx_dsp_param->io_ctrl_value);
+    }
 #else
     // do rx dsp process
 #if !(HL_DEVICE_RX_USE_BYPSS_TEST)
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        // sg_dsp_io_ctrl.io_ctrl_notify   = 0;
+        sg_rx_dsp_param->io_ctrl_notify = 1;
+        sg_rx_dsp_param->io_ctrl_op     = sg_dsp_io_ctrl.io_ctrl_op;
+        sg_rx_dsp_param->io_ctrl_param  = sg_dsp_io_ctrl.io_ctrl_param;
+        sg_rx_dsp_param->io_ctrl_value  = sg_dsp_io_ctrl.io_ctrl_value;
+    }
+
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_dsp_param->in_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b24_2ch_after_process,
@@ -607,6 +623,12 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     if (ret) {
         HL_DRV_DSP_LOG("dsp pop work error\r\n");
         return ret;
+    }
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        sg_dsp_io_ctrl.io_ctrl_notify = 0;
+        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_rx_dsp_param->io_ctrl_op,
+                       sg_rx_dsp_param->io_ctrl_param, sg_rx_dsp_param->io_ctrl_value);
     }
 #else
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_bypass_dsp_param->in_buf, sg_rx_bypass_dsp_param->process_buff_len);
@@ -652,11 +674,13 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
         case HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP:
             if (((uint8_t*)ptr)[0] != 0) {
+
 #if HL_IS_TX_DEVICE()
                 sg_dsp_io_ctrl.io_ctrl_op     = 0;
                 sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #else
-                sg_dsp_io_ctrl.io_ctrl_op = 0;
+                sg_dsp_io_ctrl.io_ctrl_op     = 0;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
                 rt_kprintf("[%s][line:%d] open denoise!!!\r\n", __FUNCTION__, __LINE__);
             } else {
@@ -664,19 +688,98 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                 sg_dsp_io_ctrl.io_ctrl_op     = 3;
                 sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #else
-                sg_dsp_io_ctrl.io_ctrl_op = 3;
+                sg_dsp_io_ctrl.io_ctrl_op     = 3;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
+
                 rt_kprintf("[%s][line:%d] close denoise!!!\r\n", __FUNCTION__, __LINE__);
             }
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_MUTE:
+            // MUTE在TX
+
+#if HL_IS_TX_DEVICE()
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+            // sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
 
             break;
 
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+        
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD:
+
+#if !HL_IS_TX_DEVICE()
+            // RX才有MI混音
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_GET_VU:
+
+#if !HL_IS_TX_DEVICE()
+            // RX才有VU
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+
+            break;
         default:
             HL_DRV_DSP_LOG("dsp error ctrl msg = 0x%02x\r\n", cmd);
             break;
     }
+
+    HL_DRV_DSP_LOG("%s: op=%d,pa=%d,va=%d\r\n", __func__, sg_dsp_io_ctrl.io_ctrl_op, sg_dsp_io_ctrl.io_ctrl_param, sg_dsp_io_ctrl.io_ctrl_value);
     return 0;
 }
+
+static int dsp_io_ctrol(int argc, char** argv)
+{
+    if (argc < 4) {
+        HL_DRV_DSP_LOG("error param too few\r\n");
+        return -1;
+    }
+
+    uint16_t op    = atoi(argv[1]);
+    uint16_t param = atoi(argv[2]);
+    int32_t  value = atoi(argv[3]);
+
+    sg_dsp_io_ctrl.io_ctrl_notify = 1;
+    sg_dsp_io_ctrl.io_ctrl_op     = op;
+    sg_dsp_io_ctrl.io_ctrl_param  = param;
+    sg_dsp_io_ctrl.io_ctrl_value  = value;
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(dsp_io_ctrol, dsp_io_ctrol op param value);
 /*
  * EOF
  */
