@@ -74,22 +74,26 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
+
         case HL_KEY_EVENT_SHORT:
             break;
+
         case HL_KEY_EVENT_LONG:
-            hl_mod_pm_ctrl(HL_PM_POWER_DOWN_CMD, NULL, 0);
-            hl_mod_input_deinit();
-            hl_mod_display_deinit();
-            hl_mod_audio_deinit();
-            hl_mod_telink_stop();
-            hl_mod_telink_deinit();
-            //hl_mod_pm_stop();
-            //hl_mod_pm_deinit();
+            if (tx_info.on_off_flag == 1) {
+                hl_app_mng_powerOff();
+                tx_info.on_off_flag = 0;
+            } else {
+                hl_app_mng_powerOn();
+                tx_info.on_off_flag = 1;
+            }
             break;
+
         case HL_KEY_EVENT_DOUBLE:
             break;
+
         case HL_KEY_EVENT_RELEASE:
             break;
+
         default:
             LOG_E("event(%d) unkown!!! \r\n", event);
             break;
@@ -222,21 +226,19 @@ static void hl_app_rx_cam_plug_pro(uint32_t value);
 /// 电源键处理
 static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
 {
-
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
             break;
         case HL_KEY_EVENT_LONG:
-            hl_mod_pm_ctrl(HL_PM_POWER_DOWN_CMD, NULL, 0);
-            hl_mod_input_deinit();
-            hl_mod_display_deinit();
-            hl_mod_audio_deinit();
-            hl_mod_telink_stop();
-            hl_mod_telink_deinit();
-            //hl_mod_pm_stop();
-            //hl_mod_pm_deinit();
+            if (rx_info.on_off_flag == 1) {
+                hl_app_mng_powerOff();
+                rx_info.on_off_flag = 0;
+            } else {
+                hl_app_mng_powerOn();
+                rx_info.on_off_flag = 1;
+            }
             break;
         case HL_KEY_EVENT_DOUBLE:
             break;

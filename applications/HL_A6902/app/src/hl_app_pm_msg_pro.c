@@ -46,28 +46,32 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_pm_charge_state_e charge_state_temp;
 
     switch (p_msg->cmd) {
-        case HL_SOC_UPDATE_IND: {
+        case HL_SOC_UPDATE_IND:
             soc_temp = *(uint8_t*)p_msg->param.ptr;
             LOG_I("current soc:%d", soc_temp);
-        } break;
-        case HL_MAX_TEMP_ALERT_IND: {
+            break;
+
+        case HL_MAX_TEMP_ALERT_IND:
             temperature_temp = *(int8_t*)p_msg->param.ptr;
             LOG_I("max temp alert:%d", temperature_temp);
-        } break;
-        case HL_MIN_TEMP_ALERT_IND: {
+            break;
+
+        case HL_MIN_TEMP_ALERT_IND:
             temperature_temp = *(int8_t*)p_msg->param.ptr;
             LOG_I("min temp alert:%d", temperature_temp);
-        } break;
-        case HL_CHARGE_STATE_IND: {
+            break;
+
+        case HL_CHARGE_STATE_IND: 
             charge_state_temp = *(hl_mod_pm_charge_state_e*)p_msg->param.ptr;
             if (charge_state_temp == HL_CHARGE_STATE_NO_CHARGE) {
-                LOG_I("no charge!");
+                tx_info.charge_flag = 0;
             } else if (charge_state_temp == HL_CHARGE_STATE_CHARGING) {
-                LOG_I("charging!");
+                tx_info.charge_flag = 1;
             } else if (charge_state_temp == HL_CHARGE_STATE_CHARGE_DONE) {
-                LOG_I("charge done!");
+                tx_info.charge_flag = 0;
             }
-        } break;
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
