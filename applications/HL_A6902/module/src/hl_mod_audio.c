@@ -1444,6 +1444,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_STREAM_SET_CMD:
             hl_mod_audio_stream_set(ptr);
             break;
+            
+        case HL_USB_MSTORAGE_DISABLE_CMD:
+            rt_usbd_msc_disable();
+            break;
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
