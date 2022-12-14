@@ -119,21 +119,25 @@ static void _hl_util_nvram_print_json_data_from_a_json(char* cjosn_data, uint16_
 
 uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
                                  uint8_t (*nvram_write)(char* data, uint16_t len),
-                                 uint8_t (*nvram_read)(char* data, uint16_t* len))
+                                 uint8_t (*nvram_read)(char* data, uint16_t* len), uint8_t (*nvram_mutex_take)(),
+                                 uint8_t (*nvram_mutex_release)())
 {
     int      ret = 0;
     uint16_t len;
-    if (NULL == std_printf || NULL == nvram_read || NULL == nvram_write || sg_nvram_handle) {
+    if (NULL == std_printf || NULL == nvram_read || NULL == nvram_write || sg_nvram_handle || NULL == nvram_mutex_take
+        || NULL == nvram_mutex_release) {
         sg_nvram_handle->std_printf("error: para is null\r\n");
         return 1;
     }
-    sg_nvram_handle               = malloc(sizeof(hl_util_nvram_t));
-    sg_nvram_handle->enable       = 1;
-    sg_nvram_handle->status       = HL_EM_UTIL_NVRAM_INITIALIZED;
-    sg_nvram_handle->std_printf   = std_printf;
-    sg_nvram_handle->nvram_read   = nvram_read;
-    sg_nvram_handle->nvram_write  = nvram_write;
-    sg_nvram_handle->have_changed = 0;
+    sg_nvram_handle                      = malloc(sizeof(hl_util_nvram_t));
+    sg_nvram_handle->enable              = 1;
+    sg_nvram_handle->status              = HL_EM_UTIL_NVRAM_INITIALIZED;
+    sg_nvram_handle->std_printf          = std_printf;
+    sg_nvram_handle->nvram_read          = nvram_read;
+    sg_nvram_handle->nvram_write         = nvram_write;
+    sg_nvram_handle->nvram_mutex_take    = nvram_mutex_take;
+    sg_nvram_handle->nvram_mutex_release = nvram_mutex_release;
+    sg_nvram_handle->have_changed        = 0;
 
     sg_json_str_buffer = malloc(HL_UTIL_NVRAM_JSON_BUFFER_SIZE);
     if (NULL == sg_json_str_buffer) {
@@ -170,26 +174,42 @@ uint8_t hl_util_nvram_param_deinit()
     return 0;
 }
 
-uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* default_value)
+uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* default_value, uint16_t value_len)
 {
-    if (!sg_nvram_handle || NULL == param_key || NULL == param_value || NULL == default_value) {
+    if (!sg_nvram_handle || NULL == param_key || NULL == param_value || NULL == default_value || value_len == 0) {
         sg_nvram_handle->std_printf("error: nvram not init\r\n");
         return 1;
     }
 
+    if (sg_nvram_handle->nvram_mutex_take) {
+        sg_nvram_handle->nvram_mutex_take();
+    }
+
     cJSON*     item;
     cJSON_bool check_ret = cJSON_False;
+    uint8_t     ret       = 0;
 
     check_ret = cJSON_HasObjectItem(sg_json_paramaters, param_key);
+
     if (check_ret) {
         item = cJSON_GetObjectItem(sg_json_paramaters, param_key);
+        if (value_len < strlen(item->valuestring) + 1) {
+            sg_nvram_handle->std_printf(
+                "error: nvram get value buffer len no enough bufferlen = %d, value_len = %d\r\n", value_len,
+                strlen(item->valuestring) + 1);
+            ret = 3;
+        }
         strcpy(param_value, item->valuestring);
     } else {
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
-        return 2;
+        ret = 2;
     }
 
-    return 0;
+    if (sg_nvram_handle->nvram_mutex_release) {
+        sg_nvram_handle->nvram_mutex_release();
+    }
+
+    return ret;
 }
 
 uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int default_value)
@@ -199,10 +219,15 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
         return 1;
     }
 
+    if (sg_nvram_handle->nvram_mutex_take) {
+        sg_nvram_handle->nvram_mutex_take();
+    }
+
     //抽象一下，代码冗余了
 
     cJSON*     item;
     cJSON_bool check_ret = cJSON_False;
+    uint8_t    ret       = 0;
 
     check_ret = cJSON_HasObjectItem(sg_json_paramaters, param_key);
     if (check_ret) {
@@ -210,10 +235,14 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
         strcpy(param_value, item->valueint);
     } else {
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
-        return 2;
+        ret = 2;
     }
 
-    return 0;
+    if (sg_nvram_handle->nvram_mutex_release) {
+        sg_nvram_handle->nvram_mutex_release();
+    }
+
+    return ret;
 }
 
 uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
@@ -223,22 +252,36 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
         return 1;
     }
 
+    if (strlen(param_value) > HL_UTIL_NVRAM_ITEM_LEN_LIMIT || strlen(param_key) > HL_UTIL_NVRAM_ITEM_LEN_LIMIT) {
+        sg_nvram_handle->std_printf("error: item len out of range key_len = %d, ovalue_len = %d\r\n", strlen(param_key),
+                                    strlen(param_value));
+        return 4;
+    }
+
+    if (sg_nvram_handle->nvram_mutex_take) {
+        sg_nvram_handle->nvram_mutex_take();
+    }
+
     cJSON_bool check_ret = cJSON_False;
+    uint8_t    ret       = 0;
 
     check_ret = cJSON_HasObjectItem(sg_json_paramaters, param_key);
     if (check_ret) {
         check_ret = cJSON_ReplaceItemInObject(sg_json_paramaters, param_key, cJSON_CreateString(param_value));
         if (!check_ret) {
             sg_nvram_handle->std_printf("replace wrong!!\r\n");
-            return 3;
+            ret = 3;
         }
         sg_nvram_handle->have_changed = 1;
     } else {
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
-        return 2;
+        ret = 2;
     }
 
-    return 0;
+    if (sg_nvram_handle->nvram_mutex_release) {
+        sg_nvram_handle->nvram_mutex_release();
+    }
+    return ret;
 }
 
 uint8_t hl_util_nvram_param_save()

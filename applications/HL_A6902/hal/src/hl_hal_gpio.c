@@ -46,17 +46,18 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_C1,  PIN_MODE_INPUT},            // GPIO_REC_KEY
     {GPIO1_A4,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_VBUS_DET
     {GPIO1_B1,  PIN_MODE_INPUT},            // GPIO_GAUGE_INT
-    {GPIO1_C5,  PIN_MODE_INPUT_PULLDOWN},   // GPIO_MIC_DET
+    {GPIO1_C5,  PIN_MODE_INPUT},   // GPIO_MIC_DET
     // OUT
     {GPIO0_A3,  PIN_MODE_OUTPUT},           // GPIO_EMMC_RST
-    {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_EMMC_PWR_EN
-    {GPIO0_C6,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
+    // {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_EMMC_PWR_EN
+    // {GPIO0_C6,  PIN_MODE_OUTPUT},           // GPIO_PWR_EN
     {GPIO1_B0,  PIN_MODE_OUTPUT},           // GPIO_DC3V3_EN
     {GPIO1_A7,  PIN_MODE_OUTPUT},           // GPIO_2831P_EN
     {GPIO1_C4,  PIN_MODE_OUTPUT},           // GPIO_RF_PWR_EN
     {GPIO1_C6,  PIN_MODE_OUTPUT},           // GPIO_MIC_SW
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
-    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_PWR
+    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
+    {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_REC_LED_EN
 };
 #else
 // RX
@@ -83,7 +84,7 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_C3,  PIN_MODE_OUTPUT},           // GPIO_CODEC_EN
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
     {GPIO0_D5,  PIN_MODE_OUTPUT},           // GPIO_OLED_SWIRE
-    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_PWR
+    {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
 };
 #endif
 

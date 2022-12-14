@@ -178,12 +178,12 @@ typedef struct _hl_input_mod_t
 #if HL_IS_TX_DEVICE()
 
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_PAIR_KEY, GPIO_REC_KEY };
-static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000} };
+static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {1000}, {3000}, {3000} };
 
 static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_MIC_DET };
 #else
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_VOL_OK };
-static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {3000}, {3000}, {3000} };
+static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {1000}, {3000}, {3000} };
 
 static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_CAM_DET, GPIO_HP_DET };
 
@@ -196,6 +196,9 @@ static hl_input_key_s hl_input_keys[HL_INPUT_KEYS] = { 0 };
 static hl_switch_event_e hl_insert_event[HL_INPUT_INSERT] = { 0 };
 /* 按键的状态机信息 */
 static insert_state_s insert_state[HL_INPUT_INSERT] = { 0 };
+
+/// 电源键定时器（开机电源键长按时间1s, 定时3s后修改为3s）
+static struct rt_timer power_key_timer;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 /* 输入模块相关函数 */
@@ -441,12 +444,27 @@ static void hl_mod_input_send_single(void)
     }
 }
 
+/// 启动3秒后，恢复电源按键长按时间
+static void hl_power_key_timeout(void* parameter)
+{
+#if HL_IS_TX_DEVICE()
+    hl_input_keys[TX_PWR_KEY].param.long_press_time = 3000;
+    HL_PRINT("hl_input_keys[%d].param.long_press_time = %d \r\n", TX_PWR_KEY, hl_input_keys[TX_PWR_KEY].param.long_press_time);
+#else
+    hl_input_keys[RX_PWR_KEY].param.long_press_time = 3000;
+    HL_PRINT("hl_input_keys[%d].param.long_press_time = %d \r\n", RX_PWR_KEY, hl_input_keys[RX_PWR_KEY].param.long_press_time);
+#endif
+}
+
 static void hl_mod_input_task(void* param)
 {
     uint8_t i =0 ;
     hl_timeout_t send_period = { 0,0,0 };
     int8_t knob_value = 0;
 
+    /* 初始化定时器 */
+    rt_timer_init(&power_key_timer, "PKtimer", hl_power_key_timeout, RT_NULL, 3000, RT_TIMER_FLAG_ONE_SHOT);
+    rt_timer_start(&power_key_timer);
     hl_util_timeout_set(&send_period, TASK_SCAN_PERIOD);
     while (1) {
         // 读取按键
@@ -649,7 +667,7 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
             }
             break;
         case MIC_DET:
-            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_HIGH) {
+            if (hl_hal_gpio_read(hl_insert_map[MIC_DET]) == PIN_LOW) {
                 return LINE_INSERT;
             }
             break;
@@ -740,7 +758,6 @@ uint8_t hl_mod_input_init(void* msg_hander)
 {
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
-
     if (hl_input_msg.msg_hander == NULL) {
         HL_PRINT("msghander err!");
         return HL_FAILED;

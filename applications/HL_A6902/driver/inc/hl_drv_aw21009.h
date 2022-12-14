@@ -46,7 +46,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-27
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details pattern 模式下固定8位精度
+     * @details pattern 模式下固定8位精度，设置无效
      * @note 
      * @par 修改日志:
      * <table>
@@ -76,7 +76,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details 失能时，每个在组内的led通道的颜色独立控制，使能时，每个在组内的led通道的颜色共享同一个r/g/b参数
+     * @details 失能时，每个led通道的颜色独立控制，使能时，每个在组内的led通道的颜色共享同一个r/g/b参数
      * @note 
      * @par 修改日志:
      * <table>
@@ -91,7 +91,7 @@ typedef enum _hl_drv_aw21009_op
      * @date 2022-09-24
      * @author lilin (lin.li@hollyland-tech.com)
      * 
-     * @details led通道分组：[1-3]、[4-6]、[7-9]，取消组模式后，led通道亮度变为单独控制，否则组内led亮度统一控制
+     * @details led通道分组：[1-3]、[4-6]、[7-9]，取消组模式后，led通道亮度和颜色变为单独控制， 否则组内led亮度统一控制，颜色由组控制模式决定
      * @note 
      * @par 修改日志:
      * <table>
@@ -389,7 +389,7 @@ int hl_drv_aw21009_deinit(void);
 /**
  * 
  * @brief led 控制函数
- * @param [in] led_num led设备编号，对应rx上两个aw21009芯片，tx上则没有区别，两个编号都操作同一个芯片, see<hl_drv_aw21009_led_dev_num_e>。 
+ * @param [in] led_num led设备编号，对应两个aw21009芯片, see<hl_drv_aw21009_led_dev_num_e>。 
  * @param [in] op 
  * @param [in] arg 
  * @param [in] arg_size 
@@ -405,7 +405,7 @@ int hl_drv_aw21009_deinit(void);
  * <tr><td>2022-09-24      <td>lilin     <td>新建
  * </table>
  */
-int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size);
+int hl_drv_aw21009_ctrl(hl_drv_aw21009_led_dev_num_e led_num, hl_drv_aw21009_op_e op, void* arg, int32_t arg_size);
 
 #endif
 /*

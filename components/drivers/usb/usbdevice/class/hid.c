@@ -27,7 +27,7 @@
 
 struct hid_s
 {
-    struct rt_device parent;
+    // struct rt_device parent;
     struct ufunction *func;
     uep_t ep_in;
     uep_t ep_out;
@@ -45,18 +45,32 @@ struct usb_hid_node
     rt_list_t  list;
 };
 
+/// hid设备结构体
+struct _hl_hid_dev
+{
+    /// hid已经创建
+    uint8_t    active;
+    /// hid写互斥量的指针
+    rt_mutex_t write_mutex;
+    /// hid 发送空闲链表
+    rt_list_t free_list;
+    /// hid 就绪待发送链表
+    rt_list_t ready_list;
+    /// hid数据接收ringbuff
+    struct rt_ringbuffer* receive_rb;
+    /// hid结构体指针
+    struct hid_s *hid_s;
+    /// hidd 设备本体               
+    struct rt_device  parent;     
+};
+
 /// hid rx buff size
 #define HID_REC_BUFF_SIZE   512
 /// hid tx list node size
 #define HID_TX_NODE_SIZE    10
-/// @brief usb主机到设备uac音频流buff 
-static struct rt_ringbuffer* g_hid_receive_rb = RT_NULL;
-/// hid写互斥量的指针
-static rt_mutex_t tx_list_mutex = RT_NULL;
-/// hid 发送空闲链表
-rt_list_t hid_tx_free_list;
-/// hid 就绪待发送链表
-rt_list_t hid_tx_ready_list;
+
+/// hid设备结构体
+volatile static struct _hl_hid_dev hid_dev = {0};
 
 ALIGN(4) static struct uhid_descriptor hid_desc_buf;
 
@@ -437,7 +451,7 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
         // rt_memcpy((void *)&report,(void*)data->ep_out->buffer,size);
         // report.size = size-1;
         // rt_mq_send(&data->hid_mq,(void *)&report,sizeof(report));
-        rt_ringbuffer_put_force(g_hid_receive_rb, (void*)data->ep_out->buffer, size);
+        rt_ringbuffer_put_force(hid_dev.receive_rb, (void*)data->ep_out->buffer, size);
     }
 
     data->ep_out->request.buffer = data->ep_out->buffer;
@@ -449,15 +463,20 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
 
 static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
 {
-    struct hid_s *data;
-    RT_ASSERT(func != RT_NULL);
-    RT_ASSERT(func->device != RT_NULL);
+    // struct hid_s *data;
+    // RT_ASSERT(func != RT_NULL);
+    // RT_ASSERT(func->device != RT_NULL);
 
-    data = (struct hid_s *) func->user_data;
-    if(data->parent.tx_complete != RT_NULL)
+    // data = (struct hid_s *) func->user_data;
+    // if(data->parent.tx_complete != RT_NULL)
+    // {
+    //     data->parent.tx_complete(&data->parent,RT_NULL);
+    // }
+    if(hid_dev.parent.tx_complete != RT_NULL)
     {
-        data->parent.tx_complete(&data->parent,RT_NULL);
+        hid_dev.parent.tx_complete(&hid_dev.parent,RT_NULL);
     }
+
     return RT_EOK;
 }
 
@@ -489,6 +508,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
     RT_ASSERT(setup != RT_NULL);
 
     struct hid_s *data = (struct hid_s *) func->user_data;
+    struct usb_hid_node *p_node;
 
     switch (setup->bRequest)
     {
@@ -502,6 +522,13 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
             rt_memcpy((void *)&hid_desc_buf, (void*)(&_hid_comm_desc.hid_desc), sizeof(struct uhid_descriptor));
             rt_usbd_ep0_write(func->device, (void *)&hid_desc_buf, sizeof(struct uhid_descriptor));
         }
+        // 清空写链表
+        while (!rt_list_isempty(&hid_dev.ready_list))
+        {
+            p_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
+            rt_list_remove(&p_node->list);
+            rt_list_insert_before(&hid_dev.free_list, &p_node->list);
+        }
         break;
     case USB_HID_REQ_GET_REPORT:
         if(setup->wLength == 0)
@@ -512,6 +539,7 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         if((setup->wLength == 0) || (setup->wLength > MAX_REPORT_SIZE))
             setup->wLength = MAX_REPORT_SIZE;
         rt_usbd_ep0_write(func->device, data->report_buf,setup->wLength);
+
         break;
     case USB_HID_REQ_GET_IDLE:
         rt_usbd_ep0_write(func->device, &data->idle, 1);
@@ -598,7 +626,7 @@ static rt_err_t _function_disable(ufunction_t func)
     }
 
     // 失能hid后，清空buff
-    rt_ringbuffer_reset(g_hid_receive_rb);
+    // rt_ringbuffer_reset(hid_dev.receive_rb);
 
     return RT_EOK;
 }
@@ -634,38 +662,38 @@ static rt_size_t _hid_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_
 {
     rt_size_t data_size;
 
-    data_size = rt_ringbuffer_get(g_hid_receive_rb, buffer, size);
+    data_size = rt_ringbuffer_get(hid_dev.receive_rb, buffer, size);
 
     return data_size;
 }
 
 static rt_size_t _hid_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)
 {
-    struct hid_s *hiddev = (struct hid_s *)dev;
-    // ALIGN(4) struct hid_report report;
     rt_size_t           ret = 0;
     struct usb_hid_node *p_node;
     const  uint8_t      *p_buff;
     uint8_t             list_isempty_flag = 0;
+    struct hid_s        *p_hid_s = hid_dev.hid_s;
 
-    if (hiddev->func->device->state == USB_STATE_CONFIGURED)
+    if (hid_dev.active != 0)
+    if (p_hid_s->func->device->state == USB_STATE_CONFIGURED)
     {
-        rt_mutex_take(tx_list_mutex, RT_WAITING_FOREVER);
-        if (rt_list_isempty(&hid_tx_free_list)) {
+        rt_mutex_take(hid_dev.write_mutex, RT_WAITING_FOREVER);
+        if (rt_list_isempty(&hid_dev.free_list)) {
             return 0;
         }
 
-        if (rt_list_isempty(&hid_tx_ready_list))
+        if (rt_list_isempty(&hid_dev.ready_list))
         {
             list_isempty_flag = 1;
         }
 
         p_buff = buffer;
         for (; size > 0; ) {
-            if (rt_list_isempty(&hid_tx_free_list)) {
+            if (rt_list_isempty(&hid_dev.free_list)) {
                 break;
             }
-            p_node = rt_list_first_entry(&hid_tx_free_list, struct usb_hid_node, list);
+            p_node = rt_list_first_entry(&hid_dev.free_list, struct usb_hid_node, list);
 
             if (size < 64) {
                 ret  += size;
@@ -680,17 +708,17 @@ static rt_size_t _hid_write(rt_device_t dev, rt_off_t pos, const void *buffer, r
             p_buff += p_node->size;
 
             rt_list_remove(&p_node->list);
-            rt_list_insert_before(&hid_tx_ready_list, &p_node->list);
+            rt_list_insert_before(&hid_dev.ready_list, &p_node->list);
         }
 
         if (list_isempty_flag == 1) {
-            p_node = rt_list_first_entry(&hid_tx_ready_list, struct usb_hid_node, list);
-            hiddev->ep_in->request.buffer = (void *)p_node->buffer;
-            hiddev->ep_in->request.size = (p_node->size) > 64 ? 64 : p_node->size;
-            hiddev->ep_in->request.req_type = UIO_REQUEST_WRITE;
-            rt_usbd_io_request(hiddev->func->device, hiddev->ep_in, &hiddev->ep_in->request);
+            p_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
+            p_hid_s->ep_in->request.buffer = (void *)p_node->buffer;
+            p_hid_s->ep_in->request.size = (p_node->size) > 64 ? 64 : p_node->size;
+            p_hid_s->ep_in->request.req_type = UIO_REQUEST_WRITE;
+            rt_usbd_io_request(p_hid_s->func->device, p_hid_s->ep_in, &p_hid_s->ep_in->request);
         }
-        rt_mutex_release(tx_list_mutex);
+        rt_mutex_release(hid_dev.write_mutex);
         
         return ret;
     }
@@ -698,24 +726,35 @@ static rt_size_t _hid_write(rt_device_t dev, rt_off_t pos, const void *buffer, r
     return 0;
 }
 
+static rt_err_t _hid_ctrl(rt_device_t dev, int cmd, void *args)
+{
+    switch (cmd) {
+        default:
+            return -RT_ERROR;
+            break;
+    }
+    return RT_EOK;
+}
+
+
 rt_err_t _hid_tx_complete(rt_device_t dev, void *buffer)
 {
     struct hid_s *hiddev = (struct hid_s *)dev;
     struct usb_hid_node *p_node;
 
-    rt_mutex_take(tx_list_mutex, RT_WAITING_FOREVER);
-    p_node = rt_list_first_entry(&hid_tx_ready_list, struct usb_hid_node, list);
+    rt_mutex_take(hid_dev.write_mutex, RT_WAITING_FOREVER);
+    p_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
     rt_list_remove(&p_node->list);
-    rt_list_insert_before(&hid_tx_free_list, &p_node->list);
+    rt_list_insert_before(&hid_dev.free_list, &p_node->list);
     
-    if (!rt_list_isempty(&hid_tx_ready_list)) {
-        p_node = rt_list_first_entry(&hid_tx_ready_list, struct usb_hid_node, list);
+    if (!rt_list_isempty(&hid_dev.ready_list)) {
+        p_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
         hiddev->ep_in->request.buffer = (void *)p_node->buffer;
         hiddev->ep_in->request.size = (p_node->size) > 64 ? 64 : p_node->size;
         hiddev->ep_in->request.req_type = UIO_REQUEST_WRITE;
         rt_usbd_io_request(hiddev->func->device, hiddev->ep_in, &hiddev->ep_in->request);
     }
-    rt_mutex_release(tx_list_mutex);
+    rt_mutex_release(hid_dev.write_mutex);
 
     return RT_EOK;
 }
@@ -749,33 +788,101 @@ const static struct rt_device_ops hid_device_ops =
     RT_NULL,
     _hid_read,
     _hid_write,
-    RT_NULL,
+    _hid_ctrl,
 };
 #endif
 
 // static rt_uint8_t hid_mq_pool[(sizeof(struct hid_report)+sizeof(void*))*8];
-static void rt_usb_hid_init(struct ufunction *func)
+// static void rt_usb_hid_init(struct ufunction *func)
+// {
+//     struct hid_s *hiddev;
+//     hiddev = (struct hid_s *)func->user_data;
+//     rt_memset(&hiddev->parent, 0, sizeof(hiddev->parent));
+
+// #ifdef RT_USING_DEVICE_OPS
+//     hiddev->parent.ops   = &hid_device_ops;
+// #else
+//     hiddev->parent.write = _hid_write;
+// #endif
+//     hiddev->func = func;
+//     hiddev->idle = 1;
+
+//     rt_device_register(&hiddev->parent, "hidd", RT_DEVICE_FLAG_RDWR);
+    
+//     // rt_mq_init(&hiddev->hid_mq, "hiddmq", hid_mq_pool, sizeof(struct hid_report),
+//     //                         sizeof(hid_mq_pool), RT_IPC_FLAG_FIFO);
+                            
+//     // rt_thread_init(&hid_thread, "hidd", hid_thread_entry, hiddev,
+//     //         hid_thread_stack, sizeof(hid_thread_stack), RT_USBD_THREAD_PRIO, 20);
+//     // rt_thread_startup(&hid_thread);
+// }
+static rt_err_t rt_usb_hid_init(void)
 {
-    struct hid_s *hiddev;
-    hiddev = (struct hid_s *)func->user_data;
-    rt_memset(&hiddev->parent, 0, sizeof(hiddev->parent));
+    uint8_t node_size;
+    struct usb_hid_node *list_node;
+
+    /* create rx ringbuffer */
+    hid_dev.receive_rb = rt_ringbuffer_create(HID_REC_BUFF_SIZE);
+    if (hid_dev.receive_rb == RT_NULL) {
+        rt_kprintf("err:create hid_dev.receive_rb failed \r\n");
+        goto err0;
+    }
+
+    /* 创建tx list互斥量 */
+    hid_dev.write_mutex = rt_mutex_create("hidm", RT_IPC_FLAG_PRIO);
+    if (hid_dev.write_mutex == RT_NULL)
+    {
+        rt_kprintf("create hid tx list mutex failed.\n");
+        goto err1;
+    }
+
+    /* create tx list node */
+    rt_list_init(&hid_dev.free_list);
+    rt_list_init(&hid_dev.ready_list);
+    node_size = sizeof(struct usb_hid_node);
+    for (uint8_t i = 0; i < HID_TX_NODE_SIZE; i++)
+    {
+        list_node = rt_malloc(node_size);
+        if (!list_node)
+        {
+            rt_kprintf("%s: alloc hid tx node fail!\n", __func__);
+            goto err2;
+        }
+        rt_list_insert_before(&hid_dev.free_list, &list_node->list);
+    }
 
 #ifdef RT_USING_DEVICE_OPS
-    hiddev->parent.ops   = &hid_device_ops;
+    hid_dev.parent.ops   = &hid_device_ops;
 #else
-    hiddev->parent.write = _hid_write;
+    hid_dev.parent.write   = _hid_write;
+    hid_dev.parent.read    = _hid_read;
+    hid_dev.parent.control = _hid_ctrl;
 #endif
-    hiddev->func = func;
-    hiddev->idle = 1;
 
-    rt_device_register(&hiddev->parent, "hidd", RT_DEVICE_FLAG_RDWR);
-    
-    // rt_mq_init(&hiddev->hid_mq, "hiddmq", hid_mq_pool, sizeof(struct hid_report),
-    //                         sizeof(hid_mq_pool), RT_IPC_FLAG_FIFO);
-                            
-    // rt_thread_init(&hid_thread, "hidd", hid_thread_entry, hiddev,
-    //         hid_thread_stack, sizeof(hid_thread_stack), RT_USBD_THREAD_PRIO, 20);
-    // rt_thread_startup(&hid_thread);
+    if (RT_EOK != rt_device_register(&hid_dev.parent, "hidd", RT_DEVICE_FLAG_RDWR)) {
+        rt_kprintf("hidd rt_device_register fail!\n");
+        goto err2;
+    }
+
+    if (RT_EOK != rt_device_set_tx_complete(&hid_dev.parent, _hid_tx_complete)) {
+        goto err3;
+    }
+
+    return RT_EOK;
+
+err3:
+    rt_device_unregister(&hid_dev.parent);
+err2:
+    // 释放链表内存
+    while (!rt_list_isempty(&hid_dev.free_list)) {
+        list_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
+        rt_list_remove(&list_node->list);
+        rt_free(list_node);
+    }
+err1:
+    rt_ringbuffer_destroy(hid_dev.receive_rb);
+err0:
+    return RT_ERROR;
 }
 
 
@@ -795,41 +902,8 @@ ufunction_t rt_usbd_function_hid_create(udevice_t device)
     ualtsetting_t   hid_setting;
     uhid_comm_desc_t hid_desc;
 
-    uint8_t node_size;
-    struct usb_hid_node *list_node;
-
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
-
-    /* create rx ringbuffer */
-    g_hid_receive_rb = rt_ringbuffer_create(HID_REC_BUFF_SIZE);
-    if (g_hid_receive_rb == RT_NULL) {
-        rt_kprintf("err:create g_hid_receive_rb failed \r\n");
-        return RT_NULL;
-    }
-
-    /* 创建tx list互斥量 */
-    tx_list_mutex = rt_mutex_create("hidm", RT_IPC_FLAG_PRIO);
-    if (tx_list_mutex == RT_NULL)
-    {
-        rt_kprintf("create hid tx list mutex failed.\n");
-        return RT_NULL;
-    }
-
-    /* create tx list node */
-    rt_list_init(&hid_tx_free_list);
-    rt_list_init(&hid_tx_ready_list);
-    node_size = sizeof(struct usb_hid_node);
-    for (uint8_t i = 0; i < HID_TX_NODE_SIZE; i++)
-    {
-        list_node = rt_malloc(node_size);
-        if (!list_node)
-        {
-            rt_kprintf("%s: alloc hid tx node fail!\n", __func__);
-            return RT_NULL;
-        }
-        rt_list_insert_before(&hid_tx_free_list, &list_node->list);
-    }
 
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
@@ -873,9 +947,12 @@ ufunction_t rt_usbd_function_hid_create(udevice_t device)
     rt_usbd_function_add_interface(func, hid_intf);
 
     /* initilize hid */
-    rt_usb_hid_init(func);
+    // rt_usb_hid_init(func);
+    data->func = func;
+    data->idle = 1;
+    hid_dev.active = 1;
+    hid_dev.hid_s  = data;
 
-    rt_device_set_tx_complete(&data->parent, _hid_tx_complete);
     return func;
 }
 struct udclass hid_class = 
@@ -885,6 +962,11 @@ struct udclass hid_class =
 
 int rt_usbd_hid_class_register(void)
 {
+    if (RT_EOK != rt_usb_hid_init()) {
+        return -1;
+    }
+    hid_dev.active = 0;
+
     rt_usbd_class_register(&hid_class);
     return 0;
 }

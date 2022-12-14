@@ -31,12 +31,11 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()  //tx
-int hl_drv_aw2016a_test_init(int argc, char* argv[])
+int hl_drv_aw2016a_test_breath(int argc, char* argv[])
 {
     int                            ret;
     bool                           flag;
     uint8_t                        chip_id;
-    uint8_t                        work_mode;
     uint8_t                        led_chan;
     hl_drv_aw2016a_breath_param_st pattern_param;
     hl_drv_aw2016a_light_st        light;
@@ -52,15 +51,6 @@ int hl_drv_aw2016a_test_init(int argc, char* argv[])
 
     rt_kprintf("chip_id:%02x\n", chip_id);
 
-    work_mode = HL_DRV_AW2016A_ACTIVE_MODE;
-
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_WORK_MODE, &work_mode, sizeof(work_mode));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("set work mode\n");
-
     flag = true;
 
     ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_SYNC_CONTROL_MODE, &flag, sizeof(flag));
@@ -69,25 +59,6 @@ int hl_drv_aw2016a_test_init(int argc, char* argv[])
     }
 
     rt_kprintf("set sync control mode \n");
-
-    work_mode = HL_DRV_AW2016A_IMAX_5MA;
-
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT, &work_mode,
-                              sizeof(work_mode));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("set g current max\n");
-
-    led_chan = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
-
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_OPEN_LED_CHANNEL, &led_chan, sizeof(led_chan));
-    if (ret == AW2016A_FUNC_RET_ERR) {
-        return AW2016A_FUNC_RET_ERR;
-    }
-
-    rt_kprintf("open led \n");
 
     led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
 
@@ -129,7 +100,37 @@ int hl_drv_aw2016a_test_init(int argc, char* argv[])
     return 0;
 }
 
-MSH_CMD_EXPORT(hl_drv_aw2016a_test_init, init aw2016a test : r g b l);
+int hl_drv_aw2016a_test_led_ctrl(int argc, char* argv[])
+{
+    int                        ret;
+    bool                       flag;
+    uint8_t                    chip_id;
+    hl_drv_aw2016a_led_ctrl_st led_ctrl;
+
+    rt_kprintf("\naw2016a test\n");
+
+    hl_drv_aw2016a_init();
+
+    ret = hl_drv_aw2016a_ctrl(atoi(argv[1]), HL_DRV_AW2016A_GET_CHIP_ID, &chip_id, sizeof(chip_id));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    rt_kprintf("chip_id:%02x\n", chip_id);
+
+    led_ctrl.breath_mode = atoi(argv[2]);
+    led_ctrl.color = atoi(argv[3]);
+
+    ret = hl_drv_aw2016a_ctrl(atoi(argv[1]), HL_DRV_AW2016A_LED_CTRL, &led_ctrl, sizeof(led_ctrl));
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(hl_drv_aw2016a_test_breath, init aw2016a test : r g b l);
+MSH_CMD_EXPORT(hl_drv_aw2016a_test_led_ctrl, test led ctrl cmd : led breath_mode color);
 #endif
 /*
  * EOF
