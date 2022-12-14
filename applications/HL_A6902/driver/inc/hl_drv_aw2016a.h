@@ -30,6 +30,7 @@
 
 typedef enum _hl_drv_aw2016a_op
 {
+    /*     基础功能     */
     ///get aw2016a chip id, type of parameter is <uint8_t> pointer
     HL_DRV_AW2016A_GET_CHIP_ID,
     ///set aw2016a work mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_work_mode_e>
@@ -99,6 +100,10 @@ typedef enum _hl_drv_aw2016a_op
     HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL,
     ///dump aw2016a register value, type of parameter is <uint8_t> pointer
     HL_DRV_AW2016A_DUMP_REGISTER_VALUE,
+
+    /*     用户功能     */
+    /// 设置灯光效果，该命令可以设置一些预先定义好的灯光效果，需要参数<hl_drv_aw2016a_led_ctrl_st *>。
+    HL_DRV_AW2016A_LED_CTRL,
 } hl_drv_aw2016a_op_t;
 
 /**
@@ -165,11 +170,11 @@ typedef enum _hl_drv_aw2016a_max_output_current
  */
 typedef enum _hl_drv_aw2016a_led_channel
 {
-    ///r通道，对应6902上的红灯
+    ///r通道，对应6902上的红灯,新板上为蓝灯
     HL_DRV_AW2016A_LED_CHANNEL1 = 0x01,
     ///g通道，对应6902上的绿灯
     HL_DRV_AW2016A_LED_CHANNEL2 = 0x02,
-    ///b通道，对应6902上的蓝灯
+    ///b通道，对应6902上的蓝灯，新板上为红灯
     HL_DRV_AW2016A_LED_CHANNEL3 = 0x04,
 } hl_drv_aw2016a_led_channel_e;
 
@@ -207,6 +212,102 @@ typedef enum _hl_drv_aw2016a_pattern_time
     HL_DRV_AW2016A_PATTERN_7S30,
     HL_DRV_AW2016A_PATTERN_8S30,
 } hl_drv_aw2016a_pattern_time_e;
+
+/**
+ * 
+ * @brief 呼吸模式枚举，该枚举定义了一些预先设定好的呼吸效果
+ * @date 2022-12-07
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-12-07      <td>lilin     <td>新建
+ * </table>
+ */
+typedef enum _hl_drv_aw2016a_breath_mode_e
+{
+    /// 跳过呼吸模式设置，保持为原来的模式
+    HL_DRV_AW2016A_BREATH_MODE_SKIP = 0,
+    /// 设置为慢闪
+    HL_DRV_AW2016A_BREATH_MODE_SLOW = 1,
+    /// 设置为快闪
+    HL_DRV_AW2016A_BREATH_MODE_FAST = 2,
+    /// 设置为常亮
+    HL_DRV_AW2016A_BREATH_MODE_KEEP = 3,
+    /// 设置为红绿蓝交替慢闪
+    HL_DRV_AW2016A_BREATH_MODE_RGB_SLOW = 4,
+    /// 设置为红绿蓝交替快闪
+    HL_DRV_AW2016A_BREATH_MODE_RGB_FAST = 5,
+    /// 设置为红绿交替慢闪
+    HL_DRV_AW2016A_BREATH_MODE_RG_SLOW = 6,
+    /// 设置为红绿交替快闪
+    HL_DRV_AW2016A_BREATH_MODE_RG_FAST = 7,
+    /// 设置为红蓝交替慢闪
+    HL_DRV_AW2016A_BREATH_MODE_RB_SLOW = 8,
+    /// 设置为红蓝交替快闪
+    HL_DRV_AW2016A_BREATH_MODE_RB_FAST = 9,
+    /// 设置为绿蓝交替慢闪
+    HL_DRV_AW2016A_BREATH_MODE_GB_SLOW = 10,
+    /// 设置为绿蓝交替快闪
+    HL_DRV_AW2016A_BREATH_MODE_GB_FAST = 11,
+} hl_drv_aw2016a_breath_mode_e;
+
+/**
+ * 
+ * @brief 颜色枚举，该枚举定义了一些预先设定好的灯光效果。
+ * @date 2022-12-07
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-12-07      <td>lilin     <td>新建
+ * </table>
+ */
+typedef enum _hl_drv_aw2016a_color_e
+{
+    /// 跳过颜色设置，保留原来的颜色
+    HL_DRV_AW2016A_COLOR_SKIP = 0,
+    /// 红色
+    HL_DRV_AW2016A_COLOR_RED = 1,
+    /// 绿色
+    HL_DRV_AW2016A_COLOR_GREEN = 2,
+    /// 蓝色
+    HL_DRV_AW2016A_COLOR_BLUE = 3,
+    /// 白色
+    HL_DRV_AW2016A_COLOR_WHITE = 4,
+    /// 橙色
+    HL_DRV_AW2016A_COLOR_ORANGE = 5,
+    /// 关闭led灯
+    HL_DRV_AW2016A_COLOR_BLACK = 6,
+} hl_drv_aw2016a_color_e;
+
+/**
+ * 
+ * @brief led控制结构体，该结构体设置一些预先定义好led效果
+ * @date 2022-12-07
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-12-07      <td>lilin     <td>新建
+ * </table>
+ */
+typedef struct _hl_drv_aw2016a_led_ctrl_st
+{
+    /// 呼吸模式
+    hl_drv_aw2016a_breath_mode_e breath_mode;
+    /// 灯光颜色
+    hl_drv_aw2016a_color_e color;
+} hl_drv_aw2016a_led_ctrl_st;
 
 /**
  * 
@@ -336,7 +437,7 @@ int hl_drv_aw2016a_init(void);
 
 int hl_drv_aw2016a_deinit(void);
 
-int hl_drv_aw2016a_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size);
+int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op, void* arg, int32_t arg_size);
 
 #endif
 /*

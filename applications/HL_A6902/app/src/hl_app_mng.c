@@ -30,6 +30,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 #include "hl_mod_upgrade.h"
 #include "hl_app_audio_msg_pro.h"
@@ -76,6 +77,9 @@ void hl_app_msg_thread(void* parameter)
             switch (msg.sender) {
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
+#if !HL_IS_TX_DEVICE()                    
+                    hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg,0);
+#endif                
                     break;
                 case DISPLAY_MODE:
                     hl_app_disp_msg_pro(&msg);
@@ -123,6 +127,7 @@ void hl_app_mng_init(void)
     hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
+    hl_mod_apple_auth_init(&hl_app_mq);
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 

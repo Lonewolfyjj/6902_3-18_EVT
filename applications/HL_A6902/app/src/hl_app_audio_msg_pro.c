@@ -28,6 +28,7 @@
 #include "hl_app_mng.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_mod_audio.h"
+#include "hl_mod_display.h"
 
 #define DBG_SECTION_NAME "app_audio"
 #define DBG_LEVEL DBG_LOG
@@ -39,6 +40,24 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
+
+/// 大容量状态处理
+static void hl_app_tx_mstorage_plug_pro(uint32_t value)
+{
+    hl_switch_e        record_switch;
+    hl_led_switch record_led_ctrl;
+    
+    if (value == 0) {
+        tx_info.mstorage_plug = 0;
+    } else {
+        record_switch    = HL_SWITCH_OFF;
+        tx_info.mstorage_plug = 1;
+        record_led_ctrl  = SWITCH_CLOSE;
+        hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
+        hl_mod_display_io_ctrl(LED_RECORD_STATE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
+    }
+}
+
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
@@ -47,12 +66,29 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_audio_stream_updata();
             LOG_I("app recv uac link indicate");
             break;
+        case MSG_USB_MSTORAGE_DET:
+            hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
+			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
 }
 #else
+/// 大容量状态处理
+static void hl_app_rx_mstorage_plug_pro(uint32_t value)
+{
+    hl_switch_e        record_switch;
+    
+    if (value == 0) {
+        rx_info.mstorage_plug = 0;
+    } else {
+        record_switch    = HL_SWITCH_OFF;
+        rx_info.mstorage_plug = 1;
+    }
+}
+
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
 
@@ -61,6 +97,10 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             rx_info.uac_link_flag = 1;
             hl_app_audio_stream_updata();
             LOG_I("app recv uac link indicate");
+            break;
+        case MSG_USB_MSTORAGE_DET:
+            hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
+			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

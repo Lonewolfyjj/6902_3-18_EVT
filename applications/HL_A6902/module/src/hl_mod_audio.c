@@ -41,6 +41,10 @@
 #include "./class/uac1.h"
 #endif
 #include "hl_util_msg_type.h"
+#include "hl_drv_pcf85063atl.h"
+
+#include "./class/mstorage.h"
+#include <dfs_fs.h>
 
 #define DBG_SECTION_NAME "mod_aud"
 #define DBG_LEVEL DBG_LOG
@@ -98,8 +102,8 @@ typedef struct _hl_uacd_param_t
 /// 录制参数结构体
 typedef struct _hl_record_param_t
 {
-    int*                    file_audio_after;
-    int*                    file_audio_bypass;
+    int                     file_audio_after;
+    int                     file_audio_bypass;
     struct rt_ringbuffer*   record_after_rb;
     struct rt_ringbuffer*   record_bypass_rb;
 } hl_record_param_t;
@@ -191,10 +195,105 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
 #endif
 static void do_record_audio(void* arg);
 static int  hl_mod_audio_record_switch(uint8_t record_switch);
+// 音频模块发送消息给APP层
+static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param);
 
 static uint8_t s_record_key_flag = 0;
 
+static void mstorage_switch_cb(uint8_t mstorage_state)
+{
+    if(mstorage_state != 0) {
 #if HL_IS_TX_DEVICE()
+        hl_mod_audio_record_switch(0);
+#endif
+        hl_mod_audio_send_msg(MSG_USB_MSTORAGE_DET, 1);
+    } else {
+        hl_mod_audio_send_msg(MSG_USB_MSTORAGE_DET, 0);
+    }
+}
+
+int hl_mod_audio_rtc_set(void)
+{    
+    // rtc_time time1;
+    // time_t now;
+    // rt_err_t ret = RT_EOK; 
+    
+    // hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    // rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month&0x1f, time1.day&0x3f, time1.hour&0x3f, time1.minute&0x7f, time1.second&0x7f);
+    
+    // ret = set_date((time1.year + 2000), (time1.month&0x1f), (time1.day&0x3f)); 
+    // if(ret != RT_EOK)
+    // {
+    //     rt_kprintf("[RTC Test]Set RTC Date failed\n"); 
+    //     return RT_ERROR;
+    // }
+    
+    // ret = set_time((time1.hour&0x3f), (time1.minute&0x7f), (time1.second&0x7f)); 
+    // if(ret != RT_EOK)
+    // {
+    //     rt_kprintf("[RTC Test]Set RTC Time failed\n"); 
+    //     return RT_ERROR;
+    // }
+    
+    // now = time(RT_NULL);
+    // rt_kprintf("[RTC Test]Read RTC Date and Time: %s \r\n", ctime(&now)); 
+
+    return RT_EOK;
+}
+
+#if HL_IS_TX_DEVICE()
+static void hl_mod_audio_dfs()
+{
+    rt_device_t disk;
+    int ret = 0;
+    
+    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
+        return -RT_ERROR;
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "sd0");
+        dfs_mount_device(disk);
+        LOG_I("sd0 elm mkfs dfs ");
+    }
+#endif
+    LOG_I("hl mod audio dfs");
+}
+// static void hl_mod_audio_rtc_set()
+// {
+//     rtc_time time;
+//     memset(&time, 0, sizeof(rtc_time));
+
+//     time.year   = atoi(argv[2]);
+//     time.month  = atoi(argv[3]);
+//     time.day    = atoi(argv[4]);
+//     time.hour   = atoi(argv[5]);
+//     time.minute = atoi(argv[6]);
+//     time.second = atoi(argv[7]);
+//     hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+// }
+
+// 获取时间 timer_name参数BUF大小需要大于24
+static void hl_mod_audio_rtc_get(char *timer_name)
+{
+    rtc_time time;
+    memset(&time, 0, sizeof(rtc_time));
+
+    hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    /*时间存储格式是按 BCD 码的格式来存储的。如果需要使用，需要转换成十六进制之后才能使用，时间年的范围：0~99，需要注意*/
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);
+    if (timer_name != NULL) {
+        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);  
+    } else {
+        rt_kprintf("timer name get error (timer_name == NULL)\r\n");
+    }      
+}
+
 static void hl_hal_gpio_audio_record_irq_process(void* args)
 {
     s_record_key_flag = 1;
@@ -216,12 +315,19 @@ static void hl_mod_audio_record(int p_file_audio, uint8_t* buffer, uint32_t size
 
 static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
 {
+    if(p_file_audio < 0){
+        LOG_E("Auaio record stop error(p_file_audio:(NULL))");
+        return;
+    }
     s_audio_header.data_sz = (*s_record_size) * s_audio_header.block_align;
     s_audio_header.riff_sz = s_audio_header.data_sz + sizeof(s_audio_header) - 8;
 
     lseek(p_file_audio, 0, SEEK_SET);
     write(p_file_audio, &s_audio_header, sizeof(struct wav_header));
     close(p_file_audio);
+
+    fsync(p_file_audio);
+    rt_thread_mdelay(20);
 
     LOG_I("Auaio record stop (data_sz:(0x%08x),riff_sz:(0x%08x))", s_audio_header.data_sz, s_audio_header.riff_sz);
 }
@@ -265,8 +371,8 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
     s_audio_header.sample_rate  = cap_info.param.sampleRate;
 
     s_audio_header.bits_per_sample = 24;
-    s_audio_header.byte_rate       = (s_audio_header.bits_per_sample / 8) * 1 * cap_info.param.sampleRate;
-    s_audio_header.block_align     = cap_info.param.channels * (s_audio_header.bits_per_sample / 8);
+    s_audio_header.byte_rate       = (s_audio_header.bits_per_sample / 8) * s_audio_header.num_channels * s_audio_header.sample_rate;
+    s_audio_header.block_align     = s_audio_header.num_channels * (s_audio_header.bits_per_sample / 8);
     s_audio_header.data_id         = ID_DATA;
 
     lseek(p_file_audio, 0, SEEK_SET);
@@ -285,12 +391,28 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
         return -1;
     }
 
+    static char timer_name[50] = {0};
+    static char timer_name_after[50] = {0};
+    static char timer_name_bypass[50] = {0};
+    static char timer_name_file[50] = {0};
+
     if (record_switch) {
         rt_ringbuffer_reset(record_info.record_after_rb);
         rt_ringbuffer_reset(record_info.record_bypass_rb);
 
-        record_info.file_audio_after  = open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
-        record_info.file_audio_bypass = open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        hl_mod_audio_rtc_get(timer_name);
+        memcpy(&timer_name_file[0], "/mnt/sdcard/", 12); 
+        memcpy(&timer_name_file[12], timer_name, 10); 
+
+        if (access(timer_name_file, 0) < 0)
+        {
+            LOG_I("create record mkdir %s.", timer_name_file);
+            mkdir(timer_name_file, 0); //此处添加异常处理<
+        }
+        rt_sprintf(timer_name_after, "%s/%s-after.wav", timer_name_file, &timer_name[11]); 
+        rt_sprintf(timer_name_bypass, "%s/%s-bypass.wav", timer_name_file, &timer_name[11]); 
+        record_info.file_audio_after  = open(timer_name_after, O_WRONLY | O_CREAT | O_TRUNC);   //open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        record_info.file_audio_bypass = open(timer_name_bypass, O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
 
         hl_mod_audio_record_start(record_info.file_audio_after, &s_record_after_size);
         hl_mod_audio_record_start(record_info.file_audio_bypass, &s_record_bypass_size);
@@ -869,6 +991,20 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     // }
 }
 
+#if HL_IS_TX_DEVICE()
+// 设置输入声卡静音状态
+static void hl_mod_audio_set_mute(uint8_t mute)
+{
+    int8_t ret = 0;
+
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
+    if (ret != RT_EOK) {
+        LOG_E("fail to set mute\n");
+        return -RT_ERROR;
+    }
+}
+#endif
+
 // 音频流模式设置
 static void hl_mod_audio_stream_set(void *ptr) 
 {
@@ -1089,11 +1225,13 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     uint8_t temp = 0;
 
     s_audio_to_app_mq = p_msg_handle;
-
+    // elm_init();
 #if HL_IS_TX_DEVICE()
+    hl_mod_audio_dfs();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);
+    hl_drv_rtc_pcf85063_init();
 #else
     // hl_hal_gpio_init(GPIO_AMP_EN);
     // hl_hal_gpio_high(GPIO_AMP_EN);
@@ -1117,6 +1255,10 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
         LOG_E("hl_mod_audio_uac_config failed");
         goto err2;
     }
+#endif
+
+#ifdef RT_USB_DEVICE_MSTORAGE
+    rt_usbd_msc_state_register(mstorage_switch_cb);
 #endif
 
 #if HL_IS_TX_DEVICE()
@@ -1165,6 +1307,10 @@ err0:
 
 uint8_t hl_mod_audio_deinit(void)
 {
+#if HL_IS_TX_DEVICE()
+    hl_mod_audio_record_switch(0);
+#endif
+
     hl_mod_audio_codec_deconfig(&cap_info);
     hl_mod_audio_codec_deconfig(&play_info);
 
@@ -1223,6 +1369,15 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
+            if(((char*)ptr)[0] != 0) {
+                hl_mod_audio_set_mute(1);
+                LOG_I("[%s][line:%d] mic open mute !!!\r\n", __FUNCTION__, __LINE__);
+            } else {
+                hl_mod_audio_set_mute(0);
+                LOG_I("[%s][line:%d] mic close mute !!!\r\n", __FUNCTION__, __LINE__);
+            }
+            
+            
             break;
         case HL_AUDIO_SET_EQ_CMD:
             break;
@@ -1250,6 +1405,9 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 
         case HL_AUDIO_STREAM_SET_CMD:
             hl_mod_audio_stream_set(ptr);
+            break;
+        case HL_USB_MSTORAGE_DISABLE_CMD:
+            rt_usbd_msc_disable();
             break;
 
         default:
@@ -1285,6 +1443,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 
         case HL_AUDIO_STREAM_SET_CMD:
             hl_mod_audio_stream_set(ptr);
+            break;
+            
+        case HL_USB_MSTORAGE_DISABLE_CMD:
+            rt_usbd_msc_disable();
             break;
 
         default:
@@ -1350,7 +1512,21 @@ int hl_mod_audio_test(int argc, char** argv)
             }
             hl_mod_audio_io_ctrl(cmd, &u32_data, size);
             break;
+#if HL_IS_TX_DEVICE()    
+        case 0x05:
+            hl_mod_audio_rtc_get(NULL);
+            break;
 
+        case 0x06:
+            rt_usbd_msc_disable(); //hl_mod_audio_dfs();
+            break;
+        case 0x07:
+            hl_mod_audio_set_mute(1);
+            break;
+        case 0x08:
+            hl_mod_audio_set_mute(0);
+            break;            
+#endif
         default:
             LOG_E("Bad <size> value '%s'", argv[3]);
             break;

@@ -461,8 +461,7 @@ rt_inline void usbd_os_proerty_descriptor_send(ufunction_t func, ureq_t setup, u
     rt_usbd_ep0_write(func->device, data, setup->wLength);
 }
 
-typedef void (*mstorage_switch_cb_t)(uint8_t mstorage_state);
-void rt_usbd_msc_state_register(mstorage_switch_cb_t mstorage_cb_func);
+
 
 #ifdef __cplusplus
 }

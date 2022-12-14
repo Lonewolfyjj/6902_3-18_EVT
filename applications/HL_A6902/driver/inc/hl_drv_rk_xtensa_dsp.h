@@ -46,6 +46,8 @@ typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
     HL_EM_DRV_RK_DSP_CMD_STOP_DSP,
     /// 降噪
     HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP,
+    /// MUTE<uint8_t(0=OFF, 1=ON)>
+    HL_EM_DRV_RK_DSP_CMD_SET_MUTE,
 } hl_drv_rk_xtensa_dsp_cmd_e;
 
 /// DSP的运行角色枚举
