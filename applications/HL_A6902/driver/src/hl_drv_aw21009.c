@@ -25,6 +25,10 @@
 
 #include "hl_drv_aw21009.h"
 
+#define DBG_SECTION_NAME "aw21009"
+#define DBG_LEVEL DBG_INFO
+#include "rtdbg.h"
+
 /* typedef -------------------------------------------------------------------*/
 
 typedef enum
@@ -44,7 +48,6 @@ typedef enum
 /*****************************************************
 * define macro
 *****************************************************/
-#define DBG_LOG rt_kprintf
 
 #if HL_IS_TX_DEVICE() == 0
 ///Rx
@@ -378,7 +381,7 @@ static inline int aw_read(uint8_t dev_addr, uint8_t PointReg, uint8_t* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 2) == 2) {
         return AW21009_FUNC_RET_OK;
     } else {
-        DBG_LOG("i2c read err!\n");
+        LOG_E("i2c read err!");
         return AW21009_FUNC_RET_ERR;
     }
 }
@@ -399,7 +402,7 @@ static inline int aw_write(uint8_t dev_addr, uint8_t PointReg, uint8_t* pData)
     if (rt_i2c_transfer(_p_i2c_bus, msgs, 1) == 1) {
         return AW21009_FUNC_RET_OK;
     } else {
-        DBG_LOG("i2c write err!\n");
+        LOG_E("i2c write err!");
         return AW21009_FUNC_RET_ERR;
     }
 }
@@ -583,7 +586,7 @@ static int set_pwm_invert_enable(uint8_t dev_addr, hl_drv_aw21009_led_group_e* a
 static void aw210xx_led_init(uint8_t base_addr)
 {
     hl_drv_aw21009_led_group_e group;
-    bool flag;
+    bool                       flag;
 
     /* chip enable */
     aw210xx_chipen_set(base_addr, true);
@@ -629,7 +632,7 @@ static int32_t aw210xx_init(uint8_t dev_addr)
 
     chip_id = aw210xx_read_chipid(dev_addr);
     if (chip_id != AW21009_CHIPID) {
-        DBG_LOG("aw21009 chip id err: %02x!\n", chip_id);
+        LOG_E("aw21009 chip id err: %02x!", chip_id);
         return -1;
     }
 
@@ -769,7 +772,7 @@ static int set_led_chan_brightness(uint8_t dev_addr, hl_drv_aw21009_led_chan_bri
     }
 
     if (reg_val & AW210XX_REG_GCR2_SBMD_VAL(1)) {  //单字节亮度模式
-        DBG_LOG("single mode\n");
+        LOG_D("single mode");
         if (arg->led_chan & HL_DRV_AW21009_LED_CHANNEL1) {
             aw210xx_write_bits(dev_addr, AW210XX_REG_BR00L, AW210XX_REG_BR0XL_BRL_MASK,
                                AW210XX_REG_BR0XL_BRL_VAL(arg->brightness));
@@ -1023,36 +1026,36 @@ int hl_drv_aw21009_init(void)
     int ret;
 
     if (_init_flag != 0) {
-        DBG_LOG("aw21009 is already inited!\n");
+        LOG_W("aw21009 is already inited!");
         return AW21009_FUNC_RET_ERR;
     }
 
     _p_i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(HL_DRV_AW21009_I2C_NAME);
     if (_p_i2c_bus == NULL) {
-        DBG_LOG("i2c dev not found!:%s\n", HL_DRV_AW21009_I2C_NAME);
+        LOG_E("i2c dev not found!:%s", HL_DRV_AW21009_I2C_NAME);
         return AW21009_FUNC_RET_ERR;
     }
 
     ret = aw210xx_init(AW210XX_I2C_ADDR);
     if (ret == -1) {
-        DBG_LOG("aw21009 init failed!\n");
+        LOG_E("aw21009 init failed!");
         return AW21009_FUNC_RET_ERR;
     }
 
-    DBG_LOG("LED init success: i2c addr:%02x\n", AW210XX_I2C_ADDR);
+    LOG_D("LED init success: i2c addr:%02x", AW210XX_I2C_ADDR);
 
 #if HL_IS_TX_DEVICE() == 0
     ///Rx
     ret = aw210xx_init(HL_DRV_AW21009_OTHER_DEV_ADDR);
     if (ret == -1) {
-        DBG_LOG("aw21009 init failed!\n");
+        LOG_E("aw21009 init failed!");
         return AW21009_FUNC_RET_ERR;
     }
 
-    DBG_LOG("LED init success: i2c addr:%02x\n", HL_DRV_AW21009_OTHER_DEV_ADDR);
+    LOG_D("LED init success: i2c addr:%02x", HL_DRV_AW21009_OTHER_DEV_ADDR);
 #endif
 
-    DBG_LOG("aw21009 init success!\n");
+    LOG_D("aw21009 init success!");
 
     _init_flag = 1;
 
@@ -1062,7 +1065,7 @@ int hl_drv_aw21009_init(void)
 int hl_drv_aw21009_deinit(void)
 {
     if (_init_flag != 1) {
-        DBG_LOG("aw21009 is not inited!\n");
+        LOG_W("aw21009 is not inited!");
         return AW21009_FUNC_RET_ERR;
     }
 
@@ -1077,13 +1080,13 @@ int hl_drv_aw21009_deinit(void)
     return AW21009_FUNC_RET_OK;
 }
 
-int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size)
+int hl_drv_aw21009_ctrl(hl_drv_aw21009_led_dev_num_e led_num, hl_drv_aw21009_op_e op, void* arg, int32_t arg_size)
 {
     int     ret;
     uint8_t dev_addr;
 
     if (_init_flag != 1) {
-        DBG_LOG("aw21009 is not inited!\n");
+        LOG_E("aw21009 is not inited!");
         return AW21009_FUNC_RET_ERR;
     }
 
@@ -1102,7 +1105,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
     switch (op) {
         case HL_DRV_AW21009_GET_CHIP_ID: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1110,7 +1113,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_CHECK_POR_STATU: {
             if (arg_size != sizeof(uint8_t)) {
-                DBG_LOG("size err, ctrl arg need <uint8_t> type pointer!\n");
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1121,7 +1124,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_AUTO_BREATH_PARAM: {
             if (arg_size != sizeof(hl_drv_aw21009_auto_breath_param_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_auto_breath_param_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_auto_breath_param_st> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1132,7 +1135,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_GROUP_CTRL_DISABLE: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1143,7 +1146,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_LED_GROUP_MODE: {
             if (arg_size != sizeof(hl_drv_aw21009_led_group_e)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_group_e> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_led_group_e> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1154,7 +1157,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_PATTERN_MODE: {
             if (arg_size != sizeof(hl_drv_aw21009_pattern_mode_e)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_pattern_mode_e> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_pattern_mode_e> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1165,7 +1168,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_LED_LIGHT_EFFECT: {
             if (arg_size != sizeof(hl_drv_aw21009_led_light_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_light_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_led_light_st> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1176,7 +1179,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_LED_GROUP_LIGHT_EFFECT: {
             if (arg_size != sizeof(hl_drv_aw21009_led_light_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_light_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_led_light_st> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1187,7 +1190,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_LED_CHAN_BRIGHTNESS: {
             if (arg_size != sizeof(hl_drv_aw21009_led_chan_brightness_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_chan_brightness_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_led_chan_brightness_st> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1198,7 +1201,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_SINGLE_BYTE_MODE: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1209,7 +1212,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_LED_CHAN_COLOR: {
             if (arg_size != sizeof(hl_drv_aw21009_led_chan_color_st)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_led_chan_color_st> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_led_chan_color_st> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1220,7 +1223,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_POWER_SAVE_MODE: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1231,7 +1234,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_RGB_MODE: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1242,7 +1245,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_MANUAL_SET_SWITCH: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1253,7 +1256,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_MANUAL_SET_RAMP: {
             if (arg_size != sizeof(bool)) {
-                DBG_LOG("size err, ctrl arg need <bool> type pointer!\n");
+                LOG_E("size err, ctrl arg need <bool> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 
@@ -1264,7 +1267,7 @@ int hl_drv_aw21009_ctrl(uint8_t led_num, uint8_t op, void* arg, int32_t arg_size
         } break;
         case HL_DRV_AW21009_SET_PWM_RESOLUTION: {
             if (arg_size != sizeof(hl_drv_aw21009_pwm_resolution_e)) {
-                DBG_LOG("size err, ctrl arg need <hl_drv_aw21009_pwm_resolution_e> type pointer!\n");
+                LOG_E("size err, ctrl arg need <hl_drv_aw21009_pwm_resolution_e> type pointer!");
                 return AW21009_FUNC_RET_ERR;
             }
 

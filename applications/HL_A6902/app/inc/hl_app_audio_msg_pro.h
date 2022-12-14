@@ -45,6 +45,20 @@
  */
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg);
 
+/**
+ * @brief 音频流更新(判断当前状态选择正确的音频流)
+ * @date 2022-12-05
+ * @author luzhanghao (rd14@hollyland-tech.com)
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-12-05      <td>luzhanghao     <td>新建
+ * </table>
+ */
+void hl_app_audio_stream_updata(void);
+
 #endif /* __HL_APP_AUDIO_MSG_PRO_H__ */
 /*
  * EOF
