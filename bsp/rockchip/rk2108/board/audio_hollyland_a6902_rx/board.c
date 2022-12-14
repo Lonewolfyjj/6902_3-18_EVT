@@ -36,17 +36,22 @@ const struct codec_desc codec_es8311 =
 #endif
 
 #ifdef RT_USING_CODEC_NAU88L25B
-//#define RT_CODEC_NAU88L21 1
+
 const struct codec_desc codec_nau88l25b =
 {
     .if_type = IF_TYPE_I2C,
     .name = "88l25b",
-    .i2c_bus = "i2c1",//"i2c0"
-#ifdef RT_CODEC_NAU88L21
-    .i2c_addr = 0x1B,
-#else
+    .i2c_bus = "i2c1",
     .i2c_addr = 0x1A,
+};
 #endif
+#ifdef RT_USING_CODEC_NAU88L25B_HP
+const struct codec_desc codec_nau88l25b_hp =
+{
+    .if_type = IF_TYPE_I2C,
+    .name = "88l25bhp",
+    .i2c_bus = "i2c1",
+    .i2c_addr = 0x1B,
 };
 #endif
 
@@ -152,7 +157,7 @@ const struct audio_card_desc rk_board_audio_cards[] =
     {
         .name = "wifi",
         .dai = I2STDM1,
-        .codec = (void *) &codec_nau88l25b,
+        .codec = RT_NULL,
         .capture = true,
         .playback = false,
         .mclkfs = 256,

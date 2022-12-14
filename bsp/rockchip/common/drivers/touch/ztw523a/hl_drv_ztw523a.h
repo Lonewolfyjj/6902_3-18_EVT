@@ -151,6 +151,9 @@ struct _ts_zinitix_point_info touch_info;
 #define zinitix_swap_v(a, b, t)	((t) = (a), (a) = (b), (b) = (t))
 #define zinitix_swap_16(s) (((((s) & 0xff) << 8) | (((s) >> 8) & 0xff)))
 
+#define BUTTON_DOWN 1
+#define BUTTON_UP   0
+
 rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos);
 int hl_drv_ztw523a_botton_status(void);
 // void Tp_Init(void);

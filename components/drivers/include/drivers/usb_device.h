@@ -461,6 +461,8 @@ rt_inline void usbd_os_proerty_descriptor_send(ufunction_t func, ureq_t setup, u
     rt_usbd_ep0_write(func->device, data, setup->wLength);
 }
 
+
+
 #ifdef __cplusplus
 }
 #endif

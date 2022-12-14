@@ -32,7 +32,7 @@
 /* Exported functions --------------------------------------------------------*/
 /**
  * @brief 输入模块消息处理函数
- * @param [in] p_msg 消息指针
+ * @param [in] p_msg 消息指针<mode_to_app_msg_t*>
  * @date 2022-11-15
  * @author luzhanghao (rd14@hollyland-tech.com)
  * @details 

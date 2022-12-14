@@ -79,7 +79,7 @@ uint8_t hl_drv_usb_vendor_class_com_init();
  * <tr><td>2022-11-09      <td>yangxianyun     <td>新建
  * </table>
  */
-uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len);
+uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len, uint16_t timeout);
 
 /**
  * 

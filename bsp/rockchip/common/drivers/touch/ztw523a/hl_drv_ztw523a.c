@@ -23,8 +23,8 @@
 #define CURRENT_TOUCH_X_RANGE TPD_RES_MAX_X
 #define CURRENT_TOUCH_Y_RANGE TPD_RES_MAX_Y
 
-#define BUTTON_DOWN 1
-#define BUTTON_UP   0
+// #define BUTTON_DOWN 1
+// #define BUTTON_UP   0
 
 static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *buf, rt_size_t touch_num);
 
@@ -345,7 +345,7 @@ exit:
 static int hl_drv_ztw523a_dev_init(void)
 {
     touch_dev = rt_device_find("ZTW523A");
-
+    memset(&touch_info, 0, sizeof(struct _ts_zinitix_point_info));
     if (touch_dev == RT_NULL) {
         LOG_E("Can't find ztw523a device ZTW523A\n");
         return HL_FAILED;
@@ -428,11 +428,11 @@ int hl_drv_ztw523a_botton_status(void)
     {
         case 1:
             button = BUTTON_DOWN;
-            LOG_D("Botton down!\n");
+            // LOG_D("Botton down!\n");
         break;
         case 0x100:
             button = BUTTON_UP;
-            LOG_D("Botton up!\n");
+            // LOG_D("Botton up!\n");
         break;
         default:
             button = BUTTON_UP;
