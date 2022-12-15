@@ -19,7 +19,7 @@
  * <tr><td>2022-10-17     <td>v1.0     <td>dujunjie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -57,32 +57,31 @@
 /*****************************************************************************
 * Private constant and macro definitions using #define
 *****************************************************************************/
-#define HOST_MCU_DRIVER_VERSION                  	"Hollyland MCU V1.0 20220615"
+#define HOST_MCU_DRIVER_VERSION "Hollyland MCU V1.0 20220615"
 
-#define FTS_INFO(fmt, ...)							rt_kprintf("[FTS/I]%s:"fmt"\n", __func__, ##__VA_ARGS__)
-#define FTS_ERROR(fmt, ...)							rt_kprintf("[FTS/E]%s:"fmt"\n", __func__,  ##__VA_ARGS__)
-#define FTS_DEBUG(fmt, ...)	    					rt_kprintf("[FTS/D]%s:"fmt"\n", __func__, ##__VA_ARGS__)
+#define FTS_INFO(fmt, ...) rt_kprintf("[FTS/I]%s:" fmt "\n", __func__, ##__VA_ARGS__)
+#define FTS_ERROR(fmt, ...) rt_kprintf("[FTS/E]%s:" fmt "\n", __func__, ##__VA_ARGS__)
+#define FTS_DEBUG(fmt, ...) rt_kprintf("[FTS/D]%s:" fmt "\n", __func__, ##__VA_ARGS__)
 
-#define INTERVAL_READ_REG                   		200  /* unit:ms */
+#define INTERVAL_READ_REG 200 /* unit:ms */
 
-
-#define FTS_CMD_READ_ID                     		0x90
+#define FTS_CMD_READ_ID 0x90
 
 /* chip id */
-#define FTS_CHIP_IDH								0x52
-#define FTS_CHIP_IDL								0x60
+#define FTS_CHIP_IDH 0x52
+#define FTS_CHIP_IDL 0x60
 
 /* register address */
-#define FTS_REG_CHIP_ID                     		0xA3
-#define FTS_REG_CHIP_ID2                    		0x9F
-#define FTS_REG_FW_VER                      		0xA6
-#define FTS_REG_UPGRADE                         	0xFC
+#define FTS_REG_CHIP_ID 0xA3
+#define FTS_REG_CHIP_ID2 0x9F
+#define FTS_REG_FW_VER 0xA6
+#define FTS_REG_UPGRADE 0xFC
 
 /*
  * Gesture function enable
  * default: disable
  */
-#define FTS_GESTURE_EN                          	0
+#define FTS_GESTURE_EN 0
 
 //控制函数参数
 enum hl_ft3169_cfg
@@ -108,28 +107,28 @@ enum hl_ft3169_cfg
  * @id: ID of this point
  * @area: touch area of this point
  */
-struct fts_ts_event {
-    int x;		/*x coordinate */
-    int y;		/*y coordinate */
-    int p;		/* pressure */
-    int type;	/* touch event flag: 0 -- down; 1-- up; 2 -- contact */
-    int id; 	/*touch ID */
-    int area;   /*touch area*/
+struct fts_ts_event
+{
+    int x;    /*x coordinate */
+    int y;    /*y coordinate */
+    int p;    /* pressure */
+    int type; /* touch event flag: 0 -- down; 1-- up; 2 -- contact */
+    int id;   /*touch ID */
+    int area; /*touch area*/
 };
 
-
-struct fts_ts_data {
-    int suspended;		   /* suspended state, 1: suspended mode, 0:not suspended mode */
-    int esd_support;	   /* esd enable or disable, default: disable */
-    int gesture_support;   /* gesture enable or disable, default: disable */
+struct fts_ts_data
+{
+    int suspended;       /* suspended state, 1: suspended mode, 0:not suspended mode */
+    int esd_support;     /* esd enable or disable, default: disable */
+    int gesture_support; /* gesture enable or disable, default: disable */
 };
-
 
 /*****************************************************************************
 * Global variable or extern global variabls/functions
 *****************************************************************************/
 // extern struct fts_ts_data *fts_data;
-rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event *touch_pos);
+rt_err_t hl_drv_touch_dev_read_info(struct fts_ts_event* touch_pos);
 // void fts_msleep(unsigned long msec);
 
 /* communication interface */

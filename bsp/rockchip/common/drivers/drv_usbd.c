@@ -28,8 +28,10 @@
 #endif
 #include "board.h"
 
+#include "hl_config.h"
+
 #define WORK_QUEUE_STACK_SIZE   512
-#define WORK_QUEUE_PRIORITY     0
+#define WORK_QUEUE_PRIORITY     1
 
 struct rockchip_usbd
 {
@@ -444,7 +446,11 @@ const static struct udcd_ops g_udc_ops =
     usb_wakeup,
 };
 
+// Set the USB device speed to high speed
+#if HL_IS_TX_DEVICE()
 #define RT_USING_USBD_SPEED_FULL
+#endif
+
 int rt_usbd_register(void)
 {
     rt_memset((void *)&g_usbd.udc, 0, sizeof(struct udcd));

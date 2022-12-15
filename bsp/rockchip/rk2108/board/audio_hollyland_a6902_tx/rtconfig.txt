@@ -125,7 +125,7 @@
 /* RT_DFS_ELM_LFN_UNICODE_3 is not set */
 #define RT_DFS_ELM_LFN_UNICODE 0
 #define RT_DFS_ELM_MAX_LFN 255
-#define RT_DFS_ELM_DRIVES 2
+#define RT_DFS_ELM_DRIVES 3
 #define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
 /* RT_DFS_ELM_USE_ERASE is not set */
 #define RT_DFS_ELM_REENTRANT
@@ -158,7 +158,9 @@
 #define RT_USING_PM
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
-/* RT_USING_RTC is not set */
+#define RT_USING_RTC
+#define RT_USING_SOFT_RTC
+/* RT_USING_ALARM is not set */
 #define RT_USING_SDIO
 #define RT_SDIO_STACK_SIZE 512
 #define RT_SDIO_THREAD_PRIORITY 15
@@ -278,7 +280,14 @@
 
 /* RT_USING_BENCHMARK is not set */
 /* RT_USING_NET_HTTP is not set */
-/* RT_USING_OTA is not set */
+#define RT_USING_OTA
+
+/* OTA Component Options */
+
+/* RT_USING_OTA_RECOVERY is not set */
+#define RT_USING_OTA_FROM_LOCAL
+/* RT_USING_OTA_FROM_HTTP is not set */
+/* RT_SUPPORT_ROOT_AB is not set */
 /* RT_USING_AUPIPE is not set */
 
 /* RT-Thread third party package */
@@ -438,7 +447,7 @@
 /* RT_USING_AUDIO_CARD_ACDCDIG is not set */
 /* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
 /* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-/* RT_USING_AUDIO_CARD_PDM_MIC is not set */
+#define RT_USING_AUDIO_CARD_PDM_MIC
 /* RT_USING_AUDIO_CARD_PCM_BT is not set */
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
@@ -448,10 +457,13 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
+/* RT_USING_AUDIO_CARD_NAU88L25B_HP is not set */
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
+#define RT_USING_PDM
+#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA
@@ -476,7 +488,7 @@
 
 #define RT_USING_UART
 #define RT_USING_UART0
-/* RT_USING_UART1 is not set */
+#define RT_USING_UART1
 #define RT_USING_UART2
 
 /* Enable I2C */
@@ -537,6 +549,7 @@
 /* RT_USING_COMMON_TEST_WDT is not set */
 /* RT_USING_COMMON_TEST_PERFORMANCE is not set */
 /* RT_USING_COMMON_TEST_FWANALYSIS is not set */
+/* RT_USING_COMMON_TEST_OTA is not set */
 /* RT_USING_COMMON_TEST_TIMER is not set */
 #define RT_USING_FWANALYSIS
 
