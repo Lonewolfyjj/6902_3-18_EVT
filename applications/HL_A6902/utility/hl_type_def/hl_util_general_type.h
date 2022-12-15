@@ -48,11 +48,16 @@ typedef enum _hl_switch_e
 
 typedef enum _hl_rf_state_e
 {
-    HL_RF_STATE_IDLE = 0,
-    HL_RF_STATE_RELEASE,
-    HL_RF_STATE_PAIR,
-    HL_RF_STATE_CONNECT,
-    HL_RF_STATE_STOP,
+    /// 无配对设备
+    HL_RF_UNCONNECT = 0x00,
+    /// 左声道已配对
+    HL_RF_L_CONNECT,
+    /// 右声道已配对
+    HL_RF_R_CONNECT,
+    /// 左右声道已配对
+    HL_RF_LR_CONNECT,
+    /// 正在配对中
+    HL_RF_PAIRING,
 } HL_ENUM8(hl_rf_state_e);
 
 /* define --------------------------------------------------------------------*/
