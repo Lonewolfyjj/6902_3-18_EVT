@@ -152,7 +152,7 @@ typedef struct _dsp_io_ctrl_
 /// tx alango srp算法功能的去初始化枚举
 #define DSP_ALGO_ALANGO_SRP_DEINIT 0x4000000e
 
-#define HL_DEVICE_RX_USE_BYPSS_TEST 1
+#define HL_DEVICE_RX_USE_BYPSS_TEST 0
 //-----------------------------------------------------------------------------
 
 /* variables -----------------------------------------------------------------*/
@@ -265,7 +265,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
 #if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     RT_ASSERT(sg_rx_dsp_param != NULL);
     sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_rx_dsp_param,
-                                                    sizeof(lib_bypass_param_type_t));
+                                                    sizeof(lib_a6902_algorithm_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
@@ -417,7 +417,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
     sg_rx_dsp_param->frame_length                   = config->period_size;
     sg_rx_dsp_param->b32_2ch_len                    = config->buffer_size_b32_2ch;
     sg_rx_dsp_param->b24_2ch_len                    = config->buffer_size_b24_2ch;
-    sg_rx_dsp_param->role                           = 1;
+    sg_rx_dsp_param->role                           = 0;
     sg_rx_dsp_param->srp_profile                    = srp_profile;
     sg_rx_dsp_param->srp_profile_length             = sizeof(srp_profile);
     sg_dsp_frame_bytes = sg_rx_dsp_param->frame_length * sg_rx_dsp_param->sample_size * sg_rx_dsp_param->channel;
