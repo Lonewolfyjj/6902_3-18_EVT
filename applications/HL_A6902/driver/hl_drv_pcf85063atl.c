@@ -27,7 +27,12 @@
 
 #include "hl_drv_pcf85063atl.h"
 
+#include "hl_config.h"
+#if HL_IS_TX_DEVICE()
+#define RTC_PCF85063_I2C_BUS_NAME "i2c1"               /* 传感器连接的I2C总线设备名称 */
+#else
 #define RTC_PCF85063_I2C_BUS_NAME "i2c0"               /* 传感器连接的I2C总线设备名称 */
+#endif
 #define RTC_PCF85063_ADDR 0x51                         /* 从机地址 */
 static struct rt_i2c_bus_device* i2c_handle = RT_NULL; /* I2C总线设备句柄 */
 
