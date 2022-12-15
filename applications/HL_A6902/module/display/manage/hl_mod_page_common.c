@@ -36,6 +36,7 @@
 #include "page_test.h"
 #include "lvgl.h"
 #include "hl_drv_ztw523a.h"
+
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -45,6 +46,7 @@
 /* Exported functions --------------------------------------------------------*/
 
 #define BACKTOUCHKEY_DEBANCE_TIMER          20
+
 
 typedef struct _hl_input_mod_t
 {
@@ -66,7 +68,9 @@ static uint8_t now_center_icon = 0;
 
 static hl_display_msg_t hl_display_msg = { 0 };
 // 返回触摸按键消抖时间
-hl_timeout_t backtouchkey_debance;
+static hl_timeout_t backtouchkey_debance;
+
+
 
 // 获取当前页面
 hl_screen_page_e hl_mod_display_scr_get_page(void)
@@ -132,6 +136,10 @@ uint8_t hl_mod_keypad_touchkey_read()
                     press    = 1;
                     last_key = 0;
                     hl_util_timeout_close(&backtouchkey_debance);
+                } else {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_key = 0;
+                    press    = 0;
                 }
             } else {
                 // 出现上升沿，则清定时器
@@ -494,6 +502,8 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+
+
 
 void hl_mod_page_cb_reg(void)
 {

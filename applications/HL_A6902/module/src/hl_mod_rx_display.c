@@ -41,6 +41,8 @@
 #include "hl_mod_page_common.h"
 #include <rtthread.h>
 #include "hl_util_msg_type.h"
+#include "hl_drv_qma6100p.h"
+#include "hl_util_timeout.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -52,6 +54,11 @@
 
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
+
+#define GSENSOR_DEBANCE_TIMER          40
+
+// gsensor消抖时间
+static hl_timeout_t sensor_debance;
 
 static rt_thread_t display_tid = RT_NULL;
 
@@ -65,6 +72,8 @@ typedef struct _hl_display_msg_t
 } hl_display_msg_t;
 
 static hl_display_msg_t hl_mod_display;
+
+static void hl_mod_screen_rot_scan(void);
 
 uint8_t hl_mod_display_out_task()
 {
@@ -124,7 +133,82 @@ static void hl_mod_display_data_init(void)
 }
 
 
+static device_pose_t hl_mod_device_pose_val(void)
+{
+    euler_angle_t pose;
+    hl_drv_qma6100p_io_ctrl(QMA6100_GET_EULWER_ANGLE, (void*)&pose, sizeof(euler_angle_t));
+    if (pose.z > 0) {
+        return DEVICE_REVERSE_POSE;
+    } else {
+        return DEVICE_FORWARD_POSE;
+    }
+}
 
+static uint8_t hl_mod_device_dir_get(device_pose_t* newdir)
+{
+    static uint8_t last_stats = 0;
+    // 默认正向
+    static device_pose_t nowdir = DEVICE_FORWARD_POSE;
+    device_pose_t        res;
+    uint8_t              changeflag = 0;
+
+    res = hl_mod_device_pose_val();
+
+    switch (last_stats) {
+        case 0:
+            if (nowdir != res) {
+                // 出现下降沿，重新计数
+                hl_util_timeout_set(&sensor_debance, GSENSOR_DEBANCE_TIMER);
+                last_stats = 1;
+            }
+            break;
+        case 1:
+            if (hl_util_timeout_judge(&sensor_debance) == RT_TRUE) {
+                //20s内没有上升沿，按键按下
+                if (nowdir != res) {
+
+                    nowdir     = res;
+                    *newdir    = nowdir;
+                    last_stats = 0;
+                    changeflag = 1;
+                    hl_util_timeout_close(&sensor_debance);
+                    LV_LOG_USER("-event_dir%d\n", nowdir);
+                } else {
+                    hl_util_timeout_close(&sensor_debance);
+                    last_stats = 0;
+                    changeflag = 0;
+                }
+            } else {
+                // 出现上升沿，则清定时器
+                if (res == nowdir) {
+                    hl_util_timeout_close(&sensor_debance);
+                    last_stats = 0;
+                    changeflag = 0;
+                }
+            }
+            break;
+        default:
+            changeflag = 0;
+            break;
+    }
+    return changeflag;
+}
+
+static void hl_mod_screen_rot_scan(void)
+{
+    device_pose_t now_dir = DEVICE_FORWARD_POSE;
+    lv_disp_t*    screen_ptr;
+
+    if (hl_mod_device_dir_get(&now_dir)) {
+
+        screen_ptr = lv_disp_get_default();
+        if (now_dir == DEVICE_FORWARD_POSE) {
+            lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_270);
+        } else {
+            lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+        }
+    }
+}
 
 
 uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
@@ -287,7 +371,7 @@ static void hl_mod_display_task(void* param)
 {
 
     while (1) {
-
+        hl_mod_screen_rot_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();

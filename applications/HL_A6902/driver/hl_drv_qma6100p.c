@@ -1710,6 +1710,7 @@ uint8_t hl_drv_qma6100p_init(void)
 {
     uint8_t ret = 0;
     ret = HL_QMA6100_init();
+    rt_thread_mdelay(1000);  //初始化后不能立即获取 要等待寄存器设置完成这段时间
     return ret;
 }
 
