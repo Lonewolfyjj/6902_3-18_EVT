@@ -162,6 +162,12 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
         case HL_RF_BYPASS_VOLUME_IND:
         case HL_RF_BYPASS_RECORD_IND:
         case HL_RF_BYPASS_SETTING_IND:
+            app_msg_t.cmd       = hup_frame.cmd;
+            app_msg_t.len       = data_len;
+            app_msg_t.param.ptr = hup_frame.data_addr;
+            // 上报透传数据
+            ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            break;
             rt_kprintf("\n\n[Telink Bypass Cmd]:%02X\n", hup_frame.cmd);
             rt_kprintf("[Telink Bypass Info]:%s\n\n", hup_frame.data_addr);
             break;
