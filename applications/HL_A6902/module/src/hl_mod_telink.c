@@ -369,6 +369,8 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 
 uint8_t hl_mod_telink_deinit(void)
 {
+    s_telink.serial = NULL;
+
     // 去初始化hup、fifo工具
     hl_util_hup_deinit(&s_telink.hup);
     hl_util_fifo_deinit(&s_telink.fifo);
@@ -424,8 +426,11 @@ MSH_CMD_EXPORT(hl_mod_telink_stop, telink stop cmd);
 uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
     if (TELINK_UART_BUF_SIZE < data_len) {
-        rt_kprintf("[%s][line:%d] data_len is too long!!! \r\n", __FUNCTION__, __LINE__);
+        rt_kprintf("\n[%s][line:%d] data_len is too long!!! \n", __FUNCTION__, __LINE__);
         return 1;
+    } else if(RT_NULL == s_telink.serial) {
+        rt_kprintf("\n[%s][line:%d] telink serial is NULL!!! \n", __FUNCTION__, __LINE__);
+        return 2;
     }
     uint8_t frame_buf[TELINK_UART_BUF_SIZE] = { 0 };
 
