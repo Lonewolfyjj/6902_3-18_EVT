@@ -142,47 +142,47 @@ static void hl_mod_page_home_init(void)
 
     hl_mod_main_init(&data);
 
-    // 更新当前的RX电量信息
-    top_init.electric_top = data_ptr->rx_bat_val;
-    hl_mod_top_init(&top_init);
+    // // 更新当前的RX电量信息
+    // top_init.electric_top = data_ptr->rx_bat_val;
+    // hl_mod_top_init(&top_init);
 
-    if (data_ptr->sound_module == STEREO) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_VOICE_MOD;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sound_module == STEREO) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_VOICE_MOD;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 
     
 
-    if (data_ptr->sys_status.tx1_noise && data_ptr->sys_status.tx2_noise) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_NOISE;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sys_status.tx1_noise && data_ptr->sys_status.tx2_noise) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_NOISE;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 
-    if (data_ptr->sys_status.screen_lock) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_LOCK;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sys_status.screen_lock) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_LOCK;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 
-    if (data_ptr->sys_status.line_out_in) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_LINEOUT;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sys_status.line_out_in) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_LINEOUT;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 
-    if (data_ptr->sys_status.usb_in) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_TYPEC;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sys_status.usb_in) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_TYPEC;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 
-    if (data_ptr->sys_status.monitor_in) {
-        ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-        ioctl_top.top_param = HL_TOP_ICON_HEATSET;
-        hl_mod_top_ioctl(&ioctl_top);
-    }
+    // if (data_ptr->sys_status.monitor_in) {
+    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+    //     ioctl_top.top_param = HL_TOP_ICON_HEATSET;
+    //     hl_mod_top_ioctl(&ioctl_top);
+    // }
 }
 static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
@@ -353,7 +353,7 @@ static void hl_mod_page_home_update(void)
         hl_mod_page_home_tx2_update(flag, data_ptr);
     }
 
-    hl_mod_page_top_update(flag, data_ptr);
+    // hl_mod_page_top_update(flag, data_ptr);
 }
 
 static void hl_mod_page_setup(void)
@@ -392,11 +392,11 @@ static void hl_mod_page_exit(void)
         hl_mod_main_ioctl(&main_ctl);
     }
 
-    //删除TOP
-    hl_lvgl_top_ioctl_t ctl_data = {
-        .top_cmd = HL_TOP_ALL_DEL,
-    };
-    hl_mod_top_ioctl(&ctl_data);
+    // //删除TOP
+    // hl_lvgl_top_ioctl_t ctl_data = {
+    //     .top_cmd = HL_TOP_ALL_DEL,
+    // };
+    // hl_mod_top_ioctl(&ctl_data);
 
     // hl_mod_page_delete(lv_scr_act());
     // uint8_t i = 0;
@@ -446,7 +446,7 @@ static void hl_mod_page_run(void)
     hl_mod_menu_goto_fast_config_scan();
 
     // 快捷设置
-    hl_mod_menu_goto_quickset_scan();
+    // hl_mod_menu_goto_quickset_scan();
 
     // 菜单的页面更新
     hl_mod_page_home_update();

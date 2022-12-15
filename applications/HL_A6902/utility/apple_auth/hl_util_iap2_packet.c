@@ -32,7 +32,6 @@ int hl_iap2_detect_packet_encode(uint8_t* write_data_addr)
 int hl_iap2_detect_packet_decode(uint8_t* read_data_addr)
 {
     if (read_data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -47,7 +46,6 @@ int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_
                                  st_packet_header_arg header_arg)
 {
     if (packet_header == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -66,12 +64,10 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
                                  st_packet_header_arg* header_arg)
 {
     if (packet_header == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
     st_iap2_packet_header_t* ptr_header = (st_iap2_packet_header_t*)packet_header;
-    int                      result     = 0;
 
     if ((ptr_header->ControlByte & ctrl_byte) && (ptr_header->PacketAckNum == (header_arg->ack_num + 1))) {
         *packet_len            = ptr_header->PacketLength;
@@ -79,10 +75,10 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
         header_arg->ack_num    = ptr_header->PacketAckNum;
         header_arg->session_id = ptr_header->SessionIdentif;
     } else {
-        result = -1;
+        return -1;
     }
 
-    return result;
+    return 0;
 }
 
 int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, uint8_t payload_len)
