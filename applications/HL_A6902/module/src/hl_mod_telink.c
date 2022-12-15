@@ -357,20 +357,11 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     // 初始化fifo
     hl_util_fifo_init(&s_telink.fifo, s_telink_fifo_buf, TELINK_FIFO_BUF_SIZE);
 
-    // 初始化Telink模块串口设备
-    result = _hl_mod_telink_serial_init();
-    if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
-    }
-
     return 0;
 }
 
 uint8_t hl_mod_telink_deinit(void)
 {
-    s_telink.serial = NULL;
-
     // 去初始化hup、fifo工具
     hl_util_hup_deinit(&s_telink.hup);
     hl_util_fifo_deinit(&s_telink.fifo);
@@ -385,6 +376,13 @@ uint8_t hl_mod_telink_deinit(void)
 uint8_t hl_mod_telink_start(void)
 {
     rt_err_t result;
+
+    // 初始化Telink模块串口设备
+    result = _hl_mod_telink_serial_init();
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
+        return 1;
+    }
 
     // 清空fifo等资源
     hl_util_fifo_clear(&s_telink.fifo);
@@ -411,6 +409,13 @@ MSH_CMD_EXPORT(hl_mod_telink_start, telink start cmd);
 uint8_t hl_mod_telink_stop(void)
 {
     rt_err_t result;
+
+    result = rt_device_close(s_telink.serial);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] close faild!!! \r\n", __FUNCTION__, __LINE__);
+        return RT_ERROR;
+    }
+    s_telink.serial = NULL;
 
     // 脱离Telink线程
     result = rt_thread_detach(&telink_thread);
