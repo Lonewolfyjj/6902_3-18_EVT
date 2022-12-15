@@ -62,6 +62,9 @@ static uint8_t old_pair_info = 0x1f;
 /// 记录最新配对状态
 static uint8_t new_pair_info = 0x1f;
 
+static hl_rf_bypass_info_t s_bypass_info;
+static hl_rf_bypass_info_t* ptr;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static void telink_show_val(void)
@@ -162,9 +165,12 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
         case HL_RF_BYPASS_VOLUME_IND:
         case HL_RF_BYPASS_RECORD_IND:
         case HL_RF_BYPASS_SETTING_IND:
-            app_msg_t.cmd       = hup_frame.cmd;
-            app_msg_t.len       = data_len;
-            app_msg_t.param.ptr = hup_frame.data_addr;
+            ptr = (hl_rf_bypass_info_t*)hup_frame.data_addr;
+            s_bypass_info.chn        = ptr->chn;
+            s_bypass_info.info.state = ptr->info.state;
+            app_msg_t.cmd            = hup_frame.cmd;
+            app_msg_t.len            = sizeof(s_bypass_info);
+            app_msg_t.param.ptr      = (u_int8_t*)&s_bypass_info;
             // 上报透传数据
             ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             break;
