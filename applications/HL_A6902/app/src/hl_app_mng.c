@@ -191,6 +191,7 @@ int hl_app_info(int argc, char** argv)
     LOG_I("denoise_flag = %d ", tx_info.denoise_flag);
     LOG_I("charge_flag = %d ", tx_info.charge_flag);
     LOG_I("rf_state = %d ", tx_info.rf_state);
+    LOG_I("tx_info.soc = %d ", tx_info.soc);
 #else
     LOG_I("------show rx app info------");
     LOG_I("on_off_flag = %d", rx_info.on_off_flag);
@@ -201,6 +202,7 @@ int hl_app_info(int argc, char** argv)
     LOG_I("cam_spk_plug = %d ", rx_info.cam_spk_plug);
     LOG_I("charge_flag = %d ", rx_info.charge_flag);
     LOG_I("rf_state = %d ", rx_info.rf_state);
+    LOG_I("rx_info.soc = %d ", rx_info.soc);
     LOG_I("cur_volume_r = %d ", rx_info.cur_volume_r);
     LOG_I("cur_volume_l = %d ", rx_info.cur_volume_l);
 #endif

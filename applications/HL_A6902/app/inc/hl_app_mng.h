@@ -51,6 +51,8 @@ typedef struct _tx_app_info_t
 
     /// 无线状态
     hl_rf_state_e       rf_state;
+    /// 当前电量
+    uint8_t             soc;
 
 } tx_app_info_t;
 extern tx_app_info_t tx_info;
@@ -74,6 +76,9 @@ typedef struct _rx_app_info_t
 
     /// 无线状态
     hl_rf_state_e       rf_state;
+    /// 当前电量
+    uint8_t             soc;
+
     int32_t             cur_volume_r;
     int32_t             cur_volume_l;
 
