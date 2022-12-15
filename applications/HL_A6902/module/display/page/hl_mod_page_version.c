@@ -43,36 +43,39 @@
 #include "page_menu.h"
 #include "hl_mod_input.h"
 
-
-
-
 static void hl_mod_page_setup(void)
 {
+    hl_lvgl_verson_init_t data = { .hl_verson_firmware  = "v1.0.0.0",
+                                   .hl_verson_sn_number = "ME234576",
+                                   .hl_verson_tx1       = "v1.0.0.1",
+                                   .hl_verson_tx2       = "v1.0.0.2" };
+    hl_mod_verson_init(&data);
 
+    hl_lvgl_verson_ioctl_t verson_ctl = {
+        .verson_choose_opt = HL_VERSON_OPTION_TWO,
+    };
+    hl_mod_verson_ioctl(&verson_ctl);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_verson_ioctl_t verson_ctl = {
+        .verson_choose_opt = HL_VERSON_OPTION_EXTI,
+    };
+    hl_mod_verson_ioctl(&verson_ctl);
 }
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    // 返回按键
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_VERSION)
 {
     bool result;
 
-    result     = PageManager_PageRegister(PAGE_VERSION, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
-                                      NULL);
+    result = PageManager_PageRegister(PAGE_VERSION, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
 
     if (result == false) {
         LV_LOG_USER("PAGE_PAIR init fail\n");
@@ -83,6 +86,3 @@ PAGE_DEC(PAGE_VERSION)
 /*
  * EOF
  */
-
-
-

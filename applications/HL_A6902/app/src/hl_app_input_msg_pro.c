@@ -70,12 +70,17 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
+    hl_rf_bypass_info_t rf_bypass_info;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
 
         case HL_KEY_EVENT_SHORT:
+            rf_bypass_info.chn        = HL_RF_LEFT_CHANNEL;
+            rf_bypass_info.info.state = 1;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_info, sizeof(rf_bypass_info));
+            LOG_D("send record cmd to rx");
             break;
 
         case HL_KEY_EVENT_LONG:
@@ -95,7 +100,7 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             break;
 
         default:
-            LOG_E("event(%d) unkown!!! \r\n", event);
+            LOG_E("event(%d) unkown!!!", event);
             break;
     }
 }
@@ -312,45 +317,58 @@ static void hl_app_rx_knob_pro(hl_knob_dir_e dir, uint32_t value)
 /// usb连接状态处理
 static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
+    uint8_t usb_state = 0;
+
     if (value == 0) {
         rx_info.usb_plug = 0;
+        usb_state        = 0;
         rx_info.uac_link_flag = 0;
         hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
         rx_info.mstorage_plug = 0;
         hl_mod_apple_auth_stop();
     } else {
         rx_info.usb_plug = 1;
+        usb_state        = 1;
         hl_mod_apple_auth_start();
     }
     hl_app_audio_stream_updata();
+    hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
 }
 
 /// 监听口状态处理
 static void hl_app_rx_hp_plug_pro(uint32_t value)
 {
-    hl_switch_e hp_amp_ctrl;
+    // hl_switch_e hp_amp_ctrl;
+    uint8_t     hp_state = 0;
 
     if (value == 0) {
         rx_info.hp_spk_plug = 0;
-        hp_amp_ctrl         = HL_SWITCH_OFF;
+        // hp_amp_ctrl         = HL_SWITCH_OFF;
+        hp_state            = 0;
+        
     } else {
         rx_info.hp_spk_plug = 1;
-        hp_amp_ctrl         = HL_SWITCH_ON;
+        // hp_amp_ctrl         = HL_SWITCH_ON;
+        hp_state            = 1;
     }
-    hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &hp_amp_ctrl, sizeof(hp_amp_ctrl));
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &hp_amp_ctrl, sizeof(hp_amp_ctrl));
+    hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
 }
 
 /// 相机口状态处理
 static void hl_app_rx_cam_plug_pro(uint32_t value)
 {
+    uint8_t cam_plug_state = 0;
+
     if (value == 0) {
         rx_info.cam_spk_plug = 0;
+        cam_plug_state       = 0;
     } else {
         rx_info.cam_spk_plug = 1;
+        cam_plug_state       = 1;
     }
+    hl_mod_display_io_ctrl(LINE_OUT_IN_SWITCH_CMD, &cam_plug_state, 1);
 }
-
-
 
 #endif
 

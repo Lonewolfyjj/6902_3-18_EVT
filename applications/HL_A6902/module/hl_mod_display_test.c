@@ -395,8 +395,15 @@ int hl_mod_display_test_cmd(int argc, char** argv)
         rt_thread_mdelay(1000);
         hl_mod_display_io_ctrl(msg.cmd, (void*)&msg.param.u32_param, msg.len);
 
+    } else if (!strcmp(argv[1], "ui")) {
+        rt_kprintf("hl_mod_display_test_cmd ui\r\n");
+        msg.cmd             = atoi(argv[2]);
+        msg.len             = atoi(argv[3]);
+        msg.param.u32_param = atoi(argv[4]);
+        hl_mod_display_io_ctrl(msg.cmd, (void*)&msg.param.u32_param, msg.len);
+
     } else {
-        rt_kprintf("wrong parameter, please type: oled_test \r\n");
+        rt_kprintf("wrong parameter, please type: hl_mod_display_test_cmd \r\n");
     }
 
     return RT_EOK;

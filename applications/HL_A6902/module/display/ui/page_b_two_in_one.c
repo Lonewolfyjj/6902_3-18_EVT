@@ -252,3 +252,10 @@ void page_light_test(void)
     
     // lv_page_4_init();
 }
+
+void page_two_in_one_click(uint8_t num)
+{
+
+    lv_event_send(hl_light_obj_get(num), LV_EVENT_CLICKED, NULL);
+
+}

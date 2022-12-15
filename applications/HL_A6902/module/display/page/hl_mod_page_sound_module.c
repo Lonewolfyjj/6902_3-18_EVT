@@ -43,6 +43,8 @@
 
 #define MENU_ICON_NUM 3
 
+
+
 // 下级菜单表
 // static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
 //     PAGE_SOUND_MODULE, PAGE_NOISE_REDUCTION_INTENSITY, PAGE_VOLUME_CONTROL, PAGE_TX_CONF_MENU, PAGE_MONITOR_SET,
@@ -54,6 +56,7 @@ LV_IMG_DECLARE(Menu_single_voice);//单声道
 LV_IMG_DECLARE(Menu_stereo);//立体声
 LV_IMG_DECLARE(Menu_saft_track);//安全音轨
 
+
 static void page_10_test_cb(uint32_t current)
 {
     //未锁屏回主界面
@@ -64,13 +67,16 @@ static void page_10_test_cb(uint32_t current)
 
 static void hl_mod_page_setup(void)
 {
+    
     menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL,NULL,&Menu_single_voice,"单声道"),
         ADD_IMG_DATA(NULL,NULL,&Menu_stereo,"立体声"),
         ADD_IMG_DATA(NULL,NULL,&Menu_saft_track,"安全音轨"),
     };
-    page_menu_init(&pic_list,MENU_ICON_NUM,page_10_test_cb);
+    // 旋钮复位
     hl_mod_menu_icon_init();
+    page_menu_init(&pic_list,MENU_ICON_NUM,page_10_test_cb);
+
 }
 
 static void hl_mod_page_exit(void)
