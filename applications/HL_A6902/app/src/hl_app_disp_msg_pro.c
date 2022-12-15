@@ -25,6 +25,7 @@
 #include <rtdevice.h>
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
+#include "hl_util_general_type.h"
 #include "hl_app_mng.h"
 #include "hl_mod_display.h"
 
@@ -55,21 +56,20 @@ void hl_app_disp_state_led_set(void)
 
     // RF
     switch (tx_info.rf_state) {
-        case HL_RF_STATE_IDLE:
-            led_ctrl = LED_NET_MODE_RECONNECTION;
-            break;
-        case HL_RF_STATE_RELEASE:
-            led_ctrl = LED_NET_MODE_RECONNECTION;
-            break;
-        case HL_RF_STATE_PAIR:
+        case HL_RF_PAIRING:
             led_ctrl = LED_NET_MODE_PAIR;
             break;
-        case HL_RF_STATE_CONNECT:
-            led_ctrl = LED_NET_MODE_CONNECTED;
-            break;
-        case HL_RF_STATE_STOP:
+
+        case HL_RF_UNCONNECT:
             led_ctrl = LED_NET_MODE_RECONNECTION;
             break;
+
+        case HL_RF_L_CONNECT:
+        case HL_RF_R_CONNECT:
+        case HL_RF_LR_CONNECT:
+            led_ctrl = LED_NET_MODE_CONNECTED;
+            break;
+
         default:
             break;
     }

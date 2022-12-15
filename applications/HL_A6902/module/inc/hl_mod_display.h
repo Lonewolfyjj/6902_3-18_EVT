@@ -370,12 +370,15 @@ typedef enum _hl_cmd_e
     ///录制保护状态 1：开启  0：关闭 ，
     AUTO_RECORD_PORTECT_SWITCH_CMD,
 
-    /// TX1网络状态 1:已连接 2：未连接
-    TX1_NET_SWITCH_CMD,
-    /// TX2网络状态 1:已连接 2：未连接
-    TX2_NET_SWITCH_CMD,
+    // /// TX1网络状态 1:已连接 2：未连接
+    // TX1_NET_SWITCH_CMD,
+    // /// TX2网络状态 1:已连接 2：未连接
+    // TX2_NET_SWITCH_CMD,
     
     /* *******************************参数相关******************/
+    // Rx当前无线通讯状态，参数<hl_rf_state_e>
+    RX_RF_STATE_VAL_CMD,
+
     /// 升级进度下发 0-100 <uint8_t>
     OTA_UPDATE_REMAINED_VAL_CMD,
 
