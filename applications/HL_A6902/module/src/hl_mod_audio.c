@@ -283,7 +283,7 @@ static int hl_mod_audio_system_rtc_set(void)
     return RT_EOK;
 }
 
-static void hl_mod_audio_dfs()
+static void hl_mod_audio_dfs_sd()
 {
     rt_device_t disk;
     int ret = 0;
@@ -305,19 +305,53 @@ static void hl_mod_audio_dfs()
 #endif
     LOG_I("hl mod audio dfs");
 }
-// static void hl_mod_audio_rtc_set()
-// {
-//     rtc_time time;
-//     memset(&time, 0, sizeof(rtc_time));
 
-//     time.year   = atoi(argv[2]);
-//     time.month  = atoi(argv[3]);
-//     time.day    = atoi(argv[4]);
-//     time.hour   = atoi(argv[5]);
-//     time.minute = atoi(argv[6]);
-//     time.second = atoi(argv[7]);
-//     hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-// }
+static void hl_mod_audio_dfs_root()
+{
+    rt_device_t disk;
+    int ret = 0;
+    char file_name[20] = {0};
+    
+    disk = rt_device_find("root");
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", "root");
+        return -RT_ERROR;
+    }
+
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "root");
+        dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs ");
+    }
+#endif
+    memcpy(&file_name[0], "/mnt", 4); 
+
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+    memcpy(&file_name[0], "/mnt/sdcard", 11); 
+
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+    LOG_I("hl mod audio dfs");
+}
+
+
+static void hl_mod_audio_tx_mkfs()
+{
+
+}
 
 // 获取时间 timer_name参数BUF大小需要大于24
 static void hl_mod_audio_rtc_get(char *timer_name)
@@ -1283,7 +1317,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     s_audio_to_app_mq = p_msg_handle;
     // elm_init();
 #if HL_IS_TX_DEVICE()
-    hl_mod_audio_dfs();
+    hl_mod_audio_dfs_sd();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);
