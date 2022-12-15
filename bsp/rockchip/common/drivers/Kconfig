@@ -540,6 +540,9 @@ if RT_USING_TOUCH_DRIVERS
         config RT_USING_FT3169
             bool "FT3169 touch driver select"
 
+        config RT_USING_ZTW523A
+            bool "ZTW523A touch driver select"
+
     endchoice
 
     config RT_TOUCH_X_RANGE

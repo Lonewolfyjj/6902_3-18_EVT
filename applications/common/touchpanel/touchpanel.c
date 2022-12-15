@@ -284,4 +284,4 @@ int rt_touchpanel_thread_init(void)
 
     return RT_EOK;
 }
-INIT_ENV_EXPORT(rt_touchpanel_thread_init);
+// INIT_ENV_EXPORT(rt_touchpanel_thread_init);

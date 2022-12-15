@@ -124,7 +124,7 @@ void rt_hw_iomux_config(void)
 
     uart2_iomux_config();
 
-    
+    uart1_m0_iomux_config();
 
     uart0_iomux_config();
 

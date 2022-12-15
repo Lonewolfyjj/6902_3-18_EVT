@@ -82,7 +82,7 @@ typedef enum _input_mod_msg_cmd_e
     /// 组合按键2的消息：降噪和开关机
     MSG_COMB_REC_PWR,
     /// 组合按键3的消息：录制和开关机
-    MSG_COMB_PAIR_PWR,
+    MSG_COMB_PAIR_PWR,    
 } input_mod_msg_cmd_e;
 #else
 //RX
