@@ -305,6 +305,20 @@ void PageManager_Running()
     }
 }
 
+// 获取当前的页面
+uint8_t PageManager_GetNowPage()
+{
+    
+    /*检查页面是否忙碌*/
+    if(!IsPageBusy)
+    {
+        /*新页面ID*/
+        return NewPage;
+    } else {
+        return OldPage;
+    }
+}
+
 #endif
 /*
  * EOF

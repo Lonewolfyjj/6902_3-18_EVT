@@ -79,18 +79,17 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
+    hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl = 
+    {
+        .b_two_in_one_choose = HL_TWO_ONE_CHOOSE_EXIT,
+    };
 
+    hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_TX_LED_BRIGHT)
