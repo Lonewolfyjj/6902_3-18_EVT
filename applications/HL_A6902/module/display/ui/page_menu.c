@@ -94,12 +94,18 @@ static void lv_icon_event_cb(lv_event_t * e)
 
     if(code == LV_EVENT_SCROLL){
         if(!cont_x_center){
+            if(cont_row == NULL){
+                return ;
+            }
             lv_obj_get_coords(cont_row, &cont_a);//复制对象
             cont_x_center = cont_a.x1 + lv_area_get_width(&cont_a) / 2;//获取Y方向中心轴坐标    
             child_cnt = lv_obj_get_child_cnt(cont_row);//获取子对象数量
         }
         for(i = 0; i < child_cnt; i++) {
-            child = lv_obj_get_child(cont_row, i);        
+            child = lv_obj_get_child(cont_row, i);   
+            if(child == NULL){
+                return ;
+            }     
             lv_obj_get_coords(child, &child_a);//复制子对象
 
             child_x_center = child_a.x1 + lv_area_get_width(&child_a) / 2;//获取子对象Y方向中心轴坐标
@@ -115,8 +121,14 @@ static void lv_icon_event_cb(lv_event_t * e)
     if (code == LV_EVENT_CLICKED) {    
         // rt_kprintf("LV_EVENT_CLICKED:current = %d  check_pos = %d\n",0,0);    
         lv_indev_get_point(param, &pos);        
-        for(i = 0; i < child_cnt; i++) {
-            child = lv_obj_get_child(cont_row, i);        
+        if(cont_row == NULL){
+                return ;
+        }
+        for(i = 0; i < child_cnt; i++) {            
+            child = lv_obj_get_child(cont_row, i);   
+            if(child == NULL){
+                return ;
+            }        
             lv_obj_get_coords(child, &child_a);//复制子对象
 
             child_x_center = child_a.x1 + lv_area_get_width(&child_a) / 2;//获取子对象Y方向中心轴坐标
@@ -130,9 +142,15 @@ static void lv_icon_event_cb(lv_event_t * e)
     }
     if (code == LV_EVENT_KEY) {    
         // rt_kprintf("LV_EVENT_KEY:current = %d  check_pos = %d\n",0,0);    
-        lv_indev_get_point(param, &pos);        
+        lv_indev_get_point(param, &pos);  
+        if(cont_row == NULL){
+                return ;
+        }      
         for(i = 0; i < child_cnt; i++) {
-            child = lv_obj_get_child(cont_row, i);        
+            child = lv_obj_get_child(cont_row, i);  
+            if(child == NULL){
+                return ;
+            }         
             lv_obj_get_coords(child, &child_a);//复制子对象
 
             child_x_center = child_a.x1 + lv_area_get_width(&child_a) / 2;//获取子对象Y方向中心轴坐标
@@ -252,7 +270,7 @@ void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func)
     for(i=0;i<ICON_NUMBER;i++){
         lab_obj[i] = data[i].lab;
     }
-    // lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
+    lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
 }
 
 lv_obj_t * hl_menu_obj_get(uint8_t num)
