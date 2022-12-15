@@ -840,6 +840,16 @@ uint8_t record_flag = 0;
 static void _hl_cap2play_thread_entry(void* arg)
 {
     LOG_D("audio cap2play thread run");
+#if HL_IS_TX_DEVICE()
+    int32_t gain = 10;
+    LOG_D("----cap_info.card_name : %s\r\n", cap_info.card_name);
+    if (strcmp("pdmc", cap_info.card_name) == 0) {
+        hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
+    }else {
+        gain = 0;
+        hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
+    }
+#endif
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);

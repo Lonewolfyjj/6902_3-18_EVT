@@ -35,7 +35,73 @@ extern "C" {
 #endif
 /* typedef -------------------------------------------------------------------*/
 
-/// DSP的控制命令枚举
+/// @brief A6902配置的操作的枚举
+typedef enum _lib_a6902_algorithm_io_ctrl_op_e_
+{
+    /// @brief 无操作
+    EM_A6902_ALGO_IO_CTL_OP_IDLE = 0x00,
+    /// @brief 获取alango参数
+    EM_A6902_ALGO_IO_CTL_OP_GET_ALANGO,
+    /// @brief 写入alango参数
+    EM_A6902_ALGO_IO_CTL_OP_SET_ALANGO,
+    /// @brief bypass操作
+    EM_A6902_ALGO_IO_CTL_OP_BYPASS,
+    /// @brief Hollyland算法获取参数
+    EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET,
+    /// @brief Hollyland算法写入参数
+    EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET,
+    /// @brief mute
+    EM_A6902_ALGO_IO_CTL_OP_MUTE,
+} lib_a6902_algorithm_io_ctrl_op_e;
+
+/// 相关使能状态，DSP用
+typedef enum _lib_a6902_algorithm_enable_e_
+{
+    /// @brief 失能
+    EM_A6902_ALGO_EN_DISABLE = 0x00,
+    /// @brief 使能
+    EM_A6902_ALGO_EN_ENABLE,
+} lib_a6902_algorithm_enable_e;
+
+/// 混音模式枚举，DSP用
+typedef enum _lib_a6902_algorithm_mixer_mode_e_
+{
+    /// @brief 立体声，不混音
+    EM_A6902_ALGO_MIXER_MODE_MIX_STERO = 0x00,
+    /// @brief 单声道
+    EM_A6902_ALGO_MIXER_MODE_MIX_MONO,
+    /// @brief 立体声
+    EM_A6902_ALGO_MIXER_MODE_MIX_SAFE,
+} lib_a6902_algorithm_mixer_mode_e;
+
+/// @brief A6902配置的参数的枚举， DSP用
+typedef enum _lib_a6902_algorithm_io_ctrl_param_e_
+{
+    /// @brief 降噪参数
+    EM_A6902_ALGO_IO_CTL_PARAM_NS = 0x00,
+    /// @brief 增益开关 io_ctrl_value:0(disable) =1 (enable)
+    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_EN,
+    /// @brief 设置左增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L,
+    /// @brief 设置右增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R,
+    /// @brief 设置左右增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL, 
+    /// @brief 能量值开关 io_ctrl_value:0(disable) =1 (enable)
+    EM_A6902_ALGO_IO_CTL_PARAM_VU_EN,
+    /// @brief 左能量值 
+    EM_A6902_ALGO_IO_CTL_PARAM_VU_L,
+	/// @brief 右能量值 
+    EM_A6902_ALGO_IO_CTL_PARAM_VU_R,
+	/// @brief 所有能量值 
+    EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL,
+    /// @brief 混音参数
+    EM_A6902_ALGO_IO_CTL_PARAM_MIXER,
+    /// @brief 混音参数，设置混音模式
+    EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD,
+} lib_a6902_algorithm_io_ctrl_param_e;
+
+/// DSP的控制命令枚举， MCU用
 typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
 {
     /// 设置配置，主要是DSP的帧格式
@@ -48,6 +114,24 @@ typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
     HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP,
     /// MUTE<uint8_t(0=OFF, 1=ON)>
     HL_EM_DRV_RK_DSP_CMD_SET_MUTE,
+    /// 增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_EN,
+    /// 增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L,
+    /// 增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R,
+    /// 增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL,
+    /// USB增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_USB,
+    /// 大容量增益设置
+    HL_EM_DRV_RK_DSP_CMD_SET_GAIN_MSC,
+    /// 混音
+    HL_EM_DRV_RK_DSP_CMD_SET_MIX_EN,
+    /// 混音
+    HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD,
+    /// VU
+    HL_EM_DRV_RK_DSP_CMD_GET_VU,
 } hl_drv_rk_xtensa_dsp_cmd_e;
 
 /// DSP的运行角色枚举
