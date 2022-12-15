@@ -207,7 +207,7 @@ static uint8_t hl_mod_upgrade_telink_pack(void)
     //lseek(s_upgrade_telink.upgrade_file, (s_upgrade_telink.file_start_addr + (s_upgrade_telink.upgrade_pack.upgrade_num * HL_UPGRADE_DATA_SIZE)), SEEK_SET);
 
     while (size < HL_UPGRADE_DATA_SIZE) {
-        ret = read(s_upgrade_telink.upgrade_file, s_upgrade_telink.upgrade_pack.upgrade_data, 128);
+        ret = read(s_upgrade_telink.upgrade_file, &s_upgrade_telink.upgrade_pack.upgrade_data[size], 128);
 
         if (ret > 0) {
             size += ret;

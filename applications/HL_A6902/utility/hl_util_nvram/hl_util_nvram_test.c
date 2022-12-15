@@ -27,10 +27,11 @@
 #define HL_UTIL_SNOR_NVRAM_SIZE 4096
 #define HL_UTIL_NVRAM_JSON_ADDR 0x120000
 
-#if 1
+#if 0
 /* variables -----------------------------------------------------------------*/
 static struct rt_mtd_nor_device* snor_device = RT_NULL;
 static uint8_t*                  snor_buf    = NULL;
+static rt_mutex_t                nvram_mutex = RT_NULL;
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static uint8_t _hl_util_nvram_test_init_snor()
@@ -62,8 +63,8 @@ static uint8_t _hl_util_nvram_test_nvram_read(char* data, uint16_t* len)
 
 static uint8_t _hl_util_nvram_test_nvram_write(char* data, uint16_t len)
 {
-    uint8_t read_have_data = 1;
-    uint32_t write_size = 0;
+    uint8_t  read_have_data = 1;
+    uint32_t write_size     = 0;
     if (NULL == data || 0 == len) {
         return 1;
     }
@@ -73,6 +74,24 @@ static uint8_t _hl_util_nvram_test_nvram_write(char* data, uint16_t len)
 
     if (write_size <= 0) {
         return 2;
+    }
+
+    return 0;
+}
+
+static uint8_t _hl_util_nvram_test_nvram_mutex_take()
+{
+    if (nvram_mutex) {
+        rt_mutex_take(nvram_mutex, RT_WAITING_FOREVER);
+    }
+
+    return 0;
+}
+
+static uint8_t _hl_util_nvram_test_nvram_mutex_release()
+{
+    if (nvram_mutex) {
+        rt_mutex_release(nvram_mutex);
     }
 
     return 0;
@@ -89,7 +108,10 @@ uint8_t hl_nvram_test(int argc, char** argv)
         if (!strcmp("init", argv[1])) {
 
             _hl_util_nvram_test_init_snor();
-            ret = hl_util_nvram_param_init(rt_kprintf, _hl_util_nvram_test_nvram_write, _hl_util_nvram_test_nvram_read);
+            ret =
+                hl_util_nvram_param_init(rt_kprintf, _hl_util_nvram_test_nvram_write, _hl_util_nvram_test_nvram_read,
+                                         _hl_util_nvram_test_nvram_mutex_take, _hl_util_nvram_test_nvram_mutex_release);
+            nvram_mutex = rt_mutex_create("nvram_mutex", RT_IPC_FLAG_FIFO);
             rt_kprintf("init finish\r\n");
 
         } else if (!strcmp("get", argv[1])) {
@@ -98,7 +120,7 @@ uint8_t hl_nvram_test(int argc, char** argv)
                 rt_kprintf("wrong parameter, please type: hl_nvram_test get keyname\r\n");
                 return 0;
             }
-            ret = hl_util_nvram_param_get(argv[2], get_buffer, "0");
+            ret = hl_util_nvram_param_get(argv[2], get_buffer, "0", sizeof(get_buffer));
             if (ret) {
                 rt_kprintf("paramater %s not exist ret = %d\r\n", argv[2], ret);
             } else {

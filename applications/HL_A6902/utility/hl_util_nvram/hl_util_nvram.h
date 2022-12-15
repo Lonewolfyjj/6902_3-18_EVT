@@ -41,6 +41,7 @@ typedef enum _hl_util_nvram_e_
     HL_EM_UTIL_NVRAM_NORMAL,
 } hl_util_nvram_e;
 
+/// @brief
 typedef struct _hl_util_nvram_t_
 {
     /// 是否初始化
@@ -74,9 +75,43 @@ typedef struct _hl_util_nvram_t_
      * @note 
      */
     uint8_t (*nvram_read)(char* data, uint16_t* len);
+
+    /**
+     * 
+     * @brief 外部实现NVRam需要的互斥锁获取
+     * @date 2022-12-08
+     * @author yangxianyun (rd52@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-12-08      <td>yangxianyun     <td>新建
+     * </table>
+     */
+    uint8_t (*nvram_mutex_take)();
+
+    /**
+     * 
+     * @brief 外部实现的NVRam的互斥锁释放
+     * @date 2022-12-08
+     * @author yangxianyun (rd52@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2022-12-08      <td>yangxianyun     <td>新建
+     * </table>
+     */
+    uint8_t (*nvram_mutex_release)();
 } hl_util_nvram_t, *hl_util_nvram_t_p;
 
 /* define --------------------------------------------------------------------*/
+
+#define HL_UTIL_NVRAM_ITEM_LEN_LIMIT (128)
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
@@ -103,7 +138,8 @@ typedef struct _hl_util_nvram_t_
  */
 uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
                                  uint8_t (*nvram_write)(char* data, uint16_t len),
-                                 uint8_t (*nvram_read)(char* data, uint16_t* len));
+                                 uint8_t (*nvram_read)(char* data, uint16_t* len), uint8_t (*nvram_mutex_take)(),
+                                 uint8_t (*nvram_mutex_release)());
 
 /**
  * hl_util_nvram_param_deinit
@@ -140,7 +176,7 @@ uint8_t hl_util_nvram_param_deinit();
  * <tr><td>2022-08-15      <td>yangxianyun     <td>新建
  * </table>
  */
-uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* default_value);
+uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* default_value, uint16_t value_len);
 
 /**
  * hl_util_nvram_param_get_integer
@@ -148,6 +184,7 @@ uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* defaul
  * @param [in] param_key 欲获取的参数名
  * @param [out] param_value 获取的参数的值的保存地址
  * @param [in] default_value 获取失败时的默认参数
+ * @param [in] value_len 字符串长度
  * @return uint8_t 获取状态： 0：获取成功 | 非0：获取失败
  * @date 2022-08-15
  * @author yangxianyun (rd52@hollyland-tech.com)
@@ -167,6 +204,7 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
  * @brief 写入参数值的函数
  * @param [in] param_key 写入的参数名
  * @param [in] param_value 写入的参数的内容
+ * @param [in] value_len 字符串长度
  * @return uint8_t 写入状态 0：成功 | 非0：失败
  * @date 2022-08-15
  * @author yangxianyun (rd52@hollyland-tech.com)
