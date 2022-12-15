@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -86,20 +87,6 @@ typedef enum _hl_mod_telink_ctrl_ind
     /// 返回设置状态：类型hl_rf_bypass_info_t
     HL_RF_BYPASS_SETTING_IND = 0x24,
 } hl_mod_telink_ctrl_ind;
-
-typedef enum _hl_rf_pair_state_e
-{
-    /// 无配对设备
-    HL_RF_UNCONNECT = 0x00,
-    /// 左声道已配对
-    HL_RF_L_CONNECT,
-    /// 右声道已配对
-    HL_RF_R_CONNECT,
-    /// 左右声道已配对
-    HL_RF_LR_CONNECT,
-    /// 正在配对中
-    HL_RF_PAIRING,
-} hl_rf_pair_state_e;
 
 typedef enum _hl_rf_channel_e
 {

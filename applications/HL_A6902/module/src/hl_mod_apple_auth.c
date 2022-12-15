@@ -20,10 +20,11 @@ static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t re
     } else {
         ret += hl_drv_usb_vendor_class_com_read(read_data_addr, read_data_len, timeout);
     }
-    rt_kprintf("%s:%d\r\n", __func__, ret);
+    rt_kprintf("%s:%d\n", __func__, ret);
     for (i = 0; i < ret; i++) {
         rt_kprintf("%02x ", read_data_addr[i]);
     }
+    rt_kprintf("\n");
     return ret;
 }
 
@@ -46,7 +47,7 @@ static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t 
         ret += hl_drv_usb_vendor_class_com_write(write_data_addr, write_data_len);
     }
     rt_kprintf("%s:%d\r\n", __func__, write_data_len);
-    return 0;
+    return RT_EOK;
 }
 
 static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len,
@@ -78,7 +79,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
         // return RT_EOK;
     } else {
         rt_kprintf("i2c read err!\n");
-        return RT_ERROR;
+        return 0;
     }
 
     msgs[1].addr  = 0x10;
@@ -105,7 +106,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
         return read_data_len;
     }else {
         rt_kprintf("i2c read err!\n");
-        return RT_ERROR;
+        return 0;
     }
     
     return 0;
@@ -145,7 +146,7 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
         return RT_ERROR;
     }
 
-    return 0;
+    return RT_ERROR;
 }
 
 static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
@@ -216,15 +217,19 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     s_apple_auth.iap2_thread_flag = RT_TRUE;
     s_apple_auth.eap_thread_flag  = RT_TRUE;
 
+    // 获取苹果认证芯片I2C设备句柄
     s_apple_auth.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
     RT_ASSERT(s_apple_auth.mfi_chip_iic);
 
+    // USB通信初始化
     ret = hl_drv_usb_vendor_class_com_init();
     rt_kprintf("\nhl_drv_usb_vendor_class_com_init ret = %d\n", ret);
 
+    // 初始化结构体
     s_apple_auth.iap2_handle = rt_malloc(sizeof(st_iap2_protocol_t));
     rt_memset(s_apple_auth.iap2_handle, 0, sizeof(st_iap2_protocol_t));
 
+    // 函数注册
     s_apple_auth.iap2_func_handle.delay_usec_func = _hl_mod_apple_auth_iap2_delay;
     s_apple_auth.iap2_func_handle.iap2_usb_read   = _hl_mod_apple_auth_iap2_usb_read;
     s_apple_auth.iap2_func_handle.iap2_usb_write  = _hl_mod_apple_auth_iap2_usb_write;
@@ -250,12 +255,14 @@ int hl_mod_apple_auth_start()
 {
     rt_err_t result;
 
+    // 状态机状态初始化
     s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
     s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
     s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
     s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
     s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
 
+    // 创建线程
     hl_mod_apple_auth_iap2_thread =
         rt_thread_create("apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
                          IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
@@ -271,6 +278,7 @@ int hl_mod_apple_auth_start()
         return 1;
     }
 
+    // 启动线程
     rt_thread_startup(hl_mod_apple_auth_iap2_thread);
     rt_thread_startup(hl_mod_apple_auth_eap_thread);
 
