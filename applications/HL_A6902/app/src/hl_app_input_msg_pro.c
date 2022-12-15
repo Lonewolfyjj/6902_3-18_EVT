@@ -31,6 +31,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 
 #define DBG_SECTION_NAME "app_input"
@@ -104,7 +105,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
             break;
         case HL_KEY_EVENT_LONG:
             channel = 0;
-            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            hl_mod_telink_ioctl(HL_RF_PAIR_START_CMD, &channel, sizeof(channel));
             LOG_D("send pair cmd!!! \r\n");
             break;
         case HL_KEY_EVENT_DOUBLE:
@@ -224,12 +225,12 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
             break;
         case HL_KEY_EVENT_LONG:
             channel = 0x00;
-            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            hl_mod_telink_ioctl(HL_RF_PAIR_START_CMD, &channel, sizeof(channel));
             LOG_D("send pair cmd (channel = %d)!!! \r\n",channel);
             break;
         case HL_KEY_EVENT_DOUBLE:
             channel = 0x01;
-            hl_mod_telink_ioctl(HL_MOD_TELINK_PAIR_START_CMD, &channel, sizeof(channel));
+            hl_mod_telink_ioctl(HL_RF_PAIR_START_CMD, &channel, sizeof(channel));
             LOG_D("send pair cmd (channel = %d)!!! \r\n",channel);
             break;
         case HL_KEY_EVENT_RELEASE:
@@ -272,8 +273,10 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
 {
     if (value == 0) {
         rx_info.usb_plug = 0;
+        hl_mod_apple_auth_stop();
     } else {
         rx_info.usb_plug = 1;
+        hl_mod_apple_auth_start();
     }
 }
 

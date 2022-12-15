@@ -92,15 +92,21 @@ uint8_t hl_drv_usb_vendor_class_com_init()
     return 0;
 }
 
-uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len)
+uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len, uint16_t timeout)
 {
-    int     size   = rt_device_read(handle->device, 0, data, sizeof(data));
-    int     ret    = rt_sem_take(handle->rx_notice, 50);
+    int     size   = rt_device_read(handle->device, 0, data, data_len);
+    int     ret    = rt_sem_take(handle->rx_notice, timeout);
     uint8_t result = 0;
-    if (size > 0) {
-        result = size;
+    if (ret == 0) {
+        result = data_len;
+        // int i = 0;
+        // rt_kprintf("\r\n");
+        // for (i = 0; i < data_len; i++) {
+        //     rt_kprintf("%02x ", data[i]);
+        // }
+        // rt_kprintf("\r\n");
     } else {
-        rt_kprintf("read data error = %d\r\n", size);
+        rt_kprintf("read data error = %d\r\n", data_len);
     }
     return result;
 }
