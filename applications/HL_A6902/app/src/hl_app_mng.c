@@ -162,6 +162,7 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
     hl_mod_apple_auth_init(&hl_app_mq);
+    hl_mod_apple_auth_start();
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 }

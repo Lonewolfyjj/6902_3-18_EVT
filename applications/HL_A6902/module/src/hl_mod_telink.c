@@ -357,13 +357,6 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     // 初始化fifo
     hl_util_fifo_init(&s_telink.fifo, s_telink_fifo_buf, TELINK_FIFO_BUF_SIZE);
 
-    // 初始化Telink模块串口设备
-    result = _hl_mod_telink_serial_init();
-    if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
-    }
-
     return 0;
 }
 
@@ -383,6 +376,13 @@ uint8_t hl_mod_telink_deinit(void)
 uint8_t hl_mod_telink_start(void)
 {
     rt_err_t result;
+
+    // 初始化Telink模块串口设备
+    result = _hl_mod_telink_serial_init();
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
+        return 1;
+    }
 
     // 清空fifo等资源
     hl_util_fifo_clear(&s_telink.fifo);
@@ -410,6 +410,13 @@ uint8_t hl_mod_telink_stop(void)
 {
     rt_err_t result;
 
+    result = rt_device_close(s_telink.serial);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] close faild!!! \r\n", __FUNCTION__, __LINE__);
+        return RT_ERROR;
+    }
+    s_telink.serial = NULL;
+
     // 脱离Telink线程
     result = rt_thread_detach(&telink_thread);
     if (RT_EOK != result) {
@@ -424,8 +431,11 @@ MSH_CMD_EXPORT(hl_mod_telink_stop, telink stop cmd);
 uint8_t hl_mod_telink_ioctl(uint8_t cmd, uint8_t* data_addr, uint16_t data_len)
 {
     if (TELINK_UART_BUF_SIZE < data_len) {
-        rt_kprintf("[%s][line:%d] data_len is too long!!! \r\n", __FUNCTION__, __LINE__);
+        rt_kprintf("\n[%s][line:%d] data_len is too long!!! \n", __FUNCTION__, __LINE__);
         return 1;
+    } else if(RT_NULL == s_telink.serial) {
+        rt_kprintf("\n[%s][line:%d] telink serial is NULL!!! \n", __FUNCTION__, __LINE__);
+        return 2;
     }
     uint8_t frame_buf[TELINK_UART_BUF_SIZE] = { 0 };
 
