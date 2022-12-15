@@ -33,6 +33,7 @@
 #include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 #include "hl_mod_upgrade.h"
+#include "hl_mod_euc.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_app_com_msg_pro.h"
 #include "hl_app_disp_msg_pro.h"
@@ -161,6 +162,8 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
     hl_mod_apple_auth_init(&hl_app_mq);
+    hl_mod_euc_init(&hl_app_mq);
+    hl_mod_euc_start();
 }
 
 // 关机，去初始化模块
@@ -173,6 +176,8 @@ void hl_app_mng_powerOff(void)
     hl_mod_audio_deinit();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
+    hl_mod_euc_stop();
+    hl_mod_euc_deinit();
     //hl_mod_pm_stop();
     //hl_mod_pm_deinit();
 }

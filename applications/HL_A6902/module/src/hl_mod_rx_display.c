@@ -264,16 +264,16 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.auto_record_portect = data;
             flag->sys_status.auto_record_portect = 1;
         } break;
-        case TX1_NET_SWITCH_CMD: {
-            uint8_t data                        = *(uint8_t*)ptr;
-            data_p->sys_status.tx1_net_switch = data;
-            flag->sys_status.tx1_net_switch = 1;
-        } break;
-        case TX2_NET_SWITCH_CMD: {
-            uint8_t data                        = *(uint8_t*)ptr;
-            data_p->sys_status.tx2_net_switch = data;
-            flag->sys_status.tx2_net_switch = 1;
-        } break;
+        // case TX1_NET_SWITCH_CMD: {
+        //     uint8_t data                        = *(uint8_t*)ptr;
+        //     data_p->sys_status.tx1_net_switch = data;
+        //     flag->sys_status.tx1_net_switch = 1;
+        // } break;
+        // case TX2_NET_SWITCH_CMD: {
+        //     uint8_t data                        = *(uint8_t*)ptr;
+        //     data_p->sys_status.tx2_net_switch = data;
+        //     flag->sys_status.tx2_net_switch = 1;
+        // } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
             break;
