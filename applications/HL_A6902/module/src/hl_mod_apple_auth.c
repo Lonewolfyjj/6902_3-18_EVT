@@ -289,6 +289,10 @@ int hl_mod_apple_auth_stop()
 {
     rt_err_t result;
 
+    if(RT_NULL == hl_mod_apple_auth_iap2_thread) {
+        rt_kprintf("[%s][line:%d]delete return!!! \r\n", __FUNCTION__, __LINE__);
+        return 0;
+    }
     // 脱离Telink线程
     result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
     if (RT_EOK != result) {
@@ -297,4 +301,14 @@ int hl_mod_apple_auth_stop()
     }
 
     return 0;
+}
+
+void hl_mod_apple_auth_begin()
+{
+    s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_DETECT;
+}
+
+void hl_mod_apple_auth_end()
+{
+    s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
 }

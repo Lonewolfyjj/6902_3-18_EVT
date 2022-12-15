@@ -125,6 +125,9 @@ int hl_mod_apple_auth_start();
  */
 int hl_mod_apple_auth_stop();
 
+void hl_mod_apple_auth_begin();
+void hl_mod_apple_auth_end();
+
 #endif
 
 /*
