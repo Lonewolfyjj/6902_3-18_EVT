@@ -80,6 +80,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_CHARGE_STATE_CMD,
     /// 设置设备RTC时间，参数为<hl_mod_euc_rtc_st>
     HL_SET_RTC_TIME_CMD,
+    /// HID发送开始录制命令，无参数
+    HL_HID_START_RECORD_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -133,19 +135,20 @@ typedef enum _hl_mod_euc_charge_state_e
     HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL,
 } hl_mod_euc_charge_state_e;
 
-typedef struct _hl_mod_euc_rtc_st {
+typedef struct _hl_mod_euc_rtc_st
+{
     /// 秒  后7bit有效
-    uint8_t second;   
+    uint8_t second;
     /// 分  后7bit有效
-    uint8_t minute;   
+    uint8_t minute;
     /// 时  12h制 后5bit有效 24h制 后6bit有效
-    uint8_t hour;     
+    uint8_t hour;
     /// 天  后6bit有效
-    uint8_t day;      
+    uint8_t day;
     /// 周几    后3bit有效
-    uint8_t weekday;  
+    uint8_t weekday;
     ///月   后5bit有效
-    uint8_t month;    
+    uint8_t month;
     ///年
     uint8_t year;
 } hl_mod_euc_rtc_st;
