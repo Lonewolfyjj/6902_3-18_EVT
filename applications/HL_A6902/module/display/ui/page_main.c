@@ -487,10 +487,14 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_set_vodeo_dot_status_cb(video_dot_tx2,ptr->tx_device_2.record);
             main_init.tx_device_2.record = ptr->tx_device_2.record; 
             break;
-
-        
-        case HL_CHANGE_DELETE_PAGE:
+        case HL_CHANGE_DELETE_TX1:
             hl_obj_delete(area_tx1,true);
+        break;
+        case HL_CHANGE_DELETE_DOUBLE:
+            hl_obj_delete(area_tx1,true);
+            hl_obj_delete(area_tx2,true);
+        break;
+        case HL_CHANGE_DELETE_TX2:
             hl_obj_delete(area_tx2,true);
             break;
         default:

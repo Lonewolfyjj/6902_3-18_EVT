@@ -398,7 +398,8 @@ rt_err_t lv_port_disp_init(void)
 	disp_drv.draw_buf = &disp_ctx.disp_buf;
 	disp_drv.flush_cb = lvgl_fb_flush;
     disp_drv.sw_rotate = 1;
-    disp_drv.rotated = LV_DISP_ROT_90;
+    // disp_drv.rotated = LV_DISP_ROT_90;
+    disp_drv.rotated = LV_DISP_ROT_270;
     // disp_drv.full_refresh = 1;
 	// disp_drv.rounder_cb = lv_display_driver_rounder_callback;
     lv_disp_drv_register(&disp_drv);

@@ -29,10 +29,11 @@
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
-
+#include "hl_util_timeout.h"
 #if !HL_IS_TX_DEVICE()
 /* typedef -------------------------------------------------------------------*/
 #include "page_menu.h"
+#include "page_test.h"
 #include "lvgl.h"
 #include "hl_drv_ztw523a.h"
 /* define --------------------------------------------------------------------*/
@@ -43,10 +44,36 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
+#define BACKTOUCHKEY_DEBANCE_TIMER          20
+
+typedef struct _hl_input_mod_t
+{
+    /// 消息队列句柄
+    rt_mq_t msg_hander;
+    ///  消息
+    mode_to_app_msg_t msg;
+} hl_display_msg_t;
+
+// 系统当前的状态和类别
+static hl_display_screen_s hl_screendata;
+// 系统上一次的状态
+static  hl_display_screen_change_s change_flag;
+// 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
+// 菜单当前的居中的图标
 static uint8_t now_center_icon = 0;
-// static hl_scr_indev_msg_t  in_inputdev = {0};
+
+static hl_display_msg_t hl_display_msg = { 0 };
+// 返回触摸按键消抖时间
+hl_timeout_t backtouchkey_debance;
+
+// 获取当前页面
+hl_screen_page_e hl_mod_display_scr_get_page(void)
+{
+    hl_screendata.page_id = PageManager_GetNowPage();
+    return hl_screendata.page_id;
+}
 
 uint8_t hl_mod_menu_icon_event(uint32_t current)
 {
@@ -70,71 +97,134 @@ uint32_t hl_mod_menu_get_icon()
 {
     return now_center_icon;
 }
-
-
-void hl_mod_display_scr_set_page(uint32_t now_page)
+hl_display_screen_s* hl_mod_page_get_screen_data_ptr()
 {
-    in_data.in_cmd.page_id = now_page;
+    return &hl_screendata; 
 }
 
-hl_screen_page_e hl_mod_display_scr_get_page(void)
+hl_display_screen_change_s* hl_mod_page_get_screen_change_flag()
 {
-    return in_data.in_cmd.page_id;
+    return &change_flag;
 }
 
-static uint8_t hl_mod_display_scr_scan_incmd(uint32_t* now_screen_mode)
-{
-    static hl_scr_in_cmd_t last_in_cmd;
-    hl_scr_in_cmd_t        now;
-
-    now.page_id = hl_mod_display_scr_get_page();
-
-    if (last_in_cmd.page_id != now.page_id) {
-        last_in_cmd.page_id = now.page_id;
-        *now_screen_mode    = now.page_id;
-        LOG_E("scr new pageid(%d)\n", now.page_id);
-
-        return HL_DISPLAY_SUCCESS;
-    } else {
-        return HL_DISPLAY_FAILED;
-    }
-}
-
-//模外设置的代码
-uint8_t hl_mod_display_scr_page_incmd(void)
-{
-    uint8_t now_page_id;
-
-    if (HL_DISPLAY_SUCCESS == hl_mod_display_scr_scan_incmd(&now_page_id)) {
-        if (false == PageManager_PagePush(now_page_id)) {
-            return HL_DISPLAY_FAILED;
-        } else {
-            return HL_DISPLAY_SUCCESS;
-        }
-    }
-
-    return HL_DISPLAY_SUCCESS;
-}
-// 表示按下
+// 返回触摸按键消抖功能实现
 uint8_t hl_mod_keypad_touchkey_read()
 {
     static uint8_t last_key = 0;
-    uint8_t res;
+    uint8_t        res;
+    uint8_t        press = 0;
 
     res = hl_drv_ztw523a_botton_status();
-    if (last_key != res) {
-        LV_LOG_USER("touchkey_en");
-        last_key = res;
-        return 1;
-    } else {    
-        return 0;
+
+    switch (last_key) {
+        case 0:
+            if (res == 1) {
+                // 出现下降沿，重新计数
+                hl_util_timeout_set(&backtouchkey_debance, BACKTOUCHKEY_DEBANCE_TIMER);
+                last_key = 1;
+            }
+            break;
+        case 1:
+            if (hl_util_timeout_judge(&backtouchkey_debance) == RT_TRUE) {
+                //20s内没有上升沿，按键按下
+                if (res == 1) {
+                    LV_LOG_USER("touchkey_en");
+                    press    = 1;
+                    last_key = 0;
+                    hl_util_timeout_close(&backtouchkey_debance);
+                }
+            } else {
+                // 出现上升沿，则清定时器
+                if (res == 0) {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_key = 0;
+                    press    = 0;
+                }
+            }
+            break;
+        default:
+            press = 0;
+            break;
     }
-
-
+    return press;
 }
 
+// 返回按键扫描，（如果触发，则返回上一级菜单）
+void hl_mod_menu_goto_fast_config_scan()
+{
+    if( 1  == hl_mod_keypad_touchkey_read() )
+    {
+        PageManager_PagePush(PAGE_FAST_TX_CONFIG);
+    }
+}
 
-// 返回按键扫描
+// 旋钮进入快捷LINW OUT设置
+void hl_mod_menu_goto_quickset_scan()
+{
+    int8_t data = hl_mod_get_rx_knob_val();
+    if (data != 0)
+    {
+        PageManager_PagePush(PAGE_QUICK_SETTINGS);
+    }
+}
+
+// 选择按键处理
+void hl_mod_page_s_choose_two_one_scan(uint8_t maxnum)
+{
+    static int8_t choose = 0;
+    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl;
+
+    int8_t  data = hl_mod_get_rx_knob_val();
+
+    if (1 == hl_mod_keypad_touchkey_read()) {
+    }
+
+    // LV_LOG_USER("knob1=%d\n",data);
+    if (data != 0) {
+        choose += data;
+        if (choose >= maxnum) {
+            choose = maxnum - 1;
+        } else if (choose < 0) {
+            choose = 0;
+        }
+        LV_LOG_USER("choose=%d\n", choose);
+
+        s_two_in_one_test_ctl.s_two_in_one_choose = (hl_b_two_in_one_choose_t)choose;
+
+        hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    }
+}
+
+// 选择按键处理
+void hl_mod_page_b_choose_two_one_scan(uint8_t maxnum)
+{
+    static int8_t choose;
+    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl;
+
+    int8_t  data = hl_mod_get_rx_knob_val();
+
+    if (1 == hl_mod_keypad_touchkey_read()) {
+
+        page_two_in_one_click(choose);
+    }
+
+    // LV_LOG_USER("knob1=%d\n",data);
+    if (data != 0) {
+        choose += data;
+        if (choose >= maxnum) {
+            choose = maxnum - 1;
+        } else if (choose < 0) {
+            choose = 0;
+        }
+        LV_LOG_USER("choose=%d\n", choose);
+
+        s_two_in_one_test_ctl.s_two_in_one_choose = (hl_b_two_in_one_choose_t)choose;
+
+        hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    }
+}
+
+// 返回按键扫描，（如果触发，则返回上一级菜单）
 void hl_mod_menu_backbtn_scan()
 {
     if( 1  == hl_mod_keypad_touchkey_read() )
@@ -172,9 +262,43 @@ void hl_mod_menu_icon_set(uint32_t num)
     now_center_icon = num;
 }
 
-void hl_mod_menu_knob_icon_change(uint8_t center, uint8_t maxnum)
+// 设定旋钮的值
+void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num)
+{
+    *ptr = num;
+}
+
+// 获取旋钮的当前选定值
+int16_t hl_mod_knob_select_val_get(int16_t* ptr)
+{
+    return *ptr;
+}
+
+// 更新旋钮的当前值 left right 分别是上下限
+int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right)
+{
+    int16_t center = hl_mod_knob_select_val_get(ptr);
+    int8_t data   = hl_mod_get_rx_knob_val();
+
+    if (data != 0) {
+        center += data;
+        if (center >= right) {
+            center = right;
+        } else if (center <= left) {
+            center = left;
+        }
+        LV_LOG_USER("knob_val=%d\n", data);
+        hl_mod_knob_select_val_set(ptr, center);
+        return center;
+    }
+    // 无数据变更
+    return 0;
+}
+
+void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum)
 {
     int8_t data = hl_mod_get_rx_knob_val();
+
     // LV_LOG_USER("knob1=%d\n",data);
     if (data != 0) {
         center += data;
@@ -298,6 +422,31 @@ bool hl_mod_next_menu_enter(uint8_t* tab, uint8_t num, uint8_t max_num)
     }
 }
 
+
+void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void *param, uint32_t len)
+{
+    rt_err_t res;
+
+    hl_display_msg.msg.sender          = DISPLAY_MODE;
+    hl_display_msg.msg.cmd             = msg_cmd;
+    if (len == 0) {
+        hl_display_msg.msg.param.u32_param = *(uint32_t *)param;
+    } else {
+        hl_display_msg.msg.param.ptr = param;
+    }
+    hl_display_msg.msg.len             = len;
+
+
+    res = rt_mq_send(hl_display_msg.msg_hander, (void*)(&hl_display_msg.msg), sizeof(mode_to_app_msg_t));
+    if (res == -RT_EFULL) {
+        LOG_E("DISP_MODE msgq full\n");
+    } else if (res == -RT_ERROR) {
+        LOG_E("DISP_MODE msgq err\n");
+    }
+}
+
+
+
 void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
 {
 
@@ -370,8 +519,9 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_VERSION);
     PAGE_REG(PAGE_VOLUME_MENU);
     PAGE_REG(PAGE_MONITOR_VOLUME_SET);
-    PAGE_REG(PAGE_UACIN_VOLUME_SET);
+    // PAGE_REG(PAGE_UACIN_VOLUME_SET);
     PAGE_REG(PAGE_UACOUT_VOLUME_SET);
+    PAGE_REG(PAGE_QUICK_SETTINGS);
 }
 
 void lvgl2rtt_init(void)
@@ -385,8 +535,6 @@ void hl_mod_page_all_init(void)
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
 
-    hl_mod_display_scr_set_page(PAGE_NONE);
-    hl_mod_display_scr_set_page(PAGE_HOME);
     PageManager_PagePush(PAGE_HOME);
 }
 #endif

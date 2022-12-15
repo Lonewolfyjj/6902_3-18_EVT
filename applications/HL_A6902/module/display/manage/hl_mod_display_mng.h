@@ -86,6 +86,7 @@ void PageManager_PageStackClear();
 
 void PageManager_Running();
 
+uint8_t PageManager_GetNowPage();
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
