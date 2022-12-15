@@ -195,7 +195,7 @@ static void hl_mod_pm_gpio_deal()
 
     // hl_hal_gpio_init(GPIO_AMP_EN);// 0b0 3.3V 
     // hl_hal_gpio_high(GPIO_AMP_EN); // 
-    rt_pin_mode(GPIO1_C3, PIN_MODE_INPUT_PULLUP); // GPIO_AMP_EN
+    // rt_pin_mode(GPIO1_C3, PIN_MODE_INPUT_PULLUP); // GPIO_AMP_EN
 
     // hl_hal_gpio_init(GPIO_PWR_EN);//  AMP EN 
     // hl_hal_gpio_low(GPIO_PWR_EN); // 

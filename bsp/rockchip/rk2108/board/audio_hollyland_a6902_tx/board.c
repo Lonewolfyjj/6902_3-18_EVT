@@ -150,7 +150,7 @@ const struct audio_card_desc rk_board_audio_cards[] =
     {
         .name = "wifi",
         .dai = I2STDM1,
-        .codec = (void *) &codec_nau88l25b,
+        .codec = RT_NULL,
         .capture = false,
         .playback = true,
         .mclkfs = 256,

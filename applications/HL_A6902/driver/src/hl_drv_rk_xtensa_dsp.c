@@ -36,10 +36,10 @@
 
 typedef struct _lib_bypass_param_
 {
-    uint8_t *in_buf;
-    uint8_t *out_buf;
-    uint8_t *out_24bit_buf_after_process;
-    uint8_t *out_24bit_buf_before_process;
+    uint8_t* in_buf;
+    uint8_t* out_buf;
+    uint8_t* out_24bit_buf_after_process;
+    uint8_t* out_24bit_buf_before_process;
     uint16_t process_buff_len;
     uint16_t out_buff_len_24bit;
 } lib_bypass_param_type_t, *lib_bypass_param_type_t_p;
@@ -58,29 +58,60 @@ typedef struct _lib_bypass_param_
  * <tr><td>2022-08-10      <td>yangxianyun     <td>新建
  * </table>
  */
-typedef struct _lib_alango_srp_param_
+typedef struct _lib_a6902_algorithm_param_
 {
-    /// role = 0:RX role = 1:TX
+    /// @brief 角色role = 0:RX | role = 1:TX
     uint16_t role;
-    /// 0:get 1:set
-    uint16_t io_ctrl_op;
-    int16_t  io_ctrl_value;
+    /// @brief 音频处理通道数
     uint16_t channel;
+    /// @brief 输出24bit 2channel的字节长度（UAC用）
     uint16_t b24_2ch_len;
+    /// @brief 输出24bit 1channel的字节长度（录制用）
     uint16_t b24_1ch_len;
+    /// @brief 采样大小 32bit 4字节
     uint16_t sample_size;
+    /// @brief alango srp算法的配置长度（字节）
     uint16_t srp_profile_length;
-    uint32_t io_ctrl_param;
+    /// @brief 帧长，采样点个数
+    uint16_t frame_length;
+    /// @brief 配置参数的标志 1时进行配置， 0时不进行配置
+    uint16_t io_ctrl_notify;
+    /// @brief 详见lib_a6902_algorithm_io_ctrl_op_e
+    uint16_t io_ctrl_op;
+    /// @brief 配置的参数
+    uint16_t io_ctrl_param;
+    /// @brief 配置的参数的值
+    int32_t io_ctrl_value;
+    /// @brief 输出32bit 2channel的字节长度（音频链路用）
     uint32_t b32_2ch_len;
-    uint32_t frame_length;
-    long*    in_buf_b32_2ch;
-    long*    out_buf_b32_2ch;
-    long*    out_buf_b24_1ch_after_process;
-    long*    out_buf_b24_1ch_before_process;
-    long*    out_buf_b24_2ch_after_process;
-    long*    out_buf_b24_2ch_before_process;
-    char*    srp_profile;
-} __attribute__((packed, aligned(1))) lib_alango_srp_param_type_t, *lib_alango_srp_param_type_t_p;
+    /// @brief 输入32bit 2channel的缓存地址
+    long* in_buf_b32_2ch;
+    /// @brief 输出32bit 2channel的缓存地址
+    long* out_buf_b32_2ch;
+    /// @brief 输出24bit 1channel的缓存地址（处理后）
+    long* out_buf_b24_1ch_after_process;
+    /// @brief 输出24bit 1channel的缓存地址（处理前）
+    long* out_buf_b24_1ch_before_process;
+    /// @brief 输出24bit 2channel的缓存地址（处理后）
+    long* out_buf_b24_2ch_after_process;
+    /// @brief 输出24bit 2channel的缓存地址（处理前）
+    long* out_buf_b24_2ch_before_process;
+    /// @brief alango srp算法的配置文件缓存地址
+    char* srp_profile;
+} __attribute__((packed, aligned(1))) lib_a6902_algorithm_param_type_t, *lib_a6902_algorithm_param_type_t_p;
+
+/// DSP 控制字段的结构体，用来做读写均衡
+typedef struct _dsp_io_ctrl_
+{
+    /// @brief 配置参数的标志 1时进行配置， 0时不进行配置
+    uint16_t io_ctrl_notify;
+    /// @brief 详见lib_a6902_algorithm_io_ctrl_op_e
+    uint16_t io_ctrl_op;
+    /// @brief 配置的参数
+    uint16_t io_ctrl_param;
+    /// @brief 配置的参数的值
+    int32_t io_ctrl_value;
+} dsp_io_ctrl_t;
 
 /* define --------------------------------------------------------------------*/
 
@@ -121,7 +152,7 @@ typedef struct _lib_alango_srp_param_
 /// tx alango srp算法功能的去初始化枚举
 #define DSP_ALGO_ALANGO_SRP_DEINIT 0x4000000e
 
-#define HL_DEVICE_RX_USE_BYPSS_TEST 1
+#define HL_DEVICE_RX_USE_BYPSS_TEST 0
 //-----------------------------------------------------------------------------
 
 /* variables -----------------------------------------------------------------*/
@@ -136,19 +167,21 @@ static struct rt_device* sg_dsp_dev = NULL;
 static struct dsp_work* sg_dsp_work = NULL;
 /// 全局的帧长计算保存
 static uint16_t sg_dsp_frame_bytes = 0;
+/// DSP 控制暂存
+static dsp_io_ctrl_t sg_dsp_io_ctrl = { 0 };
 
 #if HL_IS_TX_DEVICE()
 // tx = 1
-static lib_alango_srp_param_type_t_p sg_tx_dsp_param = NULL;
+static lib_a6902_algorithm_param_type_t_p sg_tx_dsp_param = NULL;
 #else
 // rx = 0
-static lib_alango_srp_param_type_t_p sg_rx_dsp_param = NULL;
+static lib_a6902_algorithm_param_type_t_p sg_rx_dsp_param        = NULL;
 #if HL_DEVICE_RX_USE_BYPSS_TEST
-static lib_bypass_param_type_t_p sg_rx_bypass_dsp_param = NULL;
+static lib_bypass_param_type_t_p          sg_rx_bypass_dsp_param = NULL;
 #endif
 #endif
 
-extern const unsigned char srp_profile[356];
+extern const unsigned char srp_profile[386];
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -171,7 +204,8 @@ extern const unsigned char srp_profile[356];
  * <tr><td>2022-09-06      <td>yangxianyun     <td>新建
  * </table>
  */
-static struct dsp_work* _hl_drv_rk_xtensa_dsp_create_work(uint32_t id, uint32_t algo_type, uint32_t param, uint32_t param_size)
+static struct dsp_work* _hl_drv_rk_xtensa_dsp_create_work(uint32_t id, uint32_t algo_type, uint32_t param,
+                                                          uint32_t param_size)
 {
     struct dsp_work* work;
 
@@ -211,7 +245,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
 #if HL_IS_TX_DEVICE()
     RT_ASSERT(sg_tx_dsp_param != NULL);
     sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_tx_dsp_param,
-                                  sizeof(lib_alango_srp_param_type_t));
+                                                    sizeof(lib_a6902_algorithm_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
@@ -230,8 +264,8 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
     // todo rx dsp init
 #if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     RT_ASSERT(sg_rx_dsp_param != NULL);
-    sg_dsp_work =
-        _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_rx_dsp_param, sizeof(lib_bypass_param_type_t));
+    sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_ALANGO_SRP_INIT, (uint32_t)sg_rx_dsp_param,
+                                                    sizeof(lib_a6902_algorithm_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
@@ -246,7 +280,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_enable_dsp()
 #else
     RT_ASSERT(sg_rx_bypass_dsp_param != NULL);
     sg_dsp_work = _hl_drv_rk_xtensa_dsp_create_work(ASR_WAKE_ID, DSP_ALGO_BYPASS_INIT, (uint32_t)sg_rx_bypass_dsp_param,
-                                  sizeof(lib_alango_srp_param_type_t));
+                                                    sizeof(lib_a6902_algorithm_param_type_t));
     if (!sg_dsp_work) {
         HL_DRV_DSP_LOG("dsp create config work fail\n");
     }
@@ -383,7 +417,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
     sg_rx_dsp_param->frame_length                   = config->period_size;
     sg_rx_dsp_param->b32_2ch_len                    = config->buffer_size_b32_2ch;
     sg_rx_dsp_param->b24_2ch_len                    = config->buffer_size_b24_2ch;
-    sg_rx_dsp_param->role                           = 1;
+    sg_rx_dsp_param->role                           = 0;
     sg_rx_dsp_param->srp_profile                    = srp_profile;
     sg_rx_dsp_param->srp_profile_length             = sizeof(srp_profile);
     sg_dsp_frame_bytes = sg_rx_dsp_param->frame_length * sg_rx_dsp_param->sample_size * sg_rx_dsp_param->channel;
@@ -399,13 +433,13 @@ static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_
         HL_DRV_DSP_LOG("not init\r\n");
         return 1;
     }
-    sg_rx_bypass_dsp_param->in_buf                 = config->audio_process_in_buffer_b32_2ch;
-    sg_rx_bypass_dsp_param->out_buf                = config->audio_process_out_buffer_b32_2ch;
-    sg_rx_bypass_dsp_param->out_24bit_buf_after_process = config->audio_after_process_out_buffer_b24_2ch;
-    sg_rx_bypass_dsp_param->out_24bit_buf_before_process  = config->audio_before_process_out_buffer_b24_2ch;
-    sg_rx_bypass_dsp_param->process_buff_len                        = config->buffer_size_b32_2ch;
-    sg_rx_bypass_dsp_param->out_buff_len_24bit                    = config->buffer_size_b24_2ch;
-    sg_dsp_frame_bytes = sg_rx_bypass_dsp_param->process_buff_len;
+    sg_rx_bypass_dsp_param->in_buf                       = config->audio_process_in_buffer_b32_2ch;
+    sg_rx_bypass_dsp_param->out_buf                      = config->audio_process_out_buffer_b32_2ch;
+    sg_rx_bypass_dsp_param->out_24bit_buf_after_process  = config->audio_after_process_out_buffer_b24_2ch;
+    sg_rx_bypass_dsp_param->out_24bit_buf_before_process = config->audio_before_process_out_buffer_b24_2ch;
+    sg_rx_bypass_dsp_param->process_buff_len             = config->buffer_size_b32_2ch;
+    sg_rx_bypass_dsp_param->out_buff_len_24bit           = config->buffer_size_b24_2ch;
+    sg_dsp_frame_bytes                                   = sg_rx_bypass_dsp_param->process_buff_len;
     RT_ASSERT(sg_dsp_frame_bytes != 0);
 #endif
 #endif
@@ -443,7 +477,6 @@ static uint8_t _hl_drv_rk_stensa_dsp_init_frame(hl_drv_rk_xtensa_dsp_t_p handle)
 uint8_t hl_drv_rk_xtensa_dsp_init()
 {
     int ret = 0;
-    
 
     // 1. 资源创建
     if (!sg_dsp_drv_handle) {
@@ -453,23 +486,24 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
 #if (HL_IS_TX_DEVICE())
     // tx = 1
     sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_TX;
-    sg_tx_dsp_param                = rkdsp_malloc(sizeof(lib_alango_srp_param_type_t));
+    sg_tx_dsp_param                = rkdsp_malloc(sizeof(lib_a6902_algorithm_param_type_t));
 #else
     // rx = 0
 #if !(HL_DEVICE_RX_USE_BYPSS_TEST)
     sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_RX;
-    sg_rx_dsp_param                = malloc(sizeof(lib_alango_srp_param_type_t));
+    sg_rx_dsp_param                = malloc(sizeof(lib_a6902_algorithm_param_type_t));
 #else
     sg_dsp_drv_handle->device_role = HL_EM_DRV_RK_DSP_ROLE_TX;
-    sg_rx_bypass_dsp_param                = rkdsp_malloc(sizeof(lib_bypass_param_type_t));
+    sg_rx_bypass_dsp_param         = rkdsp_malloc(sizeof(lib_bypass_param_type_t));
 #endif
 #endif
 
 #if HL_IS_TX_DEVICE()
-    sg_tx_dsp_param->io_ctrl_op = 3;
+    sg_tx_dsp_param->io_ctrl_op     = 3;
+    sg_tx_dsp_param->io_ctrl_notify = 1;
 #else
-    sg_rx_dsp_param->io_ctrl_op = 3;
-#endif //<
+    sg_rx_dsp_param->io_ctrl_op    = 3;
+#endif  //<
 
     ret = _hl_drv_rk_stensa_dsp_init_frame(sg_dsp_drv_handle);
     if (ret) {
@@ -525,6 +559,16 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     }
     // HL_DRV_DSP_LOG("dsp work type = 0x%02x\r\n", sg_dsp_work->algo_type);
 #if HL_IS_TX_DEVICE()
+
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        // sg_dsp_io_ctrl.io_ctrl_notify   = 0;
+        sg_tx_dsp_param->io_ctrl_notify = 1;
+        sg_tx_dsp_param->io_ctrl_op     = sg_dsp_io_ctrl.io_ctrl_op;
+        sg_tx_dsp_param->io_ctrl_param  = sg_dsp_io_ctrl.io_ctrl_param;
+        sg_tx_dsp_param->io_ctrl_value  = sg_dsp_io_ctrl.io_ctrl_value;
+    }
+
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_tx_dsp_param->in_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b32_2ch, sg_tx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_tx_dsp_param->out_buf_b24_1ch_after_process,
@@ -543,9 +587,25 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         HL_DRV_DSP_LOG("dsp pop work error\r\n");
         return ret;
     }
+
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        sg_dsp_io_ctrl.io_ctrl_notify = 0;
+        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_tx_dsp_param->io_ctrl_op,
+                       sg_tx_dsp_param->io_ctrl_param, sg_tx_dsp_param->io_ctrl_value);
+    }
 #else
     // do rx dsp process
 #if !(HL_DEVICE_RX_USE_BYPSS_TEST)
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        // sg_dsp_io_ctrl.io_ctrl_notify   = 0;
+        sg_rx_dsp_param->io_ctrl_notify = 1;
+        sg_rx_dsp_param->io_ctrl_op     = sg_dsp_io_ctrl.io_ctrl_op;
+        sg_rx_dsp_param->io_ctrl_param  = sg_dsp_io_ctrl.io_ctrl_param;
+        sg_rx_dsp_param->io_ctrl_value  = sg_dsp_io_ctrl.io_ctrl_value;
+    }
+
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_dsp_param->in_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b32_2ch, sg_rx_dsp_param->b32_2ch_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_dsp_param->out_buf_b24_2ch_after_process,
@@ -564,9 +624,16 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         HL_DRV_DSP_LOG("dsp pop work error\r\n");
         return ret;
     }
+    // DSP io control
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        sg_dsp_io_ctrl.io_ctrl_notify = 0;
+        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_rx_dsp_param->io_ctrl_op,
+                       sg_rx_dsp_param->io_ctrl_param, sg_rx_dsp_param->io_ctrl_value);
+    }
 #else
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_bypass_dsp_param->in_buf, sg_rx_bypass_dsp_param->process_buff_len);
-    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_buf, sg_rx_bypass_dsp_param->process_buff_len);
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_buf,
+                         sg_rx_bypass_dsp_param->process_buff_len);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_24bit_buf_after_process,
                          sg_rx_bypass_dsp_param->out_buff_len_24bit);
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_INVALIDATE, sg_rx_bypass_dsp_param->out_24bit_buf_before_process,
@@ -606,59 +673,113 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             _hl_drv_rk_xtensa_dsp_disable_dsp();
             break;
         case HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP:
-            if(((uint8_t *)ptr)[0] != 0) {
+            if (((uint8_t*)ptr)[0] != 0) {
+
 #if HL_IS_TX_DEVICE()
-                sg_tx_dsp_param->io_ctrl_op = 0;
+                sg_dsp_io_ctrl.io_ctrl_op     = 0;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #else
-                sg_rx_dsp_param->io_ctrl_op = 0;
+                sg_dsp_io_ctrl.io_ctrl_op     = 0;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
                 rt_kprintf("[%s][line:%d] open denoise!!!\r\n", __FUNCTION__, __LINE__);
             } else {
 #if HL_IS_TX_DEVICE()
-                sg_tx_dsp_param->io_ctrl_op = 3;
+                sg_dsp_io_ctrl.io_ctrl_op     = 3;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #else
-                sg_rx_dsp_param->io_ctrl_op = 3;
+                sg_dsp_io_ctrl.io_ctrl_op     = 3;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
+
                 rt_kprintf("[%s][line:%d] close denoise!!!\r\n", __FUNCTION__, __LINE__);
             }
-            
             break;
 
+        case HL_EM_DRV_RK_DSP_CMD_SET_MUTE:
+            // MUTE在TX
+
+#if HL_IS_TX_DEVICE()
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+            // sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+        
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL:
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD:
+
+#if !HL_IS_TX_DEVICE()
+            // RX才有MI混音
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_GET_VU:
+
+#if !HL_IS_TX_DEVICE()
+            // RX才有VU
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+
+            break;
         default:
             HL_DRV_DSP_LOG("dsp error ctrl msg = 0x%02x\r\n", cmd);
             break;
     }
+
+    HL_DRV_DSP_LOG("%s: op=%d,pa=%d,va=%d\r\n", __func__, sg_dsp_io_ctrl.io_ctrl_op, sg_dsp_io_ctrl.io_ctrl_param, sg_dsp_io_ctrl.io_ctrl_value);
     return 0;
 }
 
-int denoise_set(int argc, char** argv)
+static int dsp_io_ctrol(int argc, char** argv)
 {
-    if (argc < 2) {
-        return 1;
+    if (argc < 4) {
+        HL_DRV_DSP_LOG("error param too few\r\n");
+        return -1;
     }
 
-    if (atoi(argv[1])) {
-#if HL_IS_TX_DEVICE()
-        // tx = 1
-        sg_tx_dsp_param->io_ctrl_op = 0;
-#else
-        // rx = 0
-        sg_rx_dsp_param->io_ctrl_op = 0;
-#endif
-    }else {
-#if HL_IS_TX_DEVICE()
-        // tx = 1
-        sg_tx_dsp_param->io_ctrl_op = 3;
-#else
-        // rx = 0
-        sg_rx_dsp_param->io_ctrl_op = 3;
-#endif
-    }
+    uint16_t op    = atoi(argv[1]);
+    uint16_t param = atoi(argv[2]);
+    int32_t  value = atoi(argv[3]);
+
+    sg_dsp_io_ctrl.io_ctrl_notify = 1;
+    sg_dsp_io_ctrl.io_ctrl_op     = op;
+    sg_dsp_io_ctrl.io_ctrl_param  = param;
+    sg_dsp_io_ctrl.io_ctrl_value  = value;
 
     return 0;
 }
 
-MSH_CMD_EXPORT(denoise_set, audio record test cmd);
+MSH_CMD_EXPORT(dsp_io_ctrol, dsp_io_ctrol op param value);
 /*
  * EOF
  */

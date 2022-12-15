@@ -45,9 +45,9 @@ typedef enum _hl_gpio_port_e
     /// (EMMC复位脚，无外部上下拉，低电平有效)
     GPIO_EMMC_RST,
     /// (EMMC电源使能，无外部上下拉，高电平有效)
-    GPIO_EMMC_PWR_EN,
-    /// (电源使能，无外部上下拉，高电平有效)
-    GPIO_PWR_EN,
+    // GPIO_EMMC_PWR_EN,
+    // /// (电源使能，无外部上下拉，高电平有效)
+    // GPIO_PWR_EN,
     /// (3.3V使能，无外部上下拉，高电平有效)
     GPIO_DC3V3_EN,
     /// (无线模块电源使能，无外部上下拉，高电平有效)
@@ -60,6 +60,8 @@ typedef enum _hl_gpio_port_e
     GPIO_ATS_RESET,
     /// (电源总开关，外部下拉，高电平有效)
     GPIO_ALL_POWER,
+    /// (录制灯开关 0：ON 1： OFF)
+    GPIO_REC_LED_EN,
 
     // GPIO 总数
     USER_GPIO_COUNT
@@ -78,12 +80,12 @@ typedef enum _hl_gpio_port_e
     GPIO_VOL_B,
     /// (左旋钮按键，外部上拉，低电平有效)
     GPIO_VOL_OK,
-    /// (左旋钮A，外部上拉，低电平有效)
-    GPIO_R_VOL_A,
-    /// (左旋钮B，外部上拉，低电平有效)
-    GPIO_R_VOL_B,
-    /// (左旋钮按键，外部上拉，低电平有效)
-    GPIO_R_VOL_KEY,
+    // /// (左旋钮A，外部上拉，低电平有效)
+    // GPIO_R_VOL_A,
+    // /// (左旋钮B，外部上拉，低电平有效)
+    // GPIO_R_VOL_B,
+    // /// (左旋钮按键，外部上拉，低电平有效)
+    // GPIO_R_VOL_KEY,
     /// (电量计中断，外部上拉，低电平有效)
     GPIO_GAUGE_INT,
     /// (usb插入检测，外部下拉，高电平有效)
@@ -96,29 +98,27 @@ typedef enum _hl_gpio_port_e
     GPIO_GSENSOR_INT,
     /// (oled帧同步输出脚，无外部上下拉，未激活输出低，激活输出高)
     GPIO_OLED_TE,
+    /// (触摸屏中断脚，无外部上下拉，...)
+    GPIO_TP_INT,
 
     // OUT
-    /// (电源使能，无外部上下拉，高电平有效)
-    GPIO_PWR_EN,    
     /// (OLED RST脚，无外部上下拉，低电平有效)
     GPIO_OLED_RST,
     /// (RF电源使能，无外部上下拉，高电平有效)
     GPIO_RF_PWR_EN,
     /// (电池供电使能，外部上下拉都有，高电平有效)
     GPIO_ATS_RESET,
-    /// (ATS供电使能，外部上下拉都有，高电平有效)
-    GPIO_ATS_PWR_EN,
-    /// (放大器使能，无外部上下拉，低电平有效)
-    GPIO_AMP_EN,
+    /// (触摸屏复位脚，无外部上下拉，...)
+    GPIO_TP_RST,
+    /// (Codec使能，无外部上下拉，高电平有效)
+    GPIO_CODEC_EN,
     /// (oled数据命令选择，无外部上下拉，低电平命令，高电平数据)
     GPIO_OLED_DCX,
     /// (Swire protocol设置脚，无外部上下拉，目前oled供电芯片使用MCU暂时没用到)(硬件用做了oled电源控制脚，后续需要更改名字)
     GPIO_OLED_SWIRE,
-
     /// (电源总开关，外部下拉，高电平有效)
     GPIO_ALL_POWER,
-    /// (显示屏供电，无外部上下拉，低电关闭，高电平打开)
-    GPIO_OLED_POWER, // MIPI_OLED供电
+
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;

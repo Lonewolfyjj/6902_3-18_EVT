@@ -33,31 +33,132 @@
 #include "stdbool.h"
 
 /* typedef -------------------------------------------------------------------*/
-typedef struct _HL_PMIC_INPUT_PARAM_T
+
+typedef enum _hl_mod_pm_cmd_e
 {
-    uint8_t cfg_opt;//参数参考 ： sgm41518 或者 sy6971 枚举内容
-    uint8_t param; //参数参考 ： 功能选项参数宏
-}HL_PMIC_INPUT_PARAM_T;
+    /// 打开总电源，无参数
+    HL_PM_POWER_UP_CMD,
+    /// 关闭总电源，无参数
+    HL_PM_POWER_DOWN_CMD,
+} hl_mod_pm_cmd_e;
+
+typedef enum _hl_mod_pm_ind_e
+{
+    /// 通知 app 电量更新，参数为<uint8_t *>
+    HL_SOC_UPDATE_IND,
+    /// 通知 app 当前温度超过最大温度设定值<45℃>，参数为<int8_t *>
+    HL_MAX_TEMP_ALERT_IND,
+    /// 通知 app 当前温度超过最小温度设定值<-10℃>，参数为<int8_t *>
+    HL_MIN_TEMP_ALERT_IND,
+    /// 通知 app 当前的充电状态，参数为<hl_mod_pm_charge_state_e *>
+    HL_CHARGE_STATE_IND,
+} hl_mod_pm_ind_e;
+
+typedef enum _hl_mod_pm_charge_state_e
+{
+    HL_CHARGE_STATE_UNKNOWN,
+    HL_CHARGE_STATE_NO_CHARGE,
+    HL_CHARGE_STATE_CHARGING,
+    HL_CHARGE_STATE_CHARGE_DONE,
+} hl_mod_pm_charge_state_e;
+
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_PM_FUNC_RET_OK 0
 #define HL_MOD_PM_FUNC_RET_ERR 1
 
-#define HL_MOD_RK2108_POWER_UP_CMD  0xFE
-#define HL_MOD_RK2108_POWER_DOWN_CMD 0xFF
-
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-int hl_mod_pm_init(void* msg_hd);
 
+/**
+ * 
+ * @brief pm 模块初始化
+ * @param [in] msg_hd 消息队列指针
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
+int hl_mod_pm_init(rt_mq_t msg_hd);
+
+/**
+ * 
+ * @brief pm 模块解初始化
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_pm_deinit(void);
 
+/**
+ * 
+ * @brief pm 模块启动，会拉起线程和使能中断
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_pm_start(void);
 
+/**
+ * 
+ * @brief pm 模块停止，会停止线程和失能中断
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
 int hl_mod_pm_stop(void);
 
-int hl_mod_pm_ctrl(int op, void* arg, int arg_size);
+/**
+ * 
+ * @brief pm 控制函数
+ * @param [in] cmd 见<hl_mod_pm_cmd_e>
+ * @param [in] arg 命令的参数指针
+ * @param [in] arg_size 参数的大小
+ * @return int HL_MOD_PM_FUNC_RET_OK or HL_MOD_PM_FUNC_RET_ERR
+ * @date 2022-11-25
+ * @author lilin (lin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-11-25      <td>lilin     <td>新建
+ * </table>
+ */
+int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size);
 
 #endif
 /*

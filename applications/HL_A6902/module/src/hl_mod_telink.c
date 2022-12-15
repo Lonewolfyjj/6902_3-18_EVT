@@ -319,11 +319,11 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 
 #if HL_IS_TX_DEVICE()
     // 使能TX相关GPIO引脚
-    hl_hal_gpio_init(GPIO_PWR_EN);
+    // hl_hal_gpio_init(GPIO_PWR_EN);
     hl_hal_gpio_init(GPIO_DC3V3_EN);
     hl_hal_gpio_init(GPIO_2831P_EN);
     hl_hal_gpio_init(GPIO_RF_PWR_EN);
-    hl_hal_gpio_high(GPIO_PWR_EN);
+    // hl_hal_gpio_high(GPIO_PWR_EN);
     hl_hal_gpio_high(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_2831P_EN);
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
