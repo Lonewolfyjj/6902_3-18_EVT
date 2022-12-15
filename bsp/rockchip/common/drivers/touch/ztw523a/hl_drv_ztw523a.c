@@ -335,9 +335,12 @@ static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *b
         //     memset(&touch_info.coord[i], 0x0, sizeof(struct _ts_zinitix_coord));
         // }
     }    
+
+    hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
     return HL_SUCCESS;
 exit:
     /*clear中断，clear后中断会被拉高*/
+
     hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
     return HL_FAILED;
 }
