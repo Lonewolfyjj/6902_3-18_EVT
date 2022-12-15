@@ -256,7 +256,7 @@ int hl_mod_apple_auth_start()
     rt_err_t result;
 
     // 状态机状态初始化
-    s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
+    s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_IDLE;
     s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
     s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
     s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
