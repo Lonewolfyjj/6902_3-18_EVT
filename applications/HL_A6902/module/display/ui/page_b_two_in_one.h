@@ -42,5 +42,5 @@ void page_light_test(void);
 void hl_mod_b_two_in_one_init(void * init_data);
 void hl_mod_b_two_in_one_ioctl(void * ctl_data);
 lv_obj_t * hl_light_obj_get(uint8_t num);
-
+void page_two_in_one_click(uint8_t num);
 #endif

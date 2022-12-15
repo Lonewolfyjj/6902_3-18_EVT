@@ -1,3 +1,5 @@
+// UAC IN原型shan
+#if 0
 /**
  * @file hl_mod_page_uacin_volume.c
  * @author liujie (jie.liu@hollyland-tech.com)
@@ -103,6 +105,6 @@ PAGE_DEC(PAGE_UACIN_VOLUME_SET)
 /*
  * EOF
  */
-
+#endif
 
 

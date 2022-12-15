@@ -142,8 +142,8 @@ typedef enum _hl_screen_page_e
     PAGE_VOLUME_MENU,
     /// 监听音量配置界面
     PAGE_MONITOR_VOLUME_SET,
-    /// UAC输入音量设置界面
-    PAGE_UACIN_VOLUME_SET,
+    /// UAC输入音量设置界面(新的原型去掉了，但是代码保留)
+    // PAGE_UACIN_VOLUME_SET,
     /// UAC输出音量设置界面
     PAGE_UACOUT_VOLUME_SET,
 
@@ -174,6 +174,8 @@ typedef enum _hl_screen_page_e
     // PAGE_LINE_OUT_STEREO,
     // /// 快捷LINE OUT输出音量页面(单声道)
     // PAGE_LINE_OUT_MONO,
+    // LINE OUT快捷设置
+    PAGE_QUICK_SETTINGS,
     ///  页面总数
     PAGE_MAX,  
 
@@ -367,6 +369,12 @@ typedef enum _hl_cmd_e
 
     ///录制保护状态 1：开启  0：关闭 ，
     AUTO_RECORD_PORTECT_SWITCH_CMD,
+
+    /// TX1网络状态 1:已连接 2：未连接
+    TX1_NET_SWITCH_CMD,
+    /// TX2网络状态 1:已连接 2：未连接
+    TX2_NET_SWITCH_CMD,
+    
     /* *******************************参数相关******************/
     /// 升级进度下发 0-100 <uint8_t>
     OTA_UPDATE_REMAINED_VAL_CMD,
@@ -391,9 +399,9 @@ typedef enum _hl_cmd_e
     /// TX2 UV值更新  uint8_t 
     TX2_VU_VAL_CMD,
 
-    /// TX1信号强度新 uint8_t
+    /// TX1信号强度 uint8_t
     TX1_SIGNAL_VAL_CMD,
-    /// 信号强度新 uint8_t
+    /// TX2信号强度 uint8_t
     TX2_SIGNAL_VAL_CMD,
     
     /// 降噪等级

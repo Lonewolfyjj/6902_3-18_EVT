@@ -42,28 +42,52 @@
 #include "page_menu.h"
 #include "hl_mod_input.h"
 
+//录制开关、静音、降噪开关界面
+static void hl_moreone_test_cb(hl_storage_check_t event_num)
+{
+    printf("event_num = %d\n", event_num);
+}
 
+static  void fast_conf_init(void)
+{    
+    hl_lvgl_moreone_init_t data = 
+    {
+        .func_cb = hl_moreone_test_cb,
+        .moreone_choose_opt.option_one = HL_MOREONE_CHOOSE_LEFT,
+        .moreone_choose_opt.option_two = HL_MOREONE_CHOOSE_RIGHT,
+        .moreone_choose_opt.option_three = HL_MOREONE_CHOOSE_LEFT,
+        .moreone_mid_opt = HL_MOREONE_OPTION_THREE,
+    };
+    hl_mod_moreone_init(&data);
+
+    hl_lvgl_moreone_ioctl_t moreone_ctl = 
+    {
+        .cmd_type = HL_MOREONE_OPTION_CMD,
+        .moreone_choose_opt = HL_MOREONE_OPTION_TWO,
+        .moreone_choose = HL_MOREONE_CHOOSE_LEFT
+    };
+    hl_mod_moreone_ioctl(&moreone_ctl);
+}
 
 
 static void hl_mod_page_setup(void)
 {
-
+    fast_conf_init();
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_moreone_ioctl_t data = {
+        .cmd_type = HL_MOREONE_POSTION_CMD,
+        .moreone_choose = 0,
+        .moreone_choose_opt = HL_MOREONE_OPTION_EXTI,
+    };
+    hl_mod_moreone_ioctl(&data);
 }
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_FAST_TX_CONFIG)
