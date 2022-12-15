@@ -212,36 +212,77 @@ static void mstorage_switch_cb(uint8_t mstorage_state)
     }
 }
 
-int hl_mod_audio_rtc_set(void)
-{    
-    // rtc_time time1;
-    // time_t now;
-    // rt_err_t ret = RT_EOK; 
+
+
+#if HL_IS_TX_DEVICE()
+static int hl_mod_audio_system_rtc_set_default(void)
+{
+    rt_err_t ret = RT_EOK; 
     
-    // hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
-    // rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month&0x1f, time1.day&0x3f, time1.hour&0x3f, time1.minute&0x7f, time1.second&0x7f);
+    rt_kprintf("[RTC Set]RTC default Start...\n");
+
+    ret = set_date(2022, 12, 16); 
+    if(ret != RT_EOK)
+    {
+        rt_kprintf("[RTC Set]Set RTC Date failed\n"); 
+        return RT_ERROR;
+    }    
     
-    // ret = set_date((time1.year + 2000), (time1.month&0x1f), (time1.day&0x3f)); 
-    // if(ret != RT_EOK)
-    // {
-    //     rt_kprintf("[RTC Test]Set RTC Date failed\n"); 
-    //     return RT_ERROR;
-    // }
+    ret = set_time(20, 30, 00); 
+    if(ret != RT_EOK)
+    {
+        rt_kprintf("[RTC Set]Set RTC Time failed\n"); 
+        return RT_ERROR;
+    }
     
-    // ret = set_time((time1.hour&0x3f), (time1.minute&0x7f), (time1.second&0x7f)); 
-    // if(ret != RT_EOK)
-    // {
-    //     rt_kprintf("[RTC Test]Set RTC Time failed\n"); 
-    //     return RT_ERROR;
-    // }
-    
-    // now = time(RT_NULL);
-    // rt_kprintf("[RTC Test]Read RTC Date and Time: %s \r\n", ctime(&now)); 
+    rt_kprintf("\n");
 
     return RT_EOK;
 }
 
-#if HL_IS_TX_DEVICE()
+static int hl_mod_audio_system_rtc_set(void)
+{    
+    rtc_time time1;
+    time_t now;
+    rt_err_t ret = RT_EOK; 
+
+    memset(&time1, 0, sizeof(rtc_time));
+
+    ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    if(ret != RT_EOK)
+    {
+        rt_kprintf("Set RTC device failed\n"); 
+        hl_mod_audio_system_rtc_set_default();
+        return RT_ERROR;
+    }   
+    
+    /* 时、分、秒 的校准 */
+    time1.hour = (time1.hour&0x3f)%24;
+    time1.minute = (time1.minute&0x7f)%60;
+    time1.second = (time1.second&0x7f)%60;
+
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month&0x1f, time1.day&0x3f, time1.hour, time1.minute, time1.second);
+    
+    ret = set_date((time1.year + 2000), (time1.month&0x1f), (time1.day&0x3f)); 
+    if(ret != RT_EOK)
+    {
+        rt_kprintf("[RTC Set]Set RTC Date failed\n"); 
+        return RT_ERROR;
+    }
+    
+    ret = set_time((time1.hour), (time1.minute), (time1.second)); 
+    if(ret != RT_EOK)
+    {
+        rt_kprintf("[RTC Set]Set RTC Time failed\n"); 
+        return RT_ERROR;
+    }
+    
+    now = time(RT_NULL);
+    rt_kprintf("[RTC Set]Read RTC Date and Time: %s \r\n", ctime(&now)); 
+
+    return RT_EOK;
+}
+
 static void hl_mod_audio_dfs()
 {
     rt_device_t disk;
@@ -285,10 +326,15 @@ static void hl_mod_audio_rtc_get(char *timer_name)
     memset(&time, 0, sizeof(rtc_time));
 
     hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
-    /*时间存储格式是按 BCD 码的格式来存储的。如果需要使用，需要转换成十六进制之后才能使用，时间年的范围：0~99，需要注意*/
-    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);
+
+    /* 时、分、秒 的校准 */
+    time.hour = (time.hour&0x3f)%24;
+    time.minute = (time.minute&0x7f)%60;
+    time.second = (time.second&0x7f)%60;
+
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month&0x1f, time.day&0x3f, time.hour, time.minute, time.second);
     if (timer_name != NULL) {
-        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month&0x1f, time.day&0x3f, time.hour&0x3f, time.minute&0x7f, time.second&0x7f);  
+        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month&0x1f, time.day&0x3f, time.hour, time.minute, time.second);  
     } else {
         rt_kprintf("timer name get error (timer_name == NULL)\r\n");
     }      
@@ -1242,6 +1288,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);
     hl_drv_rtc_pcf85063_init();
+    hl_mod_audio_system_rtc_set();
 #else
     // hl_hal_gpio_init(GPIO_AMP_EN);
     // hl_hal_gpio_high(GPIO_AMP_EN);
@@ -1535,7 +1582,10 @@ int hl_mod_audio_test(int argc, char** argv)
             break;
         case 0x08:
             hl_mod_audio_set_mute(0);
-            break;            
+            break;     
+        case 0x09:
+            hl_mod_audio_system_rtc_set();
+            break;                      
 #endif
         default:
             LOG_E("Bad <size> value '%s'", argv[3]);
