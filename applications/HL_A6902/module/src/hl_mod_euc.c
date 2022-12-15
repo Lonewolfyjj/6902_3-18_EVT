@@ -88,9 +88,11 @@ typedef struct _hl_mod_euc
     bool                      tx2_pair_ok_flag;
     rt_thread_t               euc_thread;
     int                       thread_exit_flag;
-    hl_util_hup_t             hup;
+    hl_util_hup_t             uart_hup;
+    hl_util_hup_t             hid_hup;
     rt_mq_t                   msg_handle;
     rt_device_t               uart_dev;
+    rt_device_t               hid_dev;
     struct serial_configure   uart_config;
 } hl_mod_euc_st;
 
@@ -101,9 +103,11 @@ typedef struct _hl_mod_euc
 #define HUP_PROT_SIZE 6
 
 #define HL_MOD_EUC_UART_BUFSZ 256
-#define HL_MOD_EUC_HUP_BUFSZ 256
+#define HL_MOD_EUC_UART_HUP_BUFSZ 256
+#define HL_MOD_EUC_HID_HUP_BUFSZ 256
 
-#define HL_MOD_EUC_MAX_HUP_SEND_BUFSZ 256
+#define HL_MOD_EUC_MAX_UART_HUP_SEND_BUFSZ 256
+#define HL_MOD_EUC_MAX_HID_HUP_SEND_BUFSZ 256
 
 /* variables -----------------------------------------------------------------*/
 
@@ -111,9 +115,11 @@ static hl_mod_euc_st _euc_mod = { .init_flag        = false,
                                   .start_flag       = false,
                                   .euc_thread       = NULL,
                                   .thread_exit_flag = 0,
-                                  .hup              = { 0 },
+                                  .uart_hup         = { 0 },
+                                  .hid_hup          = { 0 },
                                   .msg_handle       = NULL,
                                   .uart_dev         = NULL,
+                                  .hid_dev          = NULL,
                                   .uart_config      = {
                                       .baud_rate = BAUD_RATE_115200,
                                       .data_bits = DATA_BITS_8,
@@ -125,7 +131,8 @@ static hl_mod_euc_st _euc_mod = { .init_flag        = false,
                                       .bufsz     = HL_MOD_EUC_UART_BUFSZ,       //在 open 串口之后不可改变
                                   }, };
 
-static uint8_t hup_buf[HL_MOD_EUC_HUP_BUFSZ] = { 0 };
+static uint8_t uart_hup_buf[HL_MOD_EUC_UART_HUP_BUFSZ] = { 0 };
+static uint8_t hid_hup_buf[HL_MOD_EUC_HID_HUP_BUFSZ]   = { 0 };
 
 #if HL_IS_TX_DEVICE() == 1
 
@@ -166,15 +173,15 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
 
 static int _uart_send_hup_data(char cmd, char* buf, int len)
 {
-    if (len + HUP_PROT_SIZE > HL_MOD_EUC_MAX_HUP_SEND_BUFSZ) {
+    if (len + HUP_PROT_SIZE > HL_MOD_EUC_MAX_UART_HUP_SEND_BUFSZ) {
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
     int      size;
     uint32_t write_size;
-    uint8_t  buf_send[HL_MOD_EUC_MAX_HUP_SEND_BUFSZ] = { 0 };
+    uint8_t  buf_send[HL_MOD_EUC_MAX_UART_HUP_SEND_BUFSZ] = { 0 };
 
-    size = hl_util_hup_encode(_euc_mod.hup.hup_handle.role, cmd, buf_send, sizeof(buf_send), buf, len);
+    size = hl_util_hup_encode(_euc_mod.uart_hup.hup_handle.role, cmd, buf_send, sizeof(buf_send), buf, len);
     if (size == -1) {
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
@@ -184,9 +191,29 @@ static int _uart_send_hup_data(char cmd, char* buf, int len)
     return HL_MOD_EUC_FUNC_RET_OK;
 }
 
+static int _hid_send_hup_data(char cmd, char* buf, int len)
+{
+    if (len + HUP_PROT_SIZE > HL_MOD_EUC_MAX_HID_HUP_SEND_BUFSZ) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    int      size;
+    uint32_t write_size;
+    uint8_t  buf_send[HL_MOD_EUC_MAX_HID_HUP_SEND_BUFSZ] = { 0 };
+
+    size = hl_util_hup_encode(_euc_mod.hid_hup.hup_handle.role, cmd, buf_send, sizeof(buf_send), buf, len);
+    if (size == -1) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    rt_device_write(_euc_mod.hid_dev, 0, buf_send, size);
+
+    return HL_MOD_EUC_FUNC_RET_OK;
+}
+
 #if HL_IS_TX_DEVICE() == 1
 
-static void hup_success_handle_func(hup_protocol_type_t hup_frame)
+static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
     uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
     uint8_t  tx_num = 1;
@@ -219,9 +246,19 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
     }
 }
 
+static void hid_hup_success_handle_func(hup_protocol_type_t hup_frame)
+{
+    uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+
+    switch (hup_frame.cmd) {
+        default:
+            break;
+    }
+}
+
 #else
 
-static void hup_success_handle_func(hup_protocol_type_t hup_frame)
+static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
     uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
     uint8_t  rx_num = 0;
@@ -335,19 +372,58 @@ static void hup_success_handle_func(hup_protocol_type_t hup_frame)
     }
 }
 
+static void hid_hup_success_handle_func(hup_protocol_type_t hup_frame)
+{
+    uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+
+    switch (hup_frame.cmd) {
+        default:
+            break;
+    }
+}
+
 #endif
 
 static inline int _hl_mod_euc_hup_init(void)
 {
     int ret;
 
-    _euc_mod.hup.hup_handle.frame_data_len = sizeof(hup_buf);
-    _euc_mod.hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
-    _euc_mod.hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    _euc_mod.uart_hup.hup_handle.frame_data_len = sizeof(uart_hup_buf);
+    _euc_mod.uart_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
+    _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.hup), hup_buf, NULL, hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, NULL, uart_hup_success_handle_func);
     if (ret == -1) {
-        LOG_E("hup init err!");
+        LOG_E("uart_hup init err!");
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    _euc_mod.hid_hup.hup_handle.frame_data_len = sizeof(hid_hup_buf);
+    _euc_mod.hid_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
+    _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+
+    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, NULL, hid_hup_success_handle_func);
+    if (ret == -1) {
+        LOG_E("hid_hup init err!");
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    return HL_MOD_EUC_FUNC_RET_OK;
+}
+
+static int _hid_init(void)
+{
+    rt_err_t rt_err;
+
+    _euc_mod.hid_dev = rt_device_find("hidd");
+    if (_euc_mod.hid_dev == RT_NULL) {
+        LOG_E("hid dev find err, can not find hid dev!");
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    rt_err = rt_device_open(_euc_mod.hid_dev, RT_DEVICE_FLAG_RDWR);
+    if (rt_err != RT_EOK) {
+        LOG_E("can not open hid dev!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -356,7 +432,8 @@ static inline int _hl_mod_euc_hup_init(void)
 
 static inline void _hl_mod_euc_hup_deinit(void)
 {
-    hl_util_hup_deinit(&(_euc_mod.hup));
+    hl_util_hup_deinit(&(_euc_mod.uart_hup));
+    hl_util_hup_deinit(&(_euc_mod.hid_hup));
 }
 
 static int uart_init(void)
@@ -414,7 +491,22 @@ static inline void uart_data_process()
     }
 
     for (int i = 0; i < size; i++) {
-        hl_util_hup_decode(&(_euc_mod.hup), buf[i]);
+        hl_util_hup_decode(&(_euc_mod.uart_hup), buf[i]);
+    }
+}
+
+static void _hid_data_process()
+{
+    uint8_t buf[64];
+    int     size;
+
+    size = rt_device_read(_euc_mod.hid_dev, 0, buf, sizeof(buf));
+    if (size <= 0) {
+        return;
+    }
+
+    for (int i = 0; i < size; i++) {
+        hl_util_hup_decode(&(_euc_mod.hid_hup), buf[i]);
     }
 }
 
@@ -422,6 +514,7 @@ static void _euc_thread_entry(void* arg)
 {
     while (_euc_mod.thread_exit_flag == 0) {
         uart_data_process();
+        _hid_data_process();
 
         rt_thread_mdelay(10);
     }
@@ -440,6 +533,11 @@ int hl_mod_euc_init(rt_mq_t msg_hd)
     }
 
     ret = _hl_mod_euc_hup_init();
+    if (ret == HL_MOD_EUC_FUNC_RET_ERR) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    ret = _hid_init();
     if (ret == HL_MOD_EUC_FUNC_RET_ERR) {
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
@@ -600,6 +698,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
     uint8_t dev_num;
     uint8_t charge_state;
+    char    buf_send[2];
 
     if (_euc_mod.init_flag == false) {
         LOG_E("euc not init!");
@@ -653,6 +752,11 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             rt_memcpy(&_rtc_time_rx, arg, arg_size);
+        } break;
+        case HL_HID_START_RECORD_CMD: {
+            buf_send[0] = 0x04;
+            buf_send[1] = 0x06;
+            rt_device_write(_euc_mod.hid_dev, 0, buf_send, sizeof(buf_send));
         } break;
         default:
             break;

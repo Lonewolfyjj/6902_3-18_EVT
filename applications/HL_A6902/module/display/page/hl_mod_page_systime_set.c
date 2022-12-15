@@ -41,30 +41,52 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
+#include "page_date.h"
 #include "hl_mod_input.h"
 
 
-
+//时间设置界面
+static void hl_date_test_cb(hl_date_choose_t opt,int16_t data)
+{
+    printf("opt = %d  data = %d\n", opt,data);
+}
 
 static void hl_mod_page_setup(void)
 {
-    
+    hl_lvgl_date_init_t data = 
+    {
+        .current_choose = HL_DATE_MONTH,
+        .day = 23,
+        .func_cb = hl_date_test_cb,
+        .hour = 13,
+        .min = 46,
+        .month = 12,
+        .year = 2022,
+    };
+    hl_mod_date_init(&data);
+
+    hl_lvgl_date_ioctl_t date_ctl = 
+    {
+        .date_cmd = HL_DATE_SET_OPT_CMD,
+        .opt = HL_DATE_YEAR,
+    };
+    hl_mod_date_ioctl(&date_ctl);
 }
 
 static void hl_mod_page_exit(void)
 {
-   
+    hl_lvgl_date_ioctl_t date_ctl = 
+    {
+        .date_cmd = HL_DATE_EXTI_CMD,
+        .opt = HL_DATE_YEAR,
+    };
+    hl_mod_date_ioctl(&date_ctl);
 }
 
 static void hl_mod_page_loop(void)
 {
-    uint8_t key_event;
-
-    key_event  = hl_mod_get_knob_okkey_val();
-    
-    if (key_event == HL_KEY_EVENT_SHORT) {
-    }
-  
+    // 返回按键
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_SYS_TIME_SET)

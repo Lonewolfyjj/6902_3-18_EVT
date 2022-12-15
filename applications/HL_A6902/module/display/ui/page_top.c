@@ -271,6 +271,22 @@ static void hl_add_top_icon(hl_top_icon_t icon)
     }
 }
 
+static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+{
+    uint32_t child_cnt = 0,i;
+    child_cnt = lv_obj_get_child_cnt(obj);
+    if(child_cnt == 0){
+        lv_obj_del_delayed(obj,0);
+    }else{
+        for(i=0;i<child_cnt;i++){
+            hl_obj_delete(lv_obj_get_child(obj, i),true);            
+        }
+        if(obj_typ){
+            lv_obj_del_delayed(obj,0);
+        }        
+    }
+}
+
 static void hl_delete_top_icon(hl_top_icon_t icon)
 {
     switch(icon){
@@ -299,6 +315,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
 
 void hl_mod_top_ioctl(void * ctl_data)
 {
+    char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_top_ioctl_t * ptr = (hl_lvgl_top_ioctl_t *)ctl_data;
     switch(ptr->top_cmd){
         case HL_TOP_ADD_ICON_CMD:
@@ -306,6 +323,15 @@ void hl_mod_top_ioctl(void * ctl_data)
             break;
         case HL_TOP_DELETE_ICON_CMD:
             hl_delete_top_icon(ptr->top_param);
+            break;
+        case HL_TOP_BAT_VAL:
+            lv_bar_set_value(bat_bar, ptr->electric_top, LV_ANIM_ON);
+            lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
+            lv_label_set_text(bat_label,buf);
+            break;
+            
+        case HL_TOP_ALL_DEL:
+            hl_obj_delete(lv_scr_act(),false);
             break;
         default:
             break;
