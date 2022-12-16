@@ -204,14 +204,16 @@ static void         hl_mod_screen_rot_scan(void)
     lv_disp_t*    screen_ptr;
 
     if (hl_util_timeout_judge(&rot_scan_in)) {
-        rt_kprintf("jie \n");
+
         if (hl_mod_device_dir_get(&now_dir)) {
-            rt_kprintf("jie=%d \n",now_dir);
+            
             screen_ptr = lv_disp_get_default();
             if (now_dir == DEVICE_FORWARD_POSE) {
+                LOG_D("rot=%d \n",now_dir);
                 lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_270);
             } else {
                 lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+                LOG_D("rot=%d \n",now_dir);
             }
         }
         hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
@@ -223,6 +225,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     uint8_t              res    = HL_DISPLAY_SUCCESS;
     hl_display_screen_s* data_p = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
+    LOG_D("cmd=%d\r\n", cmd);
     switch (cmd) {
         // 更新按鍵的操作
         case MSG_INPUT_UPDATE_CMD: {
@@ -251,7 +254,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             data_p->rx_bat_val = data;
             flag->rx_bat_val = 1;
-            rt_kprintf("liujie1\n");
+            
         } break;
         case CASE_BAT_VAL_VAL_CMD: {
             uint8_t data         = *(uint8_t*)ptr;
