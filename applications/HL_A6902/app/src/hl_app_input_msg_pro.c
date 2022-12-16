@@ -77,10 +77,12 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
-            rf_bypass_info.chn        = HL_RF_LEFT_CHANNEL;
-            rf_bypass_info.info.state = 1;
-            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_info, sizeof(rf_bypass_info));
-            LOG_D("send record cmd to rx");
+            if (tx_info.on_off_flag == 1) {
+                rf_bypass_info.chn        = HL_RF_LEFT_CHANNEL;
+                rf_bypass_info.info.state = 1;
+                hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_info, sizeof(rf_bypass_info));
+                LOG_D("send record cmd to rx");
+            }
             break;
 
         case HL_KEY_EVENT_LONG:
@@ -110,6 +112,10 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 {
     hl_switch_e     denoise_switch;
     uint8_t         channel;
+
+    if (tx_info.on_off_flag == 0) {
+        return;
+    }
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
@@ -144,11 +150,15 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
     hl_switch_e        record_switch;
-    // hl_record_led_mode record_led_ctrl;
+
+    if (tx_info.on_off_flag == 0) {
+        return;
+    }
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
+
         case HL_KEY_EVENT_SHORT:
 
             if(tx_info.mstorage_plug == 1) {
@@ -159,22 +169,23 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             if (tx_info.rec_flag == 0) {
                 record_switch    = HL_SWITCH_ON;
                 tx_info.rec_flag = 1;
-                // record_led_ctrl  = RECORD_LED_MODE_OPEN;
             } else {
                 record_switch    = HL_SWITCH_OFF;
                 tx_info.rec_flag = 0;
-                // record_led_ctrl  = RECORD_LED_MODE_CLOSE;
             }
             hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
             hl_app_disp_state_led_set();
-       
             break;
+
         case HL_KEY_EVENT_LONG:
             break;
+
         case HL_KEY_EVENT_DOUBLE:
             break;
+
         case HL_KEY_EVENT_RELEASE:
             break;
+
         default:
             LOG_E("event(%d) unkown!!! \r\n", event);
             break;
@@ -187,7 +198,9 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.usb_plug = 0;
         tx_info.uac_link_flag = 0;
-        hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
+        if (tx_info.on_off_flag == 1) {
+            hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
+        }
         tx_info.mstorage_plug = 0;               
     } else {
         tx_info.usb_plug = 1;        
@@ -261,6 +274,10 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
     // static hl_screen_color_e screen_color_ctrl = RGB888_BLACK;
     static uint8_t           channel           = 0;
 
+    if (rx_info.on_off_flag == 0) {
+        return;
+    }
+
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
@@ -290,6 +307,10 @@ static void hl_app_rx_knob_key_pro(hl_key_event_e event)
 /// 旋钮转动处理
 static void hl_app_rx_knob_pro(hl_knob_dir_e dir, uint32_t value)
 {
+    if (rx_info.on_off_flag == 0) {
+        return;
+    }
+
     if (dir == HL_KNOB_L) {
         rx_info.cur_volume_l += value;
         rx_info.cur_volume_r += value;
@@ -325,11 +346,11 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
         rx_info.uac_link_flag = 0;
         hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
         rx_info.mstorage_plug = 0;
-        hl_mod_apple_auth_stop();
+        hl_mod_apple_auth_end();
     } else {
         rx_info.usb_plug = 1;
         usb_state        = 1;
-        hl_mod_apple_auth_start();
+        hl_mod_apple_auth_begin();
     }
     hl_app_audio_stream_updata();
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
@@ -343,15 +364,12 @@ static void hl_app_rx_hp_plug_pro(uint32_t value)
 
     if (value == 0) {
         rx_info.hp_spk_plug = 0;
-        // hp_amp_ctrl         = HL_SWITCH_OFF;
         hp_state            = 0;
         
     } else {
         rx_info.hp_spk_plug = 1;
-        // hp_amp_ctrl         = HL_SWITCH_ON;
         hp_state            = 1;
     }
-    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_AMP_CMD, &hp_amp_ctrl, sizeof(hp_amp_ctrl));
     hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
 }
 

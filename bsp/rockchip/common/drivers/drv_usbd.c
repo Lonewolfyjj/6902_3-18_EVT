@@ -447,7 +447,7 @@ const static struct udcd_ops g_udc_ops =
 };
 
 // Set the USB device speed to high speed
-#if HL_IS_TX_DEVICE()
+#if !HL_IS_TX_DEVICE()
 #define RT_USING_USBD_SPEED_FULL
 #endif
 

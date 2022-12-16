@@ -50,7 +50,7 @@
 
 static uint8_t page_state = SET_PAGE;
 // 0 表示左 1表示 右
-static int16_t now_sound_channal = 0;
+static int16_t now_sound_channal = (int16_t)HL_LINEOUT_CHOOSE_LEFT;
 //当前的音量
 static int16_t now_volume = 0;
 
@@ -82,6 +82,7 @@ static void page_twolineout_init()
     //  立体声
     if (flag->sound_module == STEREO) {
         page_state = BACK_PAGE;
+        hl_mod_knob_select_val_set(&now_sound_channal,(int16_t)HL_LINEOUT_CHOOSE_LEFT);
         page_s_init(data, flag);
     // 单身道
     } else if (flag->sound_module == MONO) {
@@ -209,6 +210,8 @@ static void hl_mod_page_exit(void)
 
 static void btn_scan()
 {
+    int8_t knob_val = 0;
+    hl_lvgl_lineout_ioctl_t ctrl;
     // 返回按键
     uint8_t back_btn  = hl_mod_keypad_touchkey_read();
     // OK按键
@@ -232,7 +235,12 @@ static void btn_scan()
         }
         // 选择当前的页面
         
-        // now_sound_channal
+        knob_val = hl_mod_knob_select_val_change(&now_sound_channal,0,1);
+        if (knob_val) {
+            ctrl.lineout_choose = (hl_lineout_choose_t)knob_val;
+            //hl_mod_lineout_ioctl(&ctrl);
+        }
+
         break;
     case SET_PAGE:
         // 返回首界面

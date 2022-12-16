@@ -182,27 +182,49 @@ static int32_t HL_I2C_ByteWrite(uint8_t addr, uint8_t reg, uint8_t data)
  * <tr><td>2022-09-07      <td>libo     <td>新建
  * </table>
  */
-static rt_err_t HL_i2c_read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t addr, rt_uint8_t* buf, rt_uint8_t len)
+// static rt_err_t HL_i2c_read_regs(struct rt_i2c_bus_device* bus, rt_uint8_t addr, rt_uint8_t* buf, rt_uint8_t len)
+// {
+//     if(RT_NULL == bus){
+//         rt_kprintf("QMA6100P HL_i2c_read_regs  bus is null\n");
+//         return -2;
+//     }    
+//     struct rt_i2c_msg msgs;
+
+//     msgs.addr  = addr;
+//     msgs.flags = RT_I2C_RD;
+//     msgs.buf   = buf;
+//     msgs.len   = len;
+
+//     /* 调用I2C设备接口传输数据 */
+//     if (rt_i2c_transfer(bus, &msgs, 1) == 1) {
+//         //rt_kprintf("HL_i2c_read_regs  ok\n");
+//         return RT_EOK;
+//     } else {
+//         rt_kprintf("HL_i2c_read_regs  error\n");
+//         return -RT_ERROR;
+//     }
+// }
+
+static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus,rt_uint8_t addr, rt_uint8_t reg, rt_uint8_t* rbuf,rt_uint8_t len)
 {
-    if(RT_NULL == bus){
-        rt_kprintf("QMA6100P HL_i2c_read_regs  bus is null\n");
-        return -2;
-    }    
-    struct rt_i2c_msg msgs;
+    rt_uint8_t        buf[4];
+    struct rt_i2c_msg msgs[2];
 
-    msgs.addr  = addr;
-    msgs.flags = RT_I2C_RD;
-    msgs.buf   = buf;
-    msgs.len   = len;
+    msgs[0].addr  = addr;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf   = &reg;
+    msgs[0].len   = 1;
 
-    /* 调用I2C设备接口传输数据 */
-    if (rt_i2c_transfer(bus, &msgs, 1) == 1) {
-        //rt_kprintf("HL_i2c_read_regs  ok\n");
+    msgs[1].addr  = addr;
+    msgs[1].flags = RT_I2C_RD;
+    msgs[1].buf   = rbuf;
+    msgs[1].len   = len;
+
+    // 调用I2C设备接口传输数据
+    if (rt_i2c_transfer(bus, msgs, 2) == 2) {
         return RT_EOK;
-    } else {
-        rt_kprintf("HL_i2c_read_regs  error\n");
+    } else
         return -RT_ERROR;
-    }
 }
 
 /**
@@ -230,12 +252,13 @@ static int32_t HL_I2C_BufferRead(uint8_t addr, uint8_t reg, uint8_t* data, uint1
         rt_kprintf("get_i2c_handle  error\n");
         return 1;
     }
-    if (HL_i2c_write_reg(i2c_handle, addr, reg, data, 0)) {
-        return 1;
-    }
-    if (HL_i2c_read_regs(i2c_handle, addr, data, num)) {
-        return 1;
-    }
+    hl_i2c_read_reg(i2c_handle,addr,reg,data,num);
+    // if (HL_i2c_write_reg(i2c_handle, addr, reg, data, 0)) {
+    //     return 1;
+    // }
+    // if (HL_i2c_read_regs(i2c_handle, addr, data, num)) {
+    //     return 1;
+    // }
     return 0;
 }
 
@@ -1710,6 +1733,7 @@ uint8_t hl_drv_qma6100p_init(void)
 {
     uint8_t ret = 0;
     ret = HL_QMA6100_init();
+    rt_thread_mdelay(1000);  //初始化后不能立即获取 要等待寄存器设置完成这段时间
     return ret;
 }
 
@@ -1753,10 +1777,10 @@ static uint8_t HL_QMA6100P_get_Euler_Angle(void* ptr)
         return 1;
     }
     
-    if(HL_QMA6100_ABS(acc_data[0])+HL_QMA6100_ABS(acc_data[1])+HL_QMA6100_ABS(acc_data[2]) > 18000){  //加速度之和超过18000 被认为在非静止条件下 后续可根据需求更改
-        rt_kprintf(" HL_QMA6100P_get_Euler_Angle  no static status!\n");
-        return 2;
-    }
+    // if(HL_QMA6100_ABS(acc_data[0])+HL_QMA6100_ABS(acc_data[1])+HL_QMA6100_ABS(acc_data[2]) > 18000){  //加速度之和超过18000 被认为在非静止条件下 后续可根据需求更改
+    //     rt_kprintf(" HL_QMA6100P_get_Euler_Angle  no static status!\n");
+    //     return 2;
+    // }
 
     float64_t av = sqrtf(acc_data[0]*acc_data[0]+acc_data[1]*acc_data[1]+acc_data[2]*acc_data[2]);
     float64_t pitch = asinf(-acc_data[1]/av)*R2D;
