@@ -498,12 +498,9 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
 #endif
 #endif
 
-#if HL_IS_TX_DEVICE()
-    sg_tx_dsp_param->io_ctrl_op     = 3;
-    sg_tx_dsp_param->io_ctrl_notify = 1;
-#else
-    sg_rx_dsp_param->io_ctrl_op    = 3;
-#endif  //<
+    // default bypass model
+    sg_dsp_io_ctrl.io_ctrl_op      = 3;
+    sg_dsp_io_ctrl.io_ctrl_notify  = 1;
 
     ret = _hl_drv_rk_stensa_dsp_init_frame(sg_dsp_drv_handle);
     if (ret) {
