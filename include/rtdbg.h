@@ -134,7 +134,7 @@
     }                                                       \
     while (0)
 
-#define dbg_raw(...)         rt_kprintf(__VA_ARGS__);
+#define dbg_raw(...)        // rt_kprintf(__VA_ARGS__);
 
 #else
 #define dbg_log(level, fmt, ...)
@@ -146,30 +146,30 @@
 #endif /* DBG_ENABLE */
 
 #if (DBG_LEVEL >= DBG_LOG)
-#define LOG_D(fmt, ...)      dbg_log_line("D", 0, fmt, ##__VA_ARGS__)
+#define LOG_D(fmt, ...)      //dbg_log_line("D", 0, fmt, ##__VA_ARGS__)
 #else
 #define LOG_D(...)
 #endif
 
 #if (DBG_LEVEL >= DBG_INFO)
-#define LOG_I(fmt, ...)      dbg_log_line("I", 32, fmt, ##__VA_ARGS__)
+#define LOG_I(fmt, ...)      //dbg_log_line("I", 32, fmt, ##__VA_ARGS__)
 #else
 #define LOG_I(...)
 #endif
 
 #if (DBG_LEVEL >= DBG_WARNING)
-#define LOG_W(fmt, ...)      dbg_log_func("W", 33, fmt, ##__VA_ARGS__)
+#define LOG_W(fmt, ...)      //dbg_log_func("W", 33, fmt, ##__VA_ARGS__)
 #else
 #define LOG_W(...)
 #endif
 
 #if (DBG_LEVEL >= DBG_ERROR)
-#define LOG_E(fmt, ...)      dbg_log_func("E", 31, fmt, ##__VA_ARGS__)
+#define LOG_E(fmt, ...)      //dbg_log_func("E", 31, fmt, ##__VA_ARGS__)
 #else
 #define LOG_E(...)
 #endif
 
-#define LOG_RAW(...)         dbg_raw(__VA_ARGS__)
+#define LOG_RAW(...)         //dbg_raw(__VA_ARGS__)
 
 #endif /* defined(RT_USING_ULOG) && define(DBG_ENABLE) */
 

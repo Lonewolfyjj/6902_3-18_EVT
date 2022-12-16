@@ -4,6 +4,7 @@
 
 #include "lvgl.h"
 #include "stdio.h"
+#include "rtthread.h"
 
 extern const lv_font_t language;
 extern const lv_font_t language24;
