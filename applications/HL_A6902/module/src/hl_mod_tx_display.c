@@ -93,11 +93,29 @@ static hl_mod_display_st _display_mod = {
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
+static void hl_mod_display_dump_info(void)
+{
+    LOG_I("init_flag:%d", _display_mod.init_flag);
+    LOG_I("aw2016a_init_flag:%d", _display_mod.aw2016a_init_flag);
+    LOG_I("display_state_1:%d", _display_mod.display_state_1);
+    LOG_I("display_state_2:%d", _display_mod.display_state_2);
+    LOG_I("net_mode:%d", _display_mod.net_mode);
+    LOG_I("record_state:%d", _display_mod.record_state);
+    LOG_I("record_fault_state:%d", _display_mod.record_fault_state);
+    LOG_I("denoise_state:%d", _display_mod.denoise_state);
+    LOG_I("charge_state:%d", _display_mod.charge_state);
+    LOG_I("fault_state:%d", _display_mod.fault_state);
+    LOG_I("mute_state:%d", _display_mod.mute_state);
+    LOG_I("update_state:%d", _display_mod.update_state);
+    LOG_I("bat_soc:%d", _display_mod.bat_soc);
+    LOG_I("led_brightness:%d", _display_mod.led_brightness);
+}
+
 static void _display_state_check_1(void)
 {
     hl_mod_display_state_e state;
 
-    if (_display_mod.charging_led_count != 0) {
+    if (_display_mod.charging_led_count != 0 && _display_mod.charge_state == CHARGING) {
         state = HL_DISPLAY_CHARGING;
         _display_mod.charging_led_count--;
     } else if (_display_mod.fault_state == SWITCH_OPEN) {
@@ -262,7 +280,7 @@ static int _set_brightness(void)
 
 static void _record_led_flash_ctrl(void)
 {
-    uint8_t count = 0;
+    static uint8_t count = 0;
 
     if (_display_mod.display_state_2 == HL_DISPLAY_RECORD_ERR) {
         if (count == 0) {
@@ -271,6 +289,7 @@ static void _record_led_flash_ctrl(void)
             hl_hal_gpio_low(GPIO_REC_LED_EN);
         } else if (count == 10) {
             count = 0;
+            return;
         }
 
         count++;
@@ -496,6 +515,8 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
     return HL_DISPLAY_SUCCESS;
 }
+
+MSH_CMD_EXPORT(hl_mod_display_dump_info, dump display mod all info);
 
 #endif
 /*
