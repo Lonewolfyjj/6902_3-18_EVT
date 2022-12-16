@@ -44,7 +44,7 @@ static void lv_style_page4_init(void)
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_obj_enable_style_refresh(true);
 
@@ -197,6 +197,17 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_choose_main);
+    lv_style_reset(&style_not_choose_main);
+    lv_style_reset(&style_choose_lr_main);
+    lv_style_reset(&style_not_choose_lr_main);
+    lv_style_reset(&style_label);
+    lv_style_reset(&style_indicator);
+    lv_style_reset(&style_back);
+}
+
 void hl_mod_lineout_ioctl(void * ctl_data)
 {
     hl_lvgl_lineout_ioctl_t * ptr = (hl_lvgl_lineout_ioctl_t *)ctl_data;
@@ -209,7 +220,10 @@ void hl_mod_lineout_ioctl(void * ctl_data)
             break;
         case HL_LINEOUT_DELETE_PAGE:
             hl_obj_delete(btn_left,true);
-            hl_obj_delete(btn_right,true);
+            hl_obj_delete(btn_right,true);            
+            break;
+        case HL_LINEOUT_DELETE_STYLE:
+            lv_delete_style();           
             break;
         default:
             break;
