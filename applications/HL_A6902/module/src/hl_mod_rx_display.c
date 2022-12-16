@@ -55,7 +55,11 @@
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
 
-#define GSENSOR_DEBANCE_TIMER          40
+#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*4 
+
+#define ROT_SCAN_IN_TIME 5*100
+
+static hl_timeout_t rot_scan_in;
 
 // gsensor消抖时间
 static hl_timeout_t sensor_debance;
@@ -105,12 +109,12 @@ static void hl_mod_display_data_init(void)
      now->tx1_signal = 0;
      now->tx2_signal = 0;
      now->tx_noise_level = 4;
-     now->tx1_line_out_volume = 10;
-     now->tx2_line_out_volume = 10;
+     now->tx1_line_out_volume = 0;
+     now->tx2_line_out_volume = 0;
      now->uac_in_volume = 0;
-     now->uac_out_volume = 10;
-     now->tx1_gain_volume = 10;
-     now->tx2_gain_volume =  10;
+     now->uac_out_volume = 0;
+     now->tx1_gain_volume = 0;
+     now->tx2_gain_volume =  0;
      now->led_britness = 127;
      now->tx1_remained_record_time = 10;
      now->tx2_remained_record_time = 10;
@@ -194,22 +198,25 @@ static uint8_t hl_mod_device_dir_get(device_pose_t* newdir)
     return changeflag;
 }
 
-static void hl_mod_screen_rot_scan(void)
+static void         hl_mod_screen_rot_scan(void)
 {
     device_pose_t now_dir = DEVICE_FORWARD_POSE;
     lv_disp_t*    screen_ptr;
 
-    if (hl_mod_device_dir_get(&now_dir)) {
-
-        screen_ptr = lv_disp_get_default();
-        if (now_dir == DEVICE_FORWARD_POSE) {
-            lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_270);
-        } else {
-            lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+    if (hl_util_timeout_judge(&rot_scan_in)) {
+        rt_kprintf("jie \n");
+        if (hl_mod_device_dir_get(&now_dir)) {
+            rt_kprintf("jie=%d \n",now_dir);
+            screen_ptr = lv_disp_get_default();
+            if (now_dir == DEVICE_FORWARD_POSE) {
+                lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_270);
+            } else {
+                lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+            }
         }
+        hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     }
 }
-
 
 uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
@@ -244,6 +251,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             data_p->rx_bat_val = data;
             flag->rx_bat_val = 1;
+            rt_kprintf("liujie1\n");
         } break;
         case CASE_BAT_VAL_VAL_CMD: {
             uint8_t data         = *(uint8_t*)ptr;
@@ -403,13 +411,14 @@ uint8_t hl_mod_display_init(void* display_msq)
 
     hl_drv_aw2016a_deinit();
     // hl_drv_aw2016a_init();
-
+    
     // RX
     hl_drv_rm690a0_init();
     lvgl2rtt_init();
     hl_mod_display_data_init();
     hl_mod_page_all_init();
-    
+    hl_drv_qma6100p_init();
+    hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
                                    DISPLAY_THREAD_PRIORITY, DISPLAY_THREAD_TIMESLICE);
 
