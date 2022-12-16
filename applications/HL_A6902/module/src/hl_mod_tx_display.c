@@ -140,6 +140,8 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_CHARGE_FULL;
     } else if (_display_mod.charge_state == NOT_CHARGE) {
         state = HL_DISPLAY_CHARGE_STOP;
+    } else if (_display_mod.charge_state == CHARGING) {
+        state = HL_DISPLAY_CHARGING;
     } else {
         state = HL_DISPLAY_IDLE;
     }
