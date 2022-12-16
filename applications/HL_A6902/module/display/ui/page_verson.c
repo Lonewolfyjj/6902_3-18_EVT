@@ -28,7 +28,7 @@ static void lv_style_page4_init(void)
     lv_style_set_border_width(&style_screen, 0);
     lv_style_set_outline_width(&style_screen,0);
     lv_style_set_radius(&style_screen, 0);
-    lv_obj_add_style(lv_scr_act(), &style_screen, 0);
+    // lv_obj_add_style(lv_scr_act(), &style_screen, 0);
 
     lv_style_init(&style_label);
     lv_style_set_bg_opa(&style_label, LV_OPA_TRANSP);
@@ -109,6 +109,12 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_label);
+    lv_style_reset(&style_screen);
+}
+
 void hl_mod_verson_ioctl(void * ctl_data)
 {
     hl_lvgl_verson_ioctl_t * ptr = (hl_lvgl_verson_ioctl_t *)ctl_data;
@@ -124,6 +130,9 @@ void hl_mod_verson_ioctl(void * ctl_data)
             break;
         case HL_VERSON_OPTION_EXTI:
             hl_obj_delete(lv_scr_act(),false);
+            break;
+        case HL_VERSON_OPTION_DEL_STYLE:
+            lv_delete_style();
             break;
         default:
             break;

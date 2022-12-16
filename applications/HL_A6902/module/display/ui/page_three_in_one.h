@@ -17,6 +17,7 @@ typedef enum _hl_three_in_one_choose_t
     HL_THREE_ONE_CHOOSE_LEFT = 0,
     HL_THREE_ONE_CHOOSE_MID,
     HL_THREE_ONE_CHOOSE_RIGHT,
+    HL_THREE_ONE_CHOOSE_DEL_STYLE,
     HL_THREE_ONE_CHOOSE_EXIT
 }hl_three_in_one_choose_t;
 

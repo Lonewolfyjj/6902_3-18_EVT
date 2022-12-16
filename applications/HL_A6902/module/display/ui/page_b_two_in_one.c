@@ -63,7 +63,7 @@ static void lv_style_page4_init(void)
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    // lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
@@ -189,6 +189,15 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_choose_main);
+    lv_style_reset(&style_not_choose_main);
+    lv_style_reset(&style_choose_lr_main);
+    lv_style_reset(&style_not_choose_lr_main);
+    lv_style_reset(&style_label);
+}
+
 void hl_mod_b_two_in_one_ioctl(void * ctl_data)
 {
     hl_lvgl_b_two_in_one_ioctl_t * ptr = (hl_lvgl_b_two_in_one_ioctl_t *)ctl_data;
@@ -200,7 +209,7 @@ void hl_mod_b_two_in_one_ioctl(void * ctl_data)
             lv_event_send(btn_right,LV_EVENT_CLICKED,ulock);
         break;
         case HL_B_TWO_ONE_CHOOSE_EXIT:
-            hl_obj_delete(lv_scr_act(),false);
+            hl_obj_delete(lv_scr_act(),false);            
         break;
         default:
         break;

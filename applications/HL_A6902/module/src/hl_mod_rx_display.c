@@ -33,7 +33,7 @@
 #include "hl_mod_display.h"
 
 #if !HL_IS_TX_DEVICE()
-
+#include "page_lineout.h"
 #include "hl_drv_aw2016a.h"
 #include "hl_drv_rm690a0.h"
 #include "hl_util_msg_type.h"
@@ -41,6 +41,7 @@
 #include "hl_mod_page_common.h"
 #include <rtthread.h>
 #include "hl_util_msg_type.h"
+#include "page_menu.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -54,7 +55,7 @@
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
 
 static rt_thread_t display_tid = RT_NULL;
-
+static rt_thread_t display_debug = RT_NULL;
 typedef struct _hl_display_msg_t
 {
     /// 消息队列句柄
@@ -282,18 +283,73 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     return res;
 }
 
+
+
+//主菜单页面
+LV_IMG_DECLARE(Menu_single_voice);//单声道
+LV_IMG_DECLARE(Menu_tx_config);//Tx设置
+LV_IMG_DECLARE(Menu_noise_config);//降噪设置
+LV_IMG_DECLARE(Menu_voice_config);//音量调节
+LV_IMG_DECLARE(Menu_monitor_config);//监听设置
+LV_IMG_DECLARE(Menu_common_config);//通用设置
+
+static void page_7_test_cb(uint32_t current)
+{
+    printf("Page_7 check centre icon event :%d\n",current);
+}
+static menu_data_t pic_list7[6] = {
+        ADD_IMG_DATA(NULL,NULL,&Menu_single_voice,"单声道"),
+        // ADD_IMG_DATA(NULL,NULL,&Menu_tx_config,"TX设置"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_noise_config,"降噪设置"),        
+        ADD_IMG_DATA(NULL,NULL,&Menu_voice_config,"音量调节"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_tx_config,"TX设置"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_monitor_config,"监听设置"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_common_config,"通用设置"),
+    };
+static void page_7_test(void)
+{    
+    page_menu_init(pic_list7,6,page_7_test_cb);
+}
+
+
+static void hl_bar_test_cb(int16_t bar_num)
+{
+    printf("bar_num = %d\n", bar_num);
+}
+
+
+static void page_sss_init(void)
+{
+    hl_lvgl_lineout_init_t lineout;
+
+    lineout.lineout_choose = HL_LINEOUT_CHOOSE_LEFT;
+    lineout.left_volume = 10;
+    lineout.right_volume = 11;
+    lineout.func_cb = hl_bar_test_cb;
+    hl_mod_lineout_init(&lineout);
+}
+
 // RX
 static void hl_mod_display_task(void* param)
 {
-
+    uint16_t i =0,j = 0;
     while (1) {
-
-        PageManager_Running();
-        // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
+        if(i++ == 1000){
+            i = 0;
+            if((j++)%2){
+                rt_kprintf("lv_menu_exit\n");
+                lv_menu_exit();
+            }else{
+                rt_kprintf("page_7_test\n");
+                page_7_test();                
+            }
+        }
     }
 }
+
+
 
 uint8_t hl_mod_display_deinit(void)
 {
@@ -328,14 +384,29 @@ uint8_t hl_mod_display_init(void* display_msq)
     
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
                                    DISPLAY_THREAD_PRIORITY, DISPLAY_THREAD_TIMESLICE);
+    
+    // display_debug = rt_thread_create("display_debug", hl_mod_display_debug_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
+    //                                DISPLAY_THREAD_PRIORITY, DISPLAY_THREAD_TIMESLICE);
 
-    if (display_tid != RT_NULL) {
+                                   
 
-        LOG_D("display thread init ok!\r\n");
+    if (display_tid == RT_NULL) {
+
+        LOG_D("display thread init err!\r\n");
+    }
         rt_thread_startup(display_tid);
 
-        return HL_DISPLAY_SUCCESS;
-    }
+    //     return HL_DISPLAY_SUCCESS;
+    // }
+
+    // if (display_debug == RT_NULL) {
+
+    //     LOG_D("display display_debug thread init err!\r\n");
+    // }
+    //     rt_thread_startup(display_debug);
+
+    //     return HL_DISPLAY_SUCCESS;
+    // }
 
     return HL_DISPLAY_FAILED;
 }
