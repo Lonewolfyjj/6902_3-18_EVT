@@ -49,7 +49,7 @@ static void lv_style_page4_init(void)
     lv_style_set_border_width(&style_screen, 0);
     lv_style_set_outline_width(&style_screen,0);
     lv_style_set_radius(&style_screen, 0);
-    lv_obj_add_style(lv_scr_act(), &style_screen, 0);
+    // lv_obj_add_style(lv_scr_act(), &style_screen, 0);
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
@@ -379,6 +379,16 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_choose_main);
+    lv_style_reset(&style_not_choose_main);
+    lv_style_reset(&style_choose_lr_main);
+    lv_style_reset(&style_not_choose_lr_main);
+    lv_style_reset(&style_label);
+    lv_style_reset(&style_screen);
+}
+
 static void hl_option_mid_set(hl_moreone_mid_opt_t opt,lv_anim_enable_t anim_en)
 {
     switch(opt){
@@ -406,6 +416,9 @@ static void hl_postion_cmd_deal(hl_moreone_mid_opt_t pos)
             break;
         case HL_MOREONE_OPTION_EXTI:  
             hl_obj_delete(lv_scr_act(),false);
+            break;
+        case HL_MOREONE_OPTION_DELETE_STYLE:  
+            lv_delete_style();
             break;
         default:
             break;      

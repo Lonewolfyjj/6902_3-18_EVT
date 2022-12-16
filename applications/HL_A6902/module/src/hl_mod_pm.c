@@ -255,11 +255,11 @@ static void _charge_state_update(void)
         sy6971_param.cfg_opt = E_CHRG_STAT;
         hl_drv_sy6971_io_ctrl(SY_READ_CMD, &sy6971_param, 1);
 
-        if (sy6971_param.param == 0x00) {
+        if (sy6971_param.param == 0) {
             charge_state = HL_CHARGE_STATE_NO_CHARGE;
-        } else if (sy6971_param.param == 0x01) {
+        } else if (sy6971_param.param == 1) {
             charge_state = HL_CHARGE_STATE_CHARGING;
-        } else if (sy6971_param.param == 0x10) {
+        } else if (sy6971_param.param == 2) {
             charge_state = HL_CHARGE_STATE_CHARGING;
         } else {
             charge_state = HL_CHARGE_STATE_CHARGE_DONE;
@@ -268,11 +268,11 @@ static void _charge_state_update(void)
         sgm_param.cfg_opt = R_CHRG_STAT;
         hl_drv_sgm41518_io_ctrl(SGM_READ_CMD, &sgm_param, 1);
 
-        if (sgm_param.param == 0x00) {
+        if (sgm_param.param == 0) {
             charge_state = HL_CHARGE_STATE_NO_CHARGE;
-        } else if (sgm_param.param == 0x01) {
+        } else if (sgm_param.param == 1) {
             charge_state = HL_CHARGE_STATE_CHARGING;
-        } else if (sgm_param.param == 0x10) {
+        } else if (sgm_param.param == 2) {
             charge_state = HL_CHARGE_STATE_CHARGING;
         } else {
             charge_state = HL_CHARGE_STATE_CHARGE_DONE;

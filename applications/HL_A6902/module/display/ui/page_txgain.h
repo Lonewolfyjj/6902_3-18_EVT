@@ -15,6 +15,7 @@ typedef enum _hl_txgain_choose_t
 {
     HL_TX_GAIN_CHOOSE_LEFT = 0,
     HL_TX_GAIN_CHOOSE_RIGHT,
+    HL_TX_GAIN_DELETE_STYLE,
     HL_TX_GAIN_DELETE_PAGE
 }hl_txgain_choose_t;
 

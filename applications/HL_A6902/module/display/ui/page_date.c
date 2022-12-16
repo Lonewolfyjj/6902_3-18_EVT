@@ -104,7 +104,7 @@ static void lv_style_page6_init(void)
     lv_style_set_bg_color(&style_black, lv_color_black());
     lv_style_set_border_width(&style_black, 0);
     lv_style_set_pad_all(&style_black, 0);
-    lv_obj_add_style(lv_scr_act(), &style_black, 0);
+    // lv_obj_add_style(lv_scr_act(), &style_black, 0);
     lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);  
 
     lv_style_init(&style_grey);
@@ -322,6 +322,13 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_grey);
+    lv_style_reset(&style_black);
+}
+
 void hl_mod_date_ioctl(void * ctl_data)
 {
     hl_lvgl_date_ioctl_t * ptr = (hl_lvgl_date_ioctl_t *)ctl_data;
@@ -333,7 +340,10 @@ void hl_mod_date_ioctl(void * ctl_data)
             hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON);
             break;
         case HL_DATE_EXTI_CMD:
-            hl_obj_delete(lv_scr_act(),false);
+            hl_obj_delete(lv_scr_act(),false);            
+            break;
+        case HL_DATE_DELETE_STYLE_CMD:
+            lv_delete_style();            
             break;
         default:
             break;

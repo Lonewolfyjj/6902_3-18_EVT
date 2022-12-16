@@ -461,6 +461,453 @@
 /* AUDIO_ENABLE_RECORDER_TEST is not set */
 #define RT_USING_PKGS
 
+/* RT-Thread online packages */
+
+/* IoT - internet of things */
+
+/* PKG_USING_LWIP is not set */
+/* PKG_USING_LORAWAN_DRIVER is not set */
+/* PKG_USING_PAHOMQTT is not set */
+/* PKG_USING_UMQTT is not set */
+/* PKG_USING_WEBCLIENT is not set */
+/* PKG_USING_WEBNET is not set */
+/* PKG_USING_MONGOOSE is not set */
+/* PKG_USING_MYMQTT is not set */
+/* PKG_USING_KAWAII_MQTT is not set */
+/* PKG_USING_BC28_MQTT is not set */
+/* PKG_USING_WEBTERMINAL is not set */
+/* PKG_USING_LIBMODBUS is not set */
+/* PKG_USING_FREEMODBUS is not set */
+/* PKG_USING_NANOPB is not set */
+
+/* Wi-Fi */
+
+/* Marvell WiFi */
+
+/* PKG_USING_WLANMARVELL is not set */
+
+/* Wiced WiFi */
+
+/* PKG_USING_WLAN_WICED is not set */
+/* PKG_USING_RW007 is not set */
+/* PKG_USING_COAP is not set */
+/* PKG_USING_NOPOLL is not set */
+/* PKG_USING_NETUTILS is not set */
+/* PKG_USING_CMUX is not set */
+/* PKG_USING_PPP_DEVICE is not set */
+/* PKG_USING_AT_DEVICE is not set */
+/* PKG_USING_ATSRV_SOCKET is not set */
+/* PKG_USING_WIZNET is not set */
+/* PKG_USING_ZB_COORDINATOR is not set */
+
+/* IoT Cloud */
+
+/* PKG_USING_ONENET is not set */
+/* PKG_USING_GAGENT_CLOUD is not set */
+/* PKG_USING_ALI_IOTKIT is not set */
+/* PKG_USING_AZURE is not set */
+/* PKG_USING_TENCENT_IOT_EXPLORER is not set */
+/* PKG_USING_JIOT-C-SDK is not set */
+/* PKG_USING_UCLOUD_IOT_SDK is not set */
+/* PKG_USING_JOYLINK is not set */
+/* PKG_USING_EZ_IOT_OS is not set */
+/* PKG_USING_IOTSHARP_SDK is not set */
+/* PKG_USING_NIMBLE is not set */
+/* PKG_USING_LLSYNC_SDK_ADAPTER is not set */
+/* PKG_USING_OTA_DOWNLOADER is not set */
+/* PKG_USING_IPMSG is not set */
+/* PKG_USING_LSSDP is not set */
+/* PKG_USING_AIRKISS_OPEN is not set */
+/* PKG_USING_LIBRWS is not set */
+/* PKG_USING_TCPSERVER is not set */
+/* PKG_USING_PROTOBUF_C is not set */
+/* PKG_USING_DLT645 is not set */
+/* PKG_USING_QXWZ is not set */
+/* PKG_USING_SMTP_CLIENT is not set */
+/* PKG_USING_ABUP_FOTA is not set */
+/* PKG_USING_LIBCURL2RTT is not set */
+/* PKG_USING_CAPNP is not set */
+/* PKG_USING_AGILE_TELNET is not set */
+/* PKG_USING_NMEALIB is not set */
+/* PKG_USING_PDULIB is not set */
+/* PKG_USING_BTSTACK is not set */
+/* PKG_USING_LORAWAN_ED_STACK is not set */
+/* PKG_USING_WAYZ_IOTKIT is not set */
+/* PKG_USING_MAVLINK is not set */
+/* PKG_USING_BSAL is not set */
+/* PKG_USING_AGILE_MODBUS is not set */
+/* PKG_USING_AGILE_FTP is not set */
+/* PKG_USING_EMBEDDEDPROTO is not set */
+/* PKG_USING_RT_LINK_HW is not set */
+/* PKG_USING_LORA_PKT_FWD is not set */
+/* PKG_USING_LORA_GW_DRIVER_LIB is not set */
+/* PKG_USING_LORA_PKT_SNIFFER is not set */
+/* PKG_USING_HM is not set */
+/* PKG_USING_SMALL_MODBUS is not set */
+/* PKG_USING_NET_SERVER is not set */
+/* PKG_USING_ZFTP is not set */
+
+/* security packages */
+
+/* PKG_USING_MBEDTLS is not set */
+/* PKG_USING_LIBSODIUM is not set */
+/* PKG_USING_LIBHYDROGEN is not set */
+/* PKG_USING_TINYCRYPT is not set */
+/* PKG_USING_TFM is not set */
+/* PKG_USING_YD_CRYPTO is not set */
+
+/* language packages */
+
+/* JSON: JavaScript Object Notation, a lightweight data-interchange format */
+
+/* PKG_USING_CJSON is not set */
+/* PKG_USING_LJSON is not set */
+/* PKG_USING_RT_CJSON_TOOLS is not set */
+/* PKG_USING_RAPIDJSON is not set */
+/* PKG_USING_JSMN is not set */
+/* PKG_USING_AGILE_JSMN is not set */
+/* PKG_USING_PARSON is not set */
+
+/* XML: Extensible Markup Language */
+
+/* PKG_USING_SIMPLE_XML is not set */
+/* PKG_USING_EZXML is not set */
+/* PKG_USING_LUATOS_SOC is not set */
+/* PKG_USING_LUA is not set */
+/* PKG_USING_JERRYSCRIPT is not set */
+/* PKG_USING_MICROPYTHON is not set */
+/* PKG_USING_PIKASCRIPT is not set */
+/* PKG_USING_RTT_RUST is not set */
+
+/* multimedia packages */
+
+/* LVGL: powerful and easy-to-use embedded GUI library */
+
+/* PKG_USING_LVGL is not set */
+/* PKG_USING_LITTLEVGL2RTT is not set */
+/* PKG_USING_LV_MUSIC_DEMO is not set */
+/* PKG_USING_GUI_GUIDER_DEMO is not set */
+
+/* u8g2: a monochrome graphic library */
+
+/* PKG_USING_U8G2 is not set */
+/* PKG_USING_OPENMV is not set */
+/* PKG_USING_MUPDF is not set */
+/* PKG_USING_STEMWIN is not set */
+/* PKG_USING_WAVPLAYER is not set */
+/* PKG_USING_TJPGD is not set */
+/* PKG_USING_PDFGEN is not set */
+/* PKG_USING_HELIX is not set */
+/* PKG_USING_AZUREGUIX is not set */
+/* PKG_USING_TOUCHGFX2RTT is not set */
+/* PKG_USING_NUEMWIN is not set */
+/* PKG_USING_MP3PLAYER is not set */
+/* PKG_USING_TINYJPEG is not set */
+/* PKG_USING_UGUI is not set */
+
+/* PainterEngine: A cross-platform graphics application framework written in C language */
+
+/* PKG_USING_PAINTERENGINE is not set */
+/* PKG_USING_PAINTERENGINE_AUX is not set */
+/* PKG_USING_MCURSES is not set */
+/* PKG_USING_VT100 is not set */
+/* PKG_USING_QRCODE is not set */
+/* PKG_USING_GUIENGINE is not set */
+/* PKG_USING_PERSIMMON is not set */
+
+/* tools packages */
+
+/* PKG_USING_CMBACKTRACE is not set */
+/* PKG_USING_EASYFLASH is not set */
+/* PKG_USING_EASYLOGGER is not set */
+/* PKG_USING_SYSTEMVIEW is not set */
+/* PKG_USING_SEGGER_RTT is not set */
+/* PKG_USING_RDB is not set */
+/* PKG_USING_ULOG_EASYFLASH is not set */
+/* PKG_USING_ULOG_FILE is not set */
+/* PKG_USING_LOGMGR is not set */
+/* PKG_USING_ADBD is not set */
+/* PKG_USING_COREMARK is not set */
+/* PKG_USING_DHRYSTONE is not set */
+/* PKG_USING_MEMORYPERF is not set */
+/* PKG_USING_NR_MICRO_SHELL is not set */
+/* PKG_USING_CHINESE_FONT_LIBRARY is not set */
+/* PKG_USING_LUNAR_CALENDAR is not set */
+/* PKG_USING_BS8116A is not set */
+/* PKG_USING_GPS_RMC is not set */
+/* PKG_USING_URLENCODE is not set */
+/* PKG_USING_UMCN is not set */
+/* PKG_USING_LWRB2RTT is not set */
+/* PKG_USING_CPU_USAGE is not set */
+/* PKG_USING_GBK2UTF8 is not set */
+/* PKG_USING_VCONSOLE is not set */
+/* PKG_USING_KDB is not set */
+/* PKG_USING_WAMR is not set */
+/* PKG_USING_MICRO_XRCE_DDS_CLIENT is not set */
+/* PKG_USING_LWLOG is not set */
+/* PKG_USING_ANV_TRACE is not set */
+/* PKG_USING_ANV_MEMLEAK is not set */
+/* PKG_USING_ANV_TESTSUIT is not set */
+/* PKG_USING_ANV_BENCH is not set */
+/* PKG_USING_DEVMEM is not set */
+/* PKG_USING_REGEX is not set */
+/* PKG_USING_MEM_SANDBOX is not set */
+/* PKG_USING_SOLAR_TERMS is not set */
+/* PKG_USING_GAN_ZHI is not set */
+/* PKG_USING_FDT is not set */
+/* PKG_USING_CBOX is not set */
+/* PKG_USING_SNOWFLAKE is not set */
+/* PKG_USING_HASH_MATCH is not set */
+/* PKG_USING_FIRE_PID_CURVE is not set */
+/* PKG_USING_ARMV7M_DWT_TOOL is not set */
+/* PKG_USING_VOFA_PLUS is not set */
+
+/* system packages */
+
+/* enhanced kernel services */
+
+/* PKG_USING_RT_MEMCPY_CM is not set */
+/* PKG_USING_RT_KPRINTF_THREADSAFE is not set */
+/* PKG_USING_RT_VSNPRINTF_FULL is not set */
+
+/* acceleration: Assembly language or algorithmic acceleration packages */
+
+/* PKG_USING_QFPLIB_M0_FULL is not set */
+/* PKG_USING_QFPLIB_M0_TINY is not set */
+/* PKG_USING_QFPLIB_M3 is not set */
+
+/* CMSIS: ARM Cortex-M Microcontroller Software Interface Standard */
+
+/* PKG_USING_CMSIS_5 is not set */
+/* PKG_USING_CMSIS_RTOS1 is not set */
+/* PKG_USING_CMSIS_RTOS2 is not set */
+
+/* Micrium: Micrium software products porting for RT-Thread */
+
+/* PKG_USING_UCOSIII_WRAPPER is not set */
+/* PKG_USING_UCOSII_WRAPPER is not set */
+/* PKG_USING_UC_CRC is not set */
+/* PKG_USING_UC_CLK is not set */
+/* PKG_USING_UC_COMMON is not set */
+/* PKG_USING_UC_MODBUS is not set */
+/* PKG_USING_FREERTOS_WRAPPER is not set */
+/* PKG_USING_CAIRO is not set */
+/* PKG_USING_PIXMAN is not set */
+/* PKG_USING_PARTITION is not set */
+/* PKG_USING_PERF_COUNTER is not set */
+/* PKG_USING_FAL is not set */
+/* PKG_USING_FLASHDB is not set */
+/* PKG_USING_SQLITE is not set */
+/* PKG_USING_RTI is not set */
+/* PKG_USING_DFS_YAFFS is not set */
+/* PKG_USING_LITTLEFS is not set */
+/* PKG_USING_DFS_JFFS2 is not set */
+/* PKG_USING_DFS_UFFS is not set */
+/* PKG_USING_LWEXT4 is not set */
+/* PKG_USING_THREAD_POOL is not set */
+/* PKG_USING_ROBOTS is not set */
+/* PKG_USING_EV is not set */
+/* PKG_USING_SYSWATCH is not set */
+/* PKG_USING_SYS_LOAD_MONITOR is not set */
+/* PKG_USING_PLCCORE is not set */
+/* PKG_USING_RAMDISK is not set */
+/* PKG_USING_MININI is not set */
+/* PKG_USING_QBOOT is not set */
+/* PKG_USING_PPOOL is not set */
+/* PKG_USING_OPENAMP is not set */
+/* PKG_USING_LPM is not set */
+/* PKG_USING_TLSF is not set */
+/* PKG_USING_EVENT_RECORDER is not set */
+/* PKG_USING_ARM_2D is not set */
+/* PKG_USING_MCUBOOT is not set */
+/* PKG_USING_TINYUSB is not set */
+/* PKG_USING_CHERRYUSB is not set */
+/* PKG_USING_KMULTI_RTIMER is not set */
+/* PKG_USING_TFDB is not set */
+/* PKG_USING_QPC is not set */
+
+/* peripheral libraries and drivers */
+
+/* PKG_USING_SENSORS_DRIVERS is not set */
+/* PKG_USING_REALTEK_AMEBA is not set */
+/* PKG_USING_SHT2X is not set */
+/* PKG_USING_SHT3X is not set */
+/* PKG_USING_ADT74XX is not set */
+/* PKG_USING_AS7341 is not set */
+/* PKG_USING_STM32_SDIO is not set */
+/* PKG_USING_ESP_IDF is not set */
+/* PKG_USING_ICM20608 is not set */
+/* PKG_USING_BUTTON is not set */
+/* PKG_USING_PCF8574 is not set */
+/* PKG_USING_SX12XX is not set */
+/* PKG_USING_SIGNAL_LED is not set */
+/* PKG_USING_LEDBLINK is not set */
+/* PKG_USING_LITTLED is not set */
+/* PKG_USING_LKDGUI is not set */
+/* PKG_USING_NRF5X_SDK is not set */
+/* PKG_USING_NRFX is not set */
+/* PKG_USING_WM_LIBRARIES is not set */
+
+/* Kendryte SDK */
+
+/* PKG_USING_K210_SDK is not set */
+/* PKG_USING_KENDRYTE_SDK is not set */
+/* PKG_USING_INFRARED is not set */
+/* PKG_USING_MULTI_INFRARED is not set */
+/* PKG_USING_AGILE_BUTTON is not set */
+/* PKG_USING_AGILE_LED is not set */
+/* PKG_USING_AT24CXX is not set */
+/* PKG_USING_MOTIONDRIVER2RTT is not set */
+/* PKG_USING_AD7746 is not set */
+/* PKG_USING_PCA9685 is not set */
+/* PKG_USING_I2C_TOOLS is not set */
+/* PKG_USING_NRF24L01 is not set */
+/* PKG_USING_TOUCH_DRIVERS is not set */
+/* PKG_USING_MAX17048 is not set */
+/* PKG_USING_RPLIDAR is not set */
+/* PKG_USING_AS608 is not set */
+/* PKG_USING_RC522 is not set */
+/* PKG_USING_WS2812B is not set */
+/* PKG_USING_EMBARC_BSP is not set */
+/* PKG_USING_EXTERN_RTC_DRIVERS is not set */
+/* PKG_USING_MULTI_RTIMER is not set */
+/* PKG_USING_MAX7219 is not set */
+/* PKG_USING_BEEP is not set */
+/* PKG_USING_EASYBLINK is not set */
+/* PKG_USING_PMS_SERIES is not set */
+/* PKG_USING_CAN_YMODEM is not set */
+/* PKG_USING_LORA_RADIO_DRIVER is not set */
+/* PKG_USING_QLED is not set */
+/* PKG_USING_PAJ7620 is not set */
+/* PKG_USING_AGILE_CONSOLE is not set */
+/* PKG_USING_LD3320 is not set */
+/* PKG_USING_WK2124 is not set */
+/* PKG_USING_LY68L6400 is not set */
+/* PKG_USING_DM9051 is not set */
+/* PKG_USING_SSD1306 is not set */
+/* PKG_USING_QKEY is not set */
+/* PKG_USING_RS485 is not set */
+/* PKG_USING_RS232 is not set */
+/* PKG_USING_NES is not set */
+/* PKG_USING_VIRTUAL_SENSOR is not set */
+/* PKG_USING_VDEVICE is not set */
+/* PKG_USING_SGM706 is not set */
+/* PKG_USING_STM32WB55_SDK is not set */
+/* PKG_USING_RDA58XX is not set */
+/* PKG_USING_LIBNFC is not set */
+/* PKG_USING_MFOC is not set */
+/* PKG_USING_TMC51XX is not set */
+/* PKG_USING_TCA9534 is not set */
+/* PKG_USING_KOBUKI is not set */
+/* PKG_USING_ROSSERIAL is not set */
+/* PKG_USING_MICRO_ROS is not set */
+/* PKG_USING_MCP23008 is not set */
+/* PKG_USING_BLUETRUM_SDK is not set */
+/* PKG_USING_MISAKA_AT24CXX is not set */
+/* PKG_USING_MISAKA_RGB_BLING is not set */
+/* PKG_USING_LORA_MODEM_DRIVER is not set */
+/* PKG_USING_BL_MCU_SDK is not set */
+/* PKG_USING_SOFT_SERIAL is not set */
+/* PKG_USING_MB85RS16 is not set */
+/* PKG_USING_CW2015 is not set */
+/* PKG_USING_RFM300 is not set */
+/* PKG_USING_IO_INPUT_FILTER is not set */
+/* PKG_USING_RASPBERRYPI_PICO_SDK is not set */
+
+/* AI packages */
+
+/* PKG_USING_LIBANN is not set */
+/* PKG_USING_NNOM is not set */
+/* PKG_USING_ONNX_BACKEND is not set */
+/* PKG_USING_ONNX_PARSER is not set */
+/* PKG_USING_TENSORFLOWLITEMICRO is not set */
+/* PKG_USING_ELAPACK is not set */
+/* PKG_USING_ULAPACK is not set */
+/* PKG_USING_QUEST is not set */
+/* PKG_USING_NAXOS is not set */
+
+/* miscellaneous packages */
+
+/* project laboratory */
+
+/* samples: kernel and components samples */
+
+/* PKG_USING_KERNEL_SAMPLES is not set */
+/* PKG_USING_FILESYSTEM_SAMPLES is not set */
+/* PKG_USING_NETWORK_SAMPLES is not set */
+/* PKG_USING_PERIPHERAL_SAMPLES is not set */
+
+/* entertainment: terminal games and other interesting software packages */
+
+/* PKG_USING_CMATRIX is not set */
+/* PKG_USING_SL is not set */
+/* PKG_USING_CAL is not set */
+/* PKG_USING_ACLOCK is not set */
+/* PKG_USING_THREES is not set */
+/* PKG_USING_2048 is not set */
+/* PKG_USING_SNAKE is not set */
+/* PKG_USING_TETRIS is not set */
+/* PKG_USING_DONUT is not set */
+/* PKG_USING_COWSAY is not set */
+/* PKG_USING_LIBCSV is not set */
+/* PKG_USING_OPTPARSE is not set */
+/* PKG_USING_FASTLZ is not set */
+/* PKG_USING_MINILZO is not set */
+/* PKG_USING_QUICKLZ is not set */
+/* PKG_USING_LZMA is not set */
+/* PKG_USING_MULTIBUTTON is not set */
+/* PKG_USING_FLEXIBLE_BUTTON is not set */
+/* PKG_USING_CANFESTIVAL is not set */
+/* PKG_USING_ZLIB is not set */
+/* PKG_USING_MINIZIP is not set */
+/* PKG_USING_HEATSHRINK is not set */
+/* PKG_USING_DSTR is not set */
+/* PKG_USING_TINYFRAME is not set */
+/* PKG_USING_KENDRYTE_DEMO is not set */
+/* PKG_USING_DIGITALCTRL is not set */
+/* PKG_USING_UPACKER is not set */
+/* PKG_USING_UPARAM is not set */
+/* PKG_USING_HELLO is not set */
+/* PKG_USING_VI is not set */
+/* PKG_USING_ARMv7M_DWT is not set */
+/* PKG_USING_UKAL is not set */
+/* PKG_USING_CRCLIB is not set */
+/* PKG_USING_LWGPS is not set */
+/* PKG_USING_STATE_MACHINE is not set */
+/* PKG_USING_DESIGN_PATTERN is not set */
+/* PKG_USING_CONTROLLER is not set */
+/* PKG_USING_PHASE_LOCKED_LOOP is not set */
+/* PKG_USING_MFBD is not set */
+/* PKG_USING_SLCAN2RTT is not set */
+/* PKG_USING_SOEM is not set */
+/* PKG_USING_QPARAM is not set */
+
+/* Arduino libraries */
+
+/* PKG_USING_RTDUINO is not set */
+
+/* Sensor libraries */
+
+/* PKG_USING_ARDUINO_ADAFRUIT_SENSOR is not set */
+/* PKG_USING_ARDUINO_ADAFRUIT_BUSIO is not set */
+/* PKG_USING_ARDUINO_ADAFRUIT_AHTX0 is not set */
+/* PKG_USING_ARDUINO_SEEED_BMP280 is not set */
+/* PKG_USING_ARDUINO_SEEED_LIS3DHTR is not set */
+/* PKG_USING_ARDUINO_CAPACITIVESENSOR is not set */
+
+/* Display libraries */
+
+/* PKG_USING_ARDUINO_U8G2 is not set */
+
+/* Timing libraries */
+
+/* PKG_USING_ARDUINO_MSTIMER2 is not set */
+
+/* Project libraries */
+
+/* PKG_USING_ARDUINO_ULTRASOUND_RADAR is not set */
+/* PKG_USING_ARDUINO_SENSOR_KIT is not set */
+
 /* RT-Thread board config */
 
 #define RT_BOARD_NAME "audio_hollyland_a6902_rx"
@@ -587,6 +1034,7 @@
 
 #define RT_USING_CODEC
 #define RT_USING_CODEC_NAU88L25B
+#define RT_USING_CODEC_NAU88L25B_HP
 #define RT_USING_I2STDM
 #define RT_USING_I2STDM1
 /* RT_USING_DRIVER_AUDIO_PCM_PLUGIN is not set */
@@ -597,7 +1045,7 @@
 /* RT_USING_AUDIO_CARD_ACDCDIG is not set */
 /* RT_USING_AUDIO_CARD_AUDIOPWM is not set */
 /* RT_USING_AUDIO_CARD_I2S_MIC is not set */
-#define RT_USING_AUDIO_CARD_PDM_MIC
+/* RT_USING_AUDIO_CARD_PDM_MIC is not set */
 /* RT_USING_AUDIO_CARD_PCM_BT is not set */
 /* RT_USING_AUDIO_CARD_AW8896 is not set */
 /* RT_USING_AUDIO_CARD_ES7243 is not set */
@@ -607,13 +1055,11 @@
 /* RT_USING_AUDIO_CARD_ADC_ES8311_ECHO is not set */
 /* RT_USING_AUDIO_CARD_PDM_ES8388_ECHO is not set */
 #define RT_USING_AUDIO_CARD_NAU88L25B
-/* RT_USING_AUDIO_CARD_NAU88L25B_HP is not set */
+#define RT_USING_AUDIO_CARD_NAU88L25B_HP
 
 /* Audio Interfaces */
 
 #define RT_USING_PCM
-#define RT_USING_PDM
-#define RT_USING_PDM0
 /* RT_USING_VAD is not set */
 #define RT_USING_CRU
 #define RT_USING_DMA

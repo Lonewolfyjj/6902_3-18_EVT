@@ -43,7 +43,7 @@ static void lv_style_page_init(void)
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_area_main);
     lv_style_set_bg_opa(&style_area_main, LV_OPA_COVER);
@@ -185,6 +185,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_area_main);
+    lv_style_reset(&style_label);
+    lv_style_reset(&style_bar_indicator_green);
+    lv_style_reset(&style_bar_indicator_white);
+    lv_style_reset(&style_bar_main);
+}
 
 void hl_mod_charge_ioctl(void * ctl_data)
 {
@@ -251,7 +259,10 @@ void hl_mod_charge_ioctl(void * ctl_data)
             break;
         
         case HL_CHARGE_CHANGE_DELETE_PAGE:
-            hl_obj_delete(lv_scr_act(),false);
+            hl_obj_delete(lv_scr_act(),false);            
+            break;
+        case HL_CHARGE_CHANGE_DELETE_STYLE:
+            lv_delete_style();            
             break;
     }
 }

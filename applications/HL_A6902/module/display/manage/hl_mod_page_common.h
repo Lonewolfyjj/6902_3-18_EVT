@@ -156,8 +156,12 @@ typedef struct _hl_scr_in_data_t
     hl_scr_indev_msg_t in_inputdev;
 } hl_scr_in_data_t;
 
-
-
+typedef enum _device_pose_t
+{
+    DEVICE_REVERSE_POSE = 0,
+    DEVICE_FORWARD_POSE,
+}HL_ENUM8(device_pose_t);
+ 
 
 hl_screen_page_e hl_mod_display_scr_get_page(void);
 hl_display_screen_s* hl_mod_page_get_screen_data_ptr();
@@ -170,6 +174,7 @@ void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum);
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num);
 int16_t hl_mod_knob_select_val_get(int16_t* ptr);
 int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right);
+
 
 hl_display_screen_change_s* hl_mod_page_get_screen_change_flag();
 void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void *param, uint32_t len);
