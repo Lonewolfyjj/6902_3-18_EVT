@@ -388,7 +388,7 @@ uint8_t hl_mod_display_deinit(void)
 
     hl_drv_aw2016a_deinit();
 
-    hl_hal_gpio_deinit(GPIO_REC_LED_EN);
+    hl_hal_gpio_low(GPIO_REC_LED_EN);
 
     LOG_I("display mod deinit success!");
 
