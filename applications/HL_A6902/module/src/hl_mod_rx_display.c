@@ -41,6 +41,8 @@
 #include "hl_mod_page_common.h"
 #include <rtthread.h>
 #include "hl_util_msg_type.h"
+#include "hl_drv_qma6100p.h"
+#include "hl_util_timeout.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -52,6 +54,15 @@
 
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
+
+#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*4 
+
+#define ROT_SCAN_IN_TIME 5*100
+
+static hl_timeout_t rot_scan_in;
+
+// gsensor消抖时间
+static hl_timeout_t sensor_debance;
 
 static rt_thread_t display_tid = RT_NULL;
 
@@ -65,6 +76,8 @@ typedef struct _hl_display_msg_t
 } hl_display_msg_t;
 
 static hl_display_msg_t hl_mod_display;
+
+static void hl_mod_screen_rot_scan(void);
 
 uint8_t hl_mod_display_out_task()
 {
@@ -96,12 +109,12 @@ static void hl_mod_display_data_init(void)
      now->tx1_signal = 0;
      now->tx2_signal = 0;
      now->tx_noise_level = 4;
-     now->tx1_line_out_volume = 10;
-     now->tx2_line_out_volume = 10;
+     now->tx1_line_out_volume = 0;
+     now->tx2_line_out_volume = 0;
      now->uac_in_volume = 0;
-     now->uac_out_volume = 10;
-     now->tx1_gain_volume = 10;
-     now->tx2_gain_volume =  10;
+     now->uac_out_volume = 0;
+     now->tx1_gain_volume = 0;
+     now->tx2_gain_volume =  0;
      now->led_britness = 127;
      now->tx1_remained_record_time = 10;
      now->tx2_remained_record_time = 10;
@@ -124,14 +137,95 @@ static void hl_mod_display_data_init(void)
 }
 
 
+static device_pose_t hl_mod_device_pose_val(void)
+{
+    euler_angle_t pose;
+    hl_drv_qma6100p_io_ctrl(QMA6100_GET_EULWER_ANGLE, (void*)&pose, sizeof(euler_angle_t));
+    if (pose.z > 0) {
+        return DEVICE_REVERSE_POSE;
+    } else {
+        return DEVICE_FORWARD_POSE;
+    }
+}
 
+static uint8_t hl_mod_device_dir_get(device_pose_t* newdir)
+{
+    static uint8_t last_stats = 0;
+    // 默认正向
+    static device_pose_t nowdir = DEVICE_FORWARD_POSE;
+    device_pose_t        res;
+    uint8_t              changeflag = 0;
 
+    res = hl_mod_device_pose_val();
+
+    switch (last_stats) {
+        case 0:
+            if (nowdir != res) {
+                // 出现下降沿，重新计数
+                hl_util_timeout_set(&sensor_debance, GSENSOR_DEBANCE_TIMER);
+                last_stats = 1;
+            }
+            break;
+        case 1:
+            if (hl_util_timeout_judge(&sensor_debance) == RT_TRUE) {
+                //20s内没有上升沿，按键按下
+                if (nowdir != res) {
+
+                    nowdir     = res;
+                    *newdir    = nowdir;
+                    last_stats = 0;
+                    changeflag = 1;
+                    hl_util_timeout_close(&sensor_debance);
+                    LV_LOG_USER("-event_dir%d\n", nowdir);
+                } else {
+                    hl_util_timeout_close(&sensor_debance);
+                    last_stats = 0;
+                    changeflag = 0;
+                }
+            } else {
+                // 出现上升沿，则清定时器
+                if (res == nowdir) {
+                    hl_util_timeout_close(&sensor_debance);
+                    last_stats = 0;
+                    changeflag = 0;
+                }
+            }
+            break;
+        default:
+            changeflag = 0;
+            break;
+    }
+    return changeflag;
+}
+
+static void         hl_mod_screen_rot_scan(void)
+{
+    device_pose_t now_dir = DEVICE_FORWARD_POSE;
+    lv_disp_t*    screen_ptr;
+
+    if (hl_util_timeout_judge(&rot_scan_in)) {
+
+        if (hl_mod_device_dir_get(&now_dir)) {
+            
+            screen_ptr = lv_disp_get_default();
+            if (now_dir == DEVICE_FORWARD_POSE) {
+                LOG_D("rot=%d \n",now_dir);
+                lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_270);
+            } else {
+                lv_disp_set_rotation(screen_ptr, LV_DISP_ROT_90);
+                LOG_D("rot=%d \n",now_dir);
+            }
+        }
+        hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
+    }
+}
 
 uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     uint8_t              res    = HL_DISPLAY_SUCCESS;
     hl_display_screen_s* data_p = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
+    LOG_D("cmd=%d\r\n", cmd);
     switch (cmd) {
         // 更新按鍵的操作
         case MSG_INPUT_UPDATE_CMD: {
@@ -160,6 +254,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             data_p->rx_bat_val = data;
             flag->rx_bat_val = 1;
+            
         } break;
         case CASE_BAT_VAL_VAL_CMD: {
             uint8_t data         = *(uint8_t*)ptr;
@@ -287,7 +382,7 @@ static void hl_mod_display_task(void* param)
 {
 
     while (1) {
-
+        hl_mod_screen_rot_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
@@ -319,13 +414,14 @@ uint8_t hl_mod_display_init(void* display_msq)
 
     hl_drv_aw2016a_deinit();
     // hl_drv_aw2016a_init();
-
+    
     // RX
     hl_drv_rm690a0_init();
     lvgl2rtt_init();
     hl_mod_display_data_init();
     hl_mod_page_all_init();
-    
+    hl_drv_qma6100p_init();
+    hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
                                    DISPLAY_THREAD_PRIORITY, DISPLAY_THREAD_TIMESLICE);
 

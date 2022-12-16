@@ -14,7 +14,6 @@
 LV_IMG_DECLARE(Main_stereo);//立体声
 
 static lv_style_t style_indicator;
-// static lv_style_t style_knob;
 static lv_style_t style_back;
 static lv_style_t style_label;
 
@@ -74,7 +73,7 @@ static void lv_style_barset_init(void)
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
@@ -123,6 +122,13 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_indicator);
+    lv_style_reset(&style_back);
+    lv_style_reset(&style_label);
+}
+
 void hl_mod_barset_ioctl(void * ctl_data)
 {
     char buf[8] = {0,0,0,0,0,0,0,0};
@@ -133,8 +139,11 @@ void hl_mod_barset_ioctl(void * ctl_data)
         lv_label_set_text(lab2, ptr);
     }
     if(ptr->barset_value == HL_EXTI){
-        hl_obj_delete(lv_scr_act(),false);
-    }    
+        hl_obj_delete(lv_scr_act(),false);        
+    }   
+    if(ptr->barset_value == HL_DELETE_STYLE){
+        lv_delete_style();        
+    }   
 }
 
 void hl_mod_barset_init(void * init_data)

@@ -181,7 +181,7 @@ static void lv_page_4_init(void)
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
     btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,54,0);
     btn1 = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,bt1_cb,-10,0,80,54,0);
     btn2 = lv_btn_creat_fun(btn1,LV_ALIGN_OUT_RIGHT_MID,bt2_cb,0,0,80,54,1);

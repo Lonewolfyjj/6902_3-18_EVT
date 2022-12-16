@@ -64,6 +64,7 @@ typedef enum _hl_lvgl_main_cmd_type_t
     HL_CHANGE_DELETE_DOUBLE,
     HL_CHANGE_DELETE_TX1,
     HL_CHANGE_DELETE_TX2,
+    HL_CHANGE_DELETE_STYLE
 }hl_lvgl_main_cmd_type_t;
 
 typedef struct __hl_lvgl_main_init_t

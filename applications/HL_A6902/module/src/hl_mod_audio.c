@@ -715,6 +715,7 @@ static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
 // dsp内存申请、参数配置和初始化
 static rt_err_t hl_mod_audio_dsp_config(void)
 {
+    uint8_t val = 0;
     dsp_config               = (hl_drv_rk_xtensa_dsp_config_t_p)rkdsp_malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
     if (RT_NULL == dsp_config) {
         LOG_D("dsp_config rkdsp_malloc failed!");
@@ -769,6 +770,9 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_START_DSP, NULL, 0);
 
+    // 关闭降噪
+    val = 0;
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
     LOG_D("audio dsp config succeed!");
     return RT_EOK;
 
@@ -921,6 +925,13 @@ static void _hl_cap2play_thread_entry(void* arg)
 {
     LOG_D("audio cap2play thread run");
 #if HL_IS_TX_DEVICE()
+    memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+
+    hl_drv_rk_xtensa_dsp_transfer();
+    
     int32_t gain = 10;
     LOG_D("----cap_info.card_name : %s\r\n", cap_info.card_name);
     if (strcmp("pdmc", cap_info.card_name) == 0) {
@@ -929,6 +940,7 @@ static void _hl_cap2play_thread_entry(void* arg)
         gain = 0;
         hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
     }
+
 #endif
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
