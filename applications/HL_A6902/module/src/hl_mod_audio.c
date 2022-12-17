@@ -1139,6 +1139,32 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     //     LOG_E("fail to set gain\n");
     //     return -RT_ERROR;
     // }
+#if HL_IS_TX_DEVICE()
+
+#else
+    int8_t ret = 0;
+
+    switch (ch) {
+        case 0x01:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &dB, 4);
+            break;
+
+        case 0x02:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R, &dB, 4);
+            break;
+
+        case 0x03:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL, &dB, 4);
+            break;
+
+        default:
+            break;
+    }
+
+    if (ret != RT_EOK) {
+        LOG_E("fail to set (%d) gain\n", HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L);
+    }
+#endif
 }
 
 #if HL_IS_TX_DEVICE()
@@ -1517,7 +1543,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, ptr, 1);
             break;
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
             if(((char*)ptr)[0] != 0) {
@@ -1579,7 +1605,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
 
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
             break;
 
         case HL_AUDIO_SET_HP_AMP_CMD:

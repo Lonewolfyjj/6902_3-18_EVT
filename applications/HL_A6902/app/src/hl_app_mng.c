@@ -165,6 +165,8 @@ void hl_app_mng_powerOn(void)
     hl_mod_apple_auth_start();
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
+
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &rx_info.cur_volume_r, 2);
 }
 
 // 关机，去初始化模块
