@@ -79,6 +79,8 @@ static void hl_mod_page_exit(void)
         .barset_value = HL_EXTI,
     };
     hl_mod_barset_ioctl(&ctl);
+    ctl.barset_value = HL_DELETE_STYLE;
+    hl_mod_barset_ioctl(&ctl);
 }
 
 static void hl_mod_page_loop(void)

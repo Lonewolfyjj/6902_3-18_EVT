@@ -184,6 +184,182 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
     }
 }
 
+static void hl_mod_main_tx12_deal_update(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_main_ioctl_t data;
+    main_tx = data_ptr->rf_net_connect;
+    LV_LOG_USER("tx12up%d\n", main_tx);
+    switch (main_tx) {
+        case HL_RF_LR_CONNECT:
+
+            data.cmd                  = HL_CHANGE_TX1_ELEC;
+            data.tx_device_1.electric = data_ptr->tx1_bat_val;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_SIGNAL;
+            data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_VOL;
+            data.tx_device_1.volume = data_ptr->tx1_vu;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_REC;
+            data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
+            hl_mod_main_ioctl(&data);
+            //TX2
+            data.cmd                  = HL_CHANGE_TX2_ELEC;
+            data.tx_device_2.electric = data_ptr->tx2_bat_val;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_SIGNAL;
+            data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_VOL;
+            data.tx_device_2.volume = data_ptr->tx2_vu;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_REC;
+            data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
+            hl_mod_main_ioctl(&data);
+            break;
+        case HL_RF_R_CONNECT:
+            data.cmd                  = HL_CHANGE_TX1_ELEC;
+            data.tx_device_1.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_SIGNAL;
+            data.tx_device_1.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_VOL;
+            data.tx_device_1.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_REC;
+            data.tx_device_1.record =0;
+            hl_mod_main_ioctl(&data);
+            //TX2
+            data.cmd                  = HL_CHANGE_TX2_ELEC;
+            data.tx_device_2.electric = data_ptr->tx2_bat_val;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_SIGNAL;
+            data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_VOL;
+            data.tx_device_2.volume = data_ptr->tx2_vu;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_REC;
+            data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
+            hl_mod_main_ioctl(&data);
+            break;
+        case HL_RF_L_CONNECT:
+            data.cmd                  = HL_CHANGE_TX1_ELEC;
+            data.tx_device_1.electric = data_ptr->tx1_bat_val;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_SIGNAL;
+            data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_VOL;
+            data.tx_device_1.volume = data_ptr->tx1_vu;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_REC;
+            data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
+            hl_mod_main_ioctl(&data);
+            //TX2
+            data.cmd                  = HL_CHANGE_TX2_ELEC;
+            data.tx_device_2.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_SIGNAL;
+            data.tx_device_2.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_VOL;
+            data.tx_device_2.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_REC;
+            data.tx_device_2.record = 0;
+            hl_mod_main_ioctl(&data);
+            break;
+        case HL_RF_UNCONNECT:
+            data.cmd                  = HL_CHANGE_TX1_ELEC;
+            data.tx_device_1.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_SIGNAL;
+            data.tx_device_1.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_VOL;
+            data.tx_device_1.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_REC;
+            data.tx_device_1.record =0;
+            hl_mod_main_ioctl(&data);
+            //TX2
+            data.cmd                  = HL_CHANGE_TX2_ELEC;
+            data.tx_device_2.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_SIGNAL;
+            data.tx_device_2.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_VOL;
+            data.tx_device_2.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_REC;
+            data.tx_device_2.record = 0;
+            hl_mod_main_ioctl(&data);
+            break;
+        case HL_RF_PAIRING:
+            data.cmd                  = HL_CHANGE_TX1_ELEC;
+            data.tx_device_1.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_SIGNAL;
+            data.tx_device_1.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_VOL;
+            data.tx_device_1.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX1_REC;
+            data.tx_device_1.record =0;
+            hl_mod_main_ioctl(&data);
+            //TX2
+            data.cmd                  = HL_CHANGE_TX2_ELEC;
+            data.tx_device_2.electric = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_SIGNAL;
+            data.tx_device_2.signal = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_VOL;
+            data.tx_device_2.volume = 0;
+            hl_mod_main_ioctl(&data);
+
+            data.cmd                = HL_CHANGE_TX2_REC;
+            data.tx_device_2.record = 0;
+            hl_mod_main_ioctl(&data);
+            break;
+        default:
+            break;
+    }
+}
 static void hl_mod_main_tx_deal_deinit()
 {
     hl_lvgl_main_ioctl_t main_ctl;
@@ -424,8 +600,9 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
 static void hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* data_ptr)
 {
     if (flag->rf_net_connect) {
-        hl_mod_main_tx_deal_deinit();
-        hl_mod_main_tx_deal_init(data_ptr);
+        // hl_mod_main_tx_deal_deinit();
+        // hl_mod_main_tx_deal_init(data_ptr);
+        hl_mod_main_tx12_deal_update(data_ptr);
         LV_LOG_USER("update%d\n",main_tx);
         switch (main_tx) {
             case HL_RF_LR_CONNECT:
@@ -486,28 +663,28 @@ static void hl_mod_page_home_update(void)
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
     hl_mod_page_main_update(flag, data_ptr);
-    // hl_mod_page_top_update(flag, data_ptr);
+    hl_mod_page_top_update(flag, data_ptr);
 }
 
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
     // hl_mod_main_two_init();
-    // hl_mod_icon_deal_init();
+    hl_mod_icon_deal_init();
     hl_mod_main_tx_deal_init(data_ptr);
-    // hl_mod_page_top_init();
+    hl_mod_page_top_init();
     // hl_mod_page_home_update();
 }
 
 static void hl_mod_page_exit(void)
 {
     hl_mod_main_tx_deal_deinit();
-    // hl_mod_icon_deal_deinit();
-    // //删除TOP
-    // hl_lvgl_top_ioctl_t ctl_data = {
-    //     .top_cmd = HL_TOP_ALL_DEL,
-    // };
-    // hl_mod_top_ioctl(&ctl_data);
+    hl_mod_icon_deal_deinit();
+    //删除TOP
+    hl_lvgl_top_ioctl_t ctl_data = {
+        .top_cmd = HL_TOP_ALL_DEL,
+    };
+    hl_mod_top_ioctl(&ctl_data);
 }
 
 // static void hl_mod_page_event(void* btn, int event)

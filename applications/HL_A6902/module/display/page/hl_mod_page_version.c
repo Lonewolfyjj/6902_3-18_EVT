@@ -63,6 +63,8 @@ static void hl_mod_page_exit(void)
         .verson_choose_opt = HL_VERSON_OPTION_EXTI,
     };
     hl_mod_verson_ioctl(&verson_ctl);
+    verson_ctl.verson_choose_opt = HL_VERSON_OPTION_DEL_STYLE;
+    hl_mod_verson_ioctl(&verson_ctl);
 }
 
 static void hl_mod_page_loop(void)
