@@ -40,10 +40,10 @@ static hl_lineout_event_cb hl_lineout_func;
 
 static void lv_style_page4_init(void)
 {
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
     //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_obj_enable_style_refresh(true);
@@ -219,8 +219,9 @@ void hl_mod_lineout_ioctl(void * ctl_data)
             lv_event_send(btn_right,LV_EVENT_CLICKED,ulock);
             break;
         case HL_LINEOUT_DELETE_PAGE:
-            hl_obj_delete(btn_left,true);
-            hl_obj_delete(btn_right,true);            
+            // hl_obj_delete(btn_left,true);
+            // hl_obj_delete(btn_right,true);   
+            hl_obj_delete(lv_scr_act(),false);         
             break;
         case HL_LINEOUT_DELETE_STYLE:
             lv_delete_style();           

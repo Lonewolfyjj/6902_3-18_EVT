@@ -177,10 +177,10 @@ static void bt3_cb(lv_event_t * e)
 
 static void lv_page_4_init(void)
 {
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
     //lv_obj_add_style(lv_scr_act(), &style, 0);
     btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,54,0);
     btn1 = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,bt1_cb,-10,0,80,54,0);
