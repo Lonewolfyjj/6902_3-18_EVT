@@ -210,11 +210,11 @@ static void hl_mod_creat_top_icon(icon_pos_t* icon_data, icon_pos_t* icon_list, 
 
 static void lv_style_page_top_init(void)
 {
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_power_bar_indicator);
     lv_style_set_bg_opa(&style_power_bar_indicator, LV_OPA_COVER);
@@ -352,6 +352,13 @@ static void hl_obj_delete(lv_obj_t* obj, bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_power_bar_indicator);
+    lv_style_reset(&style_power_bar_main);
+    lv_style_reset(&style_power_label);
+}
+
 static void hl_delete_top_icon(hl_top_icon_t icon)
 {
     switch (icon) {
@@ -434,6 +441,9 @@ void hl_mod_top_ioctl(void* ctl_data)
         case HL_TOP_ALL_DEL:
             *(uint8_t*)&top_icon_sta = 0;
             hl_obj_delete(lv_scr_act(), false);
+            break;
+        case HL_TOP_DELETE_STYLE:
+            lv_delete_style();
             break;
         default:
             break;

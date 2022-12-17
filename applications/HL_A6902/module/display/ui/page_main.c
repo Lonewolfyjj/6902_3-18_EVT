@@ -396,6 +396,20 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,16,6,init_tx2->record);
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_area_main);
+    lv_style_reset(&style_voice_sbar_indicator);
+    lv_style_reset(&style_voice_bar_main);
+    lv_style_reset(&style_voice_lbar_indicator);
+    lv_style_reset(&style_voice_bar_main);
+    lv_style_reset(&style_power_bar_indicator);
+    lv_style_reset(&style_power_bar_main);
+    lv_style_reset(&style_voice_label);
+    lv_style_reset(&style_power_label);
+    lv_style_reset(&style_device_label);
+    lv_style_reset(&style_video_dot);
+}
 
 static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
 {
@@ -499,6 +513,9 @@ void hl_mod_main_ioctl(void * ctl_data)
         break;
         case HL_CHANGE_DELETE_TX2:
             hl_obj_delete(area_tx2,true);
+            break;
+        case HL_CHANGE_DELETE_STYLE:
+            lv_delete_style();
             break;
         default:
             break;

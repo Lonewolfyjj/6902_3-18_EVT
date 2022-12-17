@@ -26,6 +26,7 @@ typedef enum _hl_moreone_mid_opt_t
     HL_MOREONE_OPTION_ONE = 0,
     HL_MOREONE_OPTION_TWO,
     HL_MOREONE_OPTION_THREE,
+    HL_MOREONE_OPTION_DELETE_STYLE,
     HL_MOREONE_OPTION_EXTI
 }hl_moreone_mid_opt_t;
 

@@ -21,7 +21,8 @@ typedef enum _hl_top_cmd_t
     HL_TOP_DELETE_ICON_CMD = 0,
     HL_TOP_ADD_ICON_CMD,
     HL_TOP_BAT_VAL,
-    HL_TOP_ALL_DEL,
+    HL_TOP_DELETE_STYLE,
+    HL_TOP_ALL_DEL
 }hl_top_cmd_t;
 
 typedef struct _hl_lvgl_top_ioctl_t
