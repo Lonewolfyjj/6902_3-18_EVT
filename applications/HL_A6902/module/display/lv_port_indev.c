@@ -199,11 +199,11 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
     uint32_t tmp;
 
     if (touchpad_switch == true) {
-        touchpad_get_xy(&last_x, &last_y);
+
         /*Save the pressed coordinates and the state*/
         if (touchpad_is_pressed()) {
             
-            // touchpad_get_xy(&last_x, &last_y);
+            touchpad_get_xy(&last_x, &last_y);
             // tmp = last_x;
             // last_x = 294 - last_y;
             // last_y = tmp;

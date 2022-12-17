@@ -127,13 +127,11 @@ static void hl_mod_display_data_init(void)
     //  now->sn[36]; 0
     //  now->device_fault_code[20]; 0
      now->sys_status.auto_record = 0;
-     now->sys_status.tx1_net_switch = 1;
-     now->sys_status.tx2_net_switch = 1;
+     now->rf_net_connect = 0;
 
-    //  now->sys_status.tx1_net_switch = 0;
-    //  now->sys_status.tx2_net_switch = 0;
 
     now->sys_status.tx1_charge_status = 0;
+    LOG_D("init_data\n");
 }
 
 
@@ -359,16 +357,12 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.auto_record_portect = data;
             flag->sys_status.auto_record_portect = 1;
         } break;
-        // case TX1_NET_SWITCH_CMD: {
-        //     uint8_t data                        = *(uint8_t*)ptr;
-        //     data_p->sys_status.tx1_net_switch = data;
-        //     flag->sys_status.tx1_net_switch = 1;
-        // } break;
-        // case TX2_NET_SWITCH_CMD: {
-        //     uint8_t data                        = *(uint8_t*)ptr;
-        //     data_p->sys_status.tx2_net_switch = data;
-        //     flag->sys_status.tx2_net_switch = 1;
-        // } break;
+        case RX_RF_STATE_VAL_CMD: {
+            uint8_t data                        = *(uint8_t*)ptr;
+            LOG_D("cmda=%d\r\n", data);
+            data_p->rf_net_connect = data;
+            flag->rf_net_connect = 1;
+        } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
             break;
@@ -418,7 +412,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     // RX
     hl_drv_rm690a0_init();
     lvgl2rtt_init();
-    hl_mod_display_data_init();
+    // hl_mod_display_data_init();
     hl_mod_page_all_init();
     hl_drv_qma6100p_init();
     hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);

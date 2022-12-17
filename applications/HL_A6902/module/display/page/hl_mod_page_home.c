@@ -40,52 +40,167 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-// static void hl_mod_rx_knob_key_pro(struct _lv_indev_drv_t* drv, lv_indev_data_t* data)
-// {
-//     // static uint32_t last_key       = 0;
-//     // uint8_t key_event;
+// static hl_icon_status icon_state = {0};
+static hl_top_cmd_t  icon_state[HL_TOP_ICON_CNT] = { 0 };
+static hl_rf_state_e main_tx;
 
-//     // key_event  = hl_mod_get_knob_okkey_val();
-//     // if (key_event) {
 
-//     //     switch (key_event) {
+static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
+static void hl_mod_icon_deal_init();
+static void hl_mod_icon_deal_deinit();
+static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr);
+static void hl_mod_main_tx_deal_deinit();
+static void hl_mod_page_main_init(void);
+static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
 
-//     //         case HL_KEY_EVENT_SHORT:
-//     //             last_key = LV_KEY_ENTER;
-//     //             LV_LOG_USER("LV_KEY_ENTER\n");
-//     //             data->state = LV_INDEV_STATE_PR;
-//     //             data->key   = last_key;
-//     //             break;
-//     //         case HL_KEY_EVENT_LONG:
-//     //             last_key = LV_KEY_NEXT;
-//     //             LV_LOG_USER("LV_KEY_NEXT\n");
-//     //             data->state = LV_INDEV_STATE_PR;
-//     //             data->key   = last_key;
-//     //             break;
-//     //         default:
-//     //             last_key    = 0;
-//     //             data->state = LV_INDEV_STATE_REL;
-//     //             data->key   = last_key;
-//     //             LV_LOG_USER("def\n");
-//     //             break;
-//     //     }
+// 添加是 1  删除是 0
+static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal)
+{
+    hl_lvgl_top_ioctl_t ioctl_top;
+    if (deal == HL_TOP_ADD_ICON_CMD) {
 
-//     // } else {
-//     //     data->state = LV_INDEV_STATE_REL;
-//     //     data->key   = last_key;
-//     // }
-// }
+        if (icon_state[icon] == HL_TOP_DELETE_ICON_CMD) {
+            ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+            ioctl_top.top_param = icon;
+            hl_mod_top_ioctl(&ioctl_top);
+            icon_state[icon] = HL_TOP_ADD_ICON_CMD;
+            LV_LOG_USER("deal=%d,icon=%d\n", deal, icon);
+        }
 
-// void eventbtn_cb(lv_event_t * e)
-// {
-//     lv_event_code_t code = lv_event_get_code(e);
-//     lv_obj_t*       obj  = lv_event_get_target(e);
+    } else if (deal == HL_TOP_DELETE_ICON_CMD) {
+        if (icon_state[icon] == HL_TOP_ADD_ICON_CMD) {
+            ioctl_top.top_cmd   = HL_TOP_DELETE_ICON_CMD;
+            ioctl_top.top_param = icon;
+            hl_mod_top_ioctl(&ioctl_top);
+            icon_state[icon] = HL_TOP_DELETE_ICON_CMD;
+            LV_LOG_USER("deal=%d,icon=%d\n", deal, icon);
+        }
+    }
+}
 
-//     if (code == LV_EVENT_KEY) {
-//         // LV_LOG_USER("key= %d\r\n", lv_indev_get_key(hl_mod_get_okkey_indev()));
-//         LV_LOG_USER("key=\n" );
-//     }
-// }
+static void hl_mod_icon_deal_init()
+{
+    for (uint8_t i = 0; i < HL_TOP_ICON_CNT; i++) {
+        icon_state[i] = HL_TOP_DELETE_ICON_CMD;
+    }
+}
+
+static void hl_mod_icon_deal_deinit()
+{
+    hl_lvgl_top_ioctl_t ioctl_top;
+
+    for (uint8_t i = 0; i < HL_TOP_ICON_CNT; i++) {
+        if (icon_state[i] == HL_TOP_ADD_ICON_CMD) {
+            ioctl_top.top_cmd   = HL_TOP_DELETE_ICON_CMD;
+            ioctl_top.top_param = i;
+            hl_mod_top_ioctl(&ioctl_top);
+        }
+        icon_state[i] = HL_TOP_DELETE_ICON_CMD;
+    }
+}
+
+static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_main_init_t data;
+    main_tx = data_ptr->rf_net_connect;
+    LV_LOG_USER("init%d\n",main_tx);
+    switch (main_tx) {
+        case HL_RF_LR_CONNECT:
+            data.display_tx_device = HL_DISPLAY_DOUBLE;
+
+            data.tx_device_1.electric = data_ptr->tx1_bat_val;
+            data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
+            data.tx_device_1.volume   = data_ptr->tx1_vu;
+
+            data.tx_device_2.electric = data_ptr->tx2_bat_val;
+            data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
+            data.tx_device_2.volume   = data_ptr->tx2_vu;
+            hl_mod_main_init(&data);
+            break;
+        case HL_RF_R_CONNECT:
+            data.display_tx_device    = HL_DISPLAY_TX2;
+            data.tx_device_2.electric = data_ptr->tx2_bat_val;
+            data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
+            data.tx_device_2.volume   = data_ptr->tx2_vu;
+            hl_mod_main_init(&data);
+            break;
+        case HL_RF_L_CONNECT:
+            data.display_tx_device    = HL_DISPLAY_TX1;
+            data.tx_device_1.electric = data_ptr->tx1_bat_val;
+            data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
+            data.tx_device_1.volume   = data_ptr->tx1_vu;
+            hl_mod_main_init(&data);
+            break;
+        case HL_RF_UNCONNECT:
+            data.display_tx_device = HL_DISPLAY_DOUBLE;
+
+            data.tx_device_1.electric = 0;
+            data.tx_device_1.signal   = HL_NO_SIGNAL;
+            data.tx_device_1.record   = HL_NO_RECODE;
+            data.tx_device_1.volume   = 0;
+
+            data.tx_device_2.electric = 0;
+            data.tx_device_2.signal   = HL_NO_SIGNAL;
+            data.tx_device_2.record   = HL_NO_RECODE;
+            data.tx_device_2.volume   = 0;
+            hl_mod_main_init(&data);
+            break;
+        case HL_RF_PAIRING:
+            data.display_tx_device = HL_DISPLAY_DOUBLE;
+
+            data.tx_device_1.electric = 0;
+            data.tx_device_1.signal   = HL_NO_SIGNAL;
+            data.tx_device_1.record   = HL_NO_RECODE;
+            data.tx_device_1.volume   = 0;
+
+            data.tx_device_2.electric = 0;
+            data.tx_device_2.signal   = HL_NO_SIGNAL;
+            data.tx_device_2.record   = HL_NO_RECODE;
+            data.tx_device_2.volume   = 0;
+            hl_mod_main_init(&data);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_mod_main_tx_deal_deinit()
+{
+    hl_lvgl_main_ioctl_t main_ctl;
+    LV_LOG_USER("deinit%d\n",main_tx);
+    switch (main_tx) {
+        case HL_RF_LR_CONNECT:
+            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
+            hl_mod_main_ioctl(&main_ctl);
+            break;
+        case HL_RF_R_CONNECT:
+            main_ctl.cmd = HL_CHANGE_DELETE_TX2;
+            hl_mod_main_ioctl(&main_ctl);
+            break;
+        case HL_RF_L_CONNECT:
+            main_ctl.cmd = HL_CHANGE_DELETE_TX1;
+            hl_mod_main_ioctl(&main_ctl);
+            break;
+        case HL_RF_UNCONNECT:
+            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
+            hl_mod_main_ioctl(&main_ctl);
+            break;
+        case HL_RF_PAIRING:
+            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
+            hl_mod_main_ioctl(&main_ctl);
+            break;
+        default:
+            break;
+    }
+}
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
 {
@@ -98,145 +213,117 @@ static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
         signal = 4;
     return signal;
 }
-static void hl_mod_page_home_init(void)
+static void hl_mod_main_two_init()
 {
     hl_lvgl_main_init_t data;
-    hl_lvgl_top_init_t  top_init;
-    hl_lvgl_top_ioctl_t ioctl_top;
+    main_tx = HL_RF_UNCONNECT;
+    LV_LOG_USER("twoinit%d\n", main_tx);
+
+    data.display_tx_device = HL_DISPLAY_DOUBLE;
+
+    data.tx_device_1.electric = 0;
+    data.tx_device_1.signal   = HL_NO_SIGNAL;
+    data.tx_device_1.record   = HL_NO_RECODE;
+    data.tx_device_1.volume   = 0;
+
+    data.tx_device_2.electric = 0;
+    data.tx_device_2.signal   = HL_NO_SIGNAL;
+    data.tx_device_2.record   = HL_NO_RECODE;
+    data.tx_device_2.volume   = 0;
+    hl_mod_main_init(&data);
+}
+// top层初始化
+static void hl_mod_page_top_init(void)
+{
+
+    hl_lvgl_top_init_t top_init;
 
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
-    if (data_ptr->sys_status.tx1_net_switch && data_ptr->sys_status.tx2_net_switch) {
-        data.display_tx_device = HL_DISPLAY_DOUBLE;
 
-        data.tx_device_1.electric = data_ptr->tx1_bat_val;
-        data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-        data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
-        data.tx_device_1.volume   = data_ptr->tx1_vu;
+    // 更新当前的RX电量信息
+    top_init.electric_top = data_ptr->rx_bat_val;
+    hl_mod_top_init(&top_init);
 
-        data.tx_device_2.electric = data_ptr->tx2_bat_val;
-        data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-        data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
-        data.tx_device_2.volume   = data_ptr->tx2_vu;
+    if (data_ptr->sound_module == STEREO) {
 
-    } else if (data_ptr->sys_status.tx2_net_switch && !data_ptr->sys_status.tx1_net_switch) {
-        data.display_tx_device    = HL_DISPLAY_TX2;
-        data.tx_device_2.electric = data_ptr->tx2_bat_val;
-        data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-        data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
-        data.tx_device_2.volume   = data_ptr->tx2_vu;
-
-    } else if (data_ptr->sys_status.tx1_net_switch && !data_ptr->sys_status.tx2_net_switch) {
-        data.display_tx_device    = HL_DISPLAY_TX1;
-        data.tx_device_1.electric = data_ptr->tx1_bat_val;
-        data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-        data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
-        data.tx_device_1.volume   = data_ptr->tx1_vu;
-    } else {
-        data.display_tx_device    = HL_DISPLAY_TX1;
-        data.tx_device_1.electric = data_ptr->tx1_bat_val;
-        data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-        data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
-        data.tx_device_1.volume   = data_ptr->tx1_vu;
+        hl_mod_icon_deal(HL_TOP_ICON_VOICE_MOD, HL_TOP_ADD_ICON_CMD);
     }
 
-    hl_mod_main_init(&data);
+    if (data_ptr->sys_status.tx1_noise || data_ptr->sys_status.tx2_noise) {
 
-    // // 更新当前的RX电量信息
-    // top_init.electric_top = data_ptr->rx_bat_val;
-    // hl_mod_top_init(&top_init);
+        hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
+    }
 
-    // if (data_ptr->sound_module == STEREO) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_VOICE_MOD;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+    if (data_ptr->sys_status.screen_lock) {
 
-    
+        hl_mod_icon_deal(HL_TOP_ICON_LOCK, HL_TOP_ADD_ICON_CMD);
+    }
 
-    // if (data_ptr->sys_status.tx1_noise && data_ptr->sys_status.tx2_noise) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_NOISE;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+    if (data_ptr->sys_status.line_out_in) {
 
-    // if (data_ptr->sys_status.screen_lock) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_LOCK;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+        hl_mod_icon_deal(HL_TOP_ICON_LINEOUT, HL_TOP_ADD_ICON_CMD);
+    }
 
-    // if (data_ptr->sys_status.line_out_in) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_LINEOUT;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+    if (data_ptr->sys_status.usb_in) {
 
-    // if (data_ptr->sys_status.usb_in) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_TYPEC;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+        hl_mod_icon_deal(HL_TOP_ICON_TYPEC, HL_TOP_ADD_ICON_CMD);
+    }
 
-    // if (data_ptr->sys_status.monitor_in) {
-    //     ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
-    //     ioctl_top.top_param = HL_TOP_ICON_HEATSET;
-    //     hl_mod_top_ioctl(&ioctl_top);
-    // }
+    if (data_ptr->sys_status.monitor_in) {
+
+        hl_mod_icon_deal(HL_TOP_ICON_HEATSET, HL_TOP_ADD_ICON_CMD);
+    }
 }
 static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
-
     hl_lvgl_top_ioctl_t ioctl_top;
+
     if (flag->rx_bat_val) {
         ioctl_top.top_cmd      = HL_TOP_BAT_VAL;
         ioctl_top.electric_top = now->rx_bat_val;
-
+        hl_mod_top_ioctl(&ioctl_top);
         flag->rx_bat_val = 0;
     }
     // 降噪一起的
-    if (now->sys_status.tx1_noise == now->sys_status.tx2_noise) {
-        if (flag->sys_status.tx1_noise) {
 
-            ioctl_top.top_cmd   = (hl_top_cmd_t)now->sys_status.tx1_noise;
-            ioctl_top.top_param = HL_TOP_ICON_NOISE;
-            hl_mod_top_ioctl(&ioctl_top);
+    if (flag->sys_status.tx1_noise || flag->sys_status.tx2_noise) {
 
-            flag->sys_status.tx1_noise = 0;
+        if (now->sys_status.tx1_noise || now->sys_status.tx2_noise) {
+
+            hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
+        } else if (!now->sys_status.tx1_noise && !now->sys_status.tx2_noise) {
+            hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_DELETE_ICON_CMD);
         }
+        flag->sys_status.tx1_noise = 0;
+        flag->sys_status.tx2_noise = 0;
     }
 
     // 锁屏
     if (flag->sys_status.screen_lock) {
 
-        ioctl_top.top_cmd   = (hl_top_cmd_t)now->sys_status.screen_lock;
-        ioctl_top.top_param = HL_TOP_ICON_LOCK;
-        hl_mod_top_ioctl(&ioctl_top);
+        hl_mod_icon_deal(HL_TOP_ICON_LOCK, (hl_top_cmd_t)now->sys_status.screen_lock);
+
         flag->sys_status.screen_lock = 0;
     }
 
     // line out
     if (flag->sys_status.line_out_in) {
 
-        ioctl_top.top_cmd   = (hl_top_cmd_t)now->sys_status.line_out_in;
-        ioctl_top.top_param = HL_TOP_ICON_LINEOUT;
-        hl_mod_top_ioctl(&ioctl_top);
+        hl_mod_icon_deal(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
         flag->sys_status.line_out_in = 0;
     }
 
     // usb
     if (flag->sys_status.usb_in) {
-        ioctl_top.top_cmd   = (hl_top_cmd_t)now->sys_status.usb_in;
-        ioctl_top.top_param = HL_TOP_ICON_TYPEC;
-        hl_mod_top_ioctl(&ioctl_top);
+
+        hl_mod_icon_deal(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
         flag->sys_status.usb_in = 0;
     }
-    // 耳机插入
+
     if (flag->sys_status.monitor_in) {
 
-        ioctl_top.top_cmd   = (hl_top_cmd_t)now->sys_status.monitor_in;
-        ioctl_top.top_param = HL_TOP_ICON_LINEOUT;
-        hl_mod_top_ioctl(&ioctl_top);
+        hl_mod_icon_deal(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
         flag->sys_status.monitor_in = 0;
     }
 }
@@ -256,7 +343,6 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
     if (flag->tx1_signal) {
         data1.cmd                = HL_CHANGE_TX1_SIGNAL;
         data1.tx_device_1.signal = hl_mod_page_signal_deal(now->tx1_signal);
-        ;
         hl_mod_main_ioctl(&data1);
 
         flag->tx1_signal = 0;
@@ -318,112 +404,94 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
     }
 }
 
+
+static void hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* data_ptr)
+{
+    if (flag->rf_net_connect) {
+        hl_mod_main_tx_deal_deinit();
+        hl_mod_main_tx_deal_init(data_ptr);
+        LV_LOG_USER("update%d\n",main_tx);
+        switch (main_tx) {
+            case HL_RF_LR_CONNECT:
+
+                hl_mod_page_home_tx1_update(flag, data_ptr);
+                hl_mod_page_home_tx2_update(flag, data_ptr);
+
+                break;
+            case HL_RF_R_CONNECT:
+
+                hl_mod_page_home_tx2_update(flag, data_ptr);
+                break;
+            case HL_RF_L_CONNECT:
+                // 一个tx1
+                hl_mod_page_home_tx1_update(flag, data_ptr);
+                break;
+            case HL_RF_UNCONNECT:
+                break;
+            case HL_RF_PAIRING:
+                break;
+            default:
+                break;
+        }
+        flag->rf_net_connect = 0;
+    } else {
+        
+        switch (main_tx) {
+            case HL_RF_LR_CONNECT:
+
+                hl_mod_page_home_tx1_update(flag, data_ptr);
+                hl_mod_page_home_tx2_update(flag, data_ptr);
+
+                break;
+            case HL_RF_R_CONNECT:
+                // 一个tx2
+
+                hl_mod_page_home_tx2_update(flag, data_ptr);
+                break;
+            case HL_RF_L_CONNECT:
+                // 一个tx1
+
+                hl_mod_page_home_tx1_update(flag, data_ptr);
+                break;
+            case HL_RF_UNCONNECT:
+                break;
+            case HL_RF_PAIRING:
+                break;
+            default:
+                break;
+        }
+
+    }
+}
 static void hl_mod_page_home_update(void)
 {
 
-    hl_lvgl_main_ioctl_t data;
     // 这一次的数据
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
-
-    // TX显示个数的的处理
-    if (flag->sys_status.tx1_net_switch || flag->sys_status.tx2_net_switch) {
-
-        //两个
-        if (data_ptr->sys_status.tx1_net_switch && data_ptr->sys_status.tx2_net_switch) {
-            data.cmd = HL_CHANGE_DOUBLE_DEVICE;
-            hl_mod_main_ioctl(&data);
-            hl_mod_page_home_tx1_update(flag, data_ptr);
-            hl_mod_page_home_tx2_update(flag, data_ptr);
-        } else if (data_ptr->sys_status.tx1_net_switch && !data_ptr->sys_status.tx2_net_switch) {
-            // 一个tx1
-            data.cmd = HL_CHANGE_TX1_DEVICE;
-            hl_mod_main_ioctl(&data);
-            hl_mod_page_home_tx1_update(flag, data_ptr);
-        } else if (!data_ptr->sys_status.tx1_net_switch && data_ptr->sys_status.tx2_net_switch) {
-            // 一个tx2
-            data.cmd = HL_CHANGE_TX2_DEVICE;
-            hl_mod_main_ioctl(&data);
-            hl_mod_page_home_tx2_update(flag, data_ptr);
-        }
-        flag->sys_status.tx1_net_switch = 0;
-        flag->sys_status.tx2_net_switch = 0;
-    } else {
-        hl_mod_page_home_tx1_update(flag, data_ptr);
-        hl_mod_page_home_tx2_update(flag, data_ptr);
-    }
-
+    hl_mod_page_main_update(flag, data_ptr);
     // hl_mod_page_top_update(flag, data_ptr);
 }
 
 static void hl_mod_page_setup(void)
 {
-    hl_mod_page_home_init();
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+    // hl_mod_main_two_init();
+    // hl_mod_icon_deal_init();
+    hl_mod_main_tx_deal_init(data_ptr);
+    // hl_mod_page_top_init();
+    // hl_mod_page_home_update();
 }
 
 static void hl_mod_page_exit(void)
 {
-    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
-
-       //删除主界面
-    if (data_ptr->sys_status.tx1_net_switch && data_ptr->sys_status.tx2_net_switch) {
-        hl_lvgl_main_ioctl_t main_ctl = {
-            .cmd = HL_CHANGE_DELETE_DOUBLE,
-        };
-        hl_mod_main_ioctl(&main_ctl);
-
-    } else if (data_ptr->sys_status.tx2_net_switch && !data_ptr->sys_status.tx1_net_switch) {
-        hl_lvgl_main_ioctl_t main_ctl = {
-            .cmd = HL_CHANGE_DELETE_TX2,
-        };
-        hl_mod_main_ioctl(&main_ctl);
-
-    } else if (data_ptr->sys_status.tx1_net_switch && !data_ptr->sys_status.tx2_net_switch) {
-        hl_lvgl_main_ioctl_t main_ctl = {
-            .cmd = HL_CHANGE_DELETE_TX1,
-        };
-        hl_mod_main_ioctl(&main_ctl);
-    } else {
-        //删除主界面
-        hl_lvgl_main_ioctl_t main_ctl = {
-            .cmd = HL_CHANGE_DELETE_TX1,
-
-        };
-        hl_mod_main_ioctl(&main_ctl);
-    }
-
+    hl_mod_main_tx_deal_deinit();
+    // hl_mod_icon_deal_deinit();
     // //删除TOP
     // hl_lvgl_top_ioctl_t ctl_data = {
     //     .top_cmd = HL_TOP_ALL_DEL,
     // };
     // hl_mod_top_ioctl(&ctl_data);
-
-    // hl_mod_page_delete(lv_scr_act());
-    // uint8_t i = 0;
-
-    // lv_obj_del(area_tx1);
-    // lv_obj_del(area_tx2);
-    // lv_obj_del(voice_bar_tx1);
-    // lv_obj_del(voice_bar_tx2);
-    // lv_obj_del(power_bar_tx1);
-    // lv_obj_del(power_bar_tx2);
-    // lv_obj_del(voice_img_tx1);
-    // lv_obj_del(voice_img_tx2);
-    // lv_obj_del(power_img_tx1);
-    // lv_obj_del(power_img_tx2);
-    // lv_obj_del(voice_lab_tx1);
-    // lv_obj_del(voice_lab_tx2);
-    // lv_obj_del(power_lab_tx1);
-    // lv_obj_del(power_lab_tx2);
-    // lv_obj_del(device_lab_tx1);
-    // lv_obj_del(device_lab_tx2);
-    // lv_obj_del(video_dot_tx1);
-    // lv_obj_del(video_dot_tx2);
-
-    // for (i = 0; i < 5; i++) {
-    //     lv_obj_del(tx1_signal_obj[i]);
-    //     lv_obj_del(tx2_signal_obj[i]);
-    // }
 }
 
 // static void hl_mod_page_event(void* btn, int event)
