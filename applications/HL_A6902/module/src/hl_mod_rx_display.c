@@ -374,7 +374,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 // RX
 static void hl_mod_display_task(void* param)
 {
-
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_bg_color(&style, lv_color_black());
+    lv_style_set_border_width(&style, 0);
+    lv_obj_add_style(lv_scr_act(), &style, 0);
     while (1) {
         hl_mod_screen_rot_scan();
         PageManager_Running();

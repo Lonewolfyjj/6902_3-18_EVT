@@ -188,6 +188,7 @@ static void hl_mod_main_tx_deal_deinit()
 {
     hl_lvgl_main_ioctl_t main_ctl;
     LV_LOG_USER("deinit%d\n",main_tx);
+
     switch (main_tx) {
         case HL_RF_LR_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
@@ -212,6 +213,9 @@ static void hl_mod_main_tx_deal_deinit()
         default:
             break;
     }
+
+    main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
+    hl_mod_main_ioctl(&main_ctl);
 }
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
