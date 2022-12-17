@@ -361,9 +361,8 @@
 /* Enable UART */
 
 #define RT_USING_UART
-/* RT_USING_UART0 is not set */
-/* RT_USING_UART1 is not set */
 #define RT_USING_UART2
+/* RT_USING_UART4 is not set */
 
 /* RT-Thread third party package */
 

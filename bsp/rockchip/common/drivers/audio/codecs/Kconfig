@@ -29,3 +29,20 @@ config RT_USING_CODEC
     config RT_USING_CODEC_ES8388
         depends on RT_USING_CODEC
         bool
+
+    config RT_USING_CODEC_NAU88L25B
+        depends on RT_USING_CODEC
+        bool
+
+    config RT_USING_CODEC_NAU88L25B_HP
+        depends on RT_USING_CODEC
+        bool
+
+    config RT_USING_I2STDM
+        depends on RT_USING_CODEC
+        bool
+
+    config RT_USING_I2STDM1
+        depends on RT_USING_CODEC
+        bool
+        

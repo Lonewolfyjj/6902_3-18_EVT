@@ -1,0 +1,3 @@
+[submodule "rk_hal"]
+	path = bsp/rockchip/common/hal
+	url = git@192.168.2.88:audiogroup/a6902/rk_hal.git

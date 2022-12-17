@@ -32,13 +32,9 @@
  for vicap driver.Interfaces and variables can be called directly by vicap driver.
  @} */
 
-#if defined(__RT_THREAD__)
 #include "adapter.h"
-#elif defined(__RK_OS__)
-#include "driver/adapter.h"
 #if defined(CONFIG_DRIVER_DSP) && defined(CONFIG_MCU_HAL_MBOX)
 #include "driver/DspDevice.h"
-#endif
 #endif
 
 /********************* Private Function Definition ***************************/
@@ -46,7 +42,7 @@
  *  @{
  */
 
-#if defined(VICAP_MODULE_COMPILED)
+#if defined(ADAPTER_MODULE_COMPILED)
 
 /**
  * @brief  create mutex.
@@ -56,13 +52,9 @@
 rk_mutex_t rk_mutex_create(const char *name, uint32_t flag)
 {
 #if defined(__RT_THREAD__)
-
     return rt_mutex_create(name, flag);
-
 #elif defined(__RK_OS__)
-
     return rkos_mutex_create();
-
 #endif
 }
 
@@ -74,13 +66,9 @@ rk_mutex_t rk_mutex_create(const char *name, uint32_t flag)
 ret_err_t rk_mutex_take(rk_mutex_t mutex, uint32_t time)
 {
 #if defined(__RT_THREAD__)
-
     return rt_mutex_take(mutex, time);
-
 #elif defined(__RK_OS__)
-
     return rkos_mutex_lock(mutex);
-
 #endif
 }
 
@@ -91,13 +79,9 @@ ret_err_t rk_mutex_take(rk_mutex_t mutex, uint32_t time)
 ret_err_t rk_mutex_release(rk_mutex_t mutex)
 {
 #if defined(__RT_THREAD__)
-
     return rt_mutex_release(mutex);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_give(mutex);
-
 #endif
 }
 
@@ -108,13 +92,9 @@ ret_err_t rk_mutex_release(rk_mutex_t mutex)
 ret_err_t rk_mutex_delete(rk_mutex_t mutex)
 {
 #if defined(__RT_THREAD__)
-
     return rt_mutex_delete(mutex);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_delete(mutex);
-
 #endif
 }
 
@@ -129,13 +109,9 @@ rk_semaphore_t rk_semaphore_create(const char *name,
                                    uint32_t maxcnt)
 {
 #if defined(__RT_THREAD__)
-
     return rt_sem_create(name, initcnt, RT_IPC_FLAG_FIFO);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_create(maxcnt, initcnt);
-
 #endif
 }
 
@@ -147,13 +123,9 @@ rk_semaphore_t rk_semaphore_create(const char *name,
 ret_err_t rk_semaphore_take(rk_semaphore_t sem, uint32_t time)
 {
 #if defined(__RT_THREAD__)
-
     return rt_sem_take(sem, time);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_take(sem, time);
-
 #endif
 }
 
@@ -164,13 +136,9 @@ ret_err_t rk_semaphore_take(rk_semaphore_t sem, uint32_t time)
 ret_err_t rk_semaphore_release(rk_semaphore_t sem)
 {
 #if defined(__RT_THREAD__)
-
     return rt_sem_release(sem);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_give(sem);
-
 #endif
 }
 
@@ -181,13 +149,9 @@ ret_err_t rk_semaphore_release(rk_semaphore_t sem)
 ret_err_t rk_semaphore_delete(rk_semaphore_t sem)
 {
 #if defined(__RT_THREAD__)
-
     return rt_sem_delete(sem);
-
 #elif defined(__RK_OS__)
-
     return rkos_semaphore_delete(sem);
-
 #endif
 }
 
@@ -198,13 +162,9 @@ ret_err_t rk_semaphore_delete(rk_semaphore_t sem)
 void *rk_malloc(uint32_t size)
 {
 #if defined(__RT_THREAD__)
-
     return rt_malloc(size);
-
 #elif defined(__RK_OS__)
-
     return rkos_memory_malloc_align(size, 32);
-
 #endif
 }
 
@@ -215,13 +175,9 @@ void *rk_malloc(uint32_t size)
 void rk_free(void *mem)
 {
 #if defined(__RT_THREAD__)
-
     rt_free(mem);
-
 #elif defined(__RK_OS__)
-
     rkos_memory_free_align(mem);
-
 #endif
 }
 
@@ -234,13 +190,9 @@ void rk_free(void *mem)
 void *rk_memset(void *s, int val, dt_ubase_t count)
 {
 #if defined(__RT_THREAD__)
-
     return rt_memset(s, val, count);
-
 #elif defined(__RK_OS__)
-
     return memset(s, val, count);
-
 #endif
 }
 
@@ -253,13 +205,9 @@ void *rk_memset(void *s, int val, dt_ubase_t count)
 void *rk_memcpy(void *dst, const void *src, dt_ubase_t count)
 {
 #if defined(__RT_THREAD__)
-
     return rt_memcpy(dst, src, count);
-
 #elif defined(__RK_OS__)
-
     rkos_memcpy(dst, (void *)src, count);
-
     return (void *)src;
 #endif
 }
@@ -271,13 +219,13 @@ void *rk_memcpy(void *dst, const void *src, dt_ubase_t count)
 void *rk_mem_malloc(uint32_t size)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_DMA
     return rt_dma_malloc(size);
-
+#else
+    return RT_NULL;
+#endif
 #elif defined(__RK_OS__)
-
     return rkos_memory_malloc_align(size, 32);
-
 #endif
 }
 
@@ -288,13 +236,11 @@ void *rk_mem_malloc(uint32_t size)
 void rk_mem_free(void *mem)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_DMA
     rt_dma_free(mem);
-
+#endif
 #elif defined(__RK_OS__)
-
     rkos_memory_free_align(mem);
-
 #endif
 }
 
@@ -305,13 +251,11 @@ void rk_mem_free(void *mem)
 void rk_dma_free_large(void *mem)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_LARGE_HEAP
     rt_dma_free_large(mem);
-
+#endif
 #elif defined(__RK_OS__)
-
     rkos_memory_free_align(mem);
-
 #endif
 }
 
@@ -322,9 +266,11 @@ void rk_dma_free_large(void *mem)
 void *rk_dma_malloc_large(dt_ubase_t size)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_LARGE_HEAP
     return rt_dma_malloc_large(size);
-
+#else
+    return RT_NULL;
+#endif
 #elif defined(__RK_OS__)
 
     /*
@@ -349,13 +295,11 @@ void *rk_dma_malloc_large(dt_ubase_t size)
 void rk_hw_cpu_dcache_ops(int ops, void *addr, int size)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef     ARCH_ARM_CORTEX_M
     rt_hw_cpu_dcache_ops(ops, addr, size);
-
+#endif
 #elif defined(__RK_OS__)
-
     rk_dcache_ops(ops, addr, size);
-
 #endif
 }
 
@@ -365,14 +309,10 @@ void rk_hw_cpu_dcache_ops(int ops, void *addr, int size)
 dt_base_t rk_hw_interrupt_disable(void)
 {
 #if defined(__RT_THREAD__)
-
     return rt_hw_interrupt_disable();
-
 #elif defined(__RK_OS__)
-
     rk_interrupt_disable();
     return 0xffffffff;
-
 #endif
 }
 
@@ -383,13 +323,9 @@ dt_base_t rk_hw_interrupt_disable(void)
 void rk_hw_interrupt_enable(dt_base_t level)
 {
 #if defined(__RT_THREAD__)
-
     rt_hw_interrupt_enable(level);
-
 #elif defined(__RK_OS__)
-
     rk_interrupt_enable();
-
 #endif
 }
 
@@ -401,11 +337,9 @@ void rk_hw_interrupt_enable(dt_base_t level)
 rk_device *rk_find_device(const char *dev_name)
 {
 #if defined(__RT_THREAD__)
-
     return rt_device_find(dev_name);
 
 #elif defined(__RK_OS__)
-
     char *cursor;
     uint8_t class_id, object_id;
     rk_device *dev;
@@ -479,13 +413,9 @@ rk_device *rk_find_device(const char *dev_name)
 ret_err_t rk_device_close(rk_device *dev)
 {
 #if defined(__RT_THREAD__)
-
     return rt_device_close(dev);
-
 #elif defined(__RK_OS__)
-
     return rkdev_close(dev);
-
 #endif
 }
 
@@ -497,11 +427,8 @@ ret_err_t rk_device_close(rk_device *dev)
 ret_err_t rk_device_open(rk_device *dev, uint16_t flag)
 {
 #if defined(__RT_THREAD__)
-
     return rt_device_open(dev, flag);
-
 #elif defined(__RK_OS__)
-
     ret_err_t ret = RET_SYS_EOK;
     rk_device *dev_instance;
     uint8_t class_id, object_id;
@@ -531,7 +458,6 @@ ret_err_t rk_device_open(rk_device *dev, uint16_t flag)
     }
 
     return ret;
-
 #endif
 }
 
@@ -542,15 +468,10 @@ ret_err_t rk_device_open(rk_device *dev, uint16_t flag)
 ret_err_t rk_device_init(rk_device *dev)
 {
 #if defined(__RT_THREAD__)
-
     return rt_device_init(dev);
-
 #elif defined(__RK_OS__)
-
 #define RK_DEVICE_CTRL_DEVICE_INIT                  (0)
-
     return rk_device_control(dev, RK_DEVICE_CTRL_DEVICE_INIT, RK_NULL);
-
 #endif
 }
 
@@ -563,13 +484,9 @@ ret_err_t rk_device_init(rk_device *dev)
 ret_err_t rk_device_control(rk_device *dev, int cmd, void *arg)
 {
 #if defined(__RT_THREAD__)
-
     return rt_device_control(dev, cmd, arg);
-
 #elif defined(__RK_OS__)
-
     return rkdev_control(dev, cmd, arg);
-
 #endif
 }
 
@@ -580,13 +497,9 @@ ret_err_t rk_device_control(rk_device *dev, int cmd, void *arg)
 ret_size_t rk_strlen(const char *s)
 {
 #if defined(__RT_THREAD__)
-
     return rt_strlen(s);
-
 #elif defined(__RK_OS__)
-
     return strlen(s);
-
 #endif
 }
 
@@ -598,13 +511,9 @@ ret_size_t rk_strlen(const char *s)
 char *rk_strstr(const char *s1, const char *s2)
 {
 #if defined(__RT_THREAD__)
-
     return rt_strstr(s1, s2);
-
 #elif defined(__RK_OS__)
-
     return strstr(s1, s2);
-
 #endif
 }
 
@@ -617,13 +526,9 @@ char *rk_strstr(const char *s1, const char *s2)
 char *rk_strncpy(char *dst, const char *src, dt_ubase_t len)
 {
 #if defined(__RT_THREAD__)
-
     return rt_strncpy(dst, src, len);
-
 #elif defined(__RK_OS__)
-
     return strncpy(dst, src, len);
-
 #endif
 }
 
@@ -635,13 +540,23 @@ char *rk_strncpy(char *dst, const char *src, dt_ubase_t len)
 int32_t rk_strcmp(const char *cs, const char *ct)
 {
 #if defined(__RT_THREAD__)
-
     return rt_strcmp(cs, ct);
-
 #elif defined(__RK_OS__)
-
     return strcmp(cs, ct);
+#endif
+}
 
+/**
+ * @brief  compare two stringes.
+ * @param ct : The targe string.
+ * @param cs : The source string.
+ */
+int32_t rk_strncmp(const char *cs, const char *ct, dt_ubase_t len)
+{
+#if defined(__RT_THREAD__)
+    return rt_strncmp(cs, ct, len);
+#elif defined(__RK_OS__)
+    return strncmp(cs, ct, len);
 #endif
 }
 
@@ -660,13 +575,13 @@ rk_tick_t rk_tick_get(void)
 ret_err_t rk_clk_enable(rk_clk_gate *gate)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_CRU
     return clk_enable(gate);
-
+#else
+    return -RT_EEMPTY;
+#endif
 #elif defined(__RK_OS__)
-
     return ClkEnable(gate);
-
 #endif
 }
 
@@ -677,13 +592,13 @@ ret_err_t rk_clk_enable(rk_clk_gate *gate)
 ret_err_t rk_clk_disable(rk_clk_gate *gate)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_CRU
     return clk_disable(gate);
-
+#else
+    return -RT_EEMPTY;
+#endif
 #elif defined(__RK_OS__)
-
     return ClkDisable(gate);
-
 #endif
 }
 
@@ -694,13 +609,13 @@ ret_err_t rk_clk_disable(rk_clk_gate *gate)
 ret_err_t rk_clk_get_rate(eCLOCK_Name clk_id)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_CRU
     return clk_get_rate(clk_id);
-
+#else
+    return -RT_EEMPTY;
+#endif
 #elif defined(__RK_OS__)
-
     return ClkGetRate(clk_id);
-
 #endif
 }
 
@@ -712,13 +627,13 @@ ret_err_t rk_clk_get_rate(eCLOCK_Name clk_id)
 ret_err_t rk_clk_set_rate(eCLOCK_Name clk_id, uint32_t rate)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_CRU
     return clk_set_rate(clk_id, rate);
-
+#else
+    return -RT_EEMPTY;
+#endif
 #elif defined(__RK_OS__)
-
     return ClkSetRate(clk_id, rate);
-
 #endif
 }
 
@@ -729,18 +644,17 @@ ret_err_t rk_clk_set_rate(eCLOCK_Name clk_id, uint32_t rate)
 rk_clk_gate *rk_get_clk_gate_from_id(int clk_id)
 {
 #if defined(__RT_THREAD__)
-
+#ifdef RT_USING_CRU
     return get_clk_gate_from_id(clk_id);
-
+#else
+    return RT_NULL;
+#endif
 #elif defined(__RK_OS__)
-
     return GetClkGateFromId(clk_id);
-
 #endif
 }
 
 #endif
-
 /** @} */  // ADAPTER_Private_Function
 
 /** @} */  // Adapter

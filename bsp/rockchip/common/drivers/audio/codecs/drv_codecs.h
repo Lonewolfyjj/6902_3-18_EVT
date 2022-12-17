@@ -27,6 +27,14 @@ extern const struct codec_desc codec_es8156;
 extern const struct codec_desc codec_es8311;
 #endif
 
+#ifdef RT_USING_CODEC_NAU88L25B
+extern const struct codec_desc codec_nau88l25b;
+#endif
+
+#ifdef RT_USING_CODEC_NAU88L25B_HP
+extern const struct codec_desc codec_nau88l25b_hp;
+#endif
+
 #ifdef RT_USING_CODEC_ES8388
 extern const struct codec_desc codec_es8388;
 #endif

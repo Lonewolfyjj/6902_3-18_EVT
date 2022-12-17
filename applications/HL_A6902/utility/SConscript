@@ -1,0 +1,21 @@
+Import('RTT_ROOT')
+Import('rtconfig')
+from building import *
+
+cwd     = GetCurrentDir()
+inc_path = [cwd]
+inc_path += [cwd + '/inc']
+inc_path += [cwd + '/hl_type_def']
+src  = Glob('*.c')
+src += Glob('src/*.c')
+CPPPATH = inc_path
+
+group = DefineGroup('HL_A6902', src, depend = [''], CPPPATH = CPPPATH)
+
+list = os.listdir(cwd)
+for d in list:
+    path = os.path.join(cwd, d)
+    if os.path.isfile(os.path.join(path, 'SConscript')):
+        group = group + SConscript(os.path.join(d, 'SConscript'))
+
+Return('group')

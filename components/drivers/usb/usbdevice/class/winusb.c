@@ -13,6 +13,7 @@
 #include <rtdevice.h>
 #include <drivers/usb_device.h>
 #include "winusb.h"
+#include "soc.h"
 struct winusb_device
 {
     struct rt_device parent;
@@ -23,6 +24,7 @@ struct winusb_device
 };
 
 typedef struct winusb_device * winusb_device_t;
+static uint8_t rx_has_data = 0;
 
 ALIGN(4)
 static struct udevice_descriptor dev_desc =
@@ -51,7 +53,7 @@ static struct usb_qualifier_descriptor dev_qualifier =
     USB_DESC_TYPE_DEVICEQUALIFIER,  //bDescriptorType
     0x0200,                         //bcdUSB
     0xFF,                           //bDeviceClass
-    0x00,                           //bDeviceSubClass
+    0xF0,                           //bDeviceSubClass
     0x00,                           //bDeviceProtocol
     64,                             //bMaxPacketSize0
     0x01,                           //bNumConfigurations
@@ -69,9 +71,9 @@ struct winusb_descriptor _winusb_desc =
         USB_DYNAMIC,
         0x01,
         0xFF,
+        0xF0,
         0x00,
-        0x00,
-        0x00,
+        0x06,
     },
 #endif
     /*interface descriptor*/
@@ -82,9 +84,9 @@ struct winusb_descriptor _winusb_desc =
         0x00,                       //bAlternateSetting;
         0x02,                       //bNumEndpoints
         0xFF,                       //bInterfaceClass;
-        0x00,                       //bInterfaceSubClass;
+        0xF0,                       //bInterfaceSubClass;
         0x00,                       //bInterfaceProtocol;
-        0x00,                       //iInterface;
+        0x06,                       //iInterface;
     },
     /*endpoint descriptor*/
     {
@@ -110,11 +112,12 @@ ALIGN(4)
 const static char* _ustring[] =
 {
     "Language",
-    "RT-Thread Team.",
-    "RTT Win USB",
+    "Shenzhen Hollyland technology Co.,LTD",
+    "Wireless Microphone",
     "32021919830108",
     "Configuration",
     "Interface",
+    "iAP Interface",
     USB_STRING_OS//must be
 };
 
@@ -134,12 +137,17 @@ struct usb_os_function_comp_id_descriptor winusb_func_comp_id_desc =
     .reserved2          = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 };
 
+static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
+winusb_device_t winusb_device;
+
 static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
 {
     winusb_device_t winusb_device = (winusb_device_t)func->user_data;
     if(winusb_device->parent.rx_indicate != RT_NULL)
     {
         winusb_device->parent.rx_indicate(&winusb_device->parent, size);
+        // rt_kprintf("winusb get out %d\r\n", size);
+        rx_has_data = 1;
     }
     return RT_EOK;
 }
@@ -150,6 +158,7 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
     if(winusb_device->parent.tx_complete != RT_NULL)
     {
         winusb_device->parent.tx_complete(&winusb_device->parent, winusb_device->ep_in->buffer);
+        // rt_kprintf("winusb get in %d\r\n", size);
     }
     return RT_EOK;
 }
@@ -193,12 +202,15 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
         _ep0_cmd_read(func, setup);
         break;
     }
+
+    // rt_kprintf("00\r\n");
     
     return RT_EOK;
 }
 static rt_err_t _function_enable(ufunction_t func)
 {
     RT_ASSERT(func != RT_NULL);
+    // rt_kprintf("01\r\n");
     return RT_EOK;
 }
 static rt_err_t _function_disable(ufunction_t func)
@@ -219,8 +231,8 @@ static rt_err_t _winusb_descriptor_config(winusb_desc_t winusb, rt_uint8_t cintf
 #ifdef RT_USB_DEVICE_COMPOSITE
     winusb->iad_desc.bFirstInterface = cintf_nr;
 #endif
-    winusb->ep_out_desc.wMaxPacketSize = device_is_hs ? 512 : 64;
-    winusb->ep_in_desc.wMaxPacketSize = device_is_hs ? 512 : 64;
+    winusb->ep_out_desc.wMaxPacketSize = device_is_hs ? 64 : 64;
+    winusb->ep_in_desc.wMaxPacketSize = device_is_hs ? 64 : 64;
     winusb_func_comp_id_desc.bFirstInterfaceNumber = cintf_nr;
     return RT_EOK;
 }
@@ -236,8 +248,14 @@ static rt_size_t win_usb_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_si
     winusb_device->ep_out->request.buffer = buffer;
     winusb_device->ep_out->request.size = size;
     winusb_device->ep_out->request.req_type = UIO_REQUEST_READ_FULL;
-    rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_out,&winusb_device->ep_out->request);
-    return size;
+    int ret = rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_out,&winusb_device->ep_out->request);
+    // rt_kprintf("02 -- %d\r\n", ret);
+    if (rx_has_data) {
+        // rt_kprintf("read OK\r\n");
+        rx_has_data = 0;
+        return size;
+    }
+    return RT_EOK;
 }
 static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)
 {
@@ -251,6 +269,7 @@ static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer
     winusb_device->ep_in->request.size = size;
     winusb_device->ep_in->request.req_type = UIO_REQUEST_WRITE;
     rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_in,&winusb_device->ep_in->request);
+    // rt_kprintf("03\r\n");
     return size;
 }
 static rt_err_t  win_usb_control(rt_device_t dev, int cmd, void *args)

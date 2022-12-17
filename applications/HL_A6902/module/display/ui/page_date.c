@@ -1,0 +1,385 @@
+#include "page_date.h"
+#include "language.h"
+
+#define ROLLER_YEAR  -96
+#define ROLLER_MONTH  2
+#define ROLLER_DAY  100
+#define ROLLER_HOUR  198
+#define ROLLER_MIN  296
+
+static uint8_t date_year[256];
+static uint8_t date_month[300];
+static uint8_t date_day[256];
+static uint8_t date_hour[256];
+static uint8_t date_min[300];
+
+static lv_style_t style_black,style_grey;
+static lv_obj_t *roller_year,*roller_month,*roller_day,*roller_hour,*roller_min;
+static lv_obj_t * con;
+static char * lock = "btn";
+static char * ulock = "ubtn";
+static hl_date_event_cb hl_date_func;
+/**
+ * Add a fade mask to roller.
+ */
+
+static void lv_year_init(void)
+{
+    char buf[10] = {0,0,0,0,0,0,0,0,0,0};
+    uint16_t i;
+    for(i=2000;i<2051;i++){
+        if(i == 2050){
+            lv_snprintf(buf, sizeof(buf), "%d", i);
+        }else{
+            lv_snprintf(buf, sizeof(buf), "%d\n", i);
+        }  
+        strcat(date_year,buf);
+    }
+}
+static void lv_month_init(void)
+{
+    char buf[10] = {0,0,0,0,0,0,0,0,0,0};
+    uint16_t i;
+    for(i=1;i<13;i++){
+        if(i == 12){
+            lv_snprintf(buf, sizeof(buf), "%d月", i);
+        }else{
+            lv_snprintf(buf, sizeof(buf), "%d月\n", i);
+        }  
+        strcat(date_month,buf);
+    }
+}
+static void lv_day_init(uint8_t day)
+{
+    char buf[10] = {0,0,0,0,0,0,0,0,0,0};
+    uint16_t i;
+    for(i=1;i<(day + 1);i++){
+        if(i == 30){
+            lv_snprintf(buf, sizeof(buf), "%d日", i);
+        }else{
+            lv_snprintf(buf, sizeof(buf), "%d日\n", i);
+        }  
+        strcat(date_day,buf);
+    }
+}
+static void lv_hour_init(void)
+{
+    char buf[10] = {0,0,0,0,0,0,0,0,0,0};
+    uint16_t i;
+    for(i=0;i<24;i++){
+        if(i == 23){
+            lv_snprintf(buf, sizeof(buf), "%d时", i);
+        }else{
+            lv_snprintf(buf, sizeof(buf), "%d时\n", i);
+        }  
+        strcat(date_hour,buf);
+    }
+}
+static void lv_min_init(void)
+{
+    char buf[10] = {0,0,0,0,0,0,0,0,0,0};
+    uint16_t i;
+    for(i=0;i<60;i++){
+        if(i == 59){
+            lv_snprintf(buf, sizeof(buf), "%d分", i);
+        }else{
+            lv_snprintf(buf, sizeof(buf), "%d分\n", i);
+        }        
+        strcat(date_min,buf);
+    }
+}
+
+static void lv_date_init(void)
+{
+    lv_year_init();
+    lv_month_init();
+    lv_day_init(30);
+    lv_hour_init();
+    lv_min_init();
+}
+
+static void lv_style_page6_init(void)
+{    
+    lv_style_init(&style_black);
+    lv_style_set_bg_color(&style_black, lv_color_black());
+    lv_style_set_border_width(&style_black, 0);
+    lv_style_set_pad_all(&style_black, 0);
+    // lv_obj_add_style(lv_scr_act(), &style_black, 0);
+    lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);  
+
+    lv_style_init(&style_grey);
+    lv_style_set_bg_opa(&style_grey, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_grey, lv_palette_darken(LV_PALETTE_GREY,2));
+    lv_style_set_border_width(&style_grey,0);
+    lv_style_set_outline_width(&style_grey,0);
+    lv_style_set_radius(&style_grey, 3);
+}
+
+static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const char * options,lv_coord_t x_offset,lv_coord_t y_offset)
+{ 
+    lv_obj_t *roller = lv_roller_create(src_obj);
+    lv_obj_add_style(roller, &style_grey, 0);    
+    lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
+    lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_size(roller,90,114); 
+// #if LV_FONT_MONTSERRAT_22
+    lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
+    lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_SELECTED); 
+// #endif
+    lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
+    lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
+    lv_roller_set_options(roller,options,LV_ROLLER_MODE_NORMAL);
+    lv_obj_set_align(roller,LV_ALIGN_CENTER);
+    lv_roller_set_visible_row_count(roller, 3);
+    lv_obj_clear_state(roller,LV_STATE_FOCUS_KEY);
+    lv_obj_clear_flag(roller,LV_OBJ_FLAG_CLICK_FOCUSABLE);
+    lv_obj_add_event_cb(roller, event_cb, LV_EVENT_ALL, NULL);    
+    return roller;
+}
+
+static void roller_year_cb(lv_event_t * e)
+{    
+    char * ptr = (char *)lv_event_get_param(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_coord_t pos = lv_roller_get_selected(roller_year);
+
+    if(code == LV_EVENT_CLICKED) {        
+        if(strcmp(ptr,lock)){
+            lv_obj_scroll_to_view(roller_year, LV_ANIM_ON);    
+            lv_obj_set_style_bg_opa(roller_year, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            hl_date_func(HL_DATE_YEAR,pos+2000);
+        }else{      
+            lv_obj_set_style_bg_opa(roller_year, LV_OPA_TRANSP, LV_PART_MAIN);
+        }
+    }    
+}
+static void roller_month_cb(lv_event_t * e)
+{    
+    char * ptr = (char *)lv_event_get_param(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_coord_t pos = lv_roller_get_selected(roller_month);
+
+    if(code == LV_EVENT_CLICKED) {        
+        if(strcmp(ptr,lock)){
+            lv_obj_scroll_to_view(roller_month, LV_ANIM_ON);    
+            lv_obj_set_style_bg_opa(roller_month, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
+            hl_date_func(HL_DATE_MONTH,pos+1);
+        }else{      
+            lv_obj_set_style_bg_opa(roller_month, LV_OPA_TRANSP, LV_PART_MAIN);
+        }
+    } 
+}
+static void roller_day_cb(lv_event_t * e)
+{    
+    char * ptr = (char *)lv_event_get_param(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_coord_t pos = lv_roller_get_selected(roller_day);
+
+    if(code == LV_EVENT_CLICKED) {        
+        if(strcmp(ptr,lock)){
+            lv_obj_scroll_to_view(roller_day, LV_ANIM_ON);    
+            lv_obj_set_style_bg_opa(roller_day, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
+            hl_date_func(HL_DATE_DAY,pos+1);
+        }else{      
+            lv_obj_set_style_bg_opa(roller_day, LV_OPA_TRANSP, LV_PART_MAIN);
+        }
+    }
+}
+static void roller_hour_cb(lv_event_t * e)
+{  
+    char * ptr = (char *)lv_event_get_param(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_coord_t pos = lv_roller_get_selected(roller_hour);
+
+    if(code == LV_EVENT_CLICKED) {        
+        if(strcmp(ptr,lock)){
+            lv_obj_scroll_to_view(roller_hour, LV_ANIM_ON);    
+            lv_obj_set_style_bg_opa(roller_hour, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
+            hl_date_func(HL_DATE_HOUR,pos);
+        }else{      
+            lv_obj_set_style_bg_opa(roller_hour, LV_OPA_TRANSP, LV_PART_MAIN);
+        }
+    }  
+}
+static void roller_min_cb(lv_event_t * e)
+{    
+    char * ptr = (char *)lv_event_get_param(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_coord_t pos = lv_roller_get_selected(roller_min);
+
+    if(code == LV_EVENT_CLICKED) {        
+        if(strcmp(ptr,lock)){
+            lv_obj_scroll_to_view(roller_min, LV_ANIM_ON);    
+            lv_obj_set_style_bg_opa(roller_min, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
+            hl_date_func(HL_DATE_MIN,pos);
+        }else{      
+            lv_obj_set_style_bg_opa(roller_min, LV_OPA_TRANSP, LV_PART_MAIN);
+        }
+    } 
+}
+
+static void roller_con_cb(lv_event_t * e)
+{
+    lv_coord_t pos = lv_obj_get_scroll_x(con);
+    switch(pos){
+        case ROLLER_YEAR:
+            lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
+            break;
+        case ROLLER_MONTH:
+            lv_event_send(roller_month,LV_EVENT_CLICKED,ulock);
+            break;
+        case ROLLER_DAY:
+            lv_event_send(roller_day,LV_EVENT_CLICKED,ulock);
+            break;
+        case ROLLER_HOUR:
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,ulock);
+            break;
+        case ROLLER_MIN:
+            lv_event_send(roller_min,LV_EVENT_CLICKED,ulock);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_current_option_set(hl_date_choose_t opt)
+{
+    switch (opt){
+        case HL_DATE_YEAR:
+            lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
+            break;
+        case HL_DATE_MONTH:
+            lv_event_send(roller_month,LV_EVENT_CLICKED,ulock);
+            break;
+        case HL_DATE_DAY:
+            lv_event_send(roller_day,LV_EVENT_CLICKED,ulock);
+            break;
+        case HL_DATE_HOUR:
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,ulock);
+            break;
+        case HL_DATE_MIN:
+            lv_event_send(roller_min,LV_EVENT_CLICKED,ulock);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_opt_value_set(hl_date_choose_t opt,int16_t value,lv_anim_enable_t anim)
+{
+    switch (opt){
+        case HL_DATE_YEAR:
+            lv_roller_set_selected(roller_year,value - 2000,anim);
+            break;
+        case HL_DATE_MONTH:
+            lv_roller_set_selected(roller_month,value,anim);
+            break;
+        case HL_DATE_DAY:
+            lv_roller_set_selected(roller_day,value,anim);
+            break;
+        case HL_DATE_HOUR:
+            lv_roller_set_selected(roller_hour,value,anim);
+            break;
+        case HL_DATE_MIN:
+            lv_roller_set_selected(roller_min,value,anim);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_mod_date_init_cfg(hl_lvgl_date_init_t * data)
+{
+    hl_current_option_set(data->current_choose);
+    hl_opt_value_set(HL_DATE_YEAR,data->year,LV_ANIM_OFF);
+    hl_opt_value_set(HL_DATE_MONTH,data->month,LV_ANIM_OFF);
+    hl_opt_value_set(HL_DATE_DAY,data->day,LV_ANIM_OFF);
+    hl_opt_value_set(HL_DATE_HOUR,data->hour,LV_ANIM_OFF);
+    hl_opt_value_set(HL_DATE_MIN,data->min,LV_ANIM_OFF);
+}
+
+static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+{
+    uint32_t child_cnt = 0,i;
+    child_cnt = lv_obj_get_child_cnt(obj);
+    if(child_cnt == 0){
+        lv_obj_del_delayed(obj,0);
+    }else{
+        for(i=0;i<child_cnt;i++){
+            hl_obj_delete(lv_obj_get_child(obj, i),true);            
+        }
+        if(obj_typ){
+            lv_obj_del_delayed(obj,0);
+        }        
+    }
+}
+
+
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_grey);
+    lv_style_reset(&style_black);
+}
+
+void hl_mod_date_ioctl(void * ctl_data)
+{
+    hl_lvgl_date_ioctl_t * ptr = (hl_lvgl_date_ioctl_t *)ctl_data;
+    switch (ptr->date_cmd){
+        case HL_DATE_SET_OPT_CMD:
+            hl_current_option_set(ptr->opt);
+            break;
+        case HL_DATE_SET_VALUE_CMD:
+            hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON);
+            break;
+        case HL_DATE_EXTI_CMD:
+            hl_obj_delete(lv_scr_act(),false);            
+            break;
+        case HL_DATE_DELETE_STYLE_CMD:
+            lv_delete_style();            
+            break;
+        default:
+            break;
+    }
+}
+
+
+void hl_mod_date_init(void * init_data)
+{
+    lv_date_init();
+    lv_style_page6_init();
+
+    hl_lvgl_date_init_t * ptr = (hl_lvgl_date_init_t *)init_data;
+    hl_date_func = ptr->func_cb;
+
+    con = lv_obj_create(lv_scr_act());
+    lv_obj_add_style(con, &style_black, 0);
+    lv_obj_set_size(con,282,114);
+    lv_obj_align(con, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
+    lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);
+    lv_obj_set_scrollbar_mode(con, LV_SCROLLBAR_MODE_OFF);   
+    lv_obj_add_event_cb(con, roller_con_cb, LV_EVENT_SCROLL_END, NULL);       
+    
+    roller_year = lv_creat_roller(con,roller_year_cb,date_year,10,0);
+    roller_month = lv_creat_roller(con,roller_month_cb,date_month,20,0);
+    roller_day = lv_creat_roller(con,roller_day_cb,date_day,20,0);
+    roller_hour = lv_creat_roller(con,roller_hour_cb,date_hour,20,0);
+    roller_min = lv_creat_roller(con,roller_min_cb,date_min,20,0);
+
+    hl_mod_date_init_cfg(ptr);
+}
+
+//测试接口
+// void page_date_test(void)
+// {
+    
+//     page_6_test();
+// }

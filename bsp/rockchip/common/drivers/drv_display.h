@@ -64,7 +64,10 @@ do { \
 #define RK_DISPLAY_CTRL_DISABLE_LUT         0x1013
 
 #define RK_DISPLAY_MAX_CRTC_WIN_NUM         3
-#define RK_DISPLAY_TIME_OUT                 50
+#define RK_DISPLAY_TIME_OUT                 300
+
+#define RT_LV_HOR_RES   126
+#define RT_LV_VER_RES   294
 
 enum rockchip_cmd_type
 {

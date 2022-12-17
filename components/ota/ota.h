@@ -8,7 +8,7 @@
 #define _SYS_OTA_H_
 
 #include "ota_opt.h"
-
+#include "hl_config.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,7 +32,11 @@ extern "C" {
 #endif
 
 #ifdef RT_USING_OTA_FROM_LOCAL
-#define OTA_FW_LOCAL_PATH       "/sdcard/Firmware.img"
+#if HL_IS_TX_DEVICE()
+#define OTA_FW_LOCAL_PATH       "/mnt/sdcard/mcu.img"
+#else
+#define OTA_FW_LOCAL_PATH       "mcu.img"
+#endif
 #endif
 
 typedef enum image_state_t_
