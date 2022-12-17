@@ -942,6 +942,16 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #endif
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
@@ -982,6 +992,17 @@ static void _hl_cap2play_thread_entry(void* arg)
 static void _hl_cap2uac_thread_entry(void* arg)
 {
     LOG_D("audio cap2uac thread run");
+
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2uac thread");
+        return;
+    }
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit cap2uac thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
@@ -1003,6 +1024,17 @@ static void _hl_uac2play_thread_entry(void* arg)
     play_uac_state_e    playback_state = HL_PLAY_UAC_IDLE;
 
     LOG_D("audio uac2play thread run");
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit uac2play thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("play_info.card is NULL, exit uac2play thread");
+        return;
+    }
+
     while (1) {
         switch (playback_state) {
             case HL_PLAY_UAC_IDLE:
@@ -1056,6 +1088,22 @@ static void _hl_uac2play_thread_entry(void* arg)
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
     LOG_D("audio cap2play2uac thread run");
+
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("play_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
