@@ -124,7 +124,13 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             hl_mod_main_init(&data);
             break;
         case HL_RF_R_CONNECT:
-            data.display_tx_device    = HL_DISPLAY_TX2;
+            data.display_tx_device = HL_DISPLAY_DOUBLE;
+
+            data.tx_device_1.electric = 0;
+            data.tx_device_1.signal   = 0;
+            data.tx_device_1.record   = 0;
+            data.tx_device_1.volume   = 0;
+
             data.tx_device_2.electric = data_ptr->tx2_bat_val;
             data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
             data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
@@ -132,11 +138,17 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             hl_mod_main_init(&data);
             break;
         case HL_RF_L_CONNECT:
-            data.display_tx_device    = HL_DISPLAY_TX1;
+            data.display_tx_device = HL_DISPLAY_DOUBLE;
+
             data.tx_device_1.electric = data_ptr->tx1_bat_val;
             data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
             data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
             data.tx_device_1.volume   = data_ptr->tx1_vu;
+
+            data.tx_device_2.electric = 0;
+            data.tx_device_2.signal   = 0;
+            data.tx_device_2.record   = 0;
+            data.tx_device_2.volume   = 0;
             hl_mod_main_init(&data);
             break;
         case HL_RF_UNCONNECT:
@@ -182,11 +194,11 @@ static void hl_mod_main_tx_deal_deinit()
             hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_R_CONNECT:
-            main_ctl.cmd = HL_CHANGE_DELETE_TX2;
+            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
             hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_L_CONNECT:
-            main_ctl.cmd = HL_CHANGE_DELETE_TX1;
+            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
             hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_UNCONNECT:
