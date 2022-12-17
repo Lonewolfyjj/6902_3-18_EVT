@@ -77,11 +77,15 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_moreone_ioctl_t data = {
-        .cmd_type = HL_MOREONE_POSTION_CMD,
-        .moreone_choose = 0,
-        .moreone_choose_opt = HL_MOREONE_OPTION_EXTI,
-    };
+    hl_lvgl_moreone_ioctl_t data;
+    data.cmd_type           = HL_MOREONE_POSTION_CMD;
+    data.moreone_choose     = 0;
+    data.moreone_choose_opt = HL_MOREONE_OPTION_EXTI;
+    hl_mod_moreone_ioctl(&data);
+
+    data.cmd_type           = HL_MOREONE_POSTION_CMD;
+    data.moreone_choose     = 0;
+    data.moreone_choose_opt = HL_MOREONE_OPTION_DELETE_STYLE;
     hl_mod_moreone_ioctl(&data);
 }
 
