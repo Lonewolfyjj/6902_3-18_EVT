@@ -1414,8 +1414,8 @@ uint8_t hl_mod_audio_deinit(void)
     hl_mod_audio_record_switch(0);
 #endif
 
-    hl_mod_audio_codec_deconfig(&cap_info);
-    hl_mod_audio_codec_deconfig(&play_info);
+    // hl_mod_audio_codec_deconfig(&cap_info);
+    // hl_mod_audio_codec_deconfig(&play_info);
 
     rt_thread_delete(audio_ctrl_thread_id);
 
