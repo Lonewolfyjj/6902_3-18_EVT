@@ -69,10 +69,10 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 
 static void lv_style_barset_init(void)
 {
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
     //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_back);
