@@ -39,10 +39,10 @@ static void lv_style_page_init(void)
 {
     lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
 
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
     //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_area_main);
