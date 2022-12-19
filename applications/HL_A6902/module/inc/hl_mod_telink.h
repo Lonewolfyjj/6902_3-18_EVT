@@ -44,6 +44,8 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_SWITCH_ANTENNA_CMD = 0x05,
     /// 设置RF射频发射功率：类型uint8_t (0~23)
     HL_RF_SET_RF_POWER_CMD = 0x06,
+    /// 设置工作模式：类型hl_rf_work_mode_e
+    HL_RF_SET_WORK_MODE_CMD = 0x08,
     /// 获取本地配对信息：类型无
     HL_RF_GET_LOCAL_MAC_CMD = 0x10,
     /// 设置配对设备配对信息：类型hl_rf_pair_info_t
@@ -70,9 +72,11 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_PAIR_STATE_IND = 0x01,
     /// 返回RSSI值：类型uint8_t (0~100)
     HL_RF_RSSI_IND = 0x04,
+    /// 返回设置结果：类型rt_err_t
+    HL_RF_SET_WORK_MODE_IND = 0x08,
     /// 返回本地配对信息：类型uint8_t mac[6]
     HL_RF_GET_LOCAL_MAC_IND = 0x10,
-    /// 设置配对设备配对信息：类型无
+    /// 设置配对设备配对信息：类型rt_err_t
     HL_RF_SET_REMOTE_MAC_IND = 0x11,
     /// 返回配对设备配对信息：类型TX uint8_t mac[6] / RX uint8_t mac[12]
     HL_RF_GET_REMOTE_MAC_IND = 0x12,
@@ -113,6 +117,14 @@ typedef enum _hl_rf_antenna_e
     /// 单天线B
     EMUN_SINGLE_R_ANTENNA,
 } hl_rf_antenna_e;
+
+typedef enum _hl_rf_work_mode_e
+{
+    /// 高功耗模式（开启RF、音频功能）
+    HL_RF_FULL_POWER = 0x00,
+    /// 低功耗模式（关闭RF、音频功能）
+    HL_RF_LOW_POWER,
+} hl_rf_work_mode_e;
 
 typedef struct
 {
