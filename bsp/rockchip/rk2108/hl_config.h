@@ -1,5 +1,5 @@
-#define A6902_TX_HL 0
-#define A6902_RX_HL_CH 1
+#define A6902_TX_HL 1
+#define A6902_RX_HL_CH 0
 #define A6902_RX_HL_EN 0
 #define A6902_TX_JF 0
 #define A6902_RX_JF_CH 0
@@ -9,32 +9,32 @@
 
 #if A6902_TX_HL
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_TX_JF
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_HL_CH
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_JF_CH
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_HL_EN
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "EN"
 
 #elif A6902_RX_JF_EN
 
-#define A6902_VERSION "V0.0.0.13"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "EN"
 
 #endif
