@@ -59,10 +59,10 @@ static void lv_style_page4_init(void)
 {
     lv_obj_enable_style_refresh(true);
 
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
     // lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_choose_main);
@@ -210,6 +210,9 @@ void hl_mod_b_two_in_one_ioctl(void * ctl_data)
         break;
         case HL_B_TWO_ONE_CHOOSE_EXIT:
             hl_obj_delete(lv_scr_act(),false);            
+        break;
+        case HL_B_TWO_ONE_CHOOSE_DEL_STYLE:
+            lv_delete_style();            
         break;
         default:
         break;

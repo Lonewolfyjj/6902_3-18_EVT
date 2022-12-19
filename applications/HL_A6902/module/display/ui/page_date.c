@@ -122,10 +122,10 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_size(roller,90,114); 
-#if LV_FONT_MONTSERRAT_22
+// #if LV_FONT_MONTSERRAT_22
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_SELECTED); 
-#endif
+// #endif
     lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
     lv_roller_set_options(roller,options,LV_ROLLER_MODE_NORMAL);

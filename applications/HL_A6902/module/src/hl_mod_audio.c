@@ -942,6 +942,16 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #endif
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
@@ -982,6 +992,17 @@ static void _hl_cap2play_thread_entry(void* arg)
 static void _hl_cap2uac_thread_entry(void* arg)
 {
     LOG_D("audio cap2uac thread run");
+
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2uac thread");
+        return;
+    }
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit cap2uac thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
@@ -1003,6 +1024,17 @@ static void _hl_uac2play_thread_entry(void* arg)
     play_uac_state_e    playback_state = HL_PLAY_UAC_IDLE;
 
     LOG_D("audio uac2play thread run");
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit uac2play thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("play_info.card is NULL, exit uac2play thread");
+        return;
+    }
+
     while (1) {
         switch (playback_state) {
             case HL_PLAY_UAC_IDLE:
@@ -1056,6 +1088,22 @@ static void _hl_uac2play_thread_entry(void* arg)
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
     LOG_D("audio cap2play2uac thread run");
+
+    if (RT_NULL == cap_info.card) {
+        LOG_E("cap_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
+    if (RT_NULL == uac_info.card) {
+        LOG_E("uac_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
+    if (RT_NULL == play_info.card) {
+        LOG_E("play_info.card is NULL, exit cap2play2uac thread");
+        return;
+    }
+
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
@@ -1091,6 +1139,32 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     //     LOG_E("fail to set gain\n");
     //     return -RT_ERROR;
     // }
+#if HL_IS_TX_DEVICE()
+
+#else
+    int8_t ret = 0;
+
+    switch (ch) {
+        case 0x01:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &dB, 4);
+            break;
+
+        case 0x02:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R, &dB, 4);
+            break;
+
+        case 0x03:
+            ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL, &dB, 4);
+            break;
+
+        default:
+            break;
+    }
+
+    if (ret != RT_EOK) {
+        LOG_E("fail to set (%d) gain\n", HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L);
+    }
+#endif
 }
 
 #if HL_IS_TX_DEVICE()
@@ -1414,8 +1488,8 @@ uint8_t hl_mod_audio_deinit(void)
     hl_mod_audio_record_switch(0);
 #endif
 
-    hl_mod_audio_codec_deconfig(&cap_info);
-    hl_mod_audio_codec_deconfig(&play_info);
+    // hl_mod_audio_codec_deconfig(&cap_info);
+    // hl_mod_audio_codec_deconfig(&play_info);
 
     rt_thread_delete(audio_ctrl_thread_id);
 
@@ -1469,7 +1543,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, ptr, 1);
             break;
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
             if(((char*)ptr)[0] != 0) {
@@ -1531,7 +1605,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
 
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x55);
+            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
             break;
 
         case HL_AUDIO_SET_HP_AMP_CMD:

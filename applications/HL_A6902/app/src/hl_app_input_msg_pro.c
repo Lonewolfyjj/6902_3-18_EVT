@@ -47,8 +47,8 @@ typedef enum _hl_knob_dir_e
 } HL_ENUM8(hl_knob_dir_e);
 
 /* define --------------------------------------------------------------------*/
-#define VOLUME_MAX       24
-#define VOLUME_MIN       -104
+#define VOLUME_MAX       64
+#define VOLUME_MIN       -64
 
 /* variables -----------------------------------------------------------------*/
 
