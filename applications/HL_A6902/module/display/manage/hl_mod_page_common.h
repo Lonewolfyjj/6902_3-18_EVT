@@ -37,8 +37,6 @@ extern "C" {
 
 //下发的命令
 typedef struct _hl_display_status{
-    uint32_t tx1_net_switch:1;
-    uint32_t tx2_net_switch:1;
     uint32_t screen_lock:1;
     uint32_t tx1_noise:1;
     uint32_t tx2_noise:1;
@@ -77,7 +75,7 @@ typedef struct _hl_display_screen_s
     hl_display_sound_module_e sound_module;
     hl_display_low_cut_e low_cut;
     hl_screen_page_e page_id;
-
+    hl_rf_state_e rf_net_connect;
     uint8_t tx1_bat_val;
     uint8_t tx2_bat_val;
     uint8_t rx_bat_val;
@@ -100,11 +98,11 @@ typedef struct _hl_display_screen_s
     uint8_t tx2_remained_record_time;
     uint8_t ota_upgrade_progress;
 
-    uint8_t tx1_ver[10];
-    uint8_t tx2_ver[10];
-    uint8_t rx_ver[10];
-    uint8_t sn[36];
-    uint8_t device_fault_code[20];
+    char tx1_ver[10];
+    char tx2_ver[10];
+    char rx_ver[10];
+    char sn[36];
+    char device_fault_code[20];
     // 显示系统当前状态信息
     hl_display_status sys_status;
     hl_display_systime_s systime;
@@ -113,6 +111,7 @@ typedef struct _hl_display_screen_s
 // 下发信息变更标志
 typedef struct _hl_display_screen_change_s{
     hl_display_status sys_status;
+    uint32_t rf_net_connect:1;
     uint32_t monitor_category:1;
     uint32_t voice_module_:1;
     uint32_t sound_module:1;

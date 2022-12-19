@@ -13,7 +13,7 @@ typedef enum _hl_top_icon_t
     HL_TOP_ICON_LINEOUT,
     HL_TOP_ICON_TYPEC,
     HL_TOP_ICON_HEATSET,
-
+    HL_TOP_ICON_CNT,
 }hl_top_icon_t;
 
 typedef enum _hl_top_cmd_t
