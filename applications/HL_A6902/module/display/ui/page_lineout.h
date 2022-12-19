@@ -15,7 +15,8 @@ typedef enum _hl_lineout_choose_t
 {
     HL_LINEOUT_CHOOSE_LEFT = 0,
     HL_LINEOUT_CHOOSE_RIGHT,
-    HL_LINEOUT_DELETE_PAGE
+    HL_LINEOUT_DELETE_PAGE,
+    HL_LINEOUT_DELETE_STYLE
 }hl_lineout_choose_t;
 
 typedef void(*hl_lineout_event_cb)(hl_lineout_check_t);

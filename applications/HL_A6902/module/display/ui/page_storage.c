@@ -39,11 +39,11 @@ static void lv_style_page4_init(void)
 {
     lv_obj_enable_style_refresh(true);
 
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
@@ -216,6 +216,18 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_choose_main);
+    lv_style_reset(&style_not_choose_main);
+    lv_style_reset(&style_choose_lr_main);
+    lv_style_reset(&style_not_choose_lr_main);
+    lv_style_reset(&style_label);
+    lv_style_reset(&style_back);
+    lv_style_reset(&style_indicator);
+    lv_style_reset(&style_main);
+}
+
 void hl_mod_storage_ioctl(void * ctl_data)
 {
     hl_lvgl_storage_ioctl_t * ptr = (hl_lvgl_storage_ioctl_t *)ctl_data;
@@ -228,6 +240,9 @@ void hl_mod_storage_ioctl(void * ctl_data)
             break;
         case HL_STORAGE_CHOOSE_EXIT:
             hl_obj_delete(lv_scr_act(),false);
+            break;
+        case HL_STORAGE_CHOOSE_DEL_STYLE:
+            lv_delete_style();
             break;
         default:
             break;

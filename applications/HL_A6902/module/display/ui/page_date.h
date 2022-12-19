@@ -18,6 +18,7 @@ typedef enum _hl_date_cmd_t
 {
     HL_DATE_SET_OPT_CMD = 0,
     HL_DATE_SET_VALUE_CMD,
+    HL_DATE_DELETE_STYLE_CMD,
     HL_DATE_EXTI_CMD
 }hl_date_cmd_t;
 

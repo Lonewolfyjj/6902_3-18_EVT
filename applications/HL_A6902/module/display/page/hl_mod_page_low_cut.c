@@ -71,11 +71,12 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl = 
-    {
-        .three_in_one_choose = HL_THREE_ONE_CHOOSE_EXIT,
-    };
+    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl;
 
+    three_in_one_test_ctl.three_in_one_choose = HL_THREE_ONE_CHOOSE_EXIT;
+    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
+
+    three_in_one_test_ctl.three_in_one_choose = HL_THREE_ONE_CHOOSE_DEL_STYLE;
     hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
 }
 

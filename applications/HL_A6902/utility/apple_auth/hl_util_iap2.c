@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 static uint8_t try_time = 3;
+static uint8_t try_detect_time = 3;
 
 /**
  * _hl_iap2_detect_process
@@ -27,6 +28,7 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_DETECT_SEND:
             result              = hl_iap2_detect_send(iap2);
             iap2->detect_status = EM_HL_IAP2_STM_DETECT_RECV;
+            iap2->iap2_printf("[OK][%s:%d]send detect message!\n", __func__, __LINE__);
             break;
 
         case EM_HL_IAP2_STM_DETECT_RECV:
@@ -35,14 +37,22 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
             if (0 == result) {
                 iap2->iap2_printf("[OK][%s:%d]receive detect message!\n", __func__, __LINE__);
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_LINK;
+                try_time = 3;
+                try_detect_time = 3;
             } else {
                 iap2->iap2_printf("[ERROR][%s:%d]receive detect message!\n", __func__, __LINE__);
                 if(try_time){
                     iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
                     try_time--;
                 }else{
-                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
-                    try_time = 3;
+                    if(try_detect_time){
+                        try_detect_time--;
+                        iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
+                    }else{
+                        iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                        try_time = 3;
+                        try_detect_time = 3;
+                    }
                 }
             }
             break;
@@ -279,10 +289,11 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
-            iap2->delay_usec_func(1000);
+            iap2->delay_usec_func(5000);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:
+            iap2->delay_usec_func(1000);
             _hl_iap2_detect_process(iap2);
             break;
 

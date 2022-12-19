@@ -16,6 +16,7 @@ typedef enum _hl_barset_top_icontyp_t
 typedef enum _hl_barset_ioctl_t
 {
     HL_VALUE = 0,//
+    HL_DELETE_STYLE,
     HL_EXTI
 }hl_barset_ioctl_t;
 

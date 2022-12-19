@@ -104,7 +104,7 @@ static void lv_style_page6_init(void)
     lv_style_set_bg_color(&style_black, lv_color_black());
     lv_style_set_border_width(&style_black, 0);
     lv_style_set_pad_all(&style_black, 0);
-    lv_obj_add_style(lv_scr_act(), &style_black, 0);
+    // lv_obj_add_style(lv_scr_act(), &style_black, 0);
     lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);  
 
     lv_style_init(&style_grey);
@@ -122,10 +122,10 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_size(roller,90,114); 
-#if LV_FONT_MONTSERRAT_22
+// #if LV_FONT_MONTSERRAT_22
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_SELECTED); 
-#endif
+// #endif
     lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
     lv_roller_set_options(roller,options,LV_ROLLER_MODE_NORMAL);
@@ -322,6 +322,13 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+
+static void lv_delete_style(void)
+{
+    lv_style_reset(&style_grey);
+    lv_style_reset(&style_black);
+}
+
 void hl_mod_date_ioctl(void * ctl_data)
 {
     hl_lvgl_date_ioctl_t * ptr = (hl_lvgl_date_ioctl_t *)ctl_data;
@@ -333,7 +340,10 @@ void hl_mod_date_ioctl(void * ctl_data)
             hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON);
             break;
         case HL_DATE_EXTI_CMD:
-            hl_obj_delete(lv_scr_act(),false);
+            hl_obj_delete(lv_scr_act(),false);            
+            break;
+        case HL_DATE_DELETE_STYLE_CMD:
+            lv_delete_style();            
             break;
         default:
             break;

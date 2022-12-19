@@ -739,7 +739,6 @@ static rt_err_t _hid_ctrl(rt_device_t dev, int cmd, void *args)
 
 rt_err_t _hid_tx_complete(rt_device_t dev, void *buffer)
 {
-    struct hid_s *hiddev = (struct hid_s *)dev;
     struct usb_hid_node *p_node;
 
     rt_mutex_take(hid_dev.write_mutex, RT_WAITING_FOREVER);
@@ -749,10 +748,10 @@ rt_err_t _hid_tx_complete(rt_device_t dev, void *buffer)
     
     if (!rt_list_isempty(&hid_dev.ready_list)) {
         p_node = rt_list_first_entry(&hid_dev.ready_list, struct usb_hid_node, list);
-        hiddev->ep_in->request.buffer = (void *)p_node->buffer;
-        hiddev->ep_in->request.size = (p_node->size) > 64 ? 64 : p_node->size;
-        hiddev->ep_in->request.req_type = UIO_REQUEST_WRITE;
-        rt_usbd_io_request(hiddev->func->device, hiddev->ep_in, &hiddev->ep_in->request);
+        hid_dev.hid_s->ep_in->request.buffer = (void *)p_node->buffer;
+        hid_dev.hid_s->ep_in->request.size = (p_node->size) > 64 ? 64 : p_node->size;
+        hid_dev.hid_s->ep_in->request.req_type = UIO_REQUEST_WRITE;
+        rt_usbd_io_request(hid_dev.hid_s->func->device, hid_dev.hid_s->ep_in, &hid_dev.hid_s->ep_in->request);
     }
     rt_mutex_release(hid_dev.write_mutex);
 

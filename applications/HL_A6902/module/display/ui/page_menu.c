@@ -26,6 +26,7 @@ static event_cb func_cb;
 static uint8_t ICON_NUMBER = 0;
 static lv_obj_t *cont_row;
 static lv_obj_t *lab_obj[MAX_MENU_NUMBER];
+static lv_obj_t *pic_obj[MAX_MENU_NUMBER];
 
 static void lv_lab_hide_set(uint8_t lab_cur)
 {    
@@ -172,7 +173,7 @@ static void lv_style_menu_init(void)
     lv_style_set_bg_color(&screen_style, lv_color_black());
     lv_style_set_radius(&screen_style, 0);
     lv_style_set_border_width(&screen_style, 0);
-    lv_obj_add_style(lv_scr_act(), &screen_style, 0);
+    // lv_obj_add_style(lv_scr_act(), &screen_style, 0);
 
     lv_style_init(&style_label);
     lv_style_set_bg_opa(&style_label, LV_OPA_TRANSP);
@@ -249,15 +250,14 @@ void lv_set_icon_postion(uint8_t pos, bool en)
     }    else {
         lv_obj_scroll_to_view(lv_obj_get_child(cont_row, pos), LV_ANIM_ON);
         lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
-    }
-
-    
+    }    
 }
 
 void lv_menu_exit(void)
 {
-    lv_obj_remove_event_cb(cont_row, lv_icon_event_cb);
     hl_obj_delete(lv_scr_act(),false);
+    lv_style_reset(&screen_style);
+    lv_style_reset(&style_label);
 }
 
 void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func)
@@ -269,6 +269,7 @@ void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func)
     lv_icon_list_init(ICON_NUMBER,data);
     for(i=0;i<ICON_NUMBER;i++){
         lab_obj[i] = data[i].lab;
+        pic_obj[i] = data[i].obj;
     }
     lv_event_send(cont_row, LV_EVENT_SCROLL, NULL);
 }
