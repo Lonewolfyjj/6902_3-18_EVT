@@ -36,6 +36,7 @@
 #include "page_test.h"
 #include "lvgl.h"
 #include "hl_drv_ztw523a.h"
+
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -46,6 +47,7 @@
 
 #define BACKTOUCHKEY_DEBANCE_TIMER          20
 
+
 typedef struct _hl_input_mod_t
 {
     /// 消息队列句柄
@@ -55,9 +57,43 @@ typedef struct _hl_input_mod_t
 } hl_display_msg_t;
 
 // 系统当前的状态和类别
-static hl_display_screen_s hl_screendata;
-// 系统上一次的状态
-static  hl_display_screen_change_s change_flag;
+static hl_display_screen_s hl_screendata = {
+    .display_fault_code       = 0,
+    .monitor_category         = 0,
+    .voice_module             = HIGH_FIDELITY,
+    .sound_module             = STEREO,
+    .low_cut                  = LOW_CUT_OFF,
+    .page_id                  = PAGE_NONE,
+    .tx1_bat_val              = 0,
+    .tx2_bat_val              = 0,
+    .rx_bat_val               = 0,
+    .case_bat_val             = 0,
+    .tx1_vu                   = 0,
+    .tx2_vu                   = 0,
+    .tx1_signal               = 0,
+    .tx2_signal               = 0,
+    .tx_noise_level           = 4,
+    .tx1_line_out_volume      = 0,
+    .tx2_line_out_volume      = 0,
+    .mono_line_out_volume     = 0,
+    .uac_in_volume            = 0,
+    .uac_out_volume           = 0,
+    .tx1_gain_volume          = 0,
+    .tx2_gain_volume          = 0,
+    .led_britness             = 127,
+    .tx1_remained_record_time = 10,
+    .tx2_remained_record_time = 10,
+    .ota_upgrade_progress     = 0,
+    .tx1_ver                  = "V0.0.0.0",
+    .tx2_ver                  = "V0.0.0.0",
+    .rx_ver                   = A6902_VERSION,
+    .sn                       = "00000000000000000000",
+
+    .sys_status = { 0 },
+    .systime    = { 2022, 12, 16, 0, 0 },
+};
+// 參數變更信息
+static hl_display_screen_change_s change_flag = { 0 };
 // 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
@@ -66,7 +102,9 @@ static uint8_t now_center_icon = 0;
 
 static hl_display_msg_t hl_display_msg = { 0 };
 // 返回触摸按键消抖时间
-hl_timeout_t backtouchkey_debance;
+static hl_timeout_t backtouchkey_debance;
+
+
 
 // 获取当前页面
 hl_screen_page_e hl_mod_display_scr_get_page(void)
@@ -132,6 +170,10 @@ uint8_t hl_mod_keypad_touchkey_read()
                     press    = 1;
                     last_key = 0;
                     hl_util_timeout_close(&backtouchkey_debance);
+                } else {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_key = 0;
+                    press    = 0;
                 }
             } else {
                 // 出现上升沿，则清定时器
@@ -494,6 +536,8 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+
+
 
 void hl_mod_page_cb_reg(void)
 {

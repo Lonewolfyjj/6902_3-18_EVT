@@ -52,6 +52,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("in box!");
         } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
+            bat_soc_temp = tx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
         case HL_GET_PAIR_MAC_REQ_IND: {  // 请求获取已经配对的mac地址
@@ -66,6 +67,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
+            charge_state_temp = tx_info.charge_flag + 1;
             hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
         } break;
         default:
@@ -98,6 +100,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("in box!");
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
+            bat_soc_temp = rx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
         case HL_TX1_BAT_INFO_UPDATE_IND: {  //更新tx1电池电量
@@ -150,6 +153,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("Tx2 pair result:%d!", tx2_pair_result_temp);
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  //请求获取充电状态
+            charge_state_temp = rx_info.charge_flag + 1;
             hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
         } break;
         case HL_TX1_CHARGE_STATE_IND: {  //更新Tx1的充电状态

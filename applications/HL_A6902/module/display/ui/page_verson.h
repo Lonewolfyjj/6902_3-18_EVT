@@ -10,6 +10,7 @@ typedef enum _hl_verson_mid_opt_t
     HL_VERSON_OPTION_ONE = 0,
     HL_VERSON_OPTION_TWO,
     HL_VERSON_OPTION_THREE,
+    HL_VERSON_OPTION_DEL_STYLE,
     HL_VERSON_OPTION_EXTI
 }hl_verson_mid_opt_t;
 

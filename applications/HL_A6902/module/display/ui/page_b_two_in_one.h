@@ -15,6 +15,7 @@ typedef enum _hl_b_two_in_one_choose_t
 {
     HL_B_TWO_ONE_CHOOSE_LEFT = 0,
     HL_B_TWO_ONE_CHOOSE_RIGHT,
+    HL_B_TWO_ONE_CHOOSE_DEL_STYLE,
     HL_B_TWO_ONE_CHOOSE_EXIT
 }hl_b_two_in_one_choose_t;
 

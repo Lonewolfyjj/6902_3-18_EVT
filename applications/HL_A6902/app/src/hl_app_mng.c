@@ -162,8 +162,14 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
     hl_mod_apple_auth_init(&hl_app_mq);
+    hl_mod_apple_auth_start();
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
+
+#if HL_IS_TX_DEVICE()
+#else
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &rx_info.cur_volume_r, 2);
+#endif
 }
 
 // 关机，去初始化模块

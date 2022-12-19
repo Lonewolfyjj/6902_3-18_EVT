@@ -15,6 +15,7 @@ typedef enum _hl_storage_choose_t
 {
     HL_STORAGE_CHOOSE_LEFT = 0,
     HL_STORAGE_CHOOSE_RIGHT,
+    HL_STORAGE_CHOOSE_DEL_STYLE,
     HL_STORAGE_CHOOSE_EXIT
 }hl_storage_choose_t;
 

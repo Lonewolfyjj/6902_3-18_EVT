@@ -135,17 +135,18 @@ static uint8_t uart_hup_buf[HL_MOD_EUC_UART_HUP_BUFSZ] = { 0 };
 static uint8_t hid_hup_buf[HL_MOD_EUC_HID_HUP_BUFSZ]   = { 0 };
 
 #if HL_IS_TX_DEVICE() == 1
-
+//tx
 static uint8_t rx_mac_addr[6] = { 0 };
 
 #else
-
+//rx
 static uint8_t tx1_mac_addr[6] = { 0 };
 static uint8_t tx2_mac_addr[6] = { 0 };
 
 static hl_mod_euc_rtc_st _rtc_time_box = { 0 };
 static hl_mod_euc_rtc_st _rtc_time_rx  = { 0 };
 
+static bool _record_hid_cmd_send_flag = false;
 #endif
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -510,11 +511,40 @@ static void _hid_data_process()
     }
 }
 
+#if HL_IS_TX_DEVICE() == 1
+
+#else
+static void _record_hid_cmd_send_poll(void)
+{
+    char buf_send[2];
+
+    if (_record_hid_cmd_send_flag == true) {
+        buf_send[0] = 0x04;
+        buf_send[1] = 0x20;
+        rt_device_write(_euc_mod.hid_dev, 0, buf_send, sizeof(buf_send));
+
+        rt_thread_mdelay(10);
+
+        buf_send[0] = 0x04;
+        buf_send[1] = 0x00;
+        rt_device_write(_euc_mod.hid_dev, 0, buf_send, sizeof(buf_send));
+
+        _record_hid_cmd_send_flag = false;
+    }
+}
+#endif
+
 static void _euc_thread_entry(void* arg)
 {
     while (_euc_mod.thread_exit_flag == 0) {
         uart_data_process();
         _hid_data_process();
+
+#if HL_IS_TX_DEVICE() == 1
+
+#else
+        _record_hid_cmd_send_poll();
+#endif
 
         rt_thread_mdelay(10);
     }
@@ -698,7 +728,6 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 {
     uint8_t dev_num;
     uint8_t charge_state;
-    char    buf_send[2];
 
     if (_euc_mod.init_flag == false) {
         LOG_E("euc not init!");
@@ -754,9 +783,7 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             rt_memcpy(&_rtc_time_rx, arg, arg_size);
         } break;
         case HL_HID_START_RECORD_CMD: {
-            buf_send[0] = 0x04;
-            buf_send[1] = 0x06;
-            rt_device_write(_euc_mod.hid_dev, 0, buf_send, sizeof(buf_send));
+            _record_hid_cmd_send_flag = true;
         } break;
         default:
             break;

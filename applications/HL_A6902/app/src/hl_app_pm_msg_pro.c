@@ -52,8 +52,8 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         state               = 1;
     } else if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
         LOG_D("charge done!");
-        tx_info.charge_flag = 0;
-        state               = 0;
+        tx_info.charge_flag = 2;
+        state               = 2;
     }
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, 1);
 #else
@@ -67,8 +67,8 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         state               = 1;
     } else if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
         LOG_D("charge done!");
-        rx_info.charge_flag = 0;
-        state               = 0;
+        rx_info.charge_flag = 2;
+        state               = 2;
     }
     hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &state, 1);
 #endif
