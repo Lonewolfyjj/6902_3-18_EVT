@@ -511,6 +511,9 @@ static void _hid_data_process()
     }
 }
 
+#if HL_IS_TX_DEVICE() == 1
+
+#else
 static void _record_hid_cmd_send_poll(void)
 {
     char buf_send[2];
@@ -529,6 +532,7 @@ static void _record_hid_cmd_send_poll(void)
         _record_hid_cmd_send_flag = false;
     }
 }
+#endif
 
 static void _euc_thread_entry(void* arg)
 {
@@ -536,7 +540,11 @@ static void _euc_thread_entry(void* arg)
         uart_data_process();
         _hid_data_process();
 
+#if HL_IS_TX_DEVICE() == 1
+
+#else
         _record_hid_cmd_send_poll();
+#endif
 
         rt_thread_mdelay(10);
     }

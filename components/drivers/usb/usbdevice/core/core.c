@@ -214,7 +214,7 @@ static rt_err_t _get_descriptor(struct udevice* device, ureq_t setup)
             _get_config_descriptor(device, setup);
             break;
         default:
-            rt_kprintf("unsupported descriptor request\n");
+            rt_kprintf("unsupported descriptor request(0x%02x)\n", (setup->wValue >> 8));
             rt_usbd_ep0_set_stall(device);
             break;
         }

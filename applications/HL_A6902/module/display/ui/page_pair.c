@@ -130,11 +130,11 @@ static void bt2_cb(lv_event_t * e)
 
 static void lv_page_4_init(void)
 {
-    static lv_style_t style;
-    lv_style_init(&style);
-    lv_style_set_bg_color(&style, lv_color_black());
-    lv_style_set_border_width(&style, 0);
-    lv_obj_add_style(lv_scr_act(), &style, 0);
+    // static lv_style_t style;
+    // lv_style_init(&style);
+    // lv_style_set_bg_color(&style, lv_color_black());
+    // lv_style_set_border_width(&style, 0);
+    //lv_obj_add_style(lv_scr_act(), &style, 0);
 
     btn1 = lv_btn_creat_fun(bt1_cb,6,-6,138,54,0);
     btn2 = lv_btn_creat_fun(bt2_cb,150,-6,138,54,1);

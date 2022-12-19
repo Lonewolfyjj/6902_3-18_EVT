@@ -30,7 +30,7 @@
 /* 看门狗设备名称 */
 #define WDT_DEVICE_NAME "dw_wdt"
 /* 看门狗超时 单位：秒 */
-#define WDT_DEVICE_TIMEOUT 1
+#define WDT_DEVICE_TIMEOUT 21
 
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
