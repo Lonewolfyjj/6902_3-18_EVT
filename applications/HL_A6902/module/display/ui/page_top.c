@@ -84,9 +84,9 @@ static icon_pos_t icon_list_l[ICON_NUM] = {
 };
 
 static icon_pos_t icon_list_r[ICON_NUM] = {
-    { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_line_in },
-    { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_usb_c },
-    { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_heatset },
+    { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_line_in },
+    { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_usb_c },
+    { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_heatset },
 };
 
 static uint8_t icon_pos_judge(uint8_t icon_pos, icon_pos_t* icon_list, uint8_t cmd_typ)
@@ -113,12 +113,14 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
 {
     uint8_t  i, is_used = 0;
     uint8_t  icon_pos, icon_ar[ICON_NUM];
-    uint16_t icon_offset;
+    int16_t icon_offset,ori;
     if (icon_typ == ICON_POS_LIFT) {
         icon_offset = 0;
+        ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = 160;
+        icon_offset = -70;
+        ori = -1;
     }
 
     for (i = 0; i < ICON_NUM; i++) {
@@ -141,7 +143,7 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
     for (i = icon_pos + 1; i < is_used; i++) {
         icon_list[icon_ar[i]].cur_pos -= 1;
         lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
-                     icon_list[icon_ar[i]].cur_pos * 20 + icon_offset, ICON_POS_VOR);
+                     icon_list[icon_ar[i]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
     }
     lv_obj_del(icon_list[duf_pos].icon);
     icon_list[duf_pos].cur_pos = POSTION_IS_NULL;
@@ -151,12 +153,14 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
 {
     uint8_t  i, j, is_used = 0, new_f = 1;
     uint8_t  icon_ar[ICON_NUM];
-    uint16_t icon_offset;
+    int16_t icon_offset,ori;
     if (icon_typ == ICON_POS_LIFT) {
         icon_offset = 0;
+        ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = 160;
+        icon_offset = -70;
+        ori = -1;
     }
 
     for (i = 0; i < ICON_NUM; i++) {
@@ -180,18 +184,18 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         } else {
             new_f           = 0;
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
-            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 + icon_offset, ICON_POS_VOR);
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
             for (j = i; j < is_used; j++) {
                 icon_list[icon_ar[j]].cur_pos += 1;
                 lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
-                             icon_list[icon_ar[j]].cur_pos * 20 + icon_offset, ICON_POS_VOR);
+                             icon_list[icon_ar[j]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
             }
             return;
         }
     }
     if (new_f) {
         icon[0].cur_pos = is_used;
-        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 + icon_offset, ICON_POS_VOR);
+        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
     }
 }
 
