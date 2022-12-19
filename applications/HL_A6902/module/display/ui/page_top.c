@@ -72,7 +72,7 @@ static HL_DISPLAY_TOP_T top_icon_sta = {
     .voice   = 0,
 };
 
-static lv_style_t style_power_bar_indicator, style_power_bar_main;
+static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main;
 static lv_style_t style_power_label;
 
 static lv_obj_t *bat_icon, *bat_bar, *bat_label;
@@ -143,9 +143,8 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
         lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
                      icon_list[icon_ar[i]].cur_pos * 20 + icon_offset, ICON_POS_VOR);
     }
-    // printf("icon_pos = %d\n",icon_pos);
     lv_obj_del(icon_list[duf_pos].icon);
-    icon_list[icon_pos].cur_pos = POSTION_IS_NULL;
+    icon_list[duf_pos].cur_pos = POSTION_IS_NULL;
 }
 
 static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t icon_typ)
@@ -210,16 +209,22 @@ static void hl_mod_creat_top_icon(icon_pos_t* icon_data, icon_pos_t* icon_list, 
 
 static void lv_style_page_top_init(void)
 {
+    lv_obj_enable_style_refresh(true);
     // static lv_style_t style;
     // lv_style_init(&style);
     // lv_style_set_bg_color(&style, lv_color_black());
     // lv_style_set_border_width(&style, 0);
     //lv_obj_add_style(lv_scr_act(), &style, 0);
 
-    lv_style_init(&style_power_bar_indicator);
-    lv_style_set_bg_opa(&style_power_bar_indicator, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_power_bar_indicator, lv_color_white());
-    lv_style_set_radius(&style_power_bar_indicator, 0);
+    lv_style_init(&style_power_bar_white_indicator);
+    lv_style_set_bg_opa(&style_power_bar_white_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_white_indicator, lv_color_white());
+    lv_style_set_radius(&style_power_bar_white_indicator, 0);
+
+    lv_style_init(&style_power_bar_green_indicator);
+    lv_style_set_bg_opa(&style_power_bar_green_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_green_indicator, lv_palette_main(LV_PALETTE_GREEN));
+    lv_style_set_radius(&style_power_bar_green_indicator, 0);
 
     lv_style_init(&style_power_bar_main);
     lv_style_set_bg_opa(&style_power_bar_main, LV_OPA_TRANSP);
@@ -237,7 +242,7 @@ static lv_obj_t* lv_power_bar_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset
 {
     lv_obj_t* bar = lv_bar_create(align_obj);
     lv_obj_add_style(bar, &style_power_bar_main, LV_PART_MAIN);
-    lv_obj_add_style(bar, &style_power_bar_indicator, LV_PART_INDICATOR);
+    lv_obj_add_style(bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
     lv_obj_set_size(bar, width, high);
     lv_obj_align_to(bar, align_obj, LV_ALIGN_LEFT_MID, x_offset, y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
@@ -354,7 +359,8 @@ static void hl_obj_delete(lv_obj_t* obj, bool obj_typ)
 
 static void lv_delete_style(void)
 {
-    lv_style_reset(&style_power_bar_indicator);
+    lv_style_reset(&style_power_bar_green_indicator);
+    lv_style_reset(&style_power_bar_white_indicator);
     lv_style_reset(&style_power_bar_main);
     lv_style_reset(&style_power_label);
 }
@@ -436,6 +442,16 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_bar_set_value(bat_bar, ptr->electric_top, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
             lv_label_set_text(bat_label, buf);
+            break;
+
+        case HL_TOP_BAT_COLOR_GREEN:
+            lv_obj_remove_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
+            break;
+
+        case HL_TOP_BAT_COLOR_WHITE:
+            lv_obj_remove_style(bat_bar,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(bat_bar,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             break;
 
         case HL_TOP_ALL_DEL:

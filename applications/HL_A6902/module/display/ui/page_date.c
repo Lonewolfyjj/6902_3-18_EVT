@@ -7,6 +7,24 @@
 #define ROLLER_HOUR  198
 #define ROLLER_MIN  296
 
+//时间结构体
+typedef struct _hl_calendar_t
+{
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;			
+	//公历日月年周
+	uint16_t w_year;
+	uint8_t  w_month;
+	uint8_t  w_date;
+	uint8_t  week;		 
+}hl_calendar_t;	
+
+
+static hl_calendar_t calendar;	//日历结构体
+//平年的月份日期表
+static uint8_t mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+
 static uint8_t date_year[256];
 static uint8_t date_month[300];
 static uint8_t date_day[256];
