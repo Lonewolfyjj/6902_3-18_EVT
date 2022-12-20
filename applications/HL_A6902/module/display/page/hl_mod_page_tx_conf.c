@@ -37,7 +37,7 @@
 #include "lvgl.h"
 #include "rtthread.h"
 #include "hl_mod_page.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 #include "page_menu.h"
 
 #define MENU_ICON_NUM 7

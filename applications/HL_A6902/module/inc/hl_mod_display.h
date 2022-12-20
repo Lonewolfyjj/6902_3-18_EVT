@@ -122,6 +122,10 @@ typedef enum _hl_screen_page_e
     PAGE_TX_CONF_MENU,
     /// TX增益调节页面
     PAGE_TX_GAIN_CONF,
+    /// TX1增益设置界面
+    PAGE_TX_GAIN_TX1,
+    /// TX2增益设置界面
+    PAGE_TX_GAIN_TX2,
     /// 低切配置
     PAGE_TX_LOW_CUT,
     /// 自动录制
@@ -168,10 +172,12 @@ typedef enum _hl_screen_page_e
     PAGE_FAST_TX_CONFIG,
     /// 单声道 立体声选择界面
     PAGE_SOUND_MODULE,
-    // //// 快捷LINE OUT输出音量页面(安全音轨)
+    //// 快捷LINE OUT输出音量页面(安全音轨)
     // PAGE_LINE_OUT_SAFE_TRACK,
-    // /// 快捷LINE OUT输出音量页面(立体声)
-    // PAGE_LINE_OUT_STEREO,
+    /// 快捷LINE OUT输出音量页面(立体声，左声道)
+    PAGE_LINE_OUT_STEREO_LEFT,
+    /// 快捷LINE OUT输出音量页面(立体声,右声道)
+    PAGE_LINE_OUT_STEREO_RIGHT,
     // /// 快捷LINE OUT输出音量页面(单声道)
     // PAGE_LINE_OUT_MONO,
     // LINE OUT快捷设置
@@ -290,6 +296,8 @@ typedef enum _hl_out_msg_e
     /// 监听设置 见枚举：hl_display_voice_monitor_e
     MONITOR_CATEGORY_VAL_IND, 
 
+    /// UAC 输出音量设置
+    UAC_OUT_VOLUME_VAL_IND,
     /// LINE_OUT音频音量 int8_t
     LINE_OUT_VOLUME_VAL_IND,
 

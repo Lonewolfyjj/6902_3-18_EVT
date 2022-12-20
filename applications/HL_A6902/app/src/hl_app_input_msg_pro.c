@@ -34,6 +34,7 @@
 #include "hl_mod_telink.h"
 #include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
+#include "hl_util_general_type.h"
 
 #define DBG_SECTION_NAME "app_input"
 #define DBG_LEVEL DBG_LOG

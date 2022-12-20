@@ -40,33 +40,34 @@
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "page_test.h"
-#include "page_menu.h"
-#include "hl_mod_input.h"
-
+#include "hl_util_general_type.h"
+#include "hl_mod_page_volume_bar_set.h"
 
 LV_IMG_DECLARE(Other_mic_black);
-
-static void hl_bar_test_cb(int16_t bar_num)
-{
-    printf("bar_num = %d\n", bar_num);
-}
 
 //UAC输入音量设置界面
 static void page_uac_out_init(void)
 {
-    hl_lvgl_barset_init_t bar_test = 
-    {
-        .func_cb = hl_bar_test_cb,
-        .icontyp = HL_NO_ICON,
-        .init_value = -16,
-        .ptr = "UAC输出音量",
-        .range_max = 40,
-        .range_min = -60,
-        .src = &Other_mic_black,
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    // 设置当前音量
+    hl_mod_page_volume_init(data->uac_out_volume);
+
+    hl_lvgl_barset_init_t bar_test = {
+        .func_cb    = hl_mod_page_volume_update,
+        .icontyp    = HL_NO_ICON,
+        .init_value = hl_mod_page_volume_get(),
+        .ptr        = "UAC输出音量",
+        .range_max  = MAX_LINEOUT_VOLUME,
+        .range_min  = MIN_LINEOUT_VOLUME,
+        .src        = &Other_mic_black,
     };
     hl_mod_barset_init(&bar_test);
 }
 
+static void page_voc_bar_tx1_init(void)
+{
+    page_uac_out_init();
+}
 
 static void hl_mod_page_setup(void)
 {
@@ -75,26 +76,28 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_barset_ioctl_t ctl = {
-        .barset_value = HL_EXTI,
-    };
-    hl_mod_barset_ioctl(&ctl);
-    ctl.barset_value = HL_DELETE_STYLE;
-    hl_mod_barset_ioctl(&ctl);
+    hl_mod_page_volume_exit();
+}
+
+static void save_before_back(void)
+{
+    hl_display_screen_s* ptr = hl_mod_page_get_screen_data_ptr();
+
+    ptr->uac_out_volume = hl_mod_page_volume_get();
+    LOG_D("vol=[%d]\n", ptr->uac_out_volume);
 }
 
 static void hl_mod_page_loop(void)
 {
-    // 返回按键
-    hl_mod_menu_backbtn_scan();
+    hl_mod_page_volume_loop(UAC_OUT_VOLUME_VAL_IND, save_before_back);
 }
 
 PAGE_DEC(PAGE_UACOUT_VOLUME_SET)
 {
     bool result;
 
-    result     = PageManager_PageRegister(PAGE_UACOUT_VOLUME_SET, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
-                                      NULL);
+    result =
+        PageManager_PageRegister(PAGE_UACOUT_VOLUME_SET, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
 
     if (result == false) {
         LV_LOG_USER("PAGE_UACOUT_VOLUME_SET init fail\n");

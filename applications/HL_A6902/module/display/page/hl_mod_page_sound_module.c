@@ -33,7 +33,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/

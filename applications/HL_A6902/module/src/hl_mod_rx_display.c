@@ -66,16 +66,7 @@ static hl_timeout_t sensor_debance;
 
 static rt_thread_t display_tid = RT_NULL;
 
-typedef struct _hl_display_msg_t
-{
-    /// 消息队列句柄
-    rt_mq_t msg_hander;
-    ///  消息
-    mode_to_app_msg_t msg;
 
-} hl_display_msg_t;
-
-static hl_display_msg_t hl_mod_display;
 
 static void hl_mod_screen_rot_scan(void);
 
@@ -119,11 +110,11 @@ static void hl_mod_display_data_init(void)
      now->tx1_remained_record_time = 10;
      now->tx2_remained_record_time = 10;
      now->ota_upgrade_progress = 0;
-     //后续要改
-     rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
-     rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
-     rt_sprintf(now->tx2_ver,"%s","V0.0.0.0");
-     rt_sprintf(now->sn,"%s","00000000000000000000");
+    //  //后续要改
+    //  rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
+    //  rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
+    //  rt_sprintf(now->tx2_ver,"%s","V0.0.0.0");
+    //  rt_sprintf(now->sn,"%s","00000000000000000000");
     //  now->sn[36]; 0
     //  now->device_fault_code[20]; 0
      now->sys_status.auto_record = 0;
@@ -403,12 +394,9 @@ uint8_t hl_mod_display_init(void* display_msq)
 {
     uint32_t frambufferaddr;
 
-    if (display_msq == NULL) {
-        LOG_E("msghander err!");
-        return HL_DISPLAY_FAILED;
-    }
 
-    hl_mod_display.msg_hander = (rt_mq_t)display_msq;
+    hl_mod_display_msq_set((rt_mq_t)display_msq);
+    
 
     hl_drv_aw2016a_deinit();
     // hl_drv_aw2016a_init();

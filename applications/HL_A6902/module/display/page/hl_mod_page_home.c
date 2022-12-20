@@ -32,7 +32,7 @@
 #include "hl_mod_page.h"
 #include "page_test.h"
 #include "page_top.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 #include "lv_port_indev.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
@@ -707,7 +707,7 @@ static void hl_mod_page_run(void)
     hl_mod_menu_goto_fast_config_scan();
 
     // 快捷设置
-    // hl_mod_menu_goto_quickset_scan();
+    hl_mod_menu_goto_quickset_scan();
 
     // 菜单的页面更新
     hl_mod_page_home_update();

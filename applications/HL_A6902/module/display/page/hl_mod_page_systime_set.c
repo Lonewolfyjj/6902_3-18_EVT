@@ -42,7 +42,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "page_date.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 
 //时间设置界面

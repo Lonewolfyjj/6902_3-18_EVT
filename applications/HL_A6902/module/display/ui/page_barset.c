@@ -136,9 +136,10 @@ void hl_mod_barset_ioctl(void * ctl_data)
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_barset_ioctl_t * ptr = (hl_lvgl_barset_ioctl_t *)ctl_data;
     if(ptr->barset_value == HL_VALUE){
-        lv_snprintf(buf, sizeof(buf), "%d", ptr->barset_value);
-        lv_slider_set_value(slider1, ptr->barset_value, LV_ANIM_ON);
-        lv_label_set_text(lab2, ptr);
+        lv_snprintf(buf, sizeof(buf), "%d", ptr->value);
+        lv_slider_set_value(slider1, ptr->value, LV_ANIM_ON);
+        lv_label_set_text(lab2,buf);
+        hl_barset_func(ptr->value);
     }
     if(ptr->barset_value == HL_EXTI){
         hl_obj_delete(lv_scr_act(),false);        

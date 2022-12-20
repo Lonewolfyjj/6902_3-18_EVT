@@ -40,7 +40,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 //录制开关、静音、降噪开关界面
 static void hl_moreone_test_cb(hl_storage_check_t event_num)

@@ -40,7 +40,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 //亮度调节界面
 LV_IMG_DECLARE(Other_led_high_black);// 11

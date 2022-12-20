@@ -1,9 +1,9 @@
 /**
- * @file hl_mod_page_pair.c
+ * @file hl_mod_page_tx2gain_set.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 配对页面
+ * @brief 
  * @version V1.0
- * @date 2022-12-13
+ * @date 2022-12-20
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,10 +16,10 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-12-13     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2022-12-20     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
- */
+ */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -30,72 +30,70 @@
 /*
  * EOF
  */
-
 #include "hl_mod_page_common.h"
 
 #if (!HL_IS_TX_DEVICE())
 #include "hl_mod_display.h"
+#include "hl_util_general_type.h"
 #include "lvgl.h"
-
+#include "hl_util_timeout.h"
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "page_test.h"
-#include "page_menu.h"
-#include "hl_util_general_type.h"
+#include "hl_mod_page_volume_bar_set.h"
 
-//配对界面
-static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
+LV_IMG_DECLARE(Other_voice);
+LV_IMG_DECLARE(Other_mic_black);
+
+static void page_voc_bar_tx2_init(void)
 {
-    printf("event_num = %d\n", event_num);
-}
-static void pair_test(void)
-{
-    hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
-        .func_cb             = hl_pair_test_cb,
-        .ptr_lift            = "取消",
-        .ptr_right           = "确定",
-        .ptr_top             = "是否进入配对",
-        .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
-    };
-    hl_mod_s_two_in_one_init(&s_two_in_one_test);
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    // 设置当前音量
+    hl_mod_page_volume_init(data->tx2_gain_volume);
 
-    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl = {
-        .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
+    hl_lvgl_barset_init_t bar_test = {
+        .func_cb    = hl_mod_page_volume_update,
+        .icontyp    = HL_NO_ICON,
+        .init_value = hl_mod_page_volume_get(),
+        .ptr        = "TX2",
+        .range_max  = MAX_LINEOUT_VOLUME,
+        .range_min  = MIN_LINEOUT_VOLUME,
+        .src        = &Other_mic_black,
     };
-
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    hl_mod_barset_init(&bar_test);
 }
 
 static void hl_mod_page_setup(void)
 {
-    pair_test();
+    page_voc_bar_tx2_init();
 }
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl = {
-        .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_EXIT,
-    };
+    hl_mod_page_volume_exit();
+}
 
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
-    s_two_in_one_test_ctl.s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+static void save_before_back(void)
+{
+    hl_display_screen_s* ptr = hl_mod_page_get_screen_data_ptr();
+    
+    ptr->tx2_gain_volume     = hl_mod_page_volume_get();
+    LOG_D("vol=[%d]\n", ptr->tx2_gain_volume);
 }
 
 static void hl_mod_page_loop(void)
 {
-    // 返回按键
-    hl_mod_menu_backbtn_scan();
+    hl_mod_page_volume_loop(TX2_GAIN_VAL_IND, save_before_back);
 }
 
-PAGE_DEC(PAGE_PAIR)
+PAGE_DEC(PAGE_TX_GAIN_TX2)
 {
     bool result;
 
-    result = PageManager_PageRegister(PAGE_PAIR, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
+    result = PageManager_PageRegister(PAGE_TX_GAIN_TX2, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
 
     if (result == false) {
-        LV_LOG_USER("PAGE_PAIR init fail\n");
+        LV_LOG_USER("PAGE_LINE_OUT_STEREO_LEFT init fail\n");
     }
 }
 

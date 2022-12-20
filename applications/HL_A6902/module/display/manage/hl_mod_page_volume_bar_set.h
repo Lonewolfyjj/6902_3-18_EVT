@@ -1,9 +1,9 @@
 /**
- * @file hl_util_general_type.h
- * @author luzhanghao (rd14@hollyland-tech.com)
+ * @file hl_mod_page_volume_bar_set.h
+ * @author liujie (jie.liu@hollyland-tech.com)
  * @brief 
  * @version V1.0
- * @date 2022-11-14
+ * @date 2022-12-20
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,69 +16,37 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
+ * <tr><td>2022-12-20     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HL_UTIL_GENERAL_TYPE__
-#define __HL_UTIL_GENERAL_TYPE__
+#ifndef _HL_MOD_PAGE_VOLUME_BAR_SET_H__
+#define _HL_MOD_PAGE_VOLUME_BAR_SET_H__
+
+
+#include "rtdef.h"
+#include "hl_mod_display.h"
+
+#define MAX_LINEOUT_VOLUME 18
+#define MIN_LINEOUT_VOLUME -18
+
+#define AUTO_GOTO_HOME_TIMER 5000
+
+#define AUTO_SILDER_TRG_TIME 1000
 
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
-#ifndef HL_ENUM8
-#define HL_ENUM8(EnumName) \
-    Enum_##EnumName;       \
-    typedef uint8_t EnumName
-#endif
-
-#ifndef HL_ENUM16
-#define HL_ENUM16(EnumName) \
-    Enum_##EnumName;        \
-    typedef uint16_t EnumName
-#endif
-
-typedef enum _hl_switch_e
-{
-    /// 关闭
-    HL_SWITCH_OFF = 0x00,
-    /// 打开
-    HL_SWITCH_ON,  
-} HL_ENUM8(hl_switch_e);
-
-typedef enum _hl_rf_state_e
-{
-    /// 无配对设备
-    HL_RF_UNCONNECT = 0x00,
-    /// 左声道已配对
-    HL_RF_L_CONNECT,
-    /// 右声道已配对
-    HL_RF_R_CONNECT,
-    /// 左右声道已配对
-    HL_RF_LR_CONNECT,
-    /// 正在配对中
-    HL_RF_PAIRING,
-} HL_ENUM8(hl_rf_state_e);
-
-typedef enum _hl_key_event_e
-{
-    HL_KEY_EVENT_IDLE = 0x00,
-    /// 按键按下
-    HL_KEY_EVENT_PRESS,
-    /// 短按
-    HL_KEY_EVENT_SHORT,
-    /// 长按
-    HL_KEY_EVENT_LONG,
-    ///  双击
-    HL_KEY_EVENT_DOUBLE,
-    /// 长按后释放
-    HL_KEY_EVENT_RELEASE,
-} HL_ENUM8(hl_key_event_e);
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-
+void hl_mod_page_volume_init(int16_t volume);
+void hl_mod_page_volume_exit(void);
+void hl_mod_page_volume_update(int16_t volume);
+void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void));
+int16_t hl_mod_page_volume_get(void);
+uint8_t hl_mod_page_volume_send(hl_out_msg_e msg_cmd,int16_t *get_data);
 #endif
 /*
  * EOF
