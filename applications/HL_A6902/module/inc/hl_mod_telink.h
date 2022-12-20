@@ -62,7 +62,9 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_RECORD_CMD = 0x23,
     /// 透传设置状态：类型hl_rf_bypass_info_t
     HL_RF_BYPASS_SETTING_CMD = 0x24,
-} hl_mod_telink_ctrl_cmd;
+    /// 透传电量信息：类型hl_rf_bypass_value_t
+    HL_RF_BYPASS_BATTERY_CMD = 0x25,
+} HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
 {
@@ -90,7 +92,9 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_RECORD_IND = 0x23,
     /// 返回设置状态：类型hl_rf_bypass_info_t
     HL_RF_BYPASS_SETTING_IND = 0x24,
-} hl_mod_telink_ctrl_ind;
+    /// 返回电量信息：类型hl_rf_bypass_value_t
+    HL_RF_BYPASS_BATTERY_IND = 0x25,
+} HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_channel_e
 {
@@ -98,7 +102,7 @@ typedef enum _hl_rf_channel_e
     HL_RF_LEFT_CHANNEL = 0x00,
     /// 右声道
     HL_RF_RIGHT_CHANNEL,
-} hl_rf_channel_e;
+} HL_ENUM8(hl_rf_channel_e);
 
 typedef enum _hl_rf_onoff_e
 {
@@ -106,7 +110,7 @@ typedef enum _hl_rf_onoff_e
     HL_RF_OFF = 0x00,
     /// 开状态
     HL_RF_ON,
-} hl_rf_onoff_e;
+} HL_ENUM8(hl_rf_onoff_e);
 
 typedef enum _hl_rf_antenna_e
 {
@@ -116,7 +120,7 @@ typedef enum _hl_rf_antenna_e
     EMUN_SINGLE_L_ANTENNA,
     /// 单天线B
     EMUN_SINGLE_R_ANTENNA,
-} hl_rf_antenna_e;
+} HL_ENUM8(hl_rf_antenna_e);
 
 typedef enum _hl_rf_work_mode_e
 {
@@ -124,7 +128,7 @@ typedef enum _hl_rf_work_mode_e
     HL_RF_FULL_POWER = 0x00,
     /// 低功耗模式（关闭RF、音频功能）
     HL_RF_LOW_POWER,
-} hl_rf_work_mode_e;
+} HL_ENUM8(hl_rf_work_mode_e);
 
 typedef struct
 {
@@ -157,6 +161,14 @@ typedef struct
         uint8_t* data;
     } info;
 } hl_rf_bypass_info_t;
+
+typedef struct
+{
+    /// 透传声道
+    hl_rf_channel_e chn;
+    /// 透传数值
+    uint8_t val;
+} hl_rf_bypass_value_t;
 
 typedef struct
 {
