@@ -140,9 +140,9 @@ static device_pose_t hl_mod_device_pose_val(void)
     euler_angle_t pose;
     hl_drv_qma6100p_io_ctrl(QMA6100_GET_EULWER_ANGLE, (void*)&pose, sizeof(euler_angle_t));
     if (pose.z > 0) {
-        return 1;
+        return DEVICE_REVERSE_POSE;
     } else {
-        return 0;
+        return DEVICE_FORWARD_POSE;
     }
 }
 
