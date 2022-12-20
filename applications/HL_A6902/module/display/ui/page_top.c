@@ -9,7 +9,7 @@
  * 
  */
 #include "page_top.h"
-#include "language.h"
+// #include "language.h"
 
 #define POSTION_IS_NULL 0xFF
 
@@ -26,6 +26,8 @@ LV_IMG_DECLARE(Main_bat);      //电池图标
 LV_IMG_DECLARE(Main_line_in);  //耳机插入
 LV_IMG_DECLARE(Main_usb_c);    //USB插入
 LV_IMG_DECLARE(Main_stereo);   //立体声
+LV_IMG_DECLARE(Main_saft_track);   //安全音轨
+LV_IMG_DECLARE(Main_single_voice);   //单声道
 LV_IMG_DECLARE(Main_lock);     //锁屏
 LV_IMG_DECLARE(Main_heatset);  //监听
 LV_IMG_DECLARE(Main_noise);    //降噪
@@ -37,17 +39,9 @@ LV_IMG_DECLARE(Main_noise);    //降噪
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
 
-/*
-    HL_TOP_ICON_VOICE_MOD = 0,
-    HL_TOP_ICON_NOISE,
-    HL_TOP_ICON_LOCK,
-    HL_TOP_ICON_LINEOUT,
-    HL_TOP_ICON_TYPEC,
-    HL_TOP_ICON_HEATSET,
-*/
 typedef struct _HL_DISPLAY_TOP_T
 {
-    uint8_t voice : 1;  //
+    uint8_t voice_mod : 1;  //
 
     uint8_t noise : 1;  //
 
@@ -69,7 +63,7 @@ static HL_DISPLAY_TOP_T top_icon_sta = {
     .lock    = 0,
     .noise   = 0,
     .typec   = 0,
-    .voice   = 0,
+    .voice_mod   = 0,
 };
 
 static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main;
@@ -119,7 +113,7 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
         ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = -70;
+        icon_offset = -80;
         ori = -1;
     }
 
@@ -159,7 +153,7 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = -70;
+        icon_offset = -80;
         ori = -1;
     }
 
@@ -275,29 +269,26 @@ static lv_obj_t* lv_power_lab_creat_fun(lv_obj_t* src_obj, lv_obj_t* align_obj, 
     return lab;
 }
 
-// static void lv_creat_top_bat_icon(void)
-// {
-//     bat_icon = lv_power_img_creat_fun(lv_scr_act(),0,0,256);
-//     bat_bar = lv_power_bar_creat_fun(bat_icon,2,0,22,10,100);
-//     bat_label = lv_power_lab_creat_fun(lv_scr_act(),bat_bar,bat_bar,-6,0);
-// }
-/*
-    hl_mod_creat_top_icon(&icon_list_l[0],icon_list_l,ICON_POS_LIFT);
-    hl_mod_creat_top_icon(&icon_list_l[1],icon_list_l,ICON_POS_LIFT);
-    hl_mod_creat_top_icon(&icon_list_l[2],icon_list_l,ICON_POS_LIFT);
-    hl_mod_creat_top_icon(&icon_list_r[0],icon_list_r,ICON_POS_RIGHT);
-    hl_mod_creat_top_icon(&icon_list_r[1],icon_list_r,ICON_POS_RIGHT);
-    hl_mod_creat_top_icon(&icon_list_r[2],icon_list_r,ICON_POS_RIGHT);
-*/
 static void hl_add_top_icon(hl_top_icon_t icon)
 {
     switch (icon) {
-        case HL_TOP_ICON_VOICE_MOD:
-            if(top_icon_sta.voice == 1){
-                rt_kprintf("Top voice is exist!\n");
+        case HL_TOP_ICON_STEREO_MOD://
+        case HL_TOP_ICON_SINGLE_MOD://
+        case HL_TOP_ICON_TRACK_MOD://
+            if(top_icon_sta.voice_mod == 1){
+                rt_kprintf("voice_mod is exist!\n");
                 return ;
             }
-            top_icon_sta.voice = 1;
+            top_icon_sta.voice_mod = 1;
+            if(icon == HL_TOP_ICON_STEREO_MOD){
+                icon_list_l[0].icon_data = &Main_stereo;
+            }
+            if(icon == HL_TOP_ICON_SINGLE_MOD){
+                icon_list_l[0].icon_data = &Main_single_voice;
+            }
+            if(icon == HL_TOP_ICON_TRACK_MOD){
+                icon_list_l[0].icon_data = &Main_saft_track;
+            }
             hl_mod_creat_top_icon(&icon_list_l[0], icon_list_l, ICON_POS_LIFT);
             break;
         case HL_TOP_ICON_NOISE:
@@ -372,12 +363,14 @@ static void lv_delete_style(void)
 static void hl_delete_top_icon(hl_top_icon_t icon)
 {
     switch (icon) {
-        case HL_TOP_ICON_VOICE_MOD:
-            if(top_icon_sta.voice == 0){
-                rt_kprintf("Top voice is not exist!\n");
+        case HL_TOP_ICON_STEREO_MOD:
+        case HL_TOP_ICON_SINGLE_MOD:
+        case HL_TOP_ICON_TRACK_MOD:
+            if(top_icon_sta.voice_mod == 0){
+                rt_kprintf("voice_mod is not exist!\n");
                 return ;
             }
-            top_icon_sta.voice = 0;
+            top_icon_sta.voice_mod = 0;
             delete_icon_pos_set(&icon_list_l[0], icon_list_l, 0, ICON_POS_LIFT);
             icon_list_l[0].icon = NULL;
             break;
@@ -476,7 +469,7 @@ void hl_mod_top_init(void* init_data)
     lv_style_page_top_init();
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
-    bat_bar   = lv_power_bar_creat_fun(bat_icon, 2, 0, 22, 10, ptr->electric_top);
+    bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
     bat_label = lv_power_lab_creat_fun(lv_scr_act(), bat_bar, bat_bar, -6, 0);
 
     // lv_creat_top_bat_icon();

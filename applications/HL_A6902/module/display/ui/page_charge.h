@@ -31,6 +31,9 @@ typedef enum _hl_lvgl_charge_cmd_type_t
     HL_CHARGE_CHANGE_RX_ELEC,
     HL_CHARGE_CHANGE_TX2_ELEC,
 
+    HL_CHARGE_BAT_COLOR_GREEN,
+    HL_CHARGE_BAT_COLOR_WHITE,
+
     HL_CHARGE_CHANGE_DELETE_PAGE,
     HL_CHARGE_CHANGE_DELETE_STYLE
 }hl_lvgl_charge_cmd_type_t;

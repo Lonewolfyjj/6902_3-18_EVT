@@ -7,7 +7,9 @@
 
 typedef enum _hl_top_icon_t
 {
-    HL_TOP_ICON_VOICE_MOD = 0,
+    HL_TOP_ICON_STEREO_MOD = 0,
+    HL_TOP_ICON_SINGLE_MOD,
+    HL_TOP_ICON_TRACK_MOD,
     HL_TOP_ICON_NOISE,
     HL_TOP_ICON_LOCK,
     HL_TOP_ICON_LINEOUT,

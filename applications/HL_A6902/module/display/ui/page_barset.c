@@ -9,9 +9,11 @@
  * 
  */
 #include "page_barset.h"
-#include "language.h"
+// #include "language.h"
 
 LV_IMG_DECLARE(Main_stereo);//立体声
+LV_IMG_DECLARE(Main_saft_track);   //安全音轨
+LV_IMG_DECLARE(Main_single_voice);   //单声道
 
 static lv_style_t style_indicator;
 static lv_style_t style_back;
@@ -60,7 +62,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab,&style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab, ptr);
     
     lv_obj_align_to(lab, align_obj, align, x_offset, y_offset);
@@ -166,10 +168,10 @@ void hl_mod_barset_init(void * init_data)
             img2 = lv_img_creat_fun(lv_scr_act(),&Main_stereo,LV_ALIGN_TOP_LEFT,6,5);
             break;
         case HL_SAYFT_ICON:
-            img2 = lv_img_creat_fun(lv_scr_act(),&Main_stereo,LV_ALIGN_TOP_LEFT,6,5);
+            img2 = lv_img_creat_fun(lv_scr_act(),&Main_saft_track,LV_ALIGN_TOP_LEFT,6,5);
             break;
         case HL_SINGLE_ICON:
-            img2 = lv_img_creat_fun(lv_scr_act(),&Main_stereo,LV_ALIGN_TOP_LEFT,6,5);
+            img2 = lv_img_creat_fun(lv_scr_act(),&Main_single_voice,LV_ALIGN_TOP_LEFT,6,5);
             break;
         default:
             break;

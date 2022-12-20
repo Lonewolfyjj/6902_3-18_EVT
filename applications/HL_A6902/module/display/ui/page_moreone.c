@@ -9,7 +9,7 @@
  * 
  */
 #include "page_moreone.h"
-#include "language.h"
+// #include "language.h"
 
 #define MAX_OBJ_NUMBER     7
 
@@ -127,7 +127,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -296,23 +296,23 @@ static void lv_page_1_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_1 = 1;
         btn_right_1 = 0;
-        btn1_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,1);
-        btn11 = lv_btn_creat_fun(con_obj,btn1_l,LV_ALIGN_OUT_RIGHT_MID,btn11_cb,-10,0,80,54,1);
-        btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,80,54,0);
-        btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn1_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,1);
+        btn11 = lv_btn_creat_fun(con_obj,btn1_l,LV_ALIGN_OUT_RIGHT_MID,btn11_cb,-10,0,108,72,1);
+        btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,108,72,0);
+        btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
     }
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_1 = 0;
         btn_right_1 = 1;
-        btn1_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,0);
-        btn11 = lv_btn_creat_fun(con_obj,btn1_l,LV_ALIGN_OUT_RIGHT_MID,btn11_cb,-10,0,80,54,0);
-        btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,80,54,1);
-        btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,1);
+        btn1_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,0);
+        btn11 = lv_btn_creat_fun(con_obj,btn1_l,LV_ALIGN_OUT_RIGHT_MID,btn11_cb,-10,0,108,72,0);
+        btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,108,72,1);
+        btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
     }
 
     lab11 = lv_lab_creat_fun(btn11,btn11,LV_ALIGN_CENTER,0,0,"ON");
     lab12 = lv_lab_creat_fun(btn12,btn12,LV_ALIGN_CENTER,0,0,"OFF");
-    lab13 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,0,-10,"录制开关");
+    lab13 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"录制开关");
 }
 
 static void lv_page_2_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
@@ -320,23 +320,23 @@ static void lv_page_2_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_2 = 1;
         btn_right_2 = 0;
-        btn2_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,1);
-        btn21 = lv_btn_creat_fun(con_obj,btn2_l,LV_ALIGN_OUT_RIGHT_MID,btn21_cb,-10,0,80,54,1);
-        btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,80,54,0);
-        btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn2_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,1);
+        btn21 = lv_btn_creat_fun(con_obj,btn2_l,LV_ALIGN_OUT_RIGHT_MID,btn21_cb,-10,0,108,72,1);
+        btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,108,72,0);
+        btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
     }
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_2 = 0;
         btn_right_2 = 1;
-        btn2_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,0);
-        btn21 = lv_btn_creat_fun(con_obj,btn2_l,LV_ALIGN_OUT_RIGHT_MID,btn21_cb,-10,0,80,54,0);
-        btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,80,54,1);
-        btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,1);
+        btn2_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,0);
+        btn21 = lv_btn_creat_fun(con_obj,btn2_l,LV_ALIGN_OUT_RIGHT_MID,btn21_cb,-10,0,108,72,0);
+        btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,108,72,1);
+        btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
     }
 
     lab21 = lv_lab_creat_fun(btn21,btn21,LV_ALIGN_CENTER,0,0,"ON");
     lab22 = lv_lab_creat_fun(btn22,btn22,LV_ALIGN_CENTER,0,0,"OFF");
-    lab23 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,0,-10,"MUTE");
+    lab23 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"MUTE");
 }
 
 static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
@@ -344,23 +344,23 @@ static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_3 = 1;
         btn_right_3 = 0;
-        btn3_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,1);
-        btn31 = lv_btn_creat_fun(con_obj,btn3_l,LV_ALIGN_OUT_RIGHT_MID,btn31_cb,-10,0,80,54,1);
-        btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,80,54,0);
-        btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn3_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,1);
+        btn31 = lv_btn_creat_fun(con_obj,btn3_l,LV_ALIGN_OUT_RIGHT_MID,btn31_cb,-10,0,108,72,1);
+        btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,108,72,0);
+        btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
     } 
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_3 = 0;
         btn_right_3 = 1;
-        btn3_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,54,0);
-        btn31 = lv_btn_creat_fun(con_obj,btn3_l,LV_ALIGN_OUT_RIGHT_MID,btn31_cb,-10,0,80,54,0);
-        btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,80,54,1);
-        btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,1);
+        btn3_l = lv_btn_lr_creat_fun(con_obj,con_obj,LV_ALIGN_LEFT_MID,-12,13,15,72,0);
+        btn31 = lv_btn_creat_fun(con_obj,btn3_l,LV_ALIGN_OUT_RIGHT_MID,btn31_cb,-10,0,108,72,0);
+        btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,108,72,1);
+        btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
     }    
 
     lab31 = lv_lab_creat_fun(btn31,btn31,LV_ALIGN_CENTER,0,0,"ON");
     lab32 = lv_lab_creat_fun(btn32,btn32,LV_ALIGN_CENTER,0,0,"OFF");
-    lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,0,-10,"降噪开关");
+    lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"降噪开关");
 }
 
 static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
@@ -475,10 +475,12 @@ void hl_mod_moreone_init(void * init_data)
     hl_moreone_func = ptr->func_cb;
     lv_style_page4_init();
 
-    con_src = lv_con_scr_creat(180,100);
-    con1 = lv_con_child_creat(con_src,172,90);
-    con2 = lv_con_child_creat(con_src,172,90);
-    con3 = lv_con_child_creat(con_src,172,90);
+    con_src = lv_con_scr_creat(270,140);
+    lv_obj_set_flex_align(con_src,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_scroll_dir(con_src,LV_DIR_HOR);
+    con1 = lv_con_child_creat(con_src,260,120);
+    con2 = lv_con_child_creat(con_src,260,120);
+    con3 = lv_con_child_creat(con_src,260,120);
     lv_page_1_init(con1,ptr->moreone_choose_opt.option_one);
     lv_page_2_init(con2,ptr->moreone_choose_opt.option_two);
     lv_page_3_init(con3,ptr->moreone_choose_opt.option_three);

@@ -144,8 +144,8 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_SELECTED); 
 // #endif
-    lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
-    lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
+    // lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
+    // lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
     lv_roller_set_options(roller,options,LV_ROLLER_MODE_NORMAL);
     lv_obj_set_align(roller,LV_ALIGN_CENTER);
     lv_roller_set_visible_row_count(roller, 3);
