@@ -66,7 +66,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab,&style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language24, LV_PART_MAIN);
+    // lv_obj_set_style_text_font(lab, &language24, LV_PART_MAIN);
     lv_obj_set_style_text_color(lab, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(lab, ptr);    
     lv_obj_align_to(lab, align_obj, align, x_offset, y_offset);
