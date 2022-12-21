@@ -7,21 +7,12 @@
 #define ROLLER_HOUR  198
 #define ROLLER_MIN  296
 
-//时间结构体
-typedef struct _hl_calendar_t
-{
-	uint8_t hour;
-	uint8_t min;
-	uint8_t sec;			
-	//公历日月年周
-	uint16_t w_year;
-	uint8_t  w_month;
-	uint8_t  w_date;
-	uint8_t  week;		 
-}hl_calendar_t;	
+#define COMMON_YEAR 0
+#define LEAP_YEAR 1
 
+#define INIT_TYPE 0
+#define IOCTL_TYPE 1
 
-static hl_calendar_t calendar;	//日历结构体
 //平年的月份日期表
 static uint8_t mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
 
@@ -29,7 +20,7 @@ static uint8_t date_year[256];
 static uint8_t date_month[300];
 static uint8_t date_day[256];
 static uint8_t date_hour[256];
-static uint8_t date_min[300];
+static uint8_t date_min[350];
 
 static lv_style_t style_black,style_grey;
 static lv_obj_t *roller_year,*roller_month,*roller_day,*roller_hour,*roller_min;
@@ -37,6 +28,9 @@ static lv_obj_t * con;
 static char * lock = "btn";
 static char * ulock = "ubtn";
 static hl_date_event_cb hl_date_func;
+
+static uint8_t leap_flag = COMMON_YEAR;//0 :平年 1：闰年
+static uint8_t month_sta = 0;
 /**
  * Add a fade mask to roller.
  */
@@ -71,8 +65,9 @@ static void lv_day_init(uint8_t day)
 {
     char buf[10] = {0,0,0,0,0,0,0,0,0,0};
     uint16_t i;
+    memset(date_day, 0, sizeof(date_day));
     for(i=1;i<(day + 1);i++){
-        if(i == 30){
+        if(i == day){
             lv_snprintf(buf, sizeof(buf), "%d日", i);
         }else{
             lv_snprintf(buf, sizeof(buf), "%d日\n", i);
@@ -116,13 +111,46 @@ static void lv_date_init(void)
     lv_min_init();
 }
 
+//0 :平年 1：闰年
+static uint8_t lv_leap_year(uint16_t year)
+{			  
+	if(year%4==0){//必须能被4整除
+		if(year%100==0) { 
+			if(year%400==0)return LEAP_YEAR;//如果以00结尾,还要能被400整除 	   
+			else return COMMON_YEAR;   
+		}else return LEAP_YEAR;   
+	}else return COMMON_YEAR;	
+}
+
+static void lv_get_cal_day_num(hl_date_choose_t opt,uint8_t data)
+{
+    uint16_t tmp_data = data;
+    uint8_t pos;
+    if(opt == HL_DATE_YEAR){
+        tmp_data += 2000;
+        leap_flag = lv_leap_year(tmp_data);
+        if(leap_flag){
+            mon_table[1] = 29;
+        }else{
+            mon_table[1] = 28;
+        }
+    }
+    if(opt == HL_DATE_MONTH){
+        month_sta = data;
+    }
+    lv_day_init(mon_table[month_sta-1]);
+    pos = lv_roller_get_selected(roller_day);    
+    lv_roller_set_options(roller_day,date_day,LV_ROLLER_MODE_NORMAL);
+    lv_roller_set_selected(roller_day,pos,LV_ANIM_ON);
+}
+
 static void lv_style_page6_init(void)
 {    
     lv_style_init(&style_black);
     lv_style_set_bg_color(&style_black, lv_color_black());
     lv_style_set_border_width(&style_black, 0);
     lv_style_set_pad_all(&style_black, 0);
-    // lv_obj_add_style(lv_scr_act(), &style_black, 0);
+    lv_obj_add_style(lv_scr_act(), &style_black, 0);
     lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);  
 
     lv_style_init(&style_grey);
@@ -140,15 +168,16 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_size(roller,90,114); 
+    // lv_obj_align(roller, LV_ALIGN_CENTER, x_offset, y_offset);
 // #if LV_FONT_MONTSERRAT_22
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
     lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_SELECTED); 
 // #endif
     // lv_obj_set_style_text_font(roller, &language, LV_PART_MAIN);
-    // lv_obj_set_style_text_color(roller,lv_color_white(),LV_PART_MAIN); 
+    lv_obj_set_style_text_color(roller,lv_palette_main(LV_PALETTE_GREY),LV_PART_MAIN); 
     lv_roller_set_options(roller,options,LV_ROLLER_MODE_NORMAL);
     lv_obj_set_align(roller,LV_ALIGN_CENTER);
-    lv_roller_set_visible_row_count(roller, 3);
+    // lv_roller_set_visible_row_count(roller, 3);
     lv_obj_clear_state(roller,LV_STATE_FOCUS_KEY);
     lv_obj_clear_flag(roller,LV_OBJ_FLAG_CLICK_FOCUSABLE);
     lv_obj_add_event_cb(roller, event_cb, LV_EVENT_ALL, NULL);    
@@ -166,6 +195,7 @@ static void roller_year_cb(lv_event_t * e)
             lv_obj_scroll_to_view(roller_year, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_year, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            lv_get_cal_day_num(HL_DATE_YEAR,pos);
             hl_date_func(HL_DATE_YEAR,pos+2000);
         }else{      
             lv_obj_set_style_bg_opa(roller_year, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -184,6 +214,7 @@ static void roller_month_cb(lv_event_t * e)
             lv_obj_set_style_bg_opa(roller_month, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
+            lv_get_cal_day_num(HL_DATE_MONTH,pos);
             hl_date_func(HL_DATE_MONTH,pos+1);
         }else{      
             lv_obj_set_style_bg_opa(roller_month, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -291,17 +322,17 @@ static void hl_current_option_set(hl_date_choose_t opt)
     }
 }
 
-static void hl_opt_value_set(hl_date_choose_t opt,int16_t value,lv_anim_enable_t anim)
+static void hl_opt_value_set(hl_date_choose_t opt,int16_t value,lv_anim_enable_t anim,uint8_t sta)
 {
     switch (opt){
         case HL_DATE_YEAR:
             lv_roller_set_selected(roller_year,value - 2000,anim);
             break;
         case HL_DATE_MONTH:
-            lv_roller_set_selected(roller_month,value,anim);
+            lv_roller_set_selected(roller_month,value-sta,anim);
             break;
         case HL_DATE_DAY:
-            lv_roller_set_selected(roller_day,value,anim);
+            lv_roller_set_selected(roller_day,value-sta,anim);
             break;
         case HL_DATE_HOUR:
             lv_roller_set_selected(roller_hour,value,anim);
@@ -317,11 +348,13 @@ static void hl_opt_value_set(hl_date_choose_t opt,int16_t value,lv_anim_enable_t
 static void hl_mod_date_init_cfg(hl_lvgl_date_init_t * data)
 {
     hl_current_option_set(data->current_choose);
-    hl_opt_value_set(HL_DATE_YEAR,data->year,LV_ANIM_OFF);
-    hl_opt_value_set(HL_DATE_MONTH,data->month,LV_ANIM_OFF);
-    hl_opt_value_set(HL_DATE_DAY,data->day,LV_ANIM_OFF);
-    hl_opt_value_set(HL_DATE_HOUR,data->hour,LV_ANIM_OFF);
-    hl_opt_value_set(HL_DATE_MIN,data->min,LV_ANIM_OFF);
+    month_sta = data->month;    
+    lv_get_cal_day_num(HL_DATE_YEAR,data->year);
+    hl_opt_value_set(HL_DATE_YEAR,data->year,LV_ANIM_OFF,INIT_TYPE);
+    hl_opt_value_set(HL_DATE_MONTH,data->month - 1,LV_ANIM_OFF,INIT_TYPE);
+    hl_opt_value_set(HL_DATE_DAY,data->day-1,LV_ANIM_OFF,INIT_TYPE);
+    hl_opt_value_set(HL_DATE_HOUR,data->hour,LV_ANIM_OFF,INIT_TYPE);
+    hl_opt_value_set(HL_DATE_MIN,data->min,LV_ANIM_OFF,INIT_TYPE);
 }
 
 static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
@@ -340,13 +373,6 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
-
-static void lv_delete_style(void)
-{
-    lv_style_reset(&style_grey);
-    lv_style_reset(&style_black);
-}
-
 void hl_mod_date_ioctl(void * ctl_data)
 {
     hl_lvgl_date_ioctl_t * ptr = (hl_lvgl_date_ioctl_t *)ctl_data;
@@ -355,13 +381,10 @@ void hl_mod_date_ioctl(void * ctl_data)
             hl_current_option_set(ptr->opt);
             break;
         case HL_DATE_SET_VALUE_CMD:
-            hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON);
+            hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON,IOCTL_TYPE);
             break;
         case HL_DATE_EXTI_CMD:
-            hl_obj_delete(lv_scr_act(),false);            
-            break;
-        case HL_DATE_DELETE_STYLE_CMD:
-            lv_delete_style();            
+            hl_obj_delete(lv_scr_act(),false);
             break;
         default:
             break;
@@ -379,8 +402,9 @@ void hl_mod_date_init(void * init_data)
 
     con = lv_obj_create(lv_scr_act());
     lv_obj_add_style(con, &style_black, 0);
+    lv_obj_set_scroll_dir(con,LV_DIR_HOR);
     lv_obj_set_size(con,282,114);
-    lv_obj_align(con, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_align(con, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(con, LV_SCROLLBAR_MODE_OFF);   

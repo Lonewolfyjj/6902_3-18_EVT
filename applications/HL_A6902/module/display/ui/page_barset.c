@@ -48,7 +48,7 @@ static lv_obj_t * lv_slider_creat_fun(lv_obj_t *src_obj,lv_align_t align,lv_coor
 {
     lv_obj_t * slider = lv_slider_create(src_obj);    
     lv_obj_remove_style_all(slider);        /*Remove the styles coming from the theme*/
-    lv_obj_set_size(slider,270,32);
+    lv_obj_set_size(slider,282,48);
     lv_obj_add_style(slider, &style_back, LV_PART_MAIN);
     lv_obj_add_style(slider, &style_indicator, LV_PART_INDICATOR);
     lv_obj_add_event_cb(slider, event_cb, LV_EVENT_VALUE_CHANGED, NULL);//添加回调
