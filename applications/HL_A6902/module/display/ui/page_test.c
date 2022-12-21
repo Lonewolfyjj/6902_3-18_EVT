@@ -10,6 +10,7 @@
 #include "page_storage.h"
 #include "page_moreone.h"
 #include "page_verson.h"
+#include "page_upgrade.h"
 
 LV_IMG_DECLARE(Other_mic_black);
 LV_IMG_DECLARE(Other_voice);
@@ -546,6 +547,20 @@ void page_verson_test(void)
         .verson_choose_opt = HL_VERSON_OPTION_TWO,
     };
     hl_mod_verson_ioctl(&verson_ctl);
+}
+
+static void page_upgrade_init(void)
+{
+    hl_lvgl_upgrade_init_t upgrade_init;
+    upgrade_init.upgrade_progress = 32;
+    hl_mod_lvgl_upgrade_init(&upgrade_init);
+}
+
+static void page_upgrade_ioctl(void)
+{
+    hl_lvgl_upgrade_ioctl_t upgrade_ioctl;
+    upgrade_ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
+    hl_mod_lvgl_upgrade_ioctl(&upgrade_ioctl);
 }
 
 void page_test(void)

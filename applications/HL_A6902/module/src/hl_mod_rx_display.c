@@ -31,7 +31,7 @@
  * EOF
  */
 #include "hl_mod_display.h"
-
+#include "page_upgrade.h"
 #if !HL_IS_TX_DEVICE()
 
 #include "hl_drv_aw2016a.h"
@@ -371,6 +371,20 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     return res;
 }
 
+static void page_upgrade_init(void)
+{
+    hl_lvgl_upgrade_init_t upgrade_init;
+    upgrade_init.upgrade_progress = 32;
+    hl_mod_lvgl_upgrade_init(&upgrade_init);
+}
+
+static void page_upgrade_ioctl(void)
+{
+    hl_lvgl_upgrade_ioctl_t upgrade_ioctl;
+    upgrade_ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
+    hl_mod_lvgl_upgrade_ioctl(&upgrade_ioctl);
+}
+
 // RX
 static void hl_mod_display_task(void* param)
 {
@@ -379,9 +393,10 @@ static void hl_mod_display_task(void* param)
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
     lv_obj_add_style(lv_scr_act(), &style, 0);
+    page_upgrade_ioctl();
     while (1) {
-        hl_mod_screen_rot_scan();
-        PageManager_Running();
+        // hl_mod_screen_rot_scan();
+        // PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
