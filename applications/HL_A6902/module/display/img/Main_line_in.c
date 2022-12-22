@@ -1,4 +1,16 @@
-#include "lvgl.h"
+#ifdef __has_include
+    #if __has_include("lvgl.h")
+        #ifndef LV_LVGL_H_INCLUDE_SIMPLE
+            #define LV_LVGL_H_INCLUDE_SIMPLE
+        #endif
+    #endif
+#endif
+
+#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+    #include "lvgl.h"
+#else
+    #include "lvgl/lvgl.h"
+#endif
 
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
@@ -86,7 +98,7 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_MAIN_LINE
   0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xf2, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf2, 0x00, 0x00, 0x00, 0x00, 
 #endif
 };
-//耳机插入
+
 const lv_img_dsc_t Main_line_in = {
   .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
   .header.always_zero = 0,

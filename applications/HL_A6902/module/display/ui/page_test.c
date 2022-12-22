@@ -4,12 +4,13 @@
 #include "page_two_in_one.h"
 #include "page_barset.h"
 #include "page_test.h"
-#include "language.h"
+// #include "language.h"
 #include "page_main.h"
 #include "page_charge.h"
 #include "page_storage.h"
 #include "page_moreone.h"
 #include "page_verson.h"
+#include "page_upgrade.h"
 
 LV_IMG_DECLARE(Other_mic_black);
 LV_IMG_DECLARE(Other_voice);
@@ -255,7 +256,7 @@ LV_IMG_DECLARE(Other_led_high_white);// 12
 LV_IMG_DECLARE(Other_led_low_black);//  21
 LV_IMG_DECLARE(Other_led_low_white);//  22
 
-static void hl_light_test_cb(hl_two_in_one_check_t event_num)
+static void hl_light_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -290,7 +291,7 @@ LV_IMG_DECLARE(Other_high_true_white);//高保真
 LV_IMG_DECLARE(Other_sound_black);//声音增强
 LV_IMG_DECLARE(Other_sound_white);//声音增强
 
-static void hl_soundeffect_test_cb(hl_two_in_one_check_t event_num)
+static void hl_soundeffect_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -324,7 +325,7 @@ LV_IMG_DECLARE(Other_monitor_uac_white);//
 LV_IMG_DECLARE(Other_monitor_tx_black);//
 LV_IMG_DECLARE(Other_monitor_tx_white);//
 
-static void hl_monitor_test_cb(hl_two_in_one_check_t event_num)
+static void hl_monitor_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -354,7 +355,7 @@ static void monitor_test(void)
 
 
 //格式化界面
-static void hl_formatting_test_cb(hl_two_in_one_check_t event_num)
+static void hl_formatting_test_cb(hl_s_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -379,7 +380,7 @@ static void formatting_test(void)
 }
 
 //配对界面
-static void hl_pair_test_cb(hl_two_in_one_check_t event_num)
+static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -404,7 +405,7 @@ static void pair_test(void)
 }
 
 //恢复出厂设置界面
-static void hl_resetfactory_test_cb(hl_two_in_one_check_t event_num)
+static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
@@ -455,7 +456,7 @@ void page_main_test(void)
 }
 
 //充电界面
-void page_charge_test(void)
+static void page_charge_test(void)
 {    
     hl_lvgl_charge_init_t data = 
     {
@@ -546,6 +547,20 @@ void page_verson_test(void)
         .verson_choose_opt = HL_VERSON_OPTION_TWO,
     };
     hl_mod_verson_ioctl(&verson_ctl);
+}
+
+static void page_upgrade_init(void)
+{
+    hl_lvgl_upgrade_init_t upgrade_init;
+    upgrade_init.upgrade_progress = 32;
+    hl_mod_lvgl_upgrade_init(&upgrade_init);
+}
+
+static void page_upgrade_ioctl(void)
+{
+    hl_lvgl_upgrade_ioctl_t upgrade_ioctl;
+    upgrade_ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
+    hl_mod_lvgl_upgrade_ioctl(&upgrade_ioctl);
 }
 
 void page_test(void)

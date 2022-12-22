@@ -9,7 +9,7 @@
  * 
  */
 #include "page_charge.h"
-#include "language.h"
+// #include "language.h"
 
 LV_IMG_DECLARE(Main_charging);//充电图标
 LV_IMG_DECLARE(Main_bat);//电池图标
@@ -133,8 +133,8 @@ static lv_obj_t * lv_device_lab_creat_fun(lv_obj_t *align_obj,lv_align_t align,l
 static void lv_device_top_creat(int16_t value)
 {
     img4 = lv_img_creat_fun(lv_scr_act(),LV_ALIGN_TOP_RIGHT,&Main_bat,-6,6);
-    bar_power4 = lv_power_bar_creat_fun(img4,2,0,22,10,LV_BAR_WHITE,value);
-    lab_power4 = lv_power_lab_creat_fun(lv_scr_act(),img4,bar_power4,LV_ALIGN_OUT_LEFT_MID,0,0);
+    bar_power4 = lv_power_bar_creat_fun(img4,3,0,25,14,LV_BAR_GREEN,value);
+    lab_power4 = lv_power_lab_creat_fun(lv_scr_act(),img4,bar_power4,LV_ALIGN_OUT_LEFT_MID,-12,0);
 
     lab_case = lv_device_lab_creat_fun(lv_scr_act(),LV_ALIGN_TOP_LEFT,6,3,"CASE");
 }
@@ -144,9 +144,9 @@ static void lv_tx1_device_creat(int16_t value)
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,90,94);
     img1 = lv_img_creat_fun(area_tx1,LV_ALIGN_CENTER,&Main_box_bat,2,0);
     img11 = lv_img_creat_fun(img1,LV_ALIGN_CENTER,&Main_charging,-1,0);
-    bar_power_tx1 = lv_power_bar_creat_fun(img1,3,-1,48,23,LV_BAR_GREEN,value);
-    lab_tx1 = lv_device_lab_creat_fun(area_tx1,LV_ALIGN_TOP_MID,0,0,"TX");
-    lab_power1 = lv_power_lab_creat_fun(area_tx1,img1,bar_power_tx1,LV_ALIGN_OUT_BOTTOM_MID,0,0);
+    bar_power_tx1 = lv_power_bar_creat_fun(img1,4,-1,46,21,LV_BAR_GREEN,value);
+    lab_tx1 = lv_device_lab_creat_fun(area_tx1,LV_ALIGN_TOP_MID,0,-5,"TX");
+    lab_power1 = lv_power_lab_creat_fun(area_tx1,img1,bar_power_tx1,LV_ALIGN_OUT_BOTTOM_MID,1,0);
 }
 
 static void lv_rx_device_creat(int16_t value)
@@ -154,9 +154,9 @@ static void lv_rx_device_creat(int16_t value)
     area_rx = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,102,-6,90,94);
     img2 = lv_img_creat_fun(area_rx,LV_ALIGN_CENTER,&Main_box_bat,2,0);
     img21 = lv_img_creat_fun(img2,LV_ALIGN_CENTER,&Main_charging,-1,0);
-    bar_power_rx = lv_power_bar_creat_fun(img2,3,-1,48,23,LV_BAR_GREEN,value);
-    lab_rx = lv_device_lab_creat_fun(area_rx,LV_ALIGN_TOP_MID,0,0,"RX");
-    lab_power2 = lv_power_lab_creat_fun(area_rx,img2,bar_power_rx,LV_ALIGN_OUT_BOTTOM_MID,0,0);
+    bar_power_rx = lv_power_bar_creat_fun(img2,4,-1,46,21,LV_BAR_GREEN,value);
+    lab_rx = lv_device_lab_creat_fun(area_rx,LV_ALIGN_TOP_MID,0,-5,"RX");
+    lab_power2 = lv_power_lab_creat_fun(area_rx,img2,bar_power_rx,LV_ALIGN_OUT_BOTTOM_MID,1,0);
 }
 
 static void lv_tx2_device_creat(int16_t value)
@@ -164,9 +164,9 @@ static void lv_tx2_device_creat(int16_t value)
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,198,-6,90,94);
     img3 = lv_img_creat_fun(area_tx2,LV_ALIGN_CENTER,&Main_box_bat,2,0);
     img31 = lv_img_creat_fun(img3,LV_ALIGN_CENTER,&Main_charging,-1,0);
-    bar_power_tx2 = lv_power_bar_creat_fun(img3,3,-1,48,23,LV_BAR_GREEN,value);
-    lab_tx2 = lv_device_lab_creat_fun(area_tx2,LV_ALIGN_TOP_MID,0,0,"TX");
-    lab_power3 = lv_power_lab_creat_fun(area_tx2,img3,bar_power_tx2,LV_ALIGN_OUT_BOTTOM_MID,0,0);
+    bar_power_tx2 = lv_power_bar_creat_fun(img3,4,-1,46,21,LV_BAR_GREEN,value);
+    lab_tx2 = lv_device_lab_creat_fun(area_tx2,LV_ALIGN_TOP_MID,0,-5,"TX");
+    lab_power3 = lv_power_lab_creat_fun(area_tx2,img3,bar_power_tx2,LV_ALIGN_OUT_BOTTOM_MID,1,0);
 }
 
 static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
@@ -256,6 +256,15 @@ void hl_mod_charge_ioctl(void * ctl_data)
             lv_bar_set_value(bar_power_tx2, ptr->electric.electric_tx2, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_tx2);
             lv_label_set_text(lab_power3,buf);
+            break;
+
+        case HL_CHARGE_BAT_COLOR_GREEN:
+            lv_obj_remove_style(bar_power4,&style_bar_indicator_green,LV_PART_INDICATOR);
+            lv_obj_add_style(bar_power4,&style_bar_indicator_green,LV_PART_INDICATOR);  
+            break;
+        case HL_CHARGE_BAT_COLOR_WHITE:
+            lv_obj_remove_style(bar_power4,&style_bar_indicator_white,LV_PART_INDICATOR);
+            lv_obj_add_style(bar_power4,&style_bar_indicator_white,LV_PART_INDICATOR);  
             break;
         
         case HL_CHARGE_CHANGE_DELETE_PAGE:
