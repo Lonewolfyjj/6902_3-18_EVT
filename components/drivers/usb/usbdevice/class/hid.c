@@ -22,6 +22,7 @@
 #include "dma.h"
 #include <ipc/ringbuffer.h>
 #include "hl_config.h"
+#include "hl_util_nvram.h"
 
 #ifdef RT_USB_DEVICE_HID
 
@@ -73,6 +74,8 @@ struct _hl_hid_dev
 volatile static struct _hl_hid_dev hid_dev = {0};
 
 ALIGN(4) static struct uhid_descriptor hid_desc_buf;
+
+static char usb_sn[100] = {0};
 
 /* CustomHID_ConfigDescriptor */
 ALIGN(4)
@@ -411,7 +414,7 @@ const static char* _ustring[] =
 #else
     "Wireless Microphone Rx",
 #endif
-    "32021919830108",
+    usb_sn,
     "Configuration",
     "Interface",
     "iAP Interface",
@@ -903,6 +906,14 @@ ufunction_t rt_usbd_function_hid_create(udevice_t device)
 
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
+
+    extern uint8_t hl_board_nvram_init();
+
+    hl_board_nvram_init();
+
+    if (!hl_util_nvram_param_get("HL_SN", usb_sn, usb_sn, sizeof(usb_sn))) {
+        rt_kprintf("USB SN : %s\r\n", usb_sn);
+    }
 
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);

@@ -51,7 +51,7 @@ LV_IMG_DECLARE(Other_monitor_uac_white);//
 LV_IMG_DECLARE(Other_monitor_tx_black);//
 LV_IMG_DECLARE(Other_monitor_tx_white);//
 
-static void hl_monitor_test_cb(hl_two_in_one_check_t event_num)
+static void hl_monitor_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
