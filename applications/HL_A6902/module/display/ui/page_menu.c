@@ -15,8 +15,8 @@
 #define CHECK_POS_LR(X,Y)    (X) < (125) ? 0 : 1 //0:lift 1:right
 #define LAB_ADD(X)  lab##X
 
-#define MENU_CRUNT_WIDE 150
-#define MENU_CRUNT_HIGH 64
+#define MENU_CRUNT_WIDE 250
+#define MENU_CRUNT_HIGH 80
 // #define ICON_NUMBER     6
 #define CENTRE_CHECK    1
 #define RIGHT_CHECK     2
@@ -42,7 +42,7 @@ static lv_coord_t get_distance(lv_coord_t data)
     if(data > 128){
         return 0;
     }
-    return (128 - (data*2));
+    return (128 - data);
 }
 
 static void icon_pos_changed(lv_coord_t current,lv_coord_t x,lv_coord_t y)
@@ -57,20 +57,16 @@ static void icon_pos_changed(lv_coord_t current,lv_coord_t x,lv_coord_t y)
         check_pos = LIFT_CHECK;
     }
     if(check_pos == CENTRE_CHECK){
-        // printf("Check centre icon event\n");
         func_cb(current);
     }
     if(check_pos == RIGHT_CHECK && current < (ICON_NUMBER - 1)){
         current+=1;
         lv_obj_scroll_to_view(lv_obj_get_child(cont_row, current), LV_ANIM_ON);
-        // lv_lab_hide_set(current);
     }
     if(check_pos == LIFT_CHECK && current > 0){
         current-=1;
         lv_obj_scroll_to_view(lv_obj_get_child(cont_row, current), LV_ANIM_ON);
-        // lv_lab_hide_set(current);
     }
-    // printf("current = %d  check_pos = %d\n",current,check_pos);
 }
 
 
@@ -204,23 +200,21 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
     cont_row = lv_obj_create(lv_scr_act());
     lv_obj_add_style(cont_row,&screen_style,0);
     lv_obj_set_size(cont_row, MENU_CRUNT_WIDE, MENU_CRUNT_HIGH);
-    lv_obj_align(cont_row, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_align(cont_row, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_set_flex_align(cont_row,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(cont_row,40,0);
+    lv_obj_set_scroll_dir(cont_row,LV_DIR_HOR);
     lv_obj_set_flex_flow(cont_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(cont_row, LV_SCROLLBAR_MODE_OFF);
-    // lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
     
     for(i = 0; i <pic_num; i++){
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
         lv_img_set_zoom(picdata[i].obj,128);
-        // lv_obj_add_flag(picdata[i].obj,LV_OBJ_FLAG_EVENT_BUBBLE);
-        // lv_group_add_obj(lv_group_get_default() ,picdata[i].obj);
-
-        picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,0,1,picdata[i].ptr);
+        picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,15,1,picdata[i].ptr);
     }    
     lv_img_set_zoom(picdata[0].obj,256);   
-    // lv_event_send(cont_row, LV_EVENT_SCROLL, NULL); 
     lv_obj_scroll_to_view(lv_obj_get_child(cont_row, 0), LV_ANIM_OFF);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
