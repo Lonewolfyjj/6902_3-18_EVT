@@ -1,5 +1,5 @@
 #include "page_main.h"
-#include "language.h"
+// #include "language.h"
 
 LV_IMG_DECLARE(Main_horn);//喇叭
 LV_IMG_DECLARE(Main_bat);//电池图标
@@ -148,27 +148,27 @@ static lv_obj_t * lv_area_creat_fun(lv_align_t align,lv_coord_t x_offset,lv_coor
     return null_area;
 }
 
-static lv_obj_t * lv_voice_sbar_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
+static lv_obj_t * lv_voice_sbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
 {
-    lv_obj_t * bar = lv_bar_create(align_obj);
+    lv_obj_t * bar = lv_bar_create(src_obj);
     lv_obj_add_style(bar, &style_voice_bar_main, LV_PART_MAIN);
     lv_obj_add_style(bar, &style_voice_sbar_indicator, LV_PART_INDICATOR);
     lv_bar_set_range(bar,0,118);
     lv_obj_set_size(bar, width, high);
-    lv_obj_align_to(bar,align_obj,LV_ALIGN_BOTTOM_LEFT,x_offset,y_offset);
+    lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
     // lv_bar_set_range(bar,0,118);
     return bar;
 }
 
-static lv_obj_t * lv_voice_lbar_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
+static lv_obj_t * lv_voice_lbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
 {
-    lv_obj_t * bar = lv_bar_create(align_obj);
+    lv_obj_t * bar = lv_bar_create(src_obj);
     lv_obj_add_style(bar, &style_voice_bar_main, LV_PART_MAIN);
     lv_obj_add_style(bar, &style_voice_lbar_indicator, LV_PART_INDICATOR);
     lv_bar_set_range(bar,0,118);
     lv_obj_set_size(bar, width, high);
-    lv_obj_align_to(bar,align_obj,LV_ALIGN_BOTTOM_LEFT,x_offset,y_offset);
+    lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
     // lv_bar_set_range(bar,0,118);
     return bar;
@@ -204,12 +204,12 @@ static lv_obj_t * lv_power_img_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset
     return img;
 }
 
-static lv_obj_t * lv_signal_img_creat_fun(lv_obj_t *align_obj,const void * picture,lv_coord_t x_offset,lv_coord_t y_offset,uint16_t zoom,uint8_t hide)
+static lv_obj_t * lv_signal_img_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,const void * picture,lv_coord_t x_offset,lv_coord_t y_offset,uint16_t zoom,uint8_t hide)
 {
-    lv_obj_t * img = lv_img_create(align_obj);
+    lv_obj_t * img = lv_img_create(src_obj);
     lv_img_set_src(img,picture);
     lv_img_set_zoom(img, zoom);
-    lv_obj_align_to(img,align_obj,LV_ALIGN_TOP_LEFT,x_offset,y_offset);
+    lv_obj_align_to(img,align_obj,LV_ALIGN_OUT_RIGHT_BOTTOM,x_offset,y_offset);
     if(!hide){
         lv_obj_add_flag(img,LV_OBJ_FLAG_HIDDEN);
     }
@@ -305,22 +305,22 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 
 static void lv_signal_tx1_set(int16_t signal)
 {    
-    tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,&Main_signal_0,0,-10,256,0);
-    tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,&Main_signal_1,0,-10,256,0);
-    tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,&Main_signal_2,0,-10,256,0);
-    tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,&Main_signal_3,0,-10,256,0);
-    tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,&Main_signal_4,0,-10,256,0);
+    tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_0,8,-2,256,0);
+    tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_1,8,-2,256,0);
+    tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_2,8,-2,256,0);
+    tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_3,8,-2,256,0);
+    tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_4,8,-2,256,0);
 
     lv_signal_hide_set(1,signal);
 }
 
 static void lv_signal_tx2_set(int16_t signal)
 {    
-    tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,&Main_signal_0,0,-10,256,0);
-    tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,&Main_signal_1,0,-10,256,0);
-    tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,&Main_signal_2,0,-10,256,0);
-    tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,&Main_signal_3,0,-10,256,0);
-    tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,&Main_signal_4,0,-10,256,0);
+    tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_0,8,-2,256,0);
+    tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_1,8,-2,256,0);
+    tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_2,8,-2,256,0);
+    tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_3,8,-2,256,0);
+    tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_4,8,-2,256,0);
 
     lv_signal_hide_set(2,signal);
 }
@@ -328,15 +328,15 @@ static void lv_signal_tx2_set(int16_t signal)
 static void lv_display_tx1(device_data_t * init_data)
 {
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-3,-5,256);
+    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-8,2,256);
     power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-6,256);
 
-    voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,13,-5,251,14,init_data->volume);
-    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,2,0,22,10,init_data->electric);
+    voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
+    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
     
     voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,0,0);
     power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
-    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-9,"1");
+    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
 
     lv_signal_tx1_set(init_data->signal);
 
@@ -346,15 +346,15 @@ static void lv_display_tx1(device_data_t * init_data)
 static void lv_display_tx2(device_data_t * init_data)
 {
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-3,-5,256);
+    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-8,2,256);
     power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-6,256);
 
-    voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,13,-5,251,14,init_data->volume);
-    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,2,0,22,10,init_data->electric);
+    voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
+    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
     
     voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,0,0);
     power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0);
-    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-9,"2");
+    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
 
     lv_signal_tx2_set(init_data->signal);
 
@@ -367,17 +367,17 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,138,94);
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,150,-6,138,94);
     //音量喇叭图片
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-3,-5,256);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-3,-5,256);
+    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-8,2,256);
+    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-8,2,256);
     //电池图标图片
     power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-6,256);
     power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-6,256);
     //音量大小进度条
-    voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,13,-5,107,14,init_tx1->volume);
-    voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,13,-5,107,14,init_tx2->volume);
+    voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
+    voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
     //电池电量进度条
-    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,2,0,22,10,init_tx1->electric);
-    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,2,0,22,10,init_tx2->electric);
+    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
+    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
     //音量大小文本
     voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,0,0);
     voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,0,0);   
@@ -385,8 +385,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
     //设备文本
-    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-9,"1");
-    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-9,"2");
+    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
+    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
     //信号图标
     lv_signal_tx1_set(init_tx1->signal);
     lv_signal_tx2_set(init_tx2->signal);
@@ -452,6 +452,7 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
 
 void hl_mod_main_ioctl(void * ctl_data)
 {
+    return;
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_main_ioctl_t * ptr =  (hl_lvgl_main_ioctl_t *)ctl_data;
     switch(ptr->cmd){

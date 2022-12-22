@@ -7,7 +7,9 @@
 
 typedef enum _hl_top_icon_t
 {
-    HL_TOP_ICON_VOICE_MOD = 0,
+    HL_TOP_ICON_STEREO_MOD = 0,
+    HL_TOP_ICON_SINGLE_MOD,
+    HL_TOP_ICON_TRACK_MOD,
     HL_TOP_ICON_NOISE,
     HL_TOP_ICON_LOCK,
     HL_TOP_ICON_LINEOUT,
@@ -21,6 +23,8 @@ typedef enum _hl_top_cmd_t
     HL_TOP_DELETE_ICON_CMD = 0,
     HL_TOP_ADD_ICON_CMD,
     HL_TOP_BAT_VAL,
+    HL_TOP_BAT_COLOR_GREEN,
+    HL_TOP_BAT_COLOR_WHITE,
     HL_TOP_DELETE_STYLE,
     HL_TOP_ALL_DEL
 }hl_top_cmd_t;
