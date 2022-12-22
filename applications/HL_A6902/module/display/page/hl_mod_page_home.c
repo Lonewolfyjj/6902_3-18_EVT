@@ -439,7 +439,7 @@ static void hl_mod_page_top_init(void)
 
     if (data_ptr->sound_module == STEREO) {
 
-        hl_mod_icon_deal(HL_TOP_ICON_VOICE_MOD, HL_TOP_ADD_ICON_CMD);
+        hl_mod_icon_deal(HL_TOP_ICON_TRACK_MOD, HL_TOP_ADD_ICON_CMD);
     }
 
     if (data_ptr->sys_status.tx1_noise || data_ptr->sys_status.tx2_noise) {

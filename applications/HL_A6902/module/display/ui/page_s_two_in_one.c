@@ -9,7 +9,7 @@
  * 
  */
 #include "page_s_two_in_one.h"
-#include "language.h"
+// #include "language.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -95,7 +95,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -203,19 +203,19 @@ void hl_mod_s_two_in_one_init(void * init_data)
     if(ptr->s_two_in_one_choose == HL_S_TWO_ONE_CHOOSE_LEFT){
         btn_right_cnt = 0;
         btn_left_cnt = 1;
-        btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,54,1);
-        btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,54,0);
+        btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,82,1);
+        btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,82,0);
     }
     if(ptr->s_two_in_one_choose == HL_S_TWO_ONE_CHOOSE_RIGHT){
         btn_right_cnt = 1;
         btn_left_cnt = 0;
-        btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,54,0);
-        btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,54,1);
+        btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,82,0);
+        btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,82,1);
     }    
 
     lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift);
     lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right);
-    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,23,ptr->ptr_top);
+    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,7,ptr->ptr_top);
 
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
