@@ -45,8 +45,12 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_GET_TIME_CMD,
     /// 音频流设置命令，hl_mod_audio_io_ctrl的参数参考<hl_stream_mode_e>
     HL_AUDIO_STREAM_SET_CMD,
-    /// int(-103~24)
+    /// 设置DSP的所有通道增益 int(-103~24)
     HL_AUDIO_SET_GAIN_CMD,
+    /// 设置DSP的左通道增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_L_CMD,
+    /// 设置DSP的右通道增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_R_CMD,
     /// 降噪开关设置, 参数<hl_switch_e>(HL_SWITCH_ON--打开降噪, HL_SWITCH_OFF--关闭降噪)
     HL_AUDIO_SET_DENOISE_CMD,
     /// uint8_t(0=OFF, 1=ON)
@@ -85,16 +89,32 @@ typedef enum _hl_mod_audio_ctrl_cmd
 {
     /// 暂无
     HL_AUDIO_GET_INFO_CMD = 0x00,
-    /// int(-103~24)
+    /// 设置DSP的所有通道增益 int(-103~24)
     HL_AUDIO_SET_GAIN_CMD,
+    /// 设置DSP的左通道增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_L_CMD,
+    /// 设置DSP的右通道增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_R_CMD,
     /// int8_t(0=OFF, 1=ON)
     HL_AUDIO_SET_HP_AMP_CMD, 
     /// 音频流设置命令，hl_mod_audio_io_ctrl的参数参考<hl_stream_mode_e>
     HL_AUDIO_STREAM_SET_CMD,
+    /// int8_t(0=OFF, 1=ON)
+    HL_AUDIO_SET_MIX_SWITCH_CMD, 
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
+
+typedef enum _hl_mod_audio_channel
+{
+    /// 左声道
+    HL_AUDIO_CHANNEL_L = 0,
+    /// 右声道
+    HL_AUDIO_CHANNEL_R,
+    /// 所有声道
+    HL_AUDIO_CHANNEL_ALL,
+} HL_ENUM8(hl_mod_audio_channel);
 
 typedef enum _hl_stream_mode_e
 {
