@@ -311,7 +311,7 @@ static void _display_thread_entry(void* arg)
 
         _record_led_flash_ctrl();
 
-        rt_thread_mdelay(100);
+        rt_thread_mdelay(10);
     }
 
     _display_mod.thread_exit_flag = -1;
@@ -355,7 +355,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     _display_mod.thread_exit_flag = 0;
 
     _display_mod.display_thread =
-        rt_thread_create("hl_mod_display_thread", _display_thread_entry, RT_NULL, 1024, 25, 10);
+        rt_thread_create("hl_mod_display_thread", _display_thread_entry, RT_NULL, 1024, 15, 5);
     if (_display_mod.display_thread == RT_NULL) {
         LOG_E("display thread create failed");
         return HL_DISPLAY_FAILED;

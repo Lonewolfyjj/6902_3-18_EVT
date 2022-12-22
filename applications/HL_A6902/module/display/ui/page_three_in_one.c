@@ -9,7 +9,7 @@
  * 
  */
 #include "page_three_in_one.h"
-#include "language.h"
+// #include "language.h"
 
 #define MAX_OBJ_NUMBER     6
 
@@ -115,7 +115,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -259,36 +259,35 @@ void hl_mod_three_in_one_init(void * init_data)
     hl_three_in_one_func = ptr->func_cb;
 
     lv_style_page4_init();
-
     if(ptr->three_in_one_choose == HL_THREE_ONE_CHOOSE_LEFT){
         btn_left_cnt = 1;
         btn_mid_cnt = 0;
         btn_right_cnt = 0;
-        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,54,1);
-        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,80,54,1);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,80,54,0);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,80,54,0);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,0,5,15,82,1);
+        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,1);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,0);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,0);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,0);
     }
     if(ptr->three_in_one_choose == HL_THREE_ONE_CHOOSE_MID){
         btn_left_cnt = 0;
         btn_mid_cnt = 1;
         btn_right_cnt = 0;
-        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,54,0);
-        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,80,54,0);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,80,54,1);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,80,54,0);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,82,0);
+        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,0);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,1);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,0);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,0);
     }
     if(ptr->three_in_one_choose == HL_THREE_ONE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
         btn_mid_cnt = 0;
         btn_right_cnt = 1;
-        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,54,0);
-        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,80,54,0);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,80,54,0);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,80,54,1);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,1);
+        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,5,15,82,0);
+        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,0);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,0);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,1);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,1);
     }
     
 

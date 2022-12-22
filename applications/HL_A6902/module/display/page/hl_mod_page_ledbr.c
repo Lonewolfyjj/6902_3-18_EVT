@@ -48,7 +48,7 @@ LV_IMG_DECLARE(Other_led_high_white);// 12
 LV_IMG_DECLARE(Other_led_low_black);//  21
 LV_IMG_DECLARE(Other_led_low_white);//  22
 
-static void hl_light_test_cb(hl_two_in_one_check_t event_num)
+static void hl_light_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
