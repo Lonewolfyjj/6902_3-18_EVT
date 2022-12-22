@@ -283,76 +283,6 @@ static int hl_mod_audio_system_rtc_set(void)
     return RT_EOK;
 }
 
-static void hl_mod_audio_dfs_sd()
-{
-    rt_device_t disk;
-    int ret = 0;
-    
-    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
-    if(disk == RT_NULL)
-    {
-        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
-        return -RT_ERROR;
-    }
-
-#ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "sd0");
-        dfs_mount_device(disk);
-        LOG_I("sd0 elm mkfs dfs ");
-    }
-#endif
-    LOG_I("hl mod audio dfs");
-}
-
-static void hl_mod_audio_dfs_root()
-{
-    rt_device_t disk;
-    int ret = 0;
-    char file_name[20] = {0};
-    
-    disk = rt_device_find("root");
-    if(disk == RT_NULL)
-    {
-        LOG_E("no disk named %s", "root");
-        return -RT_ERROR;
-    }
-
-
-#ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "root");
-        dfs_mount_device(disk);
-        LOG_I("root elm mkfs dfs ");
-    }
-#endif
-    memcpy(&file_name[0], "/mnt", 4); 
-
-    if (access(file_name, 0) < 0)
-    {
-        LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
-    }
-
-    memcpy(&file_name[0], "/mnt/sdcard", 11); 
-
-    if (access(file_name, 0) < 0)
-    {
-        LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
-    }
-
-    LOG_I("hl mod audio dfs");
-}
-
-
-static void hl_mod_audio_tx_mkfs()
-{
-
-}
-
 // 获取时间 timer_name参数BUF大小需要大于24
 static void hl_mod_audio_rtc_get(char *timer_name)
 {
@@ -507,7 +437,67 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
     return 0;
 }
 
+static void hl_mod_audio_dfs_sd()
+{
+    rt_device_t disk;
+    char file_name[20] = {0};
+    int ret = 0;
+    
+    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
+        return -RT_ERROR;
+    }
+
+    memcpy(&file_name[0], "/mnt", 4); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+    memcpy(&file_name[0], "/mnt/sdcard", 11); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "sd0");
+        dfs_mount_device(disk);
+        LOG_I("sd0 elm mkfs dfs ");
+    }
 #endif
+    LOG_I("hl mod audio dfs");
+}
+
+#endif
+static void hl_mod_audio_dfs_root()
+{
+    rt_device_t disk;    
+    
+    disk = rt_device_find("root");
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", "root");
+        return -RT_ERROR;
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "root");
+        dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs ");
+    }
+#endif
+
+    LOG_I("hl mod audio dfs");
+}
 
 // 捕获和播放声卡内存申请和参数配置
 static rt_err_t hl_mod_audio_param_config(void)
@@ -1430,6 +1420,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 
     s_audio_to_app_mq = p_msg_handle;
     // elm_init();
+    hl_mod_audio_dfs_root();
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_dfs_sd();
     s_record_switch = 0;
