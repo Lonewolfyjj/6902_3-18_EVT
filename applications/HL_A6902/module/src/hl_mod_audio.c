@@ -283,76 +283,6 @@ static int hl_mod_audio_system_rtc_set(void)
     return RT_EOK;
 }
 
-static void hl_mod_audio_dfs_sd()
-{
-    rt_device_t disk;
-    int ret = 0;
-    
-    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
-    if(disk == RT_NULL)
-    {
-        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
-        return -RT_ERROR;
-    }
-
-#ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "sd0");
-        dfs_mount_device(disk);
-        LOG_I("sd0 elm mkfs dfs ");
-    }
-#endif
-    LOG_I("hl mod audio dfs");
-}
-
-static void hl_mod_audio_dfs_root()
-{
-    rt_device_t disk;
-    int ret = 0;
-    char file_name[20] = {0};
-    
-    disk = rt_device_find("root");
-    if(disk == RT_NULL)
-    {
-        LOG_E("no disk named %s", "root");
-        return -RT_ERROR;
-    }
-
-
-#ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "root");
-        dfs_mount_device(disk);
-        LOG_I("root elm mkfs dfs ");
-    }
-#endif
-    memcpy(&file_name[0], "/mnt", 4); 
-
-    if (access(file_name, 0) < 0)
-    {
-        LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
-    }
-
-    memcpy(&file_name[0], "/mnt/sdcard", 11); 
-
-    if (access(file_name, 0) < 0)
-    {
-        LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
-    }
-
-    LOG_I("hl mod audio dfs");
-}
-
-
-static void hl_mod_audio_tx_mkfs()
-{
-
-}
-
 // 获取时间 timer_name参数BUF大小需要大于24
 static void hl_mod_audio_rtc_get(char *timer_name)
 {
@@ -507,7 +437,67 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
     return 0;
 }
 
+static void hl_mod_audio_dfs_sd()
+{
+    rt_device_t disk;
+    char file_name[20] = {0};
+    int ret = 0;
+    
+    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
+        return -RT_ERROR;
+    }
+
+    memcpy(&file_name[0], "/mnt", 4); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+    memcpy(&file_name[0], "/mnt/sdcard", 11); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "sd0");
+        dfs_mount_device(disk);
+        LOG_I("sd0 elm mkfs dfs ");
+    }
 #endif
+    LOG_I("hl mod audio dfs");
+}
+
+#endif
+static void hl_mod_audio_dfs_root()
+{
+    rt_device_t disk;    
+    
+    disk = rt_device_find("root");
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", "root");
+        return -RT_ERROR;
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    if (dfs_mount_device(disk) < 0) {
+        dfs_mkfs("elm", "root");
+        dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs ");
+    }
+#endif
+
+    LOG_I("hl mod audio dfs");
+}
 
 // 捕获和播放声卡内存申请和参数配置
 static rt_err_t hl_mod_audio_param_config(void)
@@ -1136,35 +1126,37 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
     }
 }
 
-// 设置输入声卡增益
+// 设置声卡增益
+static void hl_mod_audio_set_codec_gain(int dB, uint8_t ch)
+{
+    int8_t ret = 0;
+    struct AUDIO_DB_CONFIG db_config = {0};
+
+    db_config.dB = dB;
+    db_config.ch = ch;
+
+    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    if (ret != RT_EOK) {
+        LOG_E("fail to set gain\n");
+        return -RT_ERROR;
+    }
+}
+
+// 设置音频的增益
 static void hl_mod_audio_set_gain(int dB, uint8_t ch)
 {
-    // int8_t ret = 0;
-    // struct AUDIO_DB_CONFIG db_config = {0};
-
-    // db_config.dB = dB;
-    // db_config.ch = ch;
-
-    // ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
-    // if (ret != RT_EOK) {
-    //     LOG_E("fail to set gain\n");
-    //     return -RT_ERROR;
-    // }
-#if HL_IS_TX_DEVICE()
-
-#else
     int8_t ret = 0;
 
     switch (ch) {
-        case 0x01:
+        case HL_AUDIO_CHANNEL_L:
             ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &dB, 4);
             break;
 
-        case 0x02:
+        case HL_AUDIO_CHANNEL_R:
             ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R, &dB, 4);
             break;
 
-        case 0x03:
+        case HL_AUDIO_CHANNEL_ALL:
             ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL, &dB, 4);
             break;
 
@@ -1175,7 +1167,7 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     if (ret != RT_EOK) {
         LOG_E("fail to set (%d) gain\n", HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L);
     }
-#endif
+
 }
 
 #if HL_IS_TX_DEVICE()
@@ -1186,10 +1178,36 @@ static void hl_mod_audio_set_mute(uint8_t mute)
 
     ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
     if (ret != RT_EOK) {
-        LOG_E("fail to set mute\n");
+        LOG_E("fail to set mute");
         return -RT_ERROR;
     }
 }
+
+// 设置输入TX进行降噪模式
+static void hl_mod_audio_set_denoise(uint8_t denoise)
+{
+    int8_t ret = 0;
+
+    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, denoise, 1);
+    if (ret != RT_EOK) {
+        LOG_E("fail to set denoise");
+        return -RT_ERROR;
+    }
+}
+#else
+
+// 设置RX的混音开关
+static void hl_mod_audio_set_mix_switch(uint8_t mix_switch)
+{
+    int8_t ret = 0;
+
+    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MIX_EN, mix_switch, 1);
+    if (ret != RT_EOK) {
+        LOG_E("fail to set mix switch");
+        return -RT_ERROR;
+    }
+}
+
 #endif
 
 // 音频流模式设置
@@ -1405,6 +1423,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 
     s_audio_to_app_mq = p_msg_handle;
     // elm_init();
+    hl_mod_audio_dfs_root();
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_dfs_sd();
     s_record_switch = 0;
@@ -1540,24 +1559,55 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
         case HL_AUDIO_SET_DENOISE_CMD:
             if (ptr == NULL) {
-                LOG_E("HL_MOD_AUDIO_SET_DENOISE_CMD parem error");
+                LOG_E("HL_AUDIO_SET_DENOISE_CMD parem error");
                 return -1;
             }
-            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, ptr, 1);
+
+            if(((char*)ptr)[0] != 0) {
+                hl_mod_audio_set_denoise(1);
+                LOG_I("[%s][line:%d] open denoise", __FUNCTION__, __LINE__);
+            } else {
+                hl_mod_audio_set_denoise(0);
+                LOG_I("[%s][line:%d] close denoise", __FUNCTION__, __LINE__);
+            }
             break;
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_ALL);
+            break;
+        case HL_AUDIO_SET_GAIN_L_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_L_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_L);
+            break;
+        case HL_AUDIO_SET_GAIN_R_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_R_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_R);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_MUTE_CMD parem error");
+                return -1;
+            }
+
             if(((char*)ptr)[0] != 0) {
                 hl_mod_audio_set_mute(1);
-                LOG_I("[%s][line:%d] mic open mute !!!\r\n", __FUNCTION__, __LINE__);
+                LOG_I("[%s][line:%d] mic open mute", __FUNCTION__, __LINE__);
             } else {
                 hl_mod_audio_set_mute(0);
-                LOG_I("[%s][line:%d] mic close mute !!!\r\n", __FUNCTION__, __LINE__);
-            }
-            
-            
+                LOG_I("[%s][line:%d] mic close mute", __FUNCTION__, __LINE__);
+            }            
             break;
         case HL_AUDIO_SET_EQ_CMD:
             break;
@@ -1571,7 +1621,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 
         case HL_AUDIO_MIC_SWITCH_CMD:
             if (ptr == NULL) {
-                LOG_E("HL_MOD_AUDIO_RECORD_CMD parem error");
+                LOG_E("HL_AUDIO_MIC_SWITCH_CMD parem error");
                 return -1;
             }
             if(((char*)ptr)[0] != 0) {
@@ -1608,10 +1658,36 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
 
         case HL_AUDIO_SET_GAIN_CMD:
-            hl_mod_audio_set_gain(((int *)ptr)[0], 0x03);
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_ALL);
+            break;
+        case HL_AUDIO_SET_GAIN_L_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_L_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_L);
+            break;
+        case HL_AUDIO_SET_GAIN_R_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_R_CMD parem error");
+                return -1;
+            }
+
+            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_R);
             break;
 
         case HL_AUDIO_SET_HP_AMP_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_HP_AMP_CMD parem error");
+                return -1;
+            }
+
             if(((char*)ptr)[0] != 0) {
                 // hl_hal_gpio_high(GPIO_AMP_EN);
                 LOG_I("enable hp amp!!!");
@@ -1622,9 +1698,27 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
 
         case HL_AUDIO_STREAM_SET_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_HP_AMP_CMD parem error");
+                return -1;
+            }
+
             hl_mod_audio_stream_set(ptr);
             break;
-            
+        case HL_AUDIO_SET_MIX_SWITCH_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_MIX_SWITCH_CMD parem error");
+                return -1;
+            }
+
+            if(((char*)ptr)[0] != 0) {
+                hl_mod_audio_set_mix_switch(1);
+                LOG_I("enable mix amp!!!");
+            } else {
+                hl_mod_audio_set_mix_switch(0);
+                LOG_I("disable mix amp!!!");
+            }
+            break;
         case HL_USB_MSTORAGE_DISABLE_CMD:
             rt_usbd_msc_disable();
             break;

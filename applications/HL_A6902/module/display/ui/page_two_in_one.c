@@ -10,7 +10,7 @@
  */
 #include "page_two_in_one.h"
 #include "page_common.h"
-#include "language.h"
+// #include "language.h"
 
 #define MAX_OBJ_NUMBER     6
 
@@ -116,7 +116,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -230,23 +230,23 @@ void hl_mod_two_in_one_init(void * init_data)
     if(ptr->two_in_one_choose == HL_TWO_ONE_CHOOSE_LEFT){
         btn_left_cnt = 1;
         btn_right_cnt = 0;
-        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,40,5,15,54,1);
-        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,80,54,1);
-        btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,80,54,0);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,0);
+        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,26,10,15,72,1);
+        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,108,72,1);
+        btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,108,72,0);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
     }
     if(ptr->two_in_one_choose == HL_TWO_ONE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
         btn_right_cnt = 1;
-        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,40,5,15,54,0);
-        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,80,54,0);
-        btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,80,54,1);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,54,1);
+        btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,26,10,15,72,0);
+        btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,108,72,0);
+        btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,108,72,1);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
     }   
 
     lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift);
     lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right);
-    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,15,ptr->ptr_top);
+    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,-10,5,ptr->ptr_top);
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
 }
