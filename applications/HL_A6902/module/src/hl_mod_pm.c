@@ -512,7 +512,7 @@ int hl_mod_pm_start(void)
 
     _pm_mod.thread_exit_flag = 0;
 
-    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
+    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
         LOG_E("pm thread create failed");
         return HL_MOD_PM_FUNC_RET_ERR;
