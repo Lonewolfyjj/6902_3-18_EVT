@@ -9,7 +9,7 @@
  * 
  */
 #include "page_storage.h"
-#include "language.h"
+// #include "language.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -136,7 +136,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -147,7 +147,7 @@ static lv_obj_t * lv_value_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,c
     // char buf[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lab, &language, 0);
+    // lv_obj_set_style_text_font(lab, &language, 0);
     // lv_snprintf(buf, sizeof(buf), "%dh可用", lv_bar_get_value(bar_obj));
     lv_label_set_text(lab,text);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
@@ -261,21 +261,21 @@ void hl_mod_storage_init(void * init_data)
     if(ptr->storage_choose == HL_STORAGE_CHOOSE_LEFT){
         btn_left_cnt = 1;
         btn_right_cnt = 0;
-        btn_left = lv_btn_creat_fun(con1,btn_left_cb,0,0,132,28,1);
-        btn_right = lv_btn_creat_fun(con2,btn_right_cb,0,0,132,28,0);
+        btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,1);
+        btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,0);
     }
     if(ptr->storage_choose == HL_STORAGE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
         btn_right_cnt = 1;
-        btn_left = lv_btn_creat_fun(con1,btn_left_cb,0,0,132,28,0);
-        btn_right = lv_btn_creat_fun(con2,btn_right_cb,0,0,132,28,1);
+        btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,0);
+        btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,1);
     }    
 
-    bar1 = lv_bar_creat_fun(con1,0,34,132,25,ptr->used_tx1);
-    bar2 = lv_bar_creat_fun(con2,0,34,132,25,ptr->used_tx2);
+    bar1 = lv_bar_creat_fun(con1,0,13,132,25,ptr->used_tx1);
+    bar2 = lv_bar_creat_fun(con2,0,13,132,25,ptr->used_tx2);
 
-    lab11 = lv_lab_creat_fun(con1,bar1,LV_ALIGN_OUT_TOP_LEFT,0,0,"TX1");
-    lab21 = lv_lab_creat_fun(con2,bar2,LV_ALIGN_OUT_TOP_LEFT,0,0,"TX2");
+    lab11 = lv_lab_creat_fun(con1,bar1,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX1");
+    lab21 = lv_lab_creat_fun(con2,bar2,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX2");
 
     lab12 = lv_value_lab_creat_fun(con1,lab11,ptr->ptr_time_tx1,LV_ALIGN_OUT_RIGHT_MID,10,0);
     lab22 = lv_value_lab_creat_fun(con2,lab21,ptr->ptr_time_tx2,LV_ALIGN_OUT_RIGHT_MID,10,0);    

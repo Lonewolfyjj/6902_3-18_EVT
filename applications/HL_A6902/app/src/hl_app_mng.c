@@ -108,6 +108,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
+        rt_thread_mdelay(5);
     }
 }
 
@@ -134,7 +135,7 @@ void hl_app_mng_init(void)
 
     hl_mod_upgrade_init(&hl_app_mq);       
 
-	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 20, 2);
+	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 15, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {

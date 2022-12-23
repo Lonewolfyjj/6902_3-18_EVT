@@ -50,7 +50,7 @@ LV_IMG_DECLARE(Other_high_true_white);//高保真
 LV_IMG_DECLARE(Other_sound_black);//声音增强
 LV_IMG_DECLARE(Other_sound_white);//声音增强
 
-static void hl_soundeffect_test_cb(hl_two_in_one_check_t event_num)
+static void hl_soundeffect_test_cb(hl_b_two_in_one_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
