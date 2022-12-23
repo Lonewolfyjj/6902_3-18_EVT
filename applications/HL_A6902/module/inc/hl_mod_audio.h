@@ -63,6 +63,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_MIC_SWITCH_CMD,    
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
+    /// 获取RTC时间 参数<audio_time>
+    HL_AUDIO_RTC_TIME_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 
 typedef enum _hl_mod_audio_indicate
@@ -103,6 +105,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_MIX_SWITCH_CMD, 
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
+    /// 获取RTC时间 参数<audio_time>
+    HL_AUDIO_RTC_TIME_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 
@@ -132,6 +136,22 @@ typedef enum _hl_stream_mode_e
     HL_STREAM_CAP2PLAY_CAP2UAC,
 } HL_ENUM8(hl_stream_mode_e);
 
+#pragma pack(1)
+typedef struct audio_time_t
+{ 
+    /// 年
+    uint16_t year;
+    /// 月  
+    uint8_t month; 
+    /// 日  
+    uint8_t day; 
+    /// 时  
+    uint8_t hour;   
+    /// 分  
+    uint8_t minute;   
+    /// 秒  
+    uint8_t second;  
+} audio_time;
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

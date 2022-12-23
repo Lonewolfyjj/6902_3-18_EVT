@@ -198,7 +198,6 @@ static int  hl_mod_audio_record_switch(uint8_t record_switch);
 // 音频模块发送消息给APP层
 static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param);
 
-static uint8_t s_record_key_flag = 0;
 
 static void mstorage_switch_cb(uint8_t mstorage_state)
 {
@@ -212,9 +211,6 @@ static void mstorage_switch_cb(uint8_t mstorage_state)
     }
 }
 
-
-
-#if HL_IS_TX_DEVICE()
 static int hl_mod_audio_system_rtc_set_default(void)
 {
     rt_err_t ret = RT_EOK; 
@@ -304,10 +300,34 @@ static void hl_mod_audio_rtc_get(char *timer_name)
     }      
 }
 
-static void hl_hal_gpio_audio_record_irq_process(void* args)
+// 获取时间
+static void hl_mod_audio_rtc_get_param(void* timer_param)
 {
-    s_record_key_flag = 1;
+    if (timer_param == NULL) {
+        return;
+    }
+    rtc_time    time;
+    audio_time* timer = (audio_time*)timer_param;
+    memset(&time, 0, sizeof(rtc_time));
+
+    hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+
+    /* 时、分、秒 的校准 */
+    time.hour   = (time.hour & 0x3f) % 24;
+    time.minute = (time.minute & 0x7f) % 60;
+    time.second = (time.second & 0x7f) % 60;
+
+    timer->year   = time.year + 2000;
+    timer->month  = time.month & 0x1f;
+    timer->day    = time.day & 0x3f;
+    timer->hour   = time.hour;
+    timer->minute = time.minute;
+    timer->minute = time.second;
+
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour, time.minute, time.second);
 }
+
+#if HL_IS_TX_DEVICE()
 
 static void hl_mod_audio_record(int p_file_audio, uint8_t* buffer, uint32_t size, uint32_t* s_record_size)
 {
@@ -849,14 +869,6 @@ static void do_record_audio(void* arg)
             }
         }
         
-        if (s_record_key_flag == 1) {
-            s_record_key_flag = 0;
-            if (s_record_switch == 0) {
-                ter = hl_mod_audio_record_switch(1); 
-            } else {
-                ter = hl_mod_audio_record_switch(0);  
-            }
-        }
     }
 err1:
     rt_free(record_buffer);
@@ -1429,13 +1441,15 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);
-    hl_drv_rtc_pcf85063_init();
-    hl_mod_audio_system_rtc_set();
+    
+    
 #else
     // hl_hal_gpio_init(GPIO_AMP_EN);
     // hl_hal_gpio_high(GPIO_AMP_EN);
 #endif
-   
+    hl_drv_rtc_pcf85063_init();
+   hl_mod_audio_system_rtc_set();
+
     ret = hl_mod_audio_param_config();
     if (RT_EOK != ret) {
         LOG_E("hl_mod_audio_param_config failed");
@@ -1640,6 +1654,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             rt_usbd_msc_disable();
             break;
 
+        case HL_AUDIO_RTC_TIME_CMD:
+            hl_mod_audio_rtc_get_param(ptr);
+            break;
+
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
             break;
@@ -1721,6 +1739,9 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
         case HL_USB_MSTORAGE_DISABLE_CMD:
             rt_usbd_msc_disable();
+            break;
+        case HL_AUDIO_RTC_TIME_CMD:
+            hl_mod_audio_rtc_get_param(ptr);
             break;
 
         default:
