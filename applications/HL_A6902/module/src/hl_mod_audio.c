@@ -1452,7 +1452,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
             if (NULL != dsp_config) {   
                 hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118);
                 hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
-                LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
 #endif
