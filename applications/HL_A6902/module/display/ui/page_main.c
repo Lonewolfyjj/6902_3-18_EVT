@@ -452,7 +452,7 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
 
 void hl_mod_main_ioctl(void * ctl_data)
 {
-    return;
+    // return;
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_main_ioctl_t * ptr =  (hl_lvgl_main_ioctl_t *)ctl_data;
     switch(ptr->cmd){
