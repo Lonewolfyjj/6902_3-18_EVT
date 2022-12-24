@@ -46,8 +46,21 @@
 //配对界面
 static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    switch(event_num){
+        case HL_S_TWO_ONE_CHECK_LEFT:
+            value = 0;
+            break;
+        case HL_S_TWO_ONE_CHECK_RIGHT:
+            value = 1;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(DEVICE_PAIR_IND,&value,0);
 }
+
 static void pair_test(void)
 {
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {

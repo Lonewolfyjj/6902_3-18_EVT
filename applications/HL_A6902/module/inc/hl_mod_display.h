@@ -248,7 +248,7 @@ typedef enum _hl_display_fault_code_e
 
 typedef enum _hl_out_msg_e
 {
-    /// 是否恢复出厂设置 1:恢复出厂设置 0 ：不恢复出厂设置
+    /// 是否恢复出厂设置 1:恢复出厂设置 0 ：不恢复出厂设置 uint8_t
     RESTORE_SET_SWITCH_IND,
 
     ///自动录制状态 1：开启 0 ：关闭 uint8_t 
@@ -260,7 +260,7 @@ typedef enum _hl_out_msg_e
     ///声音模式  立体声  单声道  安全音轨 hl_display_sound_module_e
     SOUND_MODULE_SET_IND,
 
-    /// TX12降噪开关  1： 开 0 ：关
+    /// TX12降噪开关  1： 开 0 ：关 uint8_t 
     TX1_NOISE_SWITCH_IND,
     TX2_NOISE_SWITCH_IND,
 
@@ -312,6 +312,9 @@ typedef enum _hl_out_msg_e
 
     /// 自动关机模式 见 uint32_t 单位min  0表示永不关机目前只有15和30min两个选项
     POWEROFF_SET_VAL_IND,
+
+    ///配对 uint8_t 0:取消配对 1：进行配对
+    DEVICE_PAIR_IND,
 
     IND_CNT,
 

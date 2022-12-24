@@ -44,11 +44,32 @@
 #include "page_date.h"
 #include "hl_util_general_type.h"
 
+static hl_display_systime_s systime_recode;
 
 //时间设置界面
 static void hl_date_test_cb(hl_date_choose_t opt,int16_t data)
 {
-    printf("opt = %d  data = %d\n", opt,data);
+    switch(opt){
+        case HL_DATE_YEAR:
+            systime_recode.year = data;
+            break;
+        case HL_DATE_MONTH:
+            systime_recode.month = data;
+            break;
+        case HL_DATE_DAY:
+            systime_recode.data = data;
+            break;
+        case HL_DATE_HOUR:
+            systime_recode.hour = data;
+            break;
+        case HL_DATE_MIN:
+            systime_recode.min = data;
+            break;
+        default:
+            return;
+            break;
+    }
+    // hl_mod_display_send_msg(SYSTIME_SET_VAL_IND,&systime_recode,0);
 }
 
 static void hl_mod_page_setup(void)
@@ -63,6 +84,13 @@ static void hl_mod_page_setup(void)
         .month = 12,
         .year = 2022,
     };
+
+    systime_recode.year = data.year;
+    systime_recode.month = data.month;
+    systime_recode.data = data.day;
+    systime_recode.hour = data.hour;
+    systime_recode.min = data.min;
+
     hl_mod_date_init(&data);
 
     hl_lvgl_date_ioctl_t date_ctl = 

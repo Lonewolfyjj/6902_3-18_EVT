@@ -46,7 +46,22 @@
 //自动关机界面
 static void hl_autopoweroff_test_cb(hl_three_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint32_t value = 0;
+    switch(event_num){
+        case HL_THREE_ONE_CHECK_LEFT:
+            value = 0;
+            break;
+        case HL_THREE_ONE_CHECK_MID:
+            value = 15;
+            break;
+        case HL_THREE_ONE_CHECK_RIGHT:
+            value = 30;
+            break;
+        default:
+            return ;
+            break;
+    }    
+    hl_mod_display_send_msg(POWEROFF_SET_VAL_IND,&value,0);
 }
 
 static void hl_mod_page_setup(void)

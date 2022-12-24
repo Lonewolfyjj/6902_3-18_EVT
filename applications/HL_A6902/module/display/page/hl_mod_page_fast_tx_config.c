@@ -43,9 +43,40 @@
 #include "hl_util_general_type.h"
 
 //录制开关、静音、降噪开关界面
-static void hl_moreone_test_cb(hl_storage_check_t event_num)
+static void hl_moreone_test_cb(hl_moreone_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    hl_out_msg_e msg_cmd;
+    switch(event_num){
+        case HL_MOREONE_CHECK_ONE_LEFT:
+            msg_cmd = TX1_RECORD_STATE_SWITCH_IND;
+            value = 1;
+            break;
+        case HL_MOREONE_CHECK_ONE_RIGHT:
+            msg_cmd = TX1_RECORD_STATE_SWITCH_IND;
+            value = 0;
+            break;
+        case HL_MOREONE_CHECK_TWO_LEFT:
+            msg_cmd = TX1_MUTE_SWITCH_SWITCH_IND;
+            value = 1;
+            break;
+        case HL_MOREONE_CHECK_TWO_RIGHT:
+            msg_cmd = TX1_MUTE_SWITCH_SWITCH_IND;
+            value = 0;
+            break;
+        case HL_MOREONE_CHECK_THREE_LEFT: 
+            msg_cmd = TX1_NOISE_SWITCH_IND;
+            value = 1;
+            break;
+        case HL_MOREONE_CHECK_THREE_RIGHT:
+            msg_cmd = TX1_NOISE_SWITCH_IND;
+            value = 0;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(msg_cmd,&value,0);
 }
 
 static  void fast_conf_init(void)

@@ -13,7 +13,19 @@
 
 static void hl_recodeprotect_test_cb(hl_two_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    switch(event_num){
+        case HL_TWO_ONE_CHECK_LEFT:
+            value = 1;
+            break;
+        case HL_TWO_ONE_CHECK_RIGHT:
+            value = 0;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(AUTO_RECORD_PORTECT_SWITCH_IND,&value,0);
 }
 
 static void hl_mod_page_setup(void)

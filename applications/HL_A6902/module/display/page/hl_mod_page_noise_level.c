@@ -47,7 +47,8 @@ LV_IMG_DECLARE(Other_mic_black);
 LV_IMG_DECLARE(Other_voice);
 static void hl_bar_test_cb(int16_t bar_num)
 {
-    printf("bar_num = %d\n", bar_num);
+    uint8_t value = bar_num;
+    hl_mod_display_send_msg(TX_NOISE_LEVEL_VAL_IND,&value,0);
 }
 
 static void hl_mod_page_setup(void)
