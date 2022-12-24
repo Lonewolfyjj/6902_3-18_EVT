@@ -23,7 +23,7 @@ static lv_obj_t * power_bar_tx1,*power_bar_tx2;
 static lv_obj_t * voice_img_tx1,*voice_img_tx2;
 static lv_obj_t * power_img_tx1,*power_img_tx2;
 static lv_obj_t * voice_lab_tx1,*voice_lab_tx2;
-static lv_obj_t * power_lab_tx1,*power_lab_tx2;
+// static lv_obj_t * power_lab_tx1,*power_lab_tx2;
 static lv_obj_t * device_lab_tx1,*device_lab_tx2;
 static lv_obj_t * video_dot_tx1,*video_dot_tx2;
 static lv_obj_t * tx1_signal_obj[5];
@@ -67,7 +67,7 @@ static void lv_style_page1_init(void)
     //lv_area_creat_fun函数使用
     lv_style_init(&style_area_main);
     lv_style_set_bg_opa(&style_area_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_area_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_area_main, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_area_main,0);
     lv_style_set_outline_width(&style_area_main,0);
     lv_style_set_radius(&style_area_main, 5);
@@ -75,20 +75,20 @@ static void lv_style_page1_init(void)
     //lv_voice_sbar_creat_fun函数使用
     lv_style_init(&style_voice_sbar_indicator);
     lv_style_set_bg_opa(&style_voice_sbar_indicator, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_voice_sbar_indicator, lv_palette_main(LV_PALETTE_GREEN));
+    // lv_style_set_bg_color(&style_voice_sbar_indicator, lv_palette_main(LV_PALETTE_GREEN));
     lv_style_set_bg_img_src(&style_voice_sbar_indicator,&Main_volumebar_short);//使用图片做源
     lv_style_set_radius(&style_voice_sbar_indicator, 0);
 
     lv_style_init(&style_voice_bar_main);
     lv_style_set_bg_opa(&style_voice_bar_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_voice_bar_main, lv_palette_main(LV_PALETTE_GREY));
-    lv_style_set_bg_color(&style_voice_bar_main, lv_palette_lighten(LV_PALETTE_GREY,1));
+    // lv_style_set_bg_color(&style_voice_bar_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_voice_bar_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_radius(&style_voice_bar_main, 0);
 
     //lv_voice_lbar_creat_fun函数使用
     lv_style_init(&style_voice_lbar_indicator);
     lv_style_set_bg_opa(&style_voice_lbar_indicator, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_voice_lbar_indicator, lv_palette_main(LV_PALETTE_GREEN));
+    // lv_style_set_bg_color(&style_voice_lbar_indicator, lv_palette_main(LV_PALETTE_GREEN));
     lv_style_set_bg_img_src(&style_voice_lbar_indicator,&Main_volumebar_long);//使用图片做源
     lv_style_set_radius(&style_voice_lbar_indicator, 0);
 
@@ -110,21 +110,21 @@ static void lv_style_page1_init(void)
 
     //lv_voice_lab_creat_fun函数使用
     lv_style_init(&style_voice_label);
-    lv_style_set_bg_opa(&style_voice_label, LV_OPA_COVER);
+    lv_style_set_bg_opa(&style_voice_label, LV_OPA_TRANSP);
     lv_style_set_bg_color(&style_voice_label, lv_palette_main(LV_PALETTE_GREY));
     lv_style_set_text_opa(&style_voice_label, LV_OPA_COVER);
     lv_style_set_text_color(&style_voice_label, lv_color_white());
 
     //lv_power_lab_creat_fun函数使用
     lv_style_init(&style_power_label);
-    lv_style_set_bg_opa(&style_power_label, LV_OPA_COVER);
+    lv_style_set_bg_opa(&style_power_label, LV_OPA_TRANSP);
     lv_style_set_bg_color(&style_power_label, lv_palette_main(LV_PALETTE_GREY));
     lv_style_set_text_opa(&style_power_label, LV_OPA_COVER);
     lv_style_set_text_color(&style_power_label, lv_color_white());
 
     //lv_device_lab_creat_fun
     lv_style_init(&style_device_label);
-    lv_style_set_bg_opa(&style_device_label, LV_OPA_COVER);
+    lv_style_set_bg_opa(&style_device_label, LV_OPA_TRANSP);
     lv_style_set_bg_color(&style_device_label, lv_palette_main(LV_PALETTE_GREY));
     lv_style_set_text_opa(&style_device_label, LV_OPA_COVER);
     lv_style_set_text_color(&style_device_label, lv_color_white());
@@ -305,22 +305,22 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 
 static void lv_signal_tx1_set(int16_t signal)
 {    
-    tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_0,8,-2,256,0);
-    tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_1,8,-2,256,0);
-    tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_2,8,-2,256,0);
-    tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_3,8,-2,256,0);
-    tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_4,8,-2,256,0);
+    tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_0,8,-4,256,0);
+    tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_1,8,-4,256,0);
+    tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_2,8,-4,256,0);
+    tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_3,8,-4,256,0);
+    tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_4,8,-4,256,0);
 
     lv_signal_hide_set(1,signal);
 }
 
 static void lv_signal_tx2_set(int16_t signal)
 {    
-    tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_0,8,-2,256,0);
-    tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_1,8,-2,256,0);
-    tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_2,8,-2,256,0);
-    tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_3,8,-2,256,0);
-    tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_4,8,-2,256,0);
+    tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_0,8,-4,256,0);
+    tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_1,8,-4,256,0);
+    tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_2,8,-4,256,0);
+    tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_3,8,-4,256,0);
+    tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_4,8,-4,256,0);
 
     lv_signal_hide_set(2,signal);
 }
@@ -328,37 +328,37 @@ static void lv_signal_tx2_set(int16_t signal)
 static void lv_display_tx1(device_data_t * init_data)
 {
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-8,2,256);
-    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-6,256);
+    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-14,6,256);
+    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
 
     voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
     
     voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,0,0);
-    power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
+    // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
 
     lv_signal_tx1_set(init_data->signal);
 
-    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,16,6,init_data->record);
+    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_data->record);
 }
 
 static void lv_display_tx2(device_data_t * init_data)
 {
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-8,2,256);
-    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-6,256);
+    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-14,6,256);
+    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
 
     voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
     
     voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,0,0);
-    power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0);
+    // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0);
     device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
 
     lv_signal_tx2_set(init_data->signal);
 
-    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,16,6,init_data->record);
+    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_data->record);
 }
 
 static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
@@ -367,11 +367,11 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,138,94);
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,150,-6,138,94);
     //音量喇叭图片
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-8,2,256);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-8,2,256);
+    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-14,6,256);
+    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-14,6,256);
     //电池图标图片
-    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-6,256);
-    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-6,256);
+    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
+    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
     //音量大小进度条
     voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
     voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
@@ -379,11 +379,11 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
     //音量大小文本
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,0,0);
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,0,0);   
+    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,6,0);
+    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,6,0);   
     //电池电量大小文本
-    power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
-    power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
+    // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
+    // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
     //设备文本
     device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
     device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
@@ -392,8 +392,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     lv_signal_tx2_set(init_tx2->signal);
 
     //录制状态红点
-    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,16,6,init_tx1->record);
-    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,16,6,init_tx2->record);
+    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_tx1->record);
+    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_tx2->record);
 }
 
 static void lv_delete_style(void)
@@ -452,7 +452,6 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
 
 void hl_mod_main_ioctl(void * ctl_data)
 {
-    return;
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_main_ioctl_t * ptr =  (hl_lvgl_main_ioctl_t *)ctl_data;
     switch(ptr->cmd){
@@ -469,8 +468,8 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
         case HL_CHANGE_TX1_ELEC:
             lv_bar_set_value(power_bar_tx1, ptr->tx_device_1.electric, LV_ANIM_ON);
-            lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_1.electric);
-            lv_label_set_text(power_lab_tx1,buf);
+            // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_1.electric);
+            // lv_label_set_text(power_lab_tx1,buf);
             main_init.tx_device_1.electric = ptr->tx_device_1.electric;
             break;
         case HL_CHANGE_TX1_VOL:           
@@ -491,8 +490,8 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
         case HL_CHANGE_TX2_ELEC:
             lv_bar_set_value(power_bar_tx2, ptr->tx_device_2.electric, LV_ANIM_ON);
-            lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_2.electric);
-            lv_label_set_text(power_lab_tx2,buf);
+            // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_2.electric);
+            // lv_label_set_text(power_lab_tx2,buf);
             main_init.tx_device_2.electric = ptr->tx_device_2.electric;
             break;
         case HL_CHANGE_TX2_VOL:
@@ -536,7 +535,7 @@ void hl_mod_main_init(void * init_data)
     }
     if(ptr->display_tx_device == HL_DISPLAY_DOUBLE){
         lv_display_double(&ptr->tx_device_1,&ptr->tx_device_2);
-    }    
+    } 
 }
 
 /*
