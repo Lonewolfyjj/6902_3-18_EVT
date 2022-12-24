@@ -169,7 +169,8 @@ static struct dsp_work* sg_dsp_work = NULL;
 static uint16_t sg_dsp_frame_bytes = 0;
 /// DSP 控制暂存
 static dsp_io_ctrl_t sg_dsp_io_ctrl = { 0 };
-
+/// DSP控制句柄
+static hl_drv_rk_xtensa_dsp_config_t_p sg_audio_mod_dsp_handle = NULL;
 #if HL_IS_TX_DEVICE()
 // tx = 1
 static lib_a6902_algorithm_param_type_t_p sg_tx_dsp_param = NULL;
@@ -352,6 +353,8 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
 #endif
 #endif
 
+    sg_audio_mod_dsp_handle = NULL;
+
     return 0;
 }
 
@@ -373,6 +376,8 @@ static uint8_t _hl_drv_rk_xtensa_dsp_disable_dsp()
  */
 static uint8_t _hl_drv_rk_xtensa_dsp_set_dsp_config(hl_drv_rk_xtensa_dsp_config_t_p config)
 {
+
+    sg_audio_mod_dsp_handle = config;
 
 #if HL_IS_TX_DEVICE()
     // tx = 1
@@ -472,6 +477,71 @@ static uint8_t _hl_drv_rk_stensa_dsp_init_frame(hl_drv_rk_xtensa_dsp_t_p handle)
     return 0;
 }
 
+/**
+ * 
+ * @brief 更新DSP的参数至当前的APP中
+ * @return uint8_t 
+ * @date 2022-12-21
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2022-12-21      <td>yangxianyun     <td>新建
+ * </table>
+ */
+static uint8_t _hl_drv_rk_xtensa_dsp_update_get_data()
+{
+    switch (sg_dsp_io_ctrl.io_ctrl_param) {
+        case EM_A6902_ALGO_IO_CTL_PARAM_NS:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_GAIN_EN:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_VU_EN:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_VU_L:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_VU_R:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL:
+#if !HL_IS_TX_DEVICE()
+            if (NULL != sg_audio_mod_dsp_handle) {
+                sg_audio_mod_dsp_handle->vu_l = sg_dsp_io_ctrl.io_ctrl_value >> 16;
+                sg_audio_mod_dsp_handle->vu_r = sg_dsp_io_ctrl.io_ctrl_value & 0xffff;
+                // HL_DRV_DSP_LOG("2: l:%d, r:%d | %08x\r\n", sg_audio_mod_dsp_handle->vu_l, sg_audio_mod_dsp_handle->vu_r, sg_dsp_io_ctrl.io_ctrl_value);
+            }
+#endif
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_MIXER:
+            /* code */
+            break;
+        case EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD:
+            /* code */
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
 /* Exported functions --------------------------------------------------------*/
 
 uint8_t hl_drv_rk_xtensa_dsp_init()
@@ -499,8 +569,8 @@ uint8_t hl_drv_rk_xtensa_dsp_init()
 #endif
 
     // default bypass model
-    sg_dsp_io_ctrl.io_ctrl_op      = 3;
-    sg_dsp_io_ctrl.io_ctrl_notify  = 1;
+    sg_dsp_io_ctrl.io_ctrl_op     = 3;
+    sg_dsp_io_ctrl.io_ctrl_notify = 1;
 
     ret = _hl_drv_rk_stensa_dsp_init_frame(sg_dsp_drv_handle);
     if (ret) {
@@ -590,6 +660,10 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         sg_dsp_io_ctrl.io_ctrl_notify = 0;
         HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_tx_dsp_param->io_ctrl_op,
                        sg_tx_dsp_param->io_ctrl_param, sg_tx_dsp_param->io_ctrl_value);
+        if (sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET
+            || sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_GET_ALANGO) {
+            _hl_drv_rk_xtensa_dsp_update_get_data();
+        }
     }
 #else
     // do rx dsp process
@@ -624,8 +698,15 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     // DSP io control
     if (sg_dsp_io_ctrl.io_ctrl_notify) {
         sg_dsp_io_ctrl.io_ctrl_notify = 0;
-        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_rx_dsp_param->io_ctrl_op,
-                       sg_rx_dsp_param->io_ctrl_param, sg_rx_dsp_param->io_ctrl_value);
+        if (sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET
+            || sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_GET_ALANGO) {
+            sg_dsp_io_ctrl.io_ctrl_op     = sg_rx_dsp_param->io_ctrl_op;
+            sg_dsp_io_ctrl.io_ctrl_param  = sg_rx_dsp_param->io_ctrl_param;
+            sg_dsp_io_ctrl.io_ctrl_value  = sg_rx_dsp_param->io_ctrl_value;
+            _hl_drv_rk_xtensa_dsp_update_get_data();
+        }
+        // HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_rx_dsp_param->io_ctrl_op,
+        //                sg_rx_dsp_param->io_ctrl_param, sg_rx_dsp_param->io_ctrl_value);
     }
 #else
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_bypass_dsp_param->in_buf, sg_rx_bypass_dsp_param->process_buff_len);
@@ -697,31 +778,31 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             // MUTE在TX
 
 #if HL_IS_TX_DEVICE()
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_MUTE;
-            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
             // sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
 
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L:
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
             sg_dsp_io_ctrl.io_ctrl_notify = 1;
             break;
-        
+
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R:
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
             sg_dsp_io_ctrl.io_ctrl_notify = 1;
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL:
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
             sg_dsp_io_ctrl.io_ctrl_notify = 1;
             break;
 
@@ -729,23 +810,34 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
 #if !HL_IS_TX_DEVICE()
             // RX才有MI混音
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_EN;
+            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
             sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
 
             break;
 
+        case HL_EM_DRV_RK_DSP_CMD_SET_VU:
+
+#if !HL_IS_TX_DEVICE()
+            // RX才有VU
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+#endif
+            return 0;
+
+            break;
         case HL_EM_DRV_RK_DSP_CMD_GET_VU:
 
 #if !HL_IS_TX_DEVICE()
             // RX才有VU
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
-            sg_dsp_io_ctrl.io_ctrl_param = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
             sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
+            return 0;
 
             break;
         default:
@@ -753,7 +845,8 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
     }
 
-    HL_DRV_DSP_LOG("%s: op=%d,pa=%d,va=%d\r\n", __func__, sg_dsp_io_ctrl.io_ctrl_op, sg_dsp_io_ctrl.io_ctrl_param, sg_dsp_io_ctrl.io_ctrl_value);
+    HL_DRV_DSP_LOG("%s: op=%d,pa=%d,va=%d\r\n", __func__, sg_dsp_io_ctrl.io_ctrl_op, sg_dsp_io_ctrl.io_ctrl_param,
+                   sg_dsp_io_ctrl.io_ctrl_value);
     return 0;
 }
 
