@@ -238,10 +238,10 @@ void hl_mod_b_two_in_one_init(void * init_data)
         btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,82,1);
     }
 
-    img11 = lv_img_creat_fun(btn_left,ptr->src11,10,0);
-    img12 = lv_img_creat_fun(btn_left,ptr->src12,10,0);
-    img21 = lv_img_creat_fun(btn_right,ptr->src21,10,0);
-    img22 = lv_img_creat_fun(btn_right,ptr->src22,10,0);
+    img11 = lv_img_creat_fun(btn_left,ptr->src11,0,0);
+    img12 = lv_img_creat_fun(btn_left,ptr->src12,0,0);
+    img21 = lv_img_creat_fun(btn_right,ptr->src21,0,0);
+    img22 = lv_img_creat_fun(btn_right,ptr->src22,0,0);
 
     lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_lift);
     lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_right);

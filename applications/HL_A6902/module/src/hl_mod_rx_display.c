@@ -223,7 +223,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     uint8_t              res    = HL_DISPLAY_SUCCESS;
     hl_display_screen_s* data_p = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
-    LOG_D("cmd=%d\r\n", cmd);
+    // LOG_D("cmd=%d\r\n", cmd);
     switch (cmd) {
         // 更新按鍵的操作
         case MSG_INPUT_UPDATE_CMD: {
