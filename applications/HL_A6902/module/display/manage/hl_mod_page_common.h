@@ -147,6 +147,8 @@ typedef struct _hl_display_screen_change_s{
     uint32_t tx2_remained_record_time:1;
     uint32_t ota_upgrade_progress:1;
     uint32_t device_fault_code:1;
+    // 菜单复位时的状态
+    uint32_t menu_defaut:1;
     uint32_t systime:1;
 }hl_display_screen_change_s;
 
@@ -193,10 +195,9 @@ void hl_mod_menu_goto_home_page(void);
 void hl_mod_menu_backbtn_scan();
 void hl_mod_menu_goto_fast_config_scan();
 void hl_mod_menu_goto_quickset_scan();
-uint8_t hl_mod_menu_icon_event(uint32_t current);
-void hl_mod_menu_icon_init();
-uint32_t hl_mod_menu_get_icon();
-void hl_mod_menu_icon_set(uint32_t num);
+
+
+
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
 
 uint8_t hl_mod_display_msq_set(rt_mq_t msq);

@@ -46,7 +46,7 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-#define BACKTOUCHKEY_DEBANCE_TIMER 20
+#define BACKTOUCHKEY_DEBANCE_TIMER 10
 
 typedef struct _hl_display_msg_t
 {
@@ -106,8 +106,6 @@ static hl_display_screen_change_s change_flag = { 0 };
 // 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
-// 菜单当前的居中的图标
-static uint8_t now_center_icon = 0;
 
 
 // 返回触摸按键消抖时间
@@ -120,28 +118,10 @@ hl_screen_page_e hl_mod_display_scr_get_page(void)
     return hl_screendata.page_id;
 }
 
-uint8_t hl_mod_menu_icon_event(uint32_t current)
-{
-    rt_kprintf("Page:%x\n", current);
 
-    //未锁屏回主界面
-    if (!(current & 0x80)) {
-        return 1;
-    } else {
-        now_center_icon = current & 0x7F;
-        return 0;
-    }
-    return 0;
-}
 
-void hl_mod_menu_icon_init()
-{
-    now_center_icon = 0;
-}
-uint32_t hl_mod_menu_get_icon()
-{
-    return now_center_icon;
-}
+
+
 hl_display_screen_s* hl_mod_page_get_screen_data_ptr()
 {
     return &hl_screendata;
@@ -326,10 +306,7 @@ int8_t hl_mod_get_rx_knob_val(void)
     now_knob_data = 0;
     return data;
 }
-void hl_mod_menu_icon_set(uint32_t num)
-{
-    now_center_icon = num;
-}
+
 
 // 设定旋钮的值
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num)
@@ -342,6 +319,7 @@ int16_t hl_mod_knob_select_val_get(int16_t* ptr)
 {
     return *ptr;
 }
+
 
 // 更新旋钮的当前值 left right 分别是上下限 true表示开启循环选择， FALSE 表示关闭循环选择
 int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right, bool en)
@@ -376,23 +354,7 @@ int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right,
     return 0;
 }
 
-void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum)
-{
-    int8_t data = hl_mod_get_rx_knob_val();
 
-    // LV_LOG_USER("knob1=%d\n",data);
-    if (data != 0) {
-        center += data;
-        if (center >= maxnum) {
-            center = maxnum - 1;
-        } else if (center < 0) {
-            center = 0;
-        } 
-        LV_LOG_USER("icon_pos=%d\n", center);
-        lv_set_icon_postion(center, false);
-        hl_mod_menu_icon_set(center);
-    }
-}
 
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb)
 {

@@ -680,7 +680,7 @@ static void hl_mod_page_exit(void)
 {
     hl_mod_main_tx_deal_deinit();
     hl_mod_icon_deal_deinit();
-    //删除TOP
+    // // 删除TOP
     hl_lvgl_top_ioctl_t ctl_data = {
         .top_cmd = HL_TOP_ALL_DEL,
     };
@@ -695,11 +695,12 @@ static void hl_mod_page_exit(void)
 static void hl_mod_page_run(void)
 {
     uint8_t key_event;
-
+    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     //单机确定键进入菜单
     key_event = hl_mod_get_knob_okkey_val();
 
     if (key_event == HL_KEY_EVENT_SHORT) {
+        flag->menu_defaut = 1;
         PageManager_PagePush(PAGE_MAIN_MENU);
     }
 

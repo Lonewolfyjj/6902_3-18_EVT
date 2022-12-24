@@ -46,6 +46,8 @@
 
 #define MENU_ICON_NUM 2
 
+static int8_t menu_center_icon = 0;
+
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
     PAGE_MONITOR_VOLUME_SET,
@@ -60,21 +62,29 @@ LV_IMG_DECLARE(Menu_uac_out);        //UAC输出
 
 static void page_11_test_cb(uint32_t current)
 {
-    if (hl_mod_menu_icon_event(current)) {
+    if (!(current & 0x80)) {
         hl_mod_next_menu_enter(next_level_menu_tab, current & 0x7F, MENU_ICON_NUM);
+    } else {
+        hl_mod_knob_select_val_set(&menu_center_icon, current & 0x7F);
     }
 }
 
 static void hl_mod_page_setup(void)
 {
+    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
+
     menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_monitor_voice, "监听音量"),
         // ADD_IMG_DATA(NULL, NULL, &Menu_uac_in, "UAC输入"),
         ADD_IMG_DATA(NULL, NULL, &Menu_uac_out, "UAC输出"),
     };
-    // 旋钮复位
-    hl_mod_menu_icon_init();
-    page_menu_init(pic_list, MENU_ICON_NUM, page_11_test_cb);
+    // 如果是下一级菜单，就默认显示最左边图标
+    if (flag->menu_defaut) {
+        flag->menu_defaut = 0;
+        hl_mod_knob_select_val_set(&menu_center_icon, 0);
+    }
+
+    page_menu_init(pic_list, MENU_ICON_NUM, page_11_test_cb,menu_center_icon);
 }
 
 static void hl_mod_page_exit(void)
@@ -84,13 +94,11 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    //菜单点击按键
-    hl_mod_menu_enterbtn_scan(hl_mod_menu_get_icon());
-
-    // 返回按键
+    hl_mod_menu_enterbtn_scan(hl_mod_knob_select_val_get(&menu_center_icon));
     hl_mod_menu_backbtn_scan();
-
-    hl_mod_menu_knob_icon_change(hl_mod_menu_get_icon(), MENU_ICON_NUM);
+    if (hl_mod_knob_select_val_change(&menu_center_icon,0,MENU_ICON_NUM - 1, false) ) {
+        lv_set_icon_postion(menu_center_icon, false);
+    }
 }
 
 PAGE_DEC(PAGE_VOLUME_MENU)

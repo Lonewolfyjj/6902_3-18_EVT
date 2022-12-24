@@ -42,6 +42,7 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
+// static hl_lvgl_moreone_init_t now_opt = HL_MOREONE_OPTION_ONE;
 //录制开关、静音、降噪开关界面
 static void hl_moreone_test_cb(hl_moreone_check_t event_num)
 {
@@ -81,6 +82,8 @@ static void hl_moreone_test_cb(hl_moreone_check_t event_num)
 
 static  void fast_conf_init(void)
 {    
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+
     hl_lvgl_moreone_init_t data = 
     {
         .func_cb = hl_moreone_test_cb,
@@ -89,6 +92,10 @@ static  void fast_conf_init(void)
         .moreone_choose_opt.option_three = HL_MOREONE_CHOOSE_LEFT,
         .moreone_mid_opt = HL_MOREONE_OPTION_THREE,
     };
+
+    // now_opt = HL_MOREONE_OPTION_ONE;
+    // now_choosed = HL_MOREONE_CHECK_ONE_LEFT;
+
     hl_mod_moreone_init(&data);
 
     hl_lvgl_moreone_ioctl_t moreone_ctl = 
