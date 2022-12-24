@@ -43,7 +43,7 @@
 #include "hl_mod_input.h"
 
 //录制开关、静音、降噪开关界面
-static void hl_moreone_test_cb(hl_storage_check_t event_num)
+static void hl_moreone_test_cb(hl_moreone_check_t event_num)
 {
     printf("event_num = %d\n", event_num);
 }
