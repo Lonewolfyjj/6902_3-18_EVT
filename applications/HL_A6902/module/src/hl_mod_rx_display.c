@@ -55,9 +55,9 @@
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
 
-#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*4 
+#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*2
 
-#define ROT_SCAN_IN_TIME 5*100
+#define ROT_SCAN_IN_TIME 5*40
 
 static hl_timeout_t rot_scan_in;
 
