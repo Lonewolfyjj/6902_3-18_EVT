@@ -368,23 +368,23 @@ static void hl_mod_main_tx_deal_deinit()
     switch (main_tx) {
         case HL_RF_LR_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_R_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_L_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_UNCONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_PAIRING:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         default:
             break;
