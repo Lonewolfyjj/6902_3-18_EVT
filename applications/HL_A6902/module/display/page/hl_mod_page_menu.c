@@ -108,9 +108,9 @@ static void hl_mod_page_setup(void)
         flag->menu_defaut = 0;
         hl_mod_knob_select_val_set(&menu_center_icon, 0);
     }
-    rt_kprintf("step=%d\n",menu_center_icon);
+
     page_menu_init(pic_list, MENU_ICON_NUM, page_7_test_cb,menu_center_icon);
-    rt_kprintf("step=%d\n",menu_center_icon);
+
 }
 
 static void hl_mod_page_exit(void)

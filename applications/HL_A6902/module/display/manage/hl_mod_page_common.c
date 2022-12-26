@@ -471,11 +471,12 @@ void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void* param, uint32_t len)
     if (hl_mod_display.msg_hander == RT_NULL) {
         LOG_E("msg no init\n");
     }
+    rt_memset(&hl_mod_display.msg,0,sizeof(hl_mod_display.msg));
     hl_mod_display.msg.sender = DISPLAY_MODE;
     hl_mod_display.msg.cmd    = msg_cmd;
     if (len == 0) {
         hl_mod_display.msg.param.u32_param = *(uint32_t*)param;
-        LOG_E("msg[%d][%d]\n",hl_mod_display.msg.cmd,hl_mod_display.msg.param.u32_param);
+        LOG_E("msg[%d][%x]\n",hl_mod_display.msg.cmd,*(uint32_t*)param);
     } else {
         hl_mod_display.msg.param.ptr = param;
         LOG_E("msg[%d]\n",msg_cmd);
