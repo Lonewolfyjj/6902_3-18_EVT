@@ -88,7 +88,7 @@ static void save_before_back(void)
 
 static void hl_mod_page_loop(void)
 {
-    hl_mod_page_volume_loop(TX2_LINE_OUT_VOLUME_VAL_IND, save_before_back);
+    hl_mod_page_volume_loop(TX2_LINE_OUT_VOLUME_VAL_IND, save_before_back,MIN_LINEOUT_VOLUME,MAX_LINEOUT_VOLUME);
 }
 
 PAGE_DEC(PAGE_LINE_OUT_STEREO_RIGHT)

@@ -84,7 +84,7 @@ int16_t hl_mod_page_volume_get(void)
     return hl_mod_knob_select_val_get(&now_volume);
 }
 
-void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void))
+void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void),int16_t left, int16_t right)
 {
     int8_t                 knob_val = 0;
     hl_lvgl_barset_ioctl_t ctrl;
@@ -94,7 +94,7 @@ void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void))
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();
     // 旋钮选择TX配置通道
-    knob_val = hl_mod_knob_select_val_change(&now_volume, MIN_LINEOUT_VOLUME, MAX_LINEOUT_VOLUME, false);
+    knob_val = hl_mod_knob_select_val_change(&now_volume, left, right, false);
 
     // 设置触发点击事件
     if (ok_btn == HL_KEY_EVENT_SHORT) {

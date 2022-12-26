@@ -85,7 +85,7 @@ static void save_before_back(void)
 
 static void hl_mod_page_loop(void)
 {
-    hl_mod_page_volume_loop(MONITOR_VOLUME_VAL_IND, save_before_back);
+    hl_mod_page_volume_loop(MONITOR_VOLUME_VAL_IND, save_before_back,MIN_LINEOUT_VOLUME,MAX_LINEOUT_VOLUME);
 }
 
 PAGE_DEC(PAGE_MONITOR_VOLUME_SET)
