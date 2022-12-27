@@ -9,7 +9,9 @@
  * 
  */
 #include "page_moreone.h"
+
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     7
 
@@ -491,7 +493,10 @@ void hl_mod_moreone_init(void * init_data)
 {
     hl_lvgl_moreone_init_t * ptr = (hl_lvgl_moreone_init_t *)init_data;
     hl_moreone_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_moreone) {
+        page_style_bit.page_moreone = 1;
+        lv_style_page4_init();
+    }
 
     con_src = lv_con_scr_creat(270,140);
     lv_obj_set_flex_align(con_src,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);

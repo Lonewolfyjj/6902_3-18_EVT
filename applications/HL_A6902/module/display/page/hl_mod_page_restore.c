@@ -91,8 +91,8 @@ static void hl_mod_page_exit(void)
     };
 
     hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
-    s_two_in_one_test_ctl.s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    // s_two_in_one_test_ctl.s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_DEL_STYLE;
+    // hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

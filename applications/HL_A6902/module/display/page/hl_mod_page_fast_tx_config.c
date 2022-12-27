@@ -255,11 +255,11 @@ static void hl_mod_page_exit(void)
     data.moreone_choose     = 0;
     data.moreone_choose_opt = HL_MOREONE_OPTION_EXTI;
     hl_mod_moreone_ioctl(&data);
-
-    data.cmd_type           = HL_MOREONE_POSTION_CMD;
-    data.moreone_choose     = 0;
-    data.moreone_choose_opt = HL_MOREONE_OPTION_DELETE_STYLE;
-    hl_mod_moreone_ioctl(&data);
+    rt_thread_mdelay(10);
+    // data.cmd_type           = HL_MOREONE_POSTION_CMD;
+    // data.moreone_choose     = 0;
+    // data.moreone_choose_opt = HL_MOREONE_OPTION_DELETE_STYLE;
+    // hl_mod_moreone_ioctl(&data);
 }
 
 // static void hl_mod_switch_choose(hl_moreone_choose_t moreone_choose, hl_moreone_mid_opt_t moreone_choose_opt)

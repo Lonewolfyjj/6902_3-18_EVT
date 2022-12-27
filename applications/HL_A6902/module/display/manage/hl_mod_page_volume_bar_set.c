@@ -67,8 +67,8 @@ void hl_mod_page_volume_exit(void)
     hl_lvgl_barset_ioctl_t bar_test;
     bar_test.barset_value = HL_EXTI;
     hl_mod_barset_ioctl(&bar_test);
-    bar_test.barset_value = HL_DELETE_STYLE;
-    hl_mod_barset_ioctl(&bar_test);
+    // bar_test.barset_value = HL_DELETE_STYLE;
+    // hl_mod_barset_ioctl(&bar_test);
 }
 
 void hl_mod_page_volume_update(int16_t volume)
@@ -84,12 +84,12 @@ int16_t hl_mod_page_volume_get(void)
     return hl_mod_knob_select_val_get(&now_volume);
 }
 
-void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void),int16_t left, int16_t right)
+void hl_mod_page_volume_loop(hl_out_msg_e msg, save_func func, int16_t left, int16_t right)
 {
     int8_t                 knob_val = 0;
     hl_lvgl_barset_ioctl_t ctrl;
 
-    int8_t data;
+    int16_t data;
 
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();

@@ -109,8 +109,8 @@ static void hl_mod_page_exit(void)
         .opt = HL_DATE_YEAR,
     };
     hl_mod_date_ioctl(&date_ctl);
-    date_ctl.date_cmd = HL_DATE_DELETE_STYLE_CMD;
-    hl_mod_date_ioctl(&date_ctl);
+    // date_ctl.date_cmd = HL_DATE_DELETE_STYLE_CMD;
+    // hl_mod_date_ioctl(&date_ctl);
 }
 
 static void hl_mod_page_loop(void)

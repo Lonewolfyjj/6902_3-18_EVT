@@ -11,6 +11,7 @@
 #include "page_two_in_one.h"
 #include "page_common.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     6
 
@@ -226,7 +227,11 @@ void hl_mod_two_in_one_init(void * init_data)
 {
     hl_lvgl_two_in_one_init_t * ptr = (hl_lvgl_two_in_one_init_t *)init_data;
     hl_two_in_one_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_two_in_one) {
+        page_style_bit.page_two_in_one = 1;
+        lv_style_page4_init();
+    }
+    
     if(ptr->two_in_one_choose == HL_TWO_ONE_CHOOSE_LEFT){
         btn_left_cnt = 1;
         btn_right_cnt = 0;

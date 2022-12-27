@@ -10,6 +10,7 @@
  */
 #include "page_menu.h"
 #include "language.h"
+#include "page_style_bit.h"
 
 #define CHECK_POS_CENTRE(X,Y)    ((X >= 125) && (X < 175) )//&& (Y > 186) && (Y < 286)
 #define CHECK_POS_LR(X,Y)    (X) < (125) ? 0 : 1 //0:lift 1:right
@@ -250,8 +251,8 @@ void lv_set_icon_postion(uint8_t pos, bool en)
 void lv_menu_exit(void)
 {
     hl_obj_delete(lv_scr_act(),false);
-    lv_style_reset(&screen_style);
-    lv_style_reset(&style_label);
+    // lv_style_reset(&screen_style);
+    // lv_style_reset(&style_label);
 }
 
 void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func,int8_t center)
@@ -259,7 +260,10 @@ void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func,int8_t cent
     uint8_t i;
     ICON_NUMBER = menu_num;
     func_cb = func;
-    lv_style_menu_init();    
+    if (!page_style_bit.page_menu) {
+        page_style_bit.page_menu = 1;
+        lv_style_menu_init();  
+    }
     lv_icon_list_init(ICON_NUMBER,data,center);
     for(i=0;i<ICON_NUMBER;i++){
         lab_obj[i] = data[i].lab;

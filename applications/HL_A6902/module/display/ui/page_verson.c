@@ -10,6 +10,7 @@
  */
 #include "page_verson.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 static lv_style_t style_label;
 static lv_style_t style_screen;
@@ -141,7 +142,11 @@ void hl_mod_verson_ioctl(void * ctl_data)
 void hl_mod_verson_init(void * init_data)
 {
     hl_lvgl_verson_init_t * ptr = (hl_lvgl_verson_init_t *)init_data;
-    lv_style_page4_init();
+    if (!page_style_bit.page_verson) {
+        page_style_bit.page_verson = 1;
+        lv_style_page4_init();
+    }
+    
     con_src = lv_con_scr_creat(180,100);
     con1 = lv_con_child_creat(con_src,172,90);
     con2 = lv_con_child_creat(con_src,172,90);

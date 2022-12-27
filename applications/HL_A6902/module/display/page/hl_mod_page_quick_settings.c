@@ -114,8 +114,8 @@ static void page_s_deinit(hl_display_screen_s* data)
 
     lineout.lineout_choose = HL_LINEOUT_DELETE_PAGE;
     hl_mod_lineout_ioctl(&lineout);
-    lineout.lineout_choose = HL_LINEOUT_DELETE_STYLE;
-    hl_mod_lineout_ioctl(&lineout);
+    // lineout.lineout_choose = HL_LINEOUT_DELETE_STYLE;
+    // hl_mod_lineout_ioctl(&lineout);
 }
 
 // 立体声反初始化

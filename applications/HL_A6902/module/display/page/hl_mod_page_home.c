@@ -390,8 +390,8 @@ static void hl_mod_main_tx_deal_deinit()
             break;
     }
 
-    main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
-    hl_mod_main_ioctl(&main_ctl);
+    // main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
+    // hl_mod_main_ioctl(&main_ctl);
 }
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)

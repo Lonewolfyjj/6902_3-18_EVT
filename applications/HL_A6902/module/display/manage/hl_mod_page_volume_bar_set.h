@@ -38,13 +38,14 @@
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
+typedef void (*save_func)(void);
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 void hl_mod_page_volume_init(int16_t volume);
 void hl_mod_page_volume_exit(void);
 void hl_mod_page_volume_update(int16_t volume);
-void hl_mod_page_volume_loop(hl_out_msg_e msg, void (*func)(void),int16_t left, int16_t right);
+void hl_mod_page_volume_loop(hl_out_msg_e msg, save_func func,int16_t left, int16_t right);
 int16_t hl_mod_page_volume_get(void);
 uint8_t hl_mod_page_volume_send(hl_out_msg_e msg_cmd,int16_t *get_data);
 #endif

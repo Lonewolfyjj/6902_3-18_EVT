@@ -1,5 +1,7 @@
 #include "page_main.h"
 // #include "language.h"
+#include "page_style_bit.h"
+
 
 LV_IMG_DECLARE(Main_horn);//喇叭
 LV_IMG_DECLARE(Main_bat);//电池图标
@@ -527,7 +529,10 @@ void hl_mod_main_init(void * init_data)
 {
     hl_lvgl_main_init_t * ptr = (hl_lvgl_main_init_t *)init_data;
     memcpy(&main_init,ptr,sizeof(hl_lvgl_main_init_t));
-    lv_style_page1_init();
+    if (!page_style_bit.page_main) {
+        lv_style_page1_init();
+        page_style_bit.page_main = 1;
+    }
     if(ptr->display_tx_device == HL_DISPLAY_TX1){
         lv_display_tx1(&ptr->tx_device_1);
     }

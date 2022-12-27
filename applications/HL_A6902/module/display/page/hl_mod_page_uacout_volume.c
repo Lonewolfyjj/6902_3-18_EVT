@@ -64,10 +64,6 @@ static void page_uac_out_init(void)
     hl_mod_barset_init(&bar_test);
 }
 
-static void page_voc_bar_tx1_init(void)
-{
-    page_uac_out_init();
-}
 
 static void hl_mod_page_setup(void)
 {

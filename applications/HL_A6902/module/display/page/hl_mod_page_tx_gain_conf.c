@@ -80,8 +80,8 @@ static void hl_mod_page_exit(void)
     ioctrl.txgain_choose = HL_TX_GAIN_DELETE_PAGE;
     hl_mod_txgain_ioctl(&ioctrl);
 
-    ioctrl.txgain_choose = HL_TX_GAIN_DELETE_STYLE;
-    hl_mod_txgain_ioctl(&ioctrl);
+    // ioctrl.txgain_choose = HL_TX_GAIN_DELETE_STYLE;
+    // hl_mod_txgain_ioctl(&ioctrl);
 }
 
 static void btn_scan()

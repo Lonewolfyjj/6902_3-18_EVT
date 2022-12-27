@@ -37,6 +37,7 @@
 #include "lvgl.h"
 #include "hl_drv_ztw523a.h"
 #include "math.h"
+#include "page_style_bit.h"
 
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
@@ -623,6 +624,7 @@ void lvgl2rtt_init(void)
 }
 void hl_mod_page_all_init(void)
 {
+    hl_page_style_bit_init();
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
 

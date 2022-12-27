@@ -90,8 +90,8 @@ static void hl_mod_page_exit(void)
         .storage_choose = HL_STORAGE_CHOOSE_EXIT,
     };
     hl_mod_storage_ioctl(&storage_ctl);
-    storage_ctl.storage_choose = HL_STORAGE_CHOOSE_DEL_STYLE;
-    hl_mod_storage_ioctl(&storage_ctl);
+    // storage_ctl.storage_choose = HL_STORAGE_CHOOSE_DEL_STYLE;
+    // hl_mod_storage_ioctl(&storage_ctl);
 }
 
 static void hl_mod_page_loop(void)

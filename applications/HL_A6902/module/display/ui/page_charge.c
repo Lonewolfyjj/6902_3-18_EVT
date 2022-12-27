@@ -10,6 +10,7 @@
  */
 #include "page_charge.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 LV_IMG_DECLARE(Main_charging);//充电图标
 LV_IMG_DECLARE(Main_bat);//电池图标
@@ -280,7 +281,11 @@ void hl_mod_charge_init(void * init_data)
 {
     hl_lvgl_charge_init_t * ptr = (hl_lvgl_charge_init_t *)init_data;
     memcpy(&charge_init,ptr,sizeof(hl_lvgl_charge_init_t));
-    lv_style_page_init();
+    if (!page_style_bit.page_charge) {
+        page_style_bit.page_charge = 1;
+        lv_style_page_init();
+    }
+    
     lv_device_top_creat(ptr->electric.electric_box);
 
     if(ptr->display_device & HL_CHARGE_DISPLAY_TX1){
