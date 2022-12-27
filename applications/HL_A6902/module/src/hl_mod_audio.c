@@ -1253,7 +1253,7 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 {
     int8_t ret = 0;
 
-    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, denoise, 1);
+    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &denoise, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set denoise");
         return -RT_ERROR;
