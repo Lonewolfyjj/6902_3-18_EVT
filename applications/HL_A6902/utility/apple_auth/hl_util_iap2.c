@@ -32,9 +32,9 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_DETECT_RECV:
             result = hl_iap2_detect_recv(iap2);
             if (0 == result) {
-                iap2->iap2_printf("[OK][%s:%d] receive detect message!\n", __func__, __LINE__);
+                // iap2->iap2_printf("[OK][%s:%d] receive detect message!\n", __func__, __LINE__);
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_LINK;
-                try_time          = 11;
+                try_time          = 4;
             } else {
                 if (try_time == 0) {
                     iap2->iap2_printf("[ERROR][%s:%d] receive detect message!\n", __func__, __LINE__);
@@ -77,8 +77,16 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
 
     switch (iap2->link_status) {
         case EM_HL_IAP2_STM_LINK_SEND_SYN:
-            result            = hl_iap2_link_send_sync(iap2);
+            do {
+                result = hl_iap2_link_send_sync(iap2);
+                try_time--;
+                if (!try_time) {
+                    iap2->iap2_printf("[ERROR][%s:%d] receive link message!\n", __func__, __LINE__);
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                }
+            } while (result != 0);
             iap2->link_status = EM_HL_IAP2_STM_LINK_RECV_SYN_ACK;
+            try_time          = 11;
             break;
 
         case EM_HL_IAP2_STM_LINK_RECV_SYN_ACK:
@@ -86,7 +94,7 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
                 result = hl_iap2_link_recv_sync_ack(iap2);
                 try_time--;
                 if (!try_time) {
-                    iap2->iap2_printf("[ERROR] [_hl_iap2_link_process] receive link message!\n");
+                    iap2->iap2_printf("[ERROR][%s:%d] receive link message!\n", __func__, __LINE__);
                     iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
                     break;
                 } else if (try_time % 4 == 0) {
@@ -94,7 +102,7 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
                     break;
                 }
             } while (result != 0);
-            iap2->iap2_printf("[OK][%s:%d] receive link message!\n", __func__, __LINE__);
+            // iap2->iap2_printf("[OK][%s:%d] receive link message!\n", __func__, __LINE__);
             iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_ACK;
             try_time          = 4;
             break;
@@ -143,8 +151,6 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
                 }
             } while (result != 0);
             iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH;
-
-            iap2->iap2_printf("[TEST][%s:%d]!\n", __func__, __LINE__);
             break;
 
         case EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH:
