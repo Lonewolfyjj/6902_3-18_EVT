@@ -70,7 +70,7 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
-    hl_rf_bypass_info_t rf_bypass_info;
+    hl_rf_bypass_state_t rf_bypass_state;
 
     switch (event) {
         case HL_KEY_EVENT_PRESS:
@@ -78,9 +78,9 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 
         case HL_KEY_EVENT_SHORT:
             if (tx_info.on_off_flag == 1) {
-                rf_bypass_info.chn        = HL_RF_LEFT_CHANNEL;
-                rf_bypass_info.info.state = 1;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_info, sizeof(rf_bypass_info));
+                rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
+                rf_bypass_state.state = 1;
+                hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
                 LOG_D("send record cmd to rx");
             }
             break;

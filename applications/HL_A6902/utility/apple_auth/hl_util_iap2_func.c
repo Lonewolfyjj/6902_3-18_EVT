@@ -832,7 +832,7 @@ int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2)
     payload_check_sum = hl_checksum_calculation(iap2->send_buffer, PACKET_HEADER_SIZE + 1, ctrl_message_len);
     iap2->send_buffer[ctrl_packet_len - 1] = payload_check_sum;
 
-    iap2->iap2_usb_write(iap2->send_buffer, ctrl_packet_len);
+    // iap2->iap2_usb_write(iap2->send_buffer, ctrl_packet_len);
 
     return result;
 }
