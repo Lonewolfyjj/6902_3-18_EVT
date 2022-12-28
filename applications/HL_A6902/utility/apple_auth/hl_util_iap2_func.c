@@ -256,24 +256,24 @@ int hl_iap2_identify_ack_auth(st_iap2_protocol_p iap2)
     st_iap2_ctrl_packet_t iap2_ctrl_packet;
 
     int      result            = 0;
-    uint16_t ret               = 0;
+    uint8_t  try_time          = 5;
     uint8_t  payload_check_sum = 0;
+    uint16_t ret               = 0;
     uint16_t ctrl_packet_len   = 0;
     uint16_t ctrl_message_len  = 0;
     uint16_t ctrl_param_len    = 0;
     uint16_t certification_len = 0;
     uint16_t len               = 0;
-    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, result);
 
-    // Read Accessory Certificate Data Length
-    ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
-    iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
-    while (ret != sizeof(uint16_t)) {
-        iap2->iap2_printf("error ret = %d\n", ret);
+    do{
         ret = iap2->iap2_iic_read(CP_ACCESSORY_CERTIFICATION_DATA_LEN, iap2->recv_buffer, sizeof(uint16_t), TIMEOUT_US);
-        iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
-        // return -1;
-    }
+        try_time--;
+        if(!try_time){
+            iap2->iap2_printf("\n[ERROR][%s:%d]read cert data len failed!\n", __func__, __LINE__);
+            return -1;
+        }
+    }while(ret != sizeof(uint16_t));
+    try_time = 5;
 
     iap2->iap2_printf("\r\n%s:%d:%d\r\n", __func__, __LINE__, ret);
 
