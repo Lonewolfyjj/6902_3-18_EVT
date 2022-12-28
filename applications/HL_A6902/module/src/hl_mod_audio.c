@@ -818,6 +818,15 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     // 关闭降噪
     val = 0;
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
+
+#if HL_IS_TX_DEVICE()
+    memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    hl_drv_rk_xtensa_dsp_transfer(); 
+#endif   
+
     LOG_D("audio dsp config succeed!");
     return RT_EOK;
 
@@ -980,13 +989,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #if HL_IS_TX_DEVICE()
-    memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
-    memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
-    memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
-    memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
 
-    hl_drv_rk_xtensa_dsp_transfer();
-    
     int32_t gain = 10;
     LOG_D("----cap_info.card_name : %s\r\n", p_card_param->card->parent.name);
     if (strcmp("pdmc", p_card_param->card->parent.name) == 0) {
@@ -1702,7 +1705,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (s_vu_r<-118)?0:s_vu_r+118);//(s_vu_r<-187)?0:s_vu_r+187);
                 s_vu_l = -187;
                 s_vu_r = -187;
-                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (s_vu_l<-118)?0:s_vu_l+118, (s_vu_r<-118)?0:s_vu_r+118);
             }
         }
 #endif
