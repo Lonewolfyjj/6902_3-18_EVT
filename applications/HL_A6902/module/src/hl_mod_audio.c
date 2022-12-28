@@ -1001,7 +1001,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
-            break;
+            //break;
         }
 #if !HL_IS_TX_DEVICE()
         if (s_vu_en++ == 100) {                
@@ -1056,7 +1056,7 @@ static void _hl_cap2uac_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            break;
+            //break;
         }
 
 #if !HL_IS_TX_DEVICE()
@@ -1166,7 +1166,7 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            break;
+            //break;
         }
 
 #if !HL_IS_TX_DEVICE()
