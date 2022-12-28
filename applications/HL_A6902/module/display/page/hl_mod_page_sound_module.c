@@ -33,7 +33,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -50,7 +50,7 @@
 //     PAGE_SOUND_MODULE, PAGE_NOISE_REDUCTION_INTENSITY, PAGE_VOLUME_CONTROL, PAGE_TX_CONF_MENU, PAGE_MONITOR_SET,
 //     PAGE_OTHER_SET\
 // };
-
+static int8_t menu_center_icon = 0;
 //模式选择菜单界面
 LV_IMG_DECLARE(Menu_single_voice);//单声道
 LV_IMG_DECLARE(Menu_stereo);//立体声
@@ -59,9 +59,10 @@ LV_IMG_DECLARE(Menu_saft_track);//安全音轨
 
 static void page_10_test_cb(uint32_t current)
 {
-    //未锁屏回主界面
-    if (hl_mod_menu_icon_event(current)) {
+    if (!(current & 0x80)) {
         hl_mod_menu_goto_home_page();
+    } else {
+        hl_mod_knob_select_val_set(&menu_center_icon, current & 0x7F);
     }
 }
 
@@ -73,9 +74,8 @@ static void hl_mod_page_setup(void)
         ADD_IMG_DATA(NULL,NULL,&Menu_stereo,"立体声"),
         ADD_IMG_DATA(NULL,NULL,&Menu_saft_track,"安全音轨"),
     };
-    // 旋钮复位
-    hl_mod_menu_icon_init();
-    page_menu_init(&pic_list,MENU_ICON_NUM,page_10_test_cb);
+    
+    page_menu_init(&pic_list,MENU_ICON_NUM,page_10_test_cb,0);
 
 }
 
@@ -86,14 +86,11 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-
-    //菜单点击按键   
-    hl_mod_menu_enterbtn_scan(hl_mod_menu_get_icon());
-
-    // 返回按键
+    hl_mod_menu_enterbtn_scan(hl_mod_knob_select_val_get(&menu_center_icon));
     hl_mod_menu_backbtn_scan();
-
-    hl_mod_menu_knob_icon_change(hl_mod_menu_get_icon(),MENU_ICON_NUM);
+    if (hl_mod_knob_select_val_change(&menu_center_icon,0,MENU_ICON_NUM - 1, false) ) {
+        lv_set_icon_postion(menu_center_icon, false);
+    }
 }
 
 

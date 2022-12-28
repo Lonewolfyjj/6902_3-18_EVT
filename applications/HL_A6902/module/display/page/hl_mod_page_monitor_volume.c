@@ -41,53 +41,51 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
-
+#include "hl_util_general_type.h"
+#include "hl_mod_page_volume_bar_set.h"
 
 LV_IMG_DECLARE(Other_mic_black);
 
-
-static void hl_bar_test_cb(int16_t bar_num)
+//UAC输入音量设置界面
+static void page_uac_out_init(void)
 {
-    printf("bar_num = %d\n", bar_num);
-}
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    // 设置当前音量
+    hl_mod_page_volume_init(data->monitor_volume);
 
-//监听音量设置界面
-static void page_monit_init(void)
-{
-    hl_lvgl_barset_init_t bar_test = 
-    {
-        .func_cb = hl_bar_test_cb,
-        .icontyp = HL_NO_ICON,
-        .init_value = -16,
-        .ptr = "监听音量",
-        .range_max = 40,
-        .range_min = -60,
-        .src = &Other_mic_black,
+    hl_lvgl_barset_init_t bar_test = {
+        .func_cb    = hl_mod_page_volume_update,
+        .icontyp    = HL_NO_ICON,
+        .init_value = hl_mod_page_volume_get(),
+        .ptr        = "监听音量",
+        .range_max  = MAX_LINEOUT_VOLUME,
+        .range_min  = MIN_LINEOUT_VOLUME,
+        .src        = &Other_mic_black,
     };
     hl_mod_barset_init(&bar_test);
 }
 
-
 static void hl_mod_page_setup(void)
 {
-    page_monit_init();
+    page_uac_out_init();
 }
 
 static void hl_mod_page_exit(void)
 {
-    hl_lvgl_barset_ioctl_t ctl = {
-        .barset_value = HL_EXTI,
-    };
-    hl_mod_barset_ioctl(&ctl);
-    ctl.barset_value = HL_DELETE_STYLE;
-    hl_mod_barset_ioctl(&ctl);
+    hl_mod_page_volume_exit();
+}
+
+static void save_before_back(void)
+{
+    hl_display_screen_s* ptr = hl_mod_page_get_screen_data_ptr();
+
+    ptr->monitor_volume = hl_mod_page_volume_get();
+    LOG_D("vol=[%d]\n", ptr->monitor_volume);
 }
 
 static void hl_mod_page_loop(void)
 {
-    // 返回按键
-    hl_mod_menu_backbtn_scan();
+    hl_mod_page_volume_loop(MONITOR_VOLUME_VAL_IND, save_before_back,MIN_LINEOUT_VOLUME,MAX_LINEOUT_VOLUME);
 }
 
 PAGE_DEC(PAGE_MONITOR_VOLUME_SET)

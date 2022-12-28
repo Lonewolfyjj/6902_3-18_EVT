@@ -34,6 +34,13 @@ extern "C" {
 #include "hl_mod_display.h"
 #include "lvgl.h"
 #include "hl_util_msg_type.h"
+#include "hl_util_timeout.h"
+
+#define DBG_SECTION_NAME "display"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
+
+
 
 //下发的命令
 typedef struct _hl_display_status{
@@ -93,11 +100,12 @@ typedef struct _hl_display_screen_s
     int8_t uac_out_volume;
     int8_t tx1_gain_volume;
     int8_t tx2_gain_volume;
+    int8_t monitor_volume;
     uint8_t led_britness;
     uint8_t tx1_remained_record_time;
     uint8_t tx2_remained_record_time;
     uint8_t ota_upgrade_progress;
-
+    
     char tx1_ver[10];
     char tx2_ver[10];
     char rx_ver[10];
@@ -139,6 +147,8 @@ typedef struct _hl_display_screen_change_s{
     uint32_t tx2_remained_record_time:1;
     uint32_t ota_upgrade_progress:1;
     uint32_t device_fault_code:1;
+    // 菜单复位时的状态
+    uint32_t menu_defaut:1;
     uint32_t systime:1;
 }hl_display_screen_change_s;
 
@@ -172,9 +182,9 @@ void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum);
 
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num);
 int16_t hl_mod_knob_select_val_get(int16_t* ptr);
-int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right);
+int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right, bool en);
 
-
+uint8_t hl_mode_report_event(hl_timeout_t* timer, uint32_t time, int16_t bar_num);
 hl_display_screen_change_s* hl_mod_page_get_screen_change_flag();
 void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void *param, uint32_t len);
 bool hl_mod_next_menu_enter(uint8_t * tab, uint8_t num,uint8_t max_num);
@@ -185,11 +195,12 @@ void hl_mod_menu_goto_home_page(void);
 void hl_mod_menu_backbtn_scan();
 void hl_mod_menu_goto_fast_config_scan();
 void hl_mod_menu_goto_quickset_scan();
-uint8_t hl_mod_menu_icon_event(uint32_t current);
-void hl_mod_menu_icon_init();
-uint32_t hl_mod_menu_get_icon();
-void hl_mod_menu_icon_set(uint32_t num);
+
+
+
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
+
+uint8_t hl_mod_display_msq_set(rt_mq_t msq);
 void hl_mod_page_all_init(void);
 void lvgl2rtt_init(void);
 

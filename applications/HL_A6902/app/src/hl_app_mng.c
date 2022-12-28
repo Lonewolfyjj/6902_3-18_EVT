@@ -42,6 +42,7 @@
 #include "hl_app_pm_msg_pro.h"
 #include "hl_app_rf_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
+#include "hl_util_general_type.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
