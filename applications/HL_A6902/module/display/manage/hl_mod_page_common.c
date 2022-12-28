@@ -46,7 +46,7 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-#define BACKTOUCHKEY_DEBANCE_TIMER 10
+#define BACKTOUCHKEY_DEBANCE_TIMER 20
 
 typedef struct _hl_display_msg_t
 {
@@ -158,42 +158,73 @@ uint8_t hl_mode_report_event(hl_timeout_t* timer, uint32_t time, int16_t bar_num
 // 返回触摸按键消抖功能实现
 uint8_t hl_mod_keypad_touchkey_read()
 {
-    static uint8_t last_key = 0;
+    static uint8_t last_state = 0;
+
     uint8_t        res;
     uint8_t        press = 0;
 
     res = hl_drv_ztw523a_botton_status();
 
-    switch (last_key) {
+    switch (last_state) {
         case 0:
             if (res == 1) {
-                // 出现下降沿，重新计数
+                
                 hl_util_timeout_set(&backtouchkey_debance, BACKTOUCHKEY_DEBANCE_TIMER);
-                last_key = 1;
+                last_state = 1;
+
             }
             break;
         case 1:
             if (hl_util_timeout_judge(&backtouchkey_debance) == RT_TRUE) {
                 //20s内没有上升沿，按键按下
                 if (res == 1) {
-                    LV_LOG_USER("touchkey_en");
-                    press    = 1;
-                    last_key = 0;
+                    LV_LOG_USER("touchkey_down");
+                    press    = 0;
+                    last_state = 2;
                     hl_util_timeout_close(&backtouchkey_debance);
                 } else {
                     hl_util_timeout_close(&backtouchkey_debance);
-                    last_key = 0;
+                    last_state = 0;
                     press    = 0;
                 }
             } else {
                 // 出现上升沿，则清定时器
                 if (res == 0) {
                     hl_util_timeout_close(&backtouchkey_debance);
-                    last_key = 0;
+                    last_state = 0;
                     press    = 0;
                 }
             }
             break;
+        case 2:
+            if (res == 0) {
+                // 出现下降沿，重新计数
+                hl_util_timeout_set(&backtouchkey_debance, BACKTOUCHKEY_DEBANCE_TIMER);
+                last_state = 3;
+            }
+        break;
+        case 3:
+            if (hl_util_timeout_judge(&backtouchkey_debance) == RT_TRUE) {
+                //20s内没有被再次压下
+                if (res == 0) {
+                    LV_LOG_USER("touchkey_up");
+                    press      = 1;
+                    last_state = 0;
+                    hl_util_timeout_close(&backtouchkey_debance);
+                } else {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_state = 2;
+                    press      = 0;
+                }
+            } else {
+                // 又被压下，则清定时器
+                if (res == 1) {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_state = 2;
+                    press      = 0;
+                }
+            }
+        break;
         default:
             press = 0;
             break;
