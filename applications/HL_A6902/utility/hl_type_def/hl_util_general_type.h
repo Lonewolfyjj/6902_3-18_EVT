@@ -60,6 +60,20 @@ typedef enum _hl_rf_state_e
     HL_RF_PAIRING,
 } HL_ENUM8(hl_rf_state_e);
 
+typedef enum _hl_key_event_e
+{
+    HL_KEY_EVENT_IDLE = 0x00,
+    /// 按键按下
+    HL_KEY_EVENT_PRESS,
+    /// 短按
+    HL_KEY_EVENT_SHORT,
+    /// 长按
+    HL_KEY_EVENT_LONG,
+    ///  双击
+    HL_KEY_EVENT_DOUBLE,
+    /// 长按后释放
+    HL_KEY_EVENT_RELEASE,
+} HL_ENUM8(hl_key_event_e);
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

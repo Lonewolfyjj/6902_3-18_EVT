@@ -25,6 +25,7 @@
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
 #include "hl_util_general_type.h"
+#include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
 
@@ -52,18 +53,26 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_SET_REMOTE_MAC_CMD = 0x11,
     /// 获取配对设备配对信息：类型无
     HL_RF_GET_REMOTE_MAC_CMD = 0x12,
-    /// 透传mute静音状态：类型hl_rf_bypass_info_t
+    /// 透传mute静音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_MUTE_CMD = 0x20,
-    /// 透传降噪状态：类型hl_rf_bypass_info_t
+    /// 透传降噪开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_DENOISE_CMD = 0x21,
-    /// 透传音量状态：类型hl_rf_bypass_info_t
+    /// 透传音量开关状态：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_VOLUME_CMD = 0x22,
-    /// 透传录音状态：类型hl_rf_bypass_info_t
+    /// 透传录制开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_CMD = 0x23,
-    /// 透传设置状态：类型hl_rf_bypass_info_t
+    /// 透传设置状态：类型hl_rf_bypass_string_t
     HL_RF_BYPASS_SETTING_CMD = 0x24,
     /// 透传电量信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_BATTERY_CMD = 0x25,
+    /// 透传录制保护开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_RECORD_PROTECT_CMD = 0x26,
+    /// 透传自动录制开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_AUTO_RECORD_CMD = 0x27,
+    /// 透传格式化U盘命令：类型hl_rf_channel_e
+    HL_RF_BYPASS_FORMAT_DISK_CMD = 0x28,
+    /// 透传低切开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_LOWCUT_CMD = 0x29,
 } HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -82,18 +91,26 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_SET_REMOTE_MAC_IND = 0x11,
     /// 返回配对设备配对信息：类型TX uint8_t mac[6] / RX uint8_t mac[12]
     HL_RF_GET_REMOTE_MAC_IND = 0x12,
-    /// 返回mute静音状态：类型hl_rf_bypass_info_t
+    /// 返回mute静音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_MUTE_IND = 0x20,
-    /// 返回降噪状态：类型hl_rf_bypass_info_t
+    /// 返回降噪开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_DENOISE_IND = 0x21,
-    /// 返回音量状态：类型hl_rf_bypass_info_t
+    /// 返回音量开关状态：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_VOLUME_IND = 0x22,
-    /// 返回录音状态：类型hl_rf_bypass_info_t
+    /// 返回录音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_IND = 0x23,
-    /// 返回设置状态：类型hl_rf_bypass_info_t
+    /// 返回设置状态：类型hl_rf_bypass_string_t
     HL_RF_BYPASS_SETTING_IND = 0x24,
     /// 返回电量信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_BATTERY_IND = 0x25,
+    /// 返回录制保护开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_RECORD_PROTECT_IND = 0x26,
+    /// 返回自动录制开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_AUTO_RECORD_IND = 0x27,
+    /// 返回格式化U盘命令：类型hl_rf_channel_e
+    HL_RF_BYPASS_FORMAT_DISK_IND = 0x28,
+    /// 返回低切开关状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_LOWCUT_IND = 0x29,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_channel_e
@@ -152,15 +169,32 @@ typedef struct
 
 typedef struct
 {
+#if HL_IS_TX_DEVICE()
+    /// RX MAC地址
+    uint8_t rx_mac[6];
+#else
+    /// TX1 MAC地址
+    uint8_t tx1_mac[6];
+    /// TX2 MAC地址
+    uint8_t tx2_mac[6];
+#endif
+} hl_rf_remote_mac_t;
+
+typedef struct
+{
     /// 透传声道
     hl_rf_channel_e chn;
-    union {
-        /// 透传状态
-        uint8_t state;
-        /// 透传数据
-        uint8_t* data;
-    } info;
-} hl_rf_bypass_info_t;
+    /// 透传状态
+    hl_rf_onoff_e state;
+} hl_rf_bypass_state_t;
+
+typedef struct
+{
+    /// 透传声道
+    hl_rf_channel_e chn;
+    /// 透传数组
+    uint8_t str[128];
+} hl_rf_bypass_string_t;
 
 typedef struct
 {
