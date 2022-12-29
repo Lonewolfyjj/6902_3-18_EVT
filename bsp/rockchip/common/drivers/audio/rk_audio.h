@@ -133,6 +133,7 @@ struct audio_pcm_ops
     rt_err_t (*init)(struct audio_pcm *pcm, eAUDIO_streamType stream, struct audio_buf *buf);
     rt_err_t (*deinit)(struct audio_pcm *pcm);
     rt_err_t (*config)(struct audio_pcm *pcm, eAUDIO_streamType stream, struct AUDIO_PARAMS *params);
+    rt_err_t (*position)(struct audio_pcm *pcm, uint32_t *pos);
     rt_err_t (*start)(struct audio_pcm *pcm);
     rt_err_t (*stop)(struct audio_pcm *pcm);
 };

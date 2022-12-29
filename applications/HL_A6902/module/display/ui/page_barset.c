@@ -161,7 +161,7 @@ void hl_mod_barset_init(void * init_data)
     }
     
     lv_snprintf(buf, sizeof(buf), "%d", ptr->init_value);
-    slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,0,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
+    slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,30,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
     img1 = lv_img_creat_fun(slider1,ptr->src,LV_ALIGN_LEFT_MID,10,0);
     lab1 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_LEFT,0,-4,ptr->ptr);
     lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,0,-4,buf);

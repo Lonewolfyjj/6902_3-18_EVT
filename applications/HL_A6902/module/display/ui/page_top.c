@@ -114,7 +114,7 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
         ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = -80;
+        icon_offset = -50;
         ori = -1;
     }
 
@@ -154,7 +154,7 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
-        icon_offset = -80;
+        icon_offset = -50;
         ori = -1;
     }
 
@@ -438,8 +438,8 @@ void hl_mod_top_ioctl(void* ctl_data)
             break;
         case HL_TOP_BAT_VAL:
             lv_bar_set_value(bat_bar, ptr->electric_top, LV_ANIM_ON);
-            lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
-            lv_label_set_text(bat_label, buf);
+            // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
+            // lv_label_set_text(bat_label, buf);
             break;
 
         case HL_TOP_BAT_COLOR_GREEN:
@@ -475,7 +475,7 @@ void hl_mod_top_init(void* init_data)
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
-    bat_label = lv_power_lab_creat_fun(lv_scr_act(), bat_bar, bat_bar, -6, 0);
+    // bat_label = lv_power_lab_creat_fun(lv_scr_act(), bat_bar, bat_bar, -6, 0);
 
     // lv_creat_top_bat_icon();
 }

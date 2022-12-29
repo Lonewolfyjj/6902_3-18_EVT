@@ -131,6 +131,8 @@ typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
     /// 混音
     HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD,
     /// VU
+    HL_EM_DRV_RK_DSP_CMD_SET_VU,
+    /// VU
     HL_EM_DRV_RK_DSP_CMD_GET_VU,
 } hl_drv_rk_xtensa_dsp_cmd_e;
 
@@ -174,15 +176,20 @@ typedef struct _hl_drv_rk_xtensa_dsp_config_t_
     char* audio_process_in_buffer_b32_2ch;
     /// 音频处理过程中的暂存输出buffer
     char* audio_process_out_buffer_b32_2ch;
-    /// 音频处理过程中的暂存输出buffer
+    /// @brief 左边的VU值
+    int16_t vu_l;
+    /// @brief 右边的VU值
+    int16_t vu_r;
 #if HL_IS_TX_DEVICE()
     /// tx
     uint32_t buffer_size_b24_1ch;
+    /// 音频处理过程中的暂存输出buffer
     char* audio_before_process_out_buffer_b24_1ch;
     char* audio_after_process_out_buffer_b24_1ch;
 #else
     /// rx
     uint32_t buffer_size_b24_2ch;
+    /// 音频处理过程中的暂存输出buffer
     char* audio_before_process_out_buffer_b24_2ch;
     char* audio_after_process_out_buffer_b24_2ch;
 #endif

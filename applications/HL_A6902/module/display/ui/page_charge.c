@@ -48,7 +48,7 @@ static void lv_style_page_init(void)
 
     lv_style_init(&style_area_main);
     lv_style_set_bg_opa(&style_area_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_area_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_area_main, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_area_main,0);
     lv_style_set_outline_width(&style_area_main,0);
     lv_style_set_radius(&style_area_main, 5);
