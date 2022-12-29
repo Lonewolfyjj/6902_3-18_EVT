@@ -353,9 +353,9 @@ void hl_mod_upgrade_telink_start(void)
         for(i = 0; i<5; i++) {
             if (s_upgrade.telink_state != HL_UPGRADE_IDLE_STATE) {
                 break;
-            }
-            rt_thread_mdelay(500);
+            }            
             hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, &upgrade_param, 0);
+            rt_thread_mdelay(500);
         }
     }
 }
