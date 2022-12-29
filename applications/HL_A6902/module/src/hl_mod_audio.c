@@ -818,6 +818,15 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     // 关闭降噪
     val = 0;
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
+
+#if HL_IS_TX_DEVICE()
+    memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
+    memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    hl_drv_rk_xtensa_dsp_transfer(); 
+#endif   
+
     LOG_D("audio dsp config succeed!");
     return RT_EOK;
 
@@ -980,13 +989,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #if HL_IS_TX_DEVICE()
-    memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
-    memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
-    memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
-    memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
 
-    hl_drv_rk_xtensa_dsp_transfer();
-    
     int32_t gain = 10;
     LOG_D("----cap_info.card_name : %s\r\n", p_card_param->card->parent.name);
     if (strcmp("pdmc", p_card_param->card->parent.name) == 0) {
@@ -1001,7 +1004,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
-            break;
+            //break;
         }
 #if !HL_IS_TX_DEVICE()
         if (s_vu_en++ == 100) {                
@@ -1056,7 +1059,7 @@ static void _hl_cap2uac_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            break;
+            //break;
         }
 
 #if !HL_IS_TX_DEVICE()
@@ -1166,7 +1169,7 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
     while (1) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            break;
+            //break;
         }
 
 #if !HL_IS_TX_DEVICE()
@@ -1253,7 +1256,7 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 {
     int8_t ret = 0;
 
-    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, denoise, 1);
+    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &denoise, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set denoise");
         return -RT_ERROR;
@@ -1651,6 +1654,8 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
     rt_err_t            ret;
     rt_uint32_t         msg;
     rt_uint32_t         count_vu = 0;
+    int16_t s_vu_l = 0;
+    int16_t s_vu_r = 0;
 
     LOG_D("audio ctrl thread run");
     while (1) {
@@ -1685,12 +1690,22 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if(count_vu >= 25) {    
+        if((count_vu % 20 == 0) && (count_vu != 100)) { 
+            if (dsp_config->vu_l > s_vu_l){
+                s_vu_l = dsp_config->vu_l;
+            }
+            if (dsp_config->vu_r > s_vu_r){
+                s_vu_r = dsp_config->vu_r;
+            }
+        }
+        if(count_vu >= 100) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {   
-                hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118);
-                hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
-                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
+                hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (s_vu_l<-118)?0:s_vu_l+118);//(s_vu_l<-187)?0:s_vu_l+187);
+                hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (s_vu_r<-118)?0:s_vu_r+118);//(s_vu_r<-187)?0:s_vu_r+187);
+                s_vu_l = -187;
+                s_vu_r = -187;
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (s_vu_l<-118)?0:s_vu_l+118, (s_vu_r<-118)?0:s_vu_r+118);
             }
         }
 #endif

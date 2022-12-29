@@ -40,12 +40,27 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 //低切界面
 static void hl_diqie_test_cb(hl_three_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    switch(event_num){
+        case HL_THREE_ONE_CHECK_LEFT:
+            value = LOW_CUT_OFF;
+            break;
+        case HL_THREE_ONE_CHECK_MID:
+            value = LOW_CUT_75HZ;
+            break;
+        case HL_THREE_ONE_CHECK_RIGHT:
+            value = LOW_CUT_150HZ;
+            break;
+        default:
+            return ;
+            break;
+    }    
+    hl_mod_display_send_msg(LOW_CUT_VAL_IND,&value,0);
 }
 
 static void hl_mod_page_setup(void)
@@ -76,8 +91,8 @@ static void hl_mod_page_exit(void)
     three_in_one_test_ctl.three_in_one_choose = HL_THREE_ONE_CHOOSE_EXIT;
     hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
 
-    three_in_one_test_ctl.three_in_one_choose = HL_THREE_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
+    // three_in_one_test_ctl.three_in_one_choose = HL_THREE_ONE_CHOOSE_DEL_STYLE;
+    // hl_mod_three_in_one_ioctl(&three_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

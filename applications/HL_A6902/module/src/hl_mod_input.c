@@ -25,6 +25,7 @@
 #include "hl_drv_knob.h"
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
+#include "hl_util_general_type.h"
 
 
 /* define --------------------------------------------------------------------*/

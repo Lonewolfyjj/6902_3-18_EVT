@@ -32,7 +32,7 @@
 #include "hl_mod_page.h"
 #include "page_test.h"
 #include "page_top.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 #include "lv_port_indev.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
@@ -368,30 +368,30 @@ static void hl_mod_main_tx_deal_deinit()
     switch (main_tx) {
         case HL_RF_LR_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_R_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_L_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_UNCONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_PAIRING:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            hl_mod_main_ioctl(&main_ctl);
+            // hl_mod_main_ioctl(&main_ctl);
             break;
         default:
             break;
     }
 
-    main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
-    hl_mod_main_ioctl(&main_ctl);
+    // main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
+    // hl_mod_main_ioctl(&main_ctl);
 }
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
@@ -680,7 +680,7 @@ static void hl_mod_page_exit(void)
 {
     hl_mod_main_tx_deal_deinit();
     hl_mod_icon_deal_deinit();
-    //删除TOP
+    // // 删除TOP
     hl_lvgl_top_ioctl_t ctl_data = {
         .top_cmd = HL_TOP_ALL_DEL,
     };
@@ -695,11 +695,12 @@ static void hl_mod_page_exit(void)
 static void hl_mod_page_run(void)
 {
     uint8_t key_event;
-
+    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     //单机确定键进入菜单
     key_event = hl_mod_get_knob_okkey_val();
 
     if (key_event == HL_KEY_EVENT_SHORT) {
+        flag->menu_defaut = 1;
         PageManager_PagePush(PAGE_MAIN_MENU);
     }
 
@@ -707,7 +708,7 @@ static void hl_mod_page_run(void)
     hl_mod_menu_goto_fast_config_scan();
 
     // 快捷设置
-    // hl_mod_menu_goto_quickset_scan();
+    hl_mod_menu_goto_quickset_scan();
 
     // 菜单的页面更新
     hl_mod_page_home_update();

@@ -41,13 +41,26 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 //恢复出厂设置界面
 static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    switch(event_num){
+        case HL_S_TWO_ONE_CHECK_LEFT:
+            value = 0;
+            break;
+        case HL_S_TWO_ONE_CHECK_RIGHT:
+            value = 1;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(RESTORE_SET_SWITCH_IND,&value,0);
 }
+
 static void resetfactory_test(void)
 {
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
@@ -78,8 +91,8 @@ static void hl_mod_page_exit(void)
     };
 
     hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
-    s_two_in_one_test_ctl.s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    // s_two_in_one_test_ctl.s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_DEL_STYLE;
+    // hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

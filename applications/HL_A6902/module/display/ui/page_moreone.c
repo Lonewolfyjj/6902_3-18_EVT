@@ -9,7 +9,9 @@
  * 
  */
 #include "page_moreone.h"
+
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     7
 
@@ -211,6 +213,9 @@ static void btn11_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1=0;
             btn_left_1++;
+            if(btn_left_1 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_ONE_LEFT);
+            }
             if(btn_left_1 > 1){
                 LV_LOG_USER("btn_left1 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_ONE_LEFT);
@@ -232,6 +237,9 @@ static void btn12_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1++;
             btn_left_1 = 0;
+            if(btn_right_1 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_ONE_RIGHT);
+            }
             if(btn_right_1 > 1){
                 LV_LOG_USER("btn_right1 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_ONE_RIGHT);
@@ -253,6 +261,9 @@ static void btn21_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2=0;
             btn_left_2++;
+            if(btn_left_2 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_TWO_LEFT);
+            }
             if(btn_left_2 > 1){
                 LV_LOG_USER("btn_left2 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_TWO_LEFT);
@@ -274,6 +285,9 @@ static void btn22_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2++;
             btn_left_2 = 0;
+            if(btn_right_2 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_TWO_RIGHT);
+            }
             if(btn_right_2 > 1){
                 LV_LOG_USER("btn_right2 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_TWO_RIGHT);
@@ -295,6 +309,9 @@ static void btn31_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3=0;
             btn_left_3++;
+            if(btn_left_3 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_THREE_LEFT);
+            }
             if(btn_left_3 > 1){
                 LV_LOG_USER("btn_left3 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_THREE_LEFT);
@@ -316,6 +333,9 @@ static void btn32_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3++;
             btn_left_3 = 0;
+            if(btn_right_3 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_THREE_RIGHT);
+            }
             if(btn_right_3 > 1){
                 LV_LOG_USER("btn_right3 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_THREE_RIGHT);
@@ -584,7 +604,10 @@ void hl_mod_moreone_init(void * init_data)
 {
     hl_lvgl_moreone_init_t * ptr = (hl_lvgl_moreone_init_t *)init_data;
     hl_moreone_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_moreone) {
+        page_style_bit.page_moreone = 1;
+        lv_style_page4_init();
+    }
 
     con_src = lv_con_scr_creat(270,140);
     lv_obj_set_flex_align(con_src,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);
