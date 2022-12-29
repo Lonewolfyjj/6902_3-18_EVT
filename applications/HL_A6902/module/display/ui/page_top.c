@@ -10,6 +10,7 @@
  */
 #include "page_top.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define POSTION_IS_NULL 0xFF
 
@@ -466,7 +467,11 @@ void hl_mod_top_ioctl(void* ctl_data)
 void hl_mod_top_init(void* init_data)
 {
     hl_lvgl_top_init_t* ptr = (hl_lvgl_top_init_t*)init_data;
-    lv_style_page_top_init();
+    if (!page_style_bit.page_top) {
+        page_style_bit.page_top = 1;
+        lv_style_page_top_init();
+    }
+    
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);

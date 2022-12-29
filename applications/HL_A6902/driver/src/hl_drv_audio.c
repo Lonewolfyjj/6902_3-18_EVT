@@ -124,7 +124,7 @@ static rt_err_t audio_wait_for_avail(struct audio_stream* as)
     rt_mutex_take(&as->lock, RT_WAITING_FOREVER);
     pcm->waiting = RT_TRUE;
     rt_mutex_release(&as->lock);
-    rt_sem_take(pcm->wait, RT_WAITING_FOREVER);
+    ret = rt_sem_take(pcm->wait, 200 /* RT_WAITING_FOREVER */);
 
     if (as->state != AUDIO_STREAM_STATE_RUNNING)
         ret = -RT_ERROR;
@@ -235,6 +235,12 @@ static rt_err_t rk_audio_start(struct audio_stream* as)
 
     audio_stream_set_state(as, AUDIO_STREAM_STATE_RUNNING);
 
+    if (as->stream == AUDIO_STREAM_CAPTURE)
+    {
+        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
+    }
+
     ret = pcm->ops->start(pcm);
 
     return ret;
@@ -275,8 +281,10 @@ static rt_err_t _rk_audio_stop(struct audio_stream* as, audio_stream_state_t sta
     pcm->waiting = RT_FALSE;
     rt_mutex_release(&as->lock);
 
-    rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
-    rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
+    if (as->stream == AUDIO_STREAM_PLAYBACK) {
+        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
+    }
 
     return ret;
 }
@@ -638,6 +646,8 @@ void rk_audio_stream_update(struct audio_stream* as)
     struct audio_pcm*   pcm = as->pcm;
     audio_pcm_uframes_t ptr = pcm->status.hw_ptr;
     audio_pcm_uframes_t avail;
+    uint32_t pos, delta;
+    uint32_t p1, p2;
 
     RT_ASSERT(pcm);
 
@@ -652,9 +662,19 @@ void rk_audio_stream_update(struct audio_stream* as)
     else
         avail = audio_pcm_capture_avail(pcm);
 
-    if (avail >= pcm->abuf.buf_size) {
-        //rt_kprintf("hw_ptr:0x%x, buf_size:%d, appl_ptr:0x%x", pcm->status.hw_ptr, pcm->abuf.buf_size, pcm->status.appl_ptr);
-        rt_kprintf("[0x%08x] stream %d: xrun, avail: %lu!\n", HAL_GetTick(), as->stream, avail);
+    pcm->ops->position(pcm, &pos);
+    p1 = bytes_to_frames(pcm, pos);
+    p2 = pcm->status.hw_ptr % pcm->abuf.buf_size;
+    delta = p1 >= p2 ? p1 - p2 : p1 + pcm->abuf.buf_size - p2;
+
+    if (avail >= pcm->abuf.buf_size || delta > pcm->abuf.period_size)
+    {
+        if (delta > pcm->abuf.period_size)
+            rt_kprintf("[0x%08x] stream %d: xrun, delta: %lu!\n",
+                       HAL_GetTick(), as->stream, delta);
+        else
+            rt_kprintf("[0x%08x] stream %d: xrun, avail: %lu!\n",
+                       HAL_GetTick(), as->stream, avail);
         rk_audio_xrun(pcm->as);
     } else if (pcm->waiting) {
         rt_mutex_take(&as->lock, RT_WAITING_FOREVER);

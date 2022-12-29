@@ -658,8 +658,8 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
     // DSP io control
     if (sg_dsp_io_ctrl.io_ctrl_notify) {
         sg_dsp_io_ctrl.io_ctrl_notify = 0;
-        HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_tx_dsp_param->io_ctrl_op,
-                       sg_tx_dsp_param->io_ctrl_param, sg_tx_dsp_param->io_ctrl_value);
+        // HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_tx_dsp_param->io_ctrl_op,
+        //                sg_tx_dsp_param->io_ctrl_param, sg_tx_dsp_param->io_ctrl_value);
         if (sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET
             || sg_dsp_io_ctrl.io_ctrl_op == EM_A6902_ALGO_IO_CTL_OP_GET_ALANGO) {
             _hl_drv_rk_xtensa_dsp_update_get_data();

@@ -38,20 +38,7 @@
 #include "stdbool.h"
 // #include "hl_test_pre.h"
 
-typedef enum _hl_key_event_e
-{
-    HL_KEY_EVENT_IDLE = 0x00,
-    /// 按键按下
-    HL_KEY_EVENT_PRESS,
-    /// 短按
-    HL_KEY_EVENT_SHORT,
-    /// 长按
-    HL_KEY_EVENT_LONG,
-    ///  双击
-    HL_KEY_EVENT_DOUBLE,
-    /// 长按后释放
-    HL_KEY_EVENT_RELEASE,
-} hl_key_event_e;
+
 
 typedef enum _hl_switch_event_e
 {

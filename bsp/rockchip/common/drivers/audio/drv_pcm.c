@@ -119,6 +119,18 @@ static rt_err_t rk_pcm_config(struct audio_pcm *pcm, eAUDIO_streamType stream,
     return ret;
 }
 
+static rt_err_t rk_pcm_position(struct audio_pcm *pcm, uint32_t *pos)
+{
+    struct rk_pcm *rkpcm = to_rkpcm(pcm);
+    struct rt_dma_transfer *dx = &rkpcm->dma_xfer;
+    int ret;
+
+    ret = rt_device_control(rkpcm->dma, RT_DEVICE_CTRL_DMA_GET_POSITION, dx);
+    *pos = dx->position;
+
+    return ret;
+}
+
 static rt_err_t rk_pcm_start(struct audio_pcm *pcm)
 {
     struct rk_pcm *rkpcm = to_rkpcm(pcm);
@@ -140,6 +152,7 @@ static const struct audio_pcm_ops rk_pcm_ops =
     .init = rk_pcm_init,
     .deinit = rk_pcm_deinit,
     .config = rk_pcm_config,
+    .position = rk_pcm_position,
     .start = rk_pcm_start,
     .stop = rk_pcm_stop,
 };

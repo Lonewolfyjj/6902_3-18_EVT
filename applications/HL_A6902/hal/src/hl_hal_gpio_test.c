@@ -118,7 +118,9 @@ void hl_hal_gpio_pwr_on(void)
     // hl_hal_gpio_low(GPIO_AMP_EN);
     // hl_hal_gpio_high(GPIO_ALL_POWER);
     hl_hal_gpio_high(GPIO_CODEC_EN);
+#if (A6902_RX_HL_EN || A6902_RX_HL_CH)
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);
+#endif
 #endif
     rt_thread_mdelay(10);
 }

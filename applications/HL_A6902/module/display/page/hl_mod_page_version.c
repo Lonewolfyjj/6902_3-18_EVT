@@ -41,7 +41,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 static void hl_mod_page_setup(void)
 {
@@ -63,8 +63,8 @@ static void hl_mod_page_exit(void)
         .verson_choose_opt = HL_VERSON_OPTION_EXTI,
     };
     hl_mod_verson_ioctl(&verson_ctl);
-    verson_ctl.verson_choose_opt = HL_VERSON_OPTION_DEL_STYLE;
-    hl_mod_verson_ioctl(&verson_ctl);
+    // verson_ctl.verson_choose_opt = HL_VERSON_OPTION_DEL_STYLE;
+    // hl_mod_verson_ioctl(&verson_ctl);
 }
 
 static void hl_mod_page_loop(void)

@@ -23,6 +23,7 @@ typedef enum _hl_barset_ioctl_t
 typedef struct __hl_lvgl_barset_ioctl_t
 {
     hl_barset_ioctl_t barset_value;//
+    int16_t value;
 }hl_lvgl_barset_ioctl_t;
 
 typedef void(*hl_barset_event_cb)(int16_t);
