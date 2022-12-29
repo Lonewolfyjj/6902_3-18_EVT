@@ -50,6 +50,7 @@ typedef struct _mode_to_app_msg_t
     uint16_t     len;
     union  {
         uint32_t u32_param;
+        int32_t  s32_param;
         void*    ptr;
     } param;
 } mode_to_app_msg_t;
