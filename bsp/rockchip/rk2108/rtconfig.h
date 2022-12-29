@@ -158,7 +158,9 @@
 #define RT_USING_PM
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
-/* RT_USING_RTC is not set */
+#define RT_USING_RTC
+#define RT_USING_SOFT_RTC
+/* RT_USING_ALARM is not set */
 /* RT_USING_SDIO is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
@@ -731,7 +733,6 @@
 
 /* sensors drivers */
 
-/* PKG_USING_FINGERPRINT is not set */
 /* PKG_USING_LSM6DSM is not set */
 /* PKG_USING_LSM6DSL is not set */
 /* PKG_USING_LPS22HB is not set */
@@ -791,6 +792,10 @@
 /* PKG_USING_AD7746 is not set */
 /* PKG_USING_ADT74XX is not set */
 /* PKG_USING_MAX17048 is not set */
+/* PKG_USING_AS7341 is not set */
+/* PKG_USING_CW2015 is not set */
+/* PKG_USING_ICM20608 is not set */
+/* PKG_USING_PAJ7620 is not set */
 
 /* touch drivers */
 
@@ -803,10 +808,8 @@
 /* PKG_USING_FT6236 is not set */
 /* PKG_USING_XPT2046_TOUCH is not set */
 /* PKG_USING_REALTEK_AMEBA is not set */
-/* PKG_USING_AS7341 is not set */
 /* PKG_USING_STM32_SDIO is not set */
 /* PKG_USING_ESP_IDF is not set */
-/* PKG_USING_ICM20608 is not set */
 /* PKG_USING_BUTTON is not set */
 /* PKG_USING_PCF8574 is not set */
 /* PKG_USING_SX12XX is not set */
@@ -845,7 +848,6 @@
 /* PKG_USING_CAN_YMODEM is not set */
 /* PKG_USING_LORA_RADIO_DRIVER is not set */
 /* PKG_USING_QLED is not set */
-/* PKG_USING_PAJ7620 is not set */
 /* PKG_USING_AGILE_CONSOLE is not set */
 /* PKG_USING_LD3320 is not set */
 /* PKG_USING_WK2124 is not set */
@@ -876,11 +878,11 @@
 /* PKG_USING_BL_MCU_SDK is not set */
 /* PKG_USING_SOFT_SERIAL is not set */
 /* PKG_USING_MB85RS16 is not set */
-/* PKG_USING_CW2015 is not set */
 /* PKG_USING_RFM300 is not set */
 /* PKG_USING_IO_INPUT_FILTER is not set */
 /* PKG_USING_RASPBERRYPI_PICO_SDK is not set */
 /* PKG_USING_LRF_NV7LIDAR is not set */
+/* PKG_USING_FINGERPRINT is not set */
 
 /* AI packages */
 
@@ -953,6 +955,7 @@
 /* PKG_USING_SLCAN2RTT is not set */
 /* PKG_USING_SOEM is not set */
 /* PKG_USING_QPARAM is not set */
+/* PKG_USING_CorevMCU_CLI is not set */
 
 /* Arduino libraries */
 
