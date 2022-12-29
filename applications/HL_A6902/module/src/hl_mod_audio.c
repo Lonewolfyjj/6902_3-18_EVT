@@ -179,17 +179,17 @@ volatile static hl_uacd_param_t        uac_info;
 /// 录制参数信息
 volatile static hl_record_param_t      record_info;
 /// 录制线程id
-rt_thread_t record_thread_id       = RT_NULL;
+volatile static rt_thread_t record_thread_id       = RT_NULL;
 /// cap2play线程id
-rt_thread_t cap2play_thread_id     = RT_NULL;
+volatile static rt_thread_t cap2play_thread_id     = RT_NULL;
 /// uac2play线程id
-rt_thread_t uac2play_thread_id     = RT_NULL;
+volatile static rt_thread_t uac2play_thread_id     = RT_NULL;
 /// cap2uac线程id
-rt_thread_t cap2uac_thread_id      = RT_NULL;
+volatile static rt_thread_t cap2uac_thread_id      = RT_NULL;
 /// cap2p2u线程id
-rt_thread_t cap2play2uac_thread_id = RT_NULL;
+volatile static rt_thread_t cap2play2uac_thread_id = RT_NULL;
 /// 音频控制线程id
-rt_thread_t audio_ctrl_thread_id   = RT_NULL;
+volatile static rt_thread_t audio_ctrl_thread_id   = RT_NULL;
 
 /// cap2play线程标志
 static uint8_t cap2play_thread_flag     = 0;
@@ -1060,6 +1060,9 @@ err:
 #ifdef RT_USB_DEVICE_UAC1
 static void _hl_cap2uac_thread_entry(void* arg)
 {
+#if (!HL_IS_TX_DEVICE())
+    rt_base_t level = 0;
+#endif
     LOG_D("audio cap2uac thread run");
 
     if (RT_NULL == uac_info.card) {
@@ -1086,7 +1089,11 @@ static void _hl_cap2uac_thread_entry(void* arg)
 
         hl_drv_rk_xtensa_dsp_transfer();
 #if (!HL_IS_TX_DEVICE())
-        rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch);
+        level = rt_hw_interrupt_disable();
+        if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
+            LOG_E("write %s failed", uac_info.card->parent.name);
+        }
+        rt_hw_interrupt_enable(level);
 #endif
     }
 
@@ -1101,6 +1108,7 @@ static void _hl_uac2play_thread_entry(void* arg)
     rt_size_t           get_data_size;
     rt_uint8_t          uac_p_state;
     play_uac_state_e    playback_state = HL_PLAY_UAC_IDLE;
+    rt_base_t           level          = 0;
 
     LOG_D("audio uac2play thread run");
 
@@ -1132,7 +1140,9 @@ static void _hl_uac2play_thread_entry(void* arg)
                 LOG_I("p_buffer ready enter playback going");
 
             case HL_PLAY_UAC_GOING:
+                level = rt_hw_interrupt_disable();
                 get_data_size = rt_device_read(uac_info.card, 0, uac_info.buff24b, uac_info.buff24size);
+                rt_hw_interrupt_enable(level);
                 if (get_data_size < uac_info.buff24size) {
                     // 数据不足
                     // memset(&uac_info.buff24b[get_data_size], 0x00, uac_info.buff24size - get_data_size);
@@ -1172,6 +1182,9 @@ err:
 
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
+#if (!HL_IS_TX_DEVICE())
+    rt_base_t level = 0;
+#endif
     LOG_D("audio cap2play2uac thread run");
 
     if (RT_NULL == cap_info.card) {
@@ -1209,9 +1222,11 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         }
 #ifdef RT_USB_DEVICE_UAC1        
 #if (!HL_IS_TX_DEVICE())
+        level = rt_hw_interrupt_disable();
         if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
+        rt_hw_interrupt_enable(level);
 #endif
 #endif
     }
@@ -1599,7 +1614,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
                     while (uac2play_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
-                    while (cap2uac_thread_id == RT_NULL){
+                    while (cap2uac_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
                     hl_mod_audio_codec_deconfig(&cap_info);
@@ -1612,7 +1627,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
                     while (uac2play_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
-                    while (cap2uac_thread_id == RT_NULL){
+                    while (cap2uac_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
                     hl_cap2play_thread_setup(&cap_info);
@@ -1624,7 +1639,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
                     while (uac2play_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
-                    while (cap2uac_thread_id == RT_NULL){
+                    while (cap2uac_thread_id != RT_NULL){
                         rt_thread_mdelay(1);
                     }
                     hl_cap2play2uac_thread_setup();
