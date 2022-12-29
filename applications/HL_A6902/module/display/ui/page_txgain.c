@@ -10,6 +10,7 @@
  */
 #include "page_txgain.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -235,7 +236,11 @@ void hl_mod_txgain_init(void * init_data)
 {  
     hl_lvgl_txgain_init_t * ptr = (hl_lvgl_txgain_init_t *)init_data;
     hl_txgain_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_txgain) {
+        page_style_bit.page_txgain = 1;
+        lv_style_page4_init();
+    }
+    
 
     if(ptr->txgain_choose == HL_TX_GAIN_CHOOSE_LEFT){
         btn_left_cnt = 1;

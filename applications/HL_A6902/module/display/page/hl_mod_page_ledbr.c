@@ -40,7 +40,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 //亮度调节界面
 LV_IMG_DECLARE(Other_led_high_black);// 11
@@ -50,7 +50,19 @@ LV_IMG_DECLARE(Other_led_low_white);//  22
 
 static void hl_light_test_cb(hl_b_two_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint8_t value = 0;
+    switch(event_num){
+        case HL_B_TWO_ONE_CHECK_LEFT:
+            value = 255;
+            break;
+        case HL_B_TWO_ONE_CHECK_RIGHT:
+            value = 128;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(LED_BRITNESS_VAL_IND,&value,0);
 }
 
 static void hl_mod_page_setup(void)
@@ -84,8 +96,8 @@ static void hl_mod_page_exit(void)
     two_in_one_test_ctl.b_two_in_one_choose = HL_TWO_ONE_CHOOSE_EXIT;
     hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 
-    two_in_one_test_ctl.b_two_in_one_choose = HL_TWO_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
+    // two_in_one_test_ctl.b_two_in_one_choose = HL_TWO_ONE_CHOOSE_DEL_STYLE;
+    // hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)
