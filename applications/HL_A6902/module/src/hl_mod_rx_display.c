@@ -392,9 +392,6 @@ uint8_t hl_mod_display_deinit(void)
 
 uint8_t hl_mod_display_init(void* display_msq)
 {
-    uint32_t frambufferaddr;
-
-
     hl_mod_display_msq_set((rt_mq_t)display_msq);
     
 
