@@ -411,7 +411,7 @@ static void _pm_thread_entry(void* arg)
         if(delay_time++ > 500){
             delay_time = 0;
             _hl_mod_pmwdg();
-            _hl_mod_pm_input_check();
+            // _hl_mod_pm_input_check();
         }
     }
 

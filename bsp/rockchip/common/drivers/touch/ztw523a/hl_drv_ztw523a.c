@@ -2,6 +2,8 @@
 #if ! HL_IS_TX_DEVICE()
 #include "touch.h"
 #include "hal_pinctrl.h"
+#include <rtthread.h>
+#include <rtdevice.h>
 
 #define DBG_SECTION_NAME "drv_ztw523a"
 #define DBG_LEVEL DBG_LOG
@@ -88,6 +90,47 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg,
 	}
 }
 
+static rt_err_t hl_i2c_write_data(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint8_t* data, rt_uint16_t datalen)
+{
+	rt_err_t	ret;
+    // rt_uint8_t        buf[4];
+    struct rt_i2c_msg msgs[2];
+
+    rt_uint8_t  * buf = (rt_uint8_t  *)rt_malloc(datalen + 4);
+
+    memset(buf,0,datalen + 4);
+
+    buf[1] = (reg >> 8);        // reg
+    buf[0] = (reg & 0xFF);      //
+
+    memcpy(&buf[2],data,datalen);
+
+	// if(data != RT_NULL){
+	// 	buf[3] = (data[0] >> 8);    // data
+	// 	buf[2] = (data[0] & 0xFF);  //
+	// }
+
+    msgs[0].addr  = ZTW523A_DEVICE_ADDRESS;
+    msgs[0].flags = RT_I2C_WR;
+    msgs[0].buf   = buf;
+    msgs[0].len   = datalen+2;
+    /*
+    msgs[1].addr  = ZTW523A_DEVICE_ADDRESS;
+    msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
+    msgs[1].buf   = &buf[2];
+    msgs[1].len   = 2;
+    */
+    // 调用I2C设备接口传输数据
+    if (rt_i2c_transfer(bus, msgs, 1) == 1){
+        rt_free(buf);
+        return HL_SUCCESS;
+	}
+    else{
+        rt_free(buf);
+        return HL_FAILED;
+	}
+}
+
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint16_t reg, rt_uint8_t* rbuf, rt_uint16_t buflen)
 {
     rt_uint8_t        buf[4] = { 0, 0, 0, 0 };
@@ -117,6 +160,13 @@ static uint8_t hl_drv_ztw523a_write_reg(uint16_t reg, uint16_t data)
 {
     uint8_t ret = HL_SUCCESS;
     ret         = hl_i2c_write_reg(i2c_bus, reg, &data, 4);
+    return ret;
+}
+
+static uint8_t hl_drv_ztw523a_write_data(uint16_t reg, uint8_t * data,uint16_t data_len)
+{
+    uint8_t ret = HL_SUCCESS;
+    ret         = hl_i2c_write_data(i2c_bus, reg, data, data_len);
     return ret;
 }
 
@@ -201,6 +251,472 @@ static bool hl_drv_ztw523a_power_sequence(void) /*软件的上电序列*/
 
     return HL_FAILED;
 }
+
+
+
+
+
+
+
+
+#if TOUCH_ONESHOT_UPGRADE
+
+static bool ts_check_need_upgrade(uint16_t curRegVersion)
+{
+	uint16_t	newRegVersion;
+	
+	newRegVersion = (uint16_t) (m_firmware_data[60] | (m_firmware_data[61]<<8));
+	
+	rt_kprintf("cur reg data version = 0x%x, new reg data version = 0x%x\n",curRegVersion, newRegVersion);
+	
+	if (curRegVersion < newRegVersion)
+		return true;
+	
+	return false;
+}
+
+static bool ts_hw_calibration(void)
+{
+	uint16_t	chip_eeprom_info;
+	int time_out = 0;
+	int ret=0;
+	
+	ret=hl_drv_ztw523a_write_reg(ZINITIX_TOUCH_MODE, 0x07);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to set cali touch mode\n");
+		return false;
+	}
+	hl_drv_msleep(10);
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
+	hl_drv_msleep(10);
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);	
+	hl_drv_msleep(50);
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);	
+	hl_drv_msleep(10);
+	ret=hl_drv_ztw523a_write_cmd(ZINITIX_CALIBRATE_CMD);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write cali cmd\n");
+		return false;
+	}
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to clear int status \n");
+		return false;
+	}
+	hl_drv_msleep(10);
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
+	
+	/* wait for h/w calibration*/
+	do {
+		hl_drv_msleep(500);
+		hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);			
+		ret=hl_drv_ztw523a_read_data(ZINITIX_EEPROM_INFO_REG,(uint8_t *)&chip_eeprom_info, 2) ;
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to read eeprom info\n");
+			return false;
+		}
+		rt_kprintf("touch eeprom info = 0x%04X\r\n",chip_eeprom_info);
+
+		if (!zinitix_bit_test(chip_eeprom_info, 0))
+			break;
+		if(time_out++ == 4)
+		{
+			hl_drv_ztw523a_write_cmd(ZINITIX_CALIBRATE_CMD);
+			hl_drv_msleep(10);
+			hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);						
+			rt_kprintf("h/w calibration retry timeout.\n");
+		}
+		if(time_out++ > 10)
+		{
+			rt_kprintf("[error] h/w calibration timeout.\n");
+			break;						
+		}
+	}while (1);
+	
+	hl_drv_ztw523a_write_reg(ZINITIX_INITIAL_TOUCH_MODE, TOUCH_POINT_MODE);
+	hl_drv_ztw523a_write_reg(ZINITIX_TOUCH_MODE, TOUCH_POINT_MODE);
+	if(ic_int_mask!=0)
+	{
+		ret=hl_drv_ztw523a_write_reg( ZINITIX_INT_ENABLE_FLAG, ic_int_mask);
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to write int flag\n");
+			return false;
+		}
+	}
+	hl_drv_ztw523a_write_reg(0xc003, 0x0001);
+	hl_drv_ztw523a_write_reg(0xc104, 0x0001);
+	hl_drv_msleep(1);
+	
+	ret=hl_drv_ztw523a_write_cmd(ZINITIX_SAVE_CALIBRATION_CMD) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write save cali cmd\n");
+		return false;
+	}
+	hl_drv_msleep(1000);	
+	hl_drv_ztw523a_write_reg( 0xc003, 0x0000);
+	hl_drv_ztw523a_write_reg( 0xc104, 0x0000);
+	
+	return true;				
+	
+}
+
+
+static uint8_t ts_upgrade_firmware(const uint8_t *firmware_data, uint32_t size)
+{
+	uint16_t flash_addr;
+	uint8_t *verify_data;
+	int retry_cnt = 0;
+	int i;
+	int page_sz = 64;
+	uint16_t chip_code;
+	int ret=0;
+	uint8_t TC_SECTOR_SZ=8;
+	
+	verify_data = (uint8_t*)rt_malloc(size);
+	if (verify_data == NULL) {
+	rt_kprintf("cannot alloc verify buffer\n");
+	return false;
+	}
+	
+retry_upgrade:
+	
+	hl_drv_ztw523a_power_control(0);
+	hl_drv_ztw523a_power_control(1);
+	
+	ret=hl_drv_ztw523a_write_reg(0xc000, 0x0001);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("power sequence error (vendor cmd enable)\n");
+		goto fail_upgrade;
+	}
+	hl_drv_msleep(1);
+	ret=hl_drv_ztw523a_read_data(0xcc00, (uint8_t *)&chip_code, 2);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to read chip code\n");
+		goto fail_upgrade;
+	}
+	rt_kprintf("chip code = 0x%x\n", chip_code);
+	
+	if((chip_code == 0xf400)) 
+	{
+		page_sz = 128;
+		
+		//size = 32*1024;
+	} 
+	else if(chip_code == 0xe240)
+	{
+		page_sz = 64;
+		
+		//size = 32*1024;
+	}
+	else if(chip_code == 0xE700 )//ZT7554
+	{
+	    page_sz = 128;
+		
+		//size = 64*1024;
+	}
+	else if(chip_code == 0xE548)//ZT7548
+	{
+	    page_sz = 64;
+		
+		//size = 48*1024;
+	}
+	else if((chip_code == 0xE538)||(chip_code == 0xE532))//ZT7532
+	{
+	    page_sz = 64;
+		
+		//size = 44*1024;
+	}
+	else 
+	{
+		page_sz = 64;
+		
+		//size = 24*1024;
+	}
+	
+	hl_drv_msleep(1);
+	ret=hl_drv_ztw523a_write_cmd(0xc004);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("power sequence error (intn clear)\n");
+		goto fail_upgrade;
+	}
+	hl_drv_msleep(1);
+	
+	ret=hl_drv_ztw523a_write_reg(0xc002, 0x0001) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("power sequence error (nvm init)\n");
+		goto fail_upgrade;
+	}
+	hl_drv_msleep(10);
+	
+	rt_kprintf("init flash\n");
+	ret=hl_drv_ztw523a_write_reg(0xc003, 0x0001) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write nvm vpp on\n");
+		goto fail_upgrade;
+	}
+	hl_drv_msleep(1);
+	
+	
+	ret=hl_drv_ztw523a_write_reg(0xc104, 0x0001) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write nvm wp disable\n");
+		goto fail_upgrade;
+	}
+	
+	ret=hl_drv_ztw523a_write_cmd(ZINITIX_INIT_FLASH) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to init flash\n");
+		goto fail_upgrade;
+	}
+	hl_drv_msleep(1);
+
+	rt_kprintf("writing firmware data\n");
+	for (flash_addr = 0; flash_addr < size; ) 
+	{
+		//rt_kprintf(KERN_ERR  "Addr:0x%04x\n", flash_addr);
+		for (i = 0; i < page_sz/TC_SECTOR_SZ; i++) 
+		{
+			ret=hl_drv_ztw523a_write_data(ZINITIX_WRITE_FLASH,(uint8_t *)&firmware_data[flash_addr],TC_SECTOR_SZ);
+			if(ret!=HL_SUCCESS)
+			{
+				rt_kprintf("error : write zinitix tc firmare\n");
+				goto fail_upgrade;
+			}
+			flash_addr += TC_SECTOR_SZ;
+			hl_drv_msleep(1);
+		}
+		hl_drv_msleep(30);	
+	
+	}
+	hl_drv_msleep(100);
+	
+	ret=hl_drv_ztw523a_write_reg( 0xc003, 0x0001) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write nvm vpp on\n");
+		goto fail_upgrade;
+	}	
+	
+	ret=hl_drv_ztw523a_write_reg( 0xc104, 0x0001) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write nvm wp disable\n");
+		goto fail_upgrade;
+	}
+	
+	ret=hl_drv_ztw523a_write_cmd( ZINITIX_INIT_FLASH) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to init flash\n");
+		goto fail_upgrade;
+	}
+	
+	rt_kprintf("read firmware data\n");
+	for (flash_addr = 0; flash_addr < size; ) 
+	{
+		for (i = 0; i < page_sz/TC_SECTOR_SZ; i++) 
+		{
+			//rt_kprintf("read :addr=%04x, len=%d\n", flash_addr, TC_SECTOR_SZ);
+			ret=hl_drv_ztw523a_read_data(ZINITIX_READ_FLASH,(uint8_t*)&verify_data[flash_addr], TC_SECTOR_SZ);
+			if(ret!=HL_SUCCESS)
+			{
+				rt_kprintf("error : read zinitix tc firmare\n");
+				goto fail_upgrade;
+			}
+			flash_addr += TC_SECTOR_SZ;
+		}
+	}
+	/* verify */
+	rt_kprintf("verify firmware data\n");
+	if (memcmp((uint8_t *)&firmware_data[0], (uint8_t *)&verify_data[0], size) == 0) 
+	{
+		rt_kprintf("upgrade finished\n");
+		rt_free(verify_data);
+
+		hl_drv_ztw523a_power_control(0);
+		hl_drv_ztw523a_power_control(1);
+		hl_drv_ztw523a_power_sequence();
+		return true;
+	}
+	
+	
+fail_upgrade:
+	
+	hl_drv_ztw523a_power_control(0);
+	if (retry_cnt++ < ZINITIX_INIT_RETRY_CNT) 
+	{
+		rt_kprintf("upgrade fail : so retry... (%d)\n", retry_cnt);
+		goto retry_upgrade;		
+	}
+	
+	if (verify_data != NULL)
+	rt_free(verify_data);
+	
+	rt_kprintf("upgrade fail..\n");
+	return false;
+	
+	
+}
+
+
+static void hl_drv_upgread_tp(int argc, char** argv)
+{
+    int i; 
+	uint16_t firmware_version;
+	uint16_t reg_data_version;
+	
+	uint32_t fw_size=0;
+	int ret=0;
+
+    for (i = 0; i < 10; i++) {
+        if (hl_drv_ztw523a_write_cmd(ZINITIX_SWRESET_CMD) == HL_SUCCESS)
+            break;
+        hl_drv_msleep(10);
+    }
+    ret = hl_drv_ztw523a_read_data(ZINITIX_FIRMWARE_VERSION, (uint8_t*)&firmware_version, 2); /*固件主版本号u16 firmware_version;*/
+    if (ret != HL_SUCCESS) {
+        LOG_E("fail to read FIRMWARE_VERSION\n");
+        goto fail_init;
+    }
+    LOG_D(" touch FW version = %d\r\n", firmware_version);
+
+    ret = hl_drv_ztw523a_read_data(ZINITIX_DATA_VERSION_REG, (uint8_t*)&reg_data_version,
+                       2); /*固件寄存器版本号u16 reg_data_version;*/
+    if (ret != HL_SUCCESS) {
+        LOG_E("fail to read reg version\n");
+        goto fail_init;
+    }
+    LOG_D(" touch register version = %X\r\n", reg_data_version);
+
+    fw_size=sizeof(m_firmware_data);
+	rt_kprintf("fw_size = %d KB\r\n", fw_size/1024);
+
+	ret=hl_drv_ztw523a_read_data( ZINITIX_INT_ENABLE_FLAG,(uint8_t *)&ic_int_mask, 2) ;
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to read int reg\n");
+		goto fail_init;
+	}
+	rt_kprintf(" touch int reg = 0x%x\r\n",ic_int_mask);
+
+	if (ts_check_need_upgrade(reg_data_version) == true)
+	{
+		rt_kprintf("start upgrade firmware\n");
+
+		if(ts_upgrade_firmware(m_firmware_data,fw_size) == 0)
+		goto fail_init;
+
+		if(ts_hw_calibration() == 0)
+		goto fail_init;
+		/* disable chip interrupt */
+		ret=hl_drv_ztw523a_write_reg( ZINITIX_INT_ENABLE_FLAG, 0);
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to write int flag\n");
+			goto fail_init;
+		}
+		ret=hl_drv_ztw523a_read_data( ZINITIX_FIRMWARE_VERSION,(uint8_t *)&firmware_version, 2);/*固件主版本号u16 firmware_version;*/
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to read FIRMWARE_VERSION\n");
+			goto fail_init;
+		}
+		rt_kprintf(" touch FW version = %d\r\n",firmware_version);
+
+		ret=hl_drv_ztw523a_read_data( ZINITIX_DATA_VERSION_REG,(uint8_t *)&reg_data_version, 2) ;/*固件寄存器版本号u16 reg_data_version;*/
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to read reg version\n");
+			goto fail_init;
+		}
+		rt_kprintf(" touch register version = %d\r\n",reg_data_version);
+
+	}
+
+    
+
+    ret=hl_drv_ztw523a_write_reg( ZINITIX_INITIAL_TOUCH_MODE, TOUCH_POINT_MODE);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write inital touch mode\n");
+		goto fail_init;
+	}
+	
+	ret=hl_drv_ztw523a_write_reg( ZINITIX_TOUCH_MODE, TOUCH_POINT_MODE);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write touh mode\n");
+		goto fail_init;
+	}
+	
+	ret=hl_drv_ztw523a_write_reg(ZINITIX_SUPPORTED_FINGER_NUM,(uint16_t)MAX_SUPPORTED_FINGER_NUM);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write finger num\n");
+		goto fail_init;
+	}
+	
+	ret=hl_drv_ztw523a_write_reg(ZINITIX_X_RESOLUTION,(uint16_t)(TPD_RES_MAX_X));
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write x resolution\n");
+		goto fail_init;
+	}
+	
+	ret=hl_drv_ztw523a_write_reg(ZINITIX_Y_RESOLUTION,(uint16_t)(TPD_RES_MAX_Y));
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write Y resolution\n");
+		goto fail_init;
+	}
+		
+	ret=hl_drv_ztw523a_write_cmd( ZINITIX_CALIBRATE_CMD);
+	if(ret!=HL_SUCCESS)
+	{
+		rt_kprintf("fail to write cali cmd\n");
+		goto fail_init;
+	}
+#if TOUCH_ONESHOT_UPGRADE
+	ret=hl_drv_ztw523a_write_reg( ZINITIX_INT_ENABLE_FLAG, ic_int_mask);
+		if(ret!=HL_SUCCESS)
+		{
+			rt_kprintf("fail to write int flag\n");
+			goto fail_init;
+		}
+#endif
+	for (i = 0; i < 10; i++) 
+	{
+		hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
+		hl_drv_msleep(1);
+	}
+	rt_kprintf("successfully initialized\r\n");
+	return true;
+
+fail_init:
+	rt_kprintf("failed initialized\r\n");
+
+	return false;
+}
+
+MSH_CMD_EXPORT(hl_drv_upgread_tp, run hl_drv_upgread_tp);
+#endif
+
+
+
+
 
 static bool hl_drv_ztw523a_init(void) /*初始化芯片的一些寄存器,寄存器地址的宏定义在后面*/
 {

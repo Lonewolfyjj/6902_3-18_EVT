@@ -1437,23 +1437,23 @@ int hl_drv_sy6971_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
     uint8_t              reg_cmd, reg_serial, cmd_typ;
     HL_SY_INPUT_PARAM_T* param = (HL_SY_INPUT_PARAM_T*)ptr;
     if (ptr == NULL || len != 1) {
-        sy_printf("Param err ! len : [ %X ]\n", len);
+        sy_printf("Sy6971 param err ! len : [ %X ]\n", len);
         return HL_FAILED;
     }
     cmd_typ = cmd;
     if ((cmd_typ != hl_reg_type_get(param->cfg_opt)) && (cmd_typ == SY_WRITE_CMD)) {
-        sy_printf("Register0 : [ %X ] type err !\n", cmd);
+        sy_printf("Sy6971 register0 : [ %X ] type err !\n", cmd);
         return HL_SUCCESS;
     }
     reg_cmd    = param->cfg_opt;
     reg_serial = hl_get_reg_serial(reg_cmd);
     if (cmd_typ == SY_WRITE_CMD && (reg_cmd > E_REG_RST)) {
-        sy_printf("Register1 : [ %X ] type err !\n", cmd);
+        sy_printf("Sy6971 register1 : [ %X ] type err !\n", cmd);
         return HL_SUCCESS;
     }
 
     if (hl_reg_ctl(reg_serial, reg_cmd, cmd_typ, &param->param)) {
-        sy_printf("hl_reg_ctl fail !\n");
+        sy_printf("Sy6971 hl_reg_ctl fail !\n");
         return HL_FAILED;
     }
     return HL_SUCCESS;
