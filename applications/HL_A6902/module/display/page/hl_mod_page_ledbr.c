@@ -50,7 +50,7 @@ LV_IMG_DECLARE(Other_led_low_white);//  22
 
 static void hl_light_test_cb(hl_b_two_in_one_check_t event_num)
 {
-    uint8_t value = 0;
+    uint32_t value = 0;
     switch(event_num){
         case HL_B_TWO_ONE_CHECK_LEFT:
             value = 255;

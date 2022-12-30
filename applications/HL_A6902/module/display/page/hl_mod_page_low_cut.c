@@ -45,7 +45,7 @@
 //低切界面
 static void hl_diqie_test_cb(hl_three_in_one_check_t event_num)
 {
-    uint8_t value = 0;
+    uint32_t value = 0;
     switch(event_num){
         case HL_THREE_ONE_CHECK_LEFT:
             value = LOW_CUT_OFF;
