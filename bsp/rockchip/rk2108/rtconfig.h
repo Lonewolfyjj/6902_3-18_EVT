@@ -158,7 +158,9 @@
 #define RT_USING_PM
 /* RT_USING_PM_FG is not set */
 /* RT_USING_PM_CHARGER is not set */
-/* RT_USING_RTC is not set */
+#define RT_USING_RTC
+#define RT_USING_SOFT_RTC
+/* RT_USING_ALARM is not set */
 /* RT_USING_SDIO is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
