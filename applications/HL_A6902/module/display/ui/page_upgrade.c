@@ -1,5 +1,6 @@
 #include "page_upgrade.h"
 #include "language.h"
+#include "page_style_bit.h"
 
 LV_IMG_DECLARE(Other_upgrade_success);//
 
@@ -84,7 +85,11 @@ static lv_obj_t * lv_img_creat_fun(lv_obj_t *src_obj,const void * src,lv_align_t
 void hl_mod_lvgl_upgrade_init(void * init_data)
 {
     hl_lvgl_upgrade_init_t * ptr = (hl_lvgl_upgrade_init_t *)init_data;
-    lv_style_barset_init();    
+    if (!page_style_bit.page_upgrade) {
+        page_style_bit.page_upgrade = 1;
+        lv_style_barset_init();
+    }
+       
     bar = lv_bar_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_CENTER,0,20,ptr->upgrade_progress);
     lab = lv_lab_creat_fun(lv_scr_act(),bar,LV_ALIGN_OUT_TOP_MID,0,-20,"设备升级中...");
 }

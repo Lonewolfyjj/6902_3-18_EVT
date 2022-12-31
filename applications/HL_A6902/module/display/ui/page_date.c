@@ -1,5 +1,6 @@
 #include "page_date.h"
 #include "language.h"
+#include "page_style_bit.h"
 
 #define ROLLER_YEAR  -96
 #define ROLLER_MONTH  2
@@ -395,7 +396,11 @@ void hl_mod_date_ioctl(void * ctl_data)
 void hl_mod_date_init(void * init_data)
 {
     lv_date_init();
-    lv_style_page6_init();
+    if (!page_style_bit.page_date) {
+        page_style_bit.page_date = 1;
+        lv_style_page6_init();
+    }
+    
 
     hl_lvgl_date_init_t * ptr = (hl_lvgl_date_init_t *)init_data;
     hl_date_func = ptr->func_cb;

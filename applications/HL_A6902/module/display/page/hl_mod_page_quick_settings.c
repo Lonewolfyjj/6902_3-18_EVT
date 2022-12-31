@@ -19,7 +19,7 @@
  * <tr><td>2022-12-12     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -35,158 +35,120 @@
 
 #if (!HL_IS_TX_DEVICE())
 #include "hl_mod_display.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 #include "lvgl.h"
 
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 #include "page_lineout.h"
 
-#define SET_PAGE 1
-#define BACK_PAGE 2
+#define MAX_LINEOUT_VOLUME 18
+#define MIN_LINEOUT_VOLUME -18
 
-static uint8_t page_state = SET_PAGE;
 // 0 表示左 1表示 右
 static int16_t now_sound_channal = (int16_t)HL_LINEOUT_CHOOSE_LEFT;
-//当前的音量
-static int16_t now_volume = 0;
 
+static hl_display_sound_module_e module = STEREO;
 
 LV_IMG_DECLARE(Other_voice);
 
-static void page_s_init(hl_display_screen_s*        data, hl_display_screen_change_s* flag);
-static void page_voc_bar1_init(hl_display_screen_s*        data, hl_display_screen_change_s* flag);
+static void btn_scan();
 
-static void hl_bar_test_cb(int16_t bar_num)
-{
-    printf("bar_num = %d\n", bar_num);
-}
+static void page_deinit();
+static void page_s_deinit(hl_display_screen_s* data);
+static void page_s_init(hl_display_screen_s* data, hl_display_screen_change_s* flag);
+static void page_s_voc_bar_init();
+static void hl_bar_test_cb(hl_lineout_check_t bar_num);
 
-static void hl_bar1_test_cb(int16_t bar_num)
+// BACK_PAGE 页面回调函数
+static void hl_bar_test_cb(hl_lineout_check_t bar_num)
 {
     printf("bar_num = %d\n", bar_num);
-}
-static void hl_bar2_test_cb(int16_t bar_num)
-{
-    printf("bar_num = %d\n", bar_num);
+
+    now_sound_channal = (int16_t)bar_num;
+    page_s_voc_bar_init();
 }
 
 static void page_twolineout_init()
 {
-    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     hl_display_screen_s*        data = hl_mod_page_get_screen_data_ptr();
 
     //  立体声
-    if (flag->sound_module == STEREO) {
-        page_state = BACK_PAGE;
-        hl_mod_knob_select_val_set(&now_sound_channal,(int16_t)HL_LINEOUT_CHOOSE_LEFT);
-        page_s_init(data, flag);
-    // 单身道
-    } else if (flag->sound_module == MONO) {
-        // page_voc_bar1_init(data, flag)
-    } else if (flag->sound_module == SAFE_TRACK) {
+    module = flag->sound_module;
 
+    switch (module) {
+        case STEREO:
+            // 默认选择声道1
+            hl_mod_knob_select_val_set(&now_sound_channal, (int16_t)HL_LINEOUT_CHOOSE_LEFT);
+            page_s_init(data, flag);
+            break;
+        case MONO:
+            // page_voc_bar1_init(data, flag)
+            break;
+        case SAFE_TRACK:
+            break;
+        default:
+            break;
     }
 }
 
-// 立体声
-static void page_s_init(hl_display_screen_s*        data, hl_display_screen_change_s* flag)
+// 立体声模式的lineout初始化
+static void page_s_init(hl_display_screen_s* data, hl_display_screen_change_s* flag)
 {
     hl_lvgl_lineout_init_t lineout;
-
+    LOG_D("vol1=[%d]\n",data->tx1_line_out_volume);
     lineout.lineout_choose = HL_LINEOUT_CHOOSE_LEFT;
-    lineout.left_volume = data->tx1_line_out_volume;
-    lineout.right_volume = data->tx2_line_out_volume;
-    lineout.func_cb = hl_bar_test_cb;
+    lineout.left_volume    = data->tx1_line_out_volume;
+    lineout.right_volume   = data->tx2_line_out_volume;
+    lineout.func_cb        = hl_bar_test_cb;
     hl_mod_lineout_init(&lineout);
 }
 // 立体声反初始化
-static void page_s_deinit(hl_display_screen_s*        data, hl_display_screen_change_s* flag)
+static void page_s_deinit(hl_display_screen_s* data)
 {
     hl_lvgl_lineout_ioctl_t lineout;
 
     lineout.lineout_choose = HL_LINEOUT_DELETE_PAGE;
     hl_mod_lineout_ioctl(&lineout);
-    lineout.lineout_choose = HL_LINEOUT_DELETE_STYLE;
-    hl_mod_lineout_ioctl(&lineout);
+    // lineout.lineout_choose = HL_LINEOUT_DELETE_STYLE;
+    // hl_mod_lineout_ioctl(&lineout);
 }
 
 // 立体声反初始化
 static void page_deinit()
 {
-    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
-    hl_display_screen_s*        data = hl_mod_page_get_screen_data_ptr();
-    //  立体声
-    if (flag->sound_module == STEREO) {
-        page_s_deinit(data, flag);
-    // 单身道
-    } else if (flag->sound_module == MONO) {
-        // page_voc_bar1_init(data, flag)
-    } else if (flag->sound_module == SAFE_TRACK) {
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
 
+    switch (module) {
+        case STEREO:
+            // 默认选择声道1
+            page_s_deinit(data);
+            break;
+        case MONO:
+
+            break;
+        case SAFE_TRACK:
+            break;
+        default:
+            break;
     }
-}
-
-//左声道设置界面
-static void page_voc_bar1_init(hl_display_screen_s*        data, hl_display_screen_change_s* flag)
-{
-    hl_lvgl_barset_init_t bar_test = 
-    {
-        .func_cb = hl_bar1_test_cb,
-        .icontyp = HL_SINGLE_ICON,
-        .init_value = data->tx1_line_out_volume,
-        .ptr = "左声道",
-        .range_max = 40,
-        .range_min = -60,
-        .src = &Other_voice,
-    };
-    hl_mod_barset_init(&bar_test);
 }
 
 // 进入立体声声道设置音量页面
 static void page_s_voc_bar_init()
 {
-    hl_lvgl_barset_init_t bar_test;
-    hl_display_screen_s*        data = hl_mod_page_get_screen_data_ptr();
 
-        
-        bar_test.icontyp = HL_STEREO_ICON;
-        
-        if (now_sound_channal == 0) {
-            bar_test.func_cb = hl_bar1_test_cb;
-            bar_test.init_value = data->tx1_line_out_volume;
-            bar_test.ptr = "左声道";
-        } else {
-            bar_test.func_cb = hl_bar2_test_cb;
-            bar_test.init_value = data->tx2_line_out_volume;
-            bar_test.ptr = "右声道";
-        }
-        
-        bar_test.range_max = 40;
-        bar_test.range_min = -60;
-        bar_test.src = &Other_voice;
+    if ((hl_lineout_choose_t)now_sound_channal == HL_LINEOUT_CHOOSE_LEFT) {
+        PageManager_PagePush(PAGE_LINE_OUT_STEREO_LEFT);
 
-    hl_mod_barset_init(&bar_test);
+    } else if ((hl_lineout_choose_t)now_sound_channal == HL_LINEOUT_CHOOSE_RIGHT) {
+        PageManager_PagePush(PAGE_LINE_OUT_STEREO_RIGHT);
+    }
 }
-
-// //右声道设置界面
-// static void page_voc_bar2_init(void)
-// {
-//     hl_lvgl_barset_init_t bar_test = 
-//     {
-//         .func_cb = hl_bar_test_cb,
-//         .icontyp = HL_STEREO_ICON,
-//         .init_value = -16,
-//         .ptr = "右声道",
-//         .range_max = 40,
-//         .range_min = -60,
-//         .src = &Other_voice,
-//     };
-//     hl_mod_barset_init(&bar_test);
-// }
 
 static void hl_mod_page_setup(void)
 {
@@ -195,68 +157,35 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    switch (page_state)
-    {
-    case BACK_PAGE:
-        // 返回主页
-        page_deinit();
-        break;
-    case SET_PAGE:
-        // 返回显示界面
-        page_state = BACK_PAGE;
-        break;
-    default:
-        break;
-    }
+    page_deinit();
 }
 
 static void btn_scan()
 {
-    int8_t knob_val = 0;
+    int8_t                  knob_val = 0;
     hl_lvgl_lineout_ioctl_t ctrl;
-    // 返回按键
-    uint8_t back_btn  = hl_mod_keypad_touchkey_read();
     // OK按键
-    uint8_t ok_btn  = hl_mod_get_knob_okkey_val();
+    uint8_t ok_btn = hl_mod_get_knob_okkey_val();
 
-    switch (page_state)
-    {
-    case BACK_PAGE:
-        // 返回主页
-        if (back_btn) {
-                page_state = BACK_PAGE;
-                PageManager_PagePop();
-                page_s_voc_bar_init();
-        }
-        //进入调试
-        if (ok_btn == HL_KEY_EVENT_SHORT) {
-            page_deinit();
-            //重新创建
-            page_s_voc_bar_init();
-            page_state = SET_PAGE;
-        }
-        // 选择当前的页面
-        
-        knob_val = hl_mod_knob_select_val_change(&now_sound_channal,0,1);
-        if (knob_val) {
-            ctrl.lineout_choose = (hl_lineout_choose_t)knob_val;
-            //hl_mod_lineout_ioctl(&ctrl);
-        }
+    // 设置触发点击事件
+    if (ok_btn == HL_KEY_EVENT_SHORT) {
 
-        break;
-    case SET_PAGE:
-        // 返回首界面
-        if (back_btn || ok_btn == HL_KEY_EVENT_SHORT) 
-            page_state = BACK_PAGE;
-        break;
-    default:
-        break;
+        ctrl.lineout_choose = (hl_lineout_choose_t)now_sound_channal;
+        hl_mod_lineout_ioctl(&ctrl);
+    }
+
+    // 旋钮选择TX配置通道
+    knob_val = hl_mod_knob_select_val_change(&now_sound_channal, 0, 1,true);
+    if (knob_val) {
+        ctrl.lineout_choose = (hl_lineout_choose_t)now_sound_channal;
+        hl_mod_lineout_ioctl(&ctrl);
     }
 }
 
 static void hl_mod_page_loop(void)
 {
     btn_scan();
+    hl_mod_menu_backbtn_scan();
 }
 
 PAGE_DEC(PAGE_QUICK_SETTINGS)
@@ -274,6 +203,3 @@ PAGE_DEC(PAGE_QUICK_SETTINGS)
 /*
  * EOF
  */
-
-
-

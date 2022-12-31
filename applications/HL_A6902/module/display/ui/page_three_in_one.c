@@ -10,6 +10,7 @@
  */
 #include "page_three_in_one.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     6
 
@@ -258,7 +259,11 @@ void hl_mod_three_in_one_init(void * init_data)
     hl_lvgl_three_in_one_init_t * ptr = (hl_lvgl_three_in_one_init_t *)init_data;
     hl_three_in_one_func = ptr->func_cb;
 
-    lv_style_page4_init();
+    if (!page_style_bit.page_three_in_one) {
+        page_style_bit.page_three_in_one = 1;
+        lv_style_page4_init();
+    }
+    
     if(ptr->three_in_one_choose == HL_THREE_ONE_CHOOSE_LEFT){
         btn_left_cnt = 1;
         btn_mid_cnt = 0;
