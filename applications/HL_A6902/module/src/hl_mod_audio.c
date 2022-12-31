@@ -739,7 +739,7 @@ static rt_err_t hl_mod_audio_codec_config(hl_card_param_t *p_param)
     }
 
     LOG_I("open card:%s %d channel  %d hz  %d bits", p_param->card_name, p_param->param.channels, p_param->param.sampleRate, p_param->param.sampleBits);
-    LOG_I("audio card param deconfig succeed!");
+    LOG_I("audio card param config succeed!");
     return RT_EOK;
 
 err2:
@@ -1430,6 +1430,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
 {
     hl_stream_mode_e new_mod = next_mode;
 
+    LOG_D("thread ctrl start cur_mode(%d),next_mode(%d)",cur_mode, next_mode);
     switch (cur_mode) {
         case HL_STREAM_IDLE:
             switch (next_mode) {
@@ -1692,6 +1693,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
             new_mod = cur_mode;
             break;
     }
+    LOG_D("thread ctrl end new_mod(%d)", new_mod);
     return new_mod;
 }
 
