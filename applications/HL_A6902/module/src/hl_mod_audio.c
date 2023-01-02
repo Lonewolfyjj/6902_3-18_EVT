@@ -1060,9 +1060,6 @@ err:
 #ifdef RT_USB_DEVICE_UAC1
 static void _hl_cap2uac_thread_entry(void* arg)
 {
-#if (!HL_IS_TX_DEVICE())
-    rt_base_t level = 0;
-#endif
     LOG_D("audio cap2uac thread run");
 
     if (RT_NULL == uac_info.card) {
@@ -1089,11 +1086,9 @@ static void _hl_cap2uac_thread_entry(void* arg)
 
         hl_drv_rk_xtensa_dsp_transfer();
 #if (!HL_IS_TX_DEVICE())
-        level = rt_hw_interrupt_disable();
         if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
-        rt_hw_interrupt_enable(level);
 #endif
     }
 
@@ -1108,7 +1103,6 @@ static void _hl_uac2play_thread_entry(void* arg)
     rt_size_t           get_data_size;
     rt_uint8_t          uac_p_state;
     play_uac_state_e    playback_state = HL_PLAY_UAC_IDLE;
-    rt_base_t           level          = 0;
 
     LOG_D("audio uac2play thread run");
 
@@ -1125,7 +1119,7 @@ static void _hl_uac2play_thread_entry(void* arg)
     while (uac2play_thread_flag != 0) {
         switch (playback_state) {
             case HL_PLAY_UAC_IDLE:
-                // memset(uac_info.buff32b, 0x00, uac_info.buff32size);
+                memset(uac_info.buff32b, 0x00, uac_info.buff32size);
                 playback_state = HL_PLAY_UAC_WAIT;
                 LOG_I("enter playback wait");
                 break;
@@ -1138,31 +1132,25 @@ static void _hl_uac2play_thread_entry(void* arg)
                 }
                 playback_state = HL_PLAY_UAC_GOING;
                 LOG_I("p_buffer ready enter playback going");
+                break;
 
             case HL_PLAY_UAC_GOING:
-                level = rt_hw_interrupt_disable();
                 get_data_size = rt_device_read(uac_info.card, 0, uac_info.buff24b, uac_info.buff24size);
-                rt_hw_interrupt_enable(level);
                 if (get_data_size < uac_info.buff24size) {
                     // 数据不足
-                    // memset(&uac_info.buff24b[get_data_size], 0x00, uac_info.buff24size - get_data_size);
-                    hl_mod_audio_codec_deconfig(&play_info);
-                    hl_mod_audio_codec_config(&play_info);
+                    memset(&uac_info.buff24b[get_data_size], 0x00, uac_info.buff24size - get_data_size);
+                    // hl_mod_audio_codec_deconfig(&play_info);
+                    // hl_mod_audio_codec_config(&play_info);
                     playback_state = HL_PLAY_UAC_IDLE;
                     LOG_I("p_buffer empty enter playback idle(%d)", get_data_size);
-                } else {
-                    p = uac_info.buff32b;
-                    for (uint32_t i =0; i < uac_info.buff24size; ) {
-                        p[0] = 0;
-                        p[1] = uac_info.buff24b[i++];
-                        p[2] = uac_info.buff24b[i++];
-                        p[3] = uac_info.buff24b[i++];
-                        p   += 4;
-                    }
-                    /* 写入无线 */
-                    if (rt_device_write(play_info.card, 0, uac_info.buff32b, play_info.abuf.period_size) <= 0) {
-                        LOG_E("write %s failed", play_info.card->parent.name);
-                    }
+                }
+                p = uac_info.buff32b;
+                for (uint32_t i =0; i < uac_info.buff24size; ) {
+                    p[0] = 0;
+                    p[1] = uac_info.buff24b[i++];
+                    p[2] = uac_info.buff24b[i++];
+                    p[3] = uac_info.buff24b[i++];
+                    p   += 4;
                 }
                 break;
 
@@ -1171,6 +1159,11 @@ static void _hl_uac2play_thread_entry(void* arg)
 
             default:
                 break;
+        }
+
+        /* 写入无线 */
+        if (rt_device_write(play_info.card, 0, uac_info.buff32b, play_info.abuf.period_size) <= 0) {
+            LOG_E("write %s failed", play_info.card->parent.name);
         }
     }
 
@@ -1182,9 +1175,6 @@ err:
 
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
-#if (!HL_IS_TX_DEVICE())
-    rt_base_t level = 0;
-#endif
     LOG_D("audio cap2play2uac thread run");
 
     if (RT_NULL == cap_info.card) {
@@ -1222,11 +1212,9 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         }
 #ifdef RT_USB_DEVICE_UAC1        
 #if (!HL_IS_TX_DEVICE())
-        level = rt_hw_interrupt_disable();
         if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
-        rt_hw_interrupt_enable(level);
 #endif
 #endif
     }
@@ -1383,7 +1371,7 @@ static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param)
 
 static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
 {
-    cap2play_thread_id = rt_thread_create("cap2play", _hl_cap2play_thread_entry, p_card_info, 2048, 0, 3);
+    cap2play_thread_id = rt_thread_create("cap2play", _hl_cap2play_thread_entry, p_card_info, 2048, 1, 8);
     if (cap2play_thread_id != RT_NULL) {
         cap2play_thread_flag = 1;
         rt_thread_startup(cap2play_thread_id);
@@ -1394,7 +1382,7 @@ static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
 
 static void hl_uac2play_thread_setup(void)
 {
-    uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 0, 3);
+    uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 1, 8);
     if (uac2play_thread_id != RT_NULL) {
         uac2play_thread_flag = 1;
         rt_thread_startup(uac2play_thread_id);
@@ -1405,7 +1393,7 @@ static void hl_uac2play_thread_setup(void)
 
 static void hl_cap2uac_thread_setup(void)
 {
-    cap2uac_thread_id = rt_thread_create("cap2uac", _hl_cap2uac_thread_entry, RT_NULL, 2048, 0, 8);
+    cap2uac_thread_id = rt_thread_create("cap2uac", _hl_cap2uac_thread_entry, RT_NULL, 2048, 1, 8);
     if (cap2uac_thread_id != RT_NULL) {
         cap2uac_thread_flag = 1;
         rt_thread_startup(cap2uac_thread_id);
@@ -1416,12 +1404,85 @@ static void hl_cap2uac_thread_setup(void)
 
 static void hl_cap2play2uac_thread_setup(void)
 {
-    cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 0, 3);
+    cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 1, 8);
     if (cap2play2uac_thread_id != RT_NULL) {
         cap2play2uac_thread_flag = 1;
         rt_thread_startup(cap2play2uac_thread_id);
     } else {
-        LOG_E("cap2play2uac thread create failed!");
+        LOG_E("cap2p2u thread create failed!");
+    }
+}
+
+static void hl_cap2play_thread_stop(void)
+{
+    uint8_t i = 100;
+
+    cap2play_thread_flag = 0;
+    while(cap2play_thread_id != RT_NULL) {
+        rt_thread_mdelay(1);
+        i--;
+        if (i == 0) {
+            rt_thread_delete(cap2play_thread_id);
+            cap2play_thread_id = RT_NULL;
+            LOG_E("cap2play exit timeout!");
+        }
+    }
+}
+
+static void hl_uac2play_thread_stop(void)
+{
+    uint8_t i = 100;
+
+    uac2play_thread_flag = 0;
+    while (uac2play_thread_id != RT_NULL){
+        rt_thread_mdelay(1);
+        i--;
+        if (i == 0) {
+            rt_thread_delete(uac2play_thread_id);
+            uac2play_thread_id = RT_NULL;
+            LOG_E("uac2play exit timeout!");
+        }
+    }
+}
+
+static void hl_cap2uac_uac2play_thread_stop(void)
+{
+    uint8_t i = 100;
+
+    uac2play_thread_flag = 0;
+    cap2uac_thread_flag = 0;
+    while (uac2play_thread_id != RT_NULL) {
+        rt_thread_mdelay(1);
+        i--;
+        if (i == 0) {
+            rt_thread_delete(uac2play_thread_id);
+            uac2play_thread_id = RT_NULL;
+            LOG_E("uac2play exit timeout!");
+        }
+    }
+    i = 100;
+    while (cap2uac_thread_id != RT_NULL){
+        rt_thread_mdelay(1);
+        if (i == 0) {
+            rt_thread_delete(cap2uac_thread_id);
+            cap2uac_thread_id = RT_NULL;
+            LOG_E("uac2play exit timeout!");
+        }
+    }
+}
+
+static void hl_cap2play2uac_thread_stop(void)
+{
+    uint8_t i = 100;
+
+    cap2play2uac_thread_flag = 0;
+    while (cap2play2uac_thread_id != RT_NULL){
+        rt_thread_mdelay(1);
+        if (i == 0) {
+            rt_thread_delete(cap2uac_thread_id);
+            cap2uac_thread_id = RT_NULL;
+            LOG_E("uac2play exit timeout!");
+        }
     }
 }
 
@@ -1479,29 +1540,20 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
         case HL_STREAM_PDM2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_mod_audio_codec_deconfig(&pdm_info);
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
 
                 case HL_STREAM_CAP2PLAY:
                     hl_mod_audio_codec_config(&cap_info);
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_cap2play_thread_setup(&cap_info);
                     hl_mod_audio_codec_deconfig(&pdm_info);
                     break;
 
                 case HL_STREAM_UAC2PLAY:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_uac2play_thread_setup();
                     hl_mod_audio_codec_deconfig(&pdm_info);
                     break;
@@ -1517,10 +1569,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
         case HL_STREAM_CAP2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_mod_audio_codec_deconfig(&cap_info);
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
@@ -1528,38 +1577,26 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
 #if HL_IS_TX_DEVICE()                     
                 case HL_STREAM_PDM2PLAY:
                     hl_mod_audio_codec_config(&pdm_info);
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_cap2play_thread_setup(&pdm_info);
                     hl_mod_audio_codec_deconfig(&cap_info);
                     break;
 #endif
 
                 case HL_STREAM_UAC2PLAY:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_uac2play_thread_setup();
                     hl_mod_audio_codec_deconfig(&cap_info);
                     break;
 
                 case HL_STREAM_CAP2UAC_UAC2PLAY:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_cap2uac_thread_setup();
                     hl_uac2play_thread_setup();
                     break;
 
                 case HL_STREAM_CAP2PLAY_CAP2UAC:
-                    cap2play_thread_flag = 0;
-                    while(cap2play_thread_id != RT_NULL) {
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play_thread_stop();
                     hl_cap2play2uac_thread_setup();
                     break;
 
@@ -1574,28 +1611,19 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
         case HL_STREAM_UAC2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
-                    uac2play_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_uac2play_thread_stop();
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
                     
                 case HL_STREAM_PDM2PLAY:
                     hl_mod_audio_codec_config(&pdm_info);
-                    uac2play_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_uac2play_thread_stop();
                     hl_cap2play_thread_setup(&pdm_info);
                     break;
 
                 case HL_STREAM_CAP2PLAY:
                     hl_mod_audio_codec_config(&cap_info);
-                    uac2play_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_uac2play_thread_stop();
                     hl_cap2play_thread_setup(&cap_info);
                     break;
 
@@ -1610,39 +1638,18 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
         case HL_STREAM_CAP2UAC_UAC2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
-                    uac2play_thread_flag = 0;
-                    cap2uac_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
-                    while (cap2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2uac_uac2play_thread_stop();
                     hl_mod_audio_codec_deconfig(&cap_info);
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
                     
                 case HL_STREAM_CAP2PLAY:
-                    uac2play_thread_flag = 0;
-                    cap2uac_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
-                    while (cap2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2uac_uac2play_thread_stop();
                     hl_cap2play_thread_setup(&cap_info);
                     break;
 
                 case HL_STREAM_CAP2PLAY_CAP2UAC:
-                    uac2play_thread_flag = 0;
-                    cap2uac_thread_flag = 0;
-                    while (uac2play_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
-                    while (cap2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2uac_uac2play_thread_stop();
                     hl_cap2play2uac_thread_setup();
                     break;
 
@@ -1656,27 +1663,18 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
         case HL_STREAM_CAP2PLAY_CAP2UAC:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
-                    cap2play2uac_thread_flag = 0;
-                    while (cap2play2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play2uac_thread_stop();
                     hl_mod_audio_codec_deconfig(&cap_info);
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
 
                 case HL_STREAM_CAP2PLAY:
-                    cap2play2uac_thread_flag = 0;
-                    while (cap2play2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play2uac_thread_stop();
                     hl_cap2play_thread_setup(&cap_info);
                     break;
 
                 case HL_STREAM_CAP2UAC_UAC2PLAY:
-                    cap2play2uac_thread_flag = 0;
-                    while (cap2play2uac_thread_id != RT_NULL){
-                        rt_thread_mdelay(1);
-                    }
+                    hl_cap2play2uac_thread_stop();
                     hl_cap2uac_thread_setup();
                     hl_uac2play_thread_setup();
                     break;
