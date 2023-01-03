@@ -215,6 +215,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     hl_display_screen_s* data_p = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     // LOG_D("cmd=%d\r\n", cmd);
+    hl_mod_display_mux_take();
     switch (cmd) {
         // 更新按鍵的操作
         case MSG_INPUT_UPDATE_CMD: {
@@ -338,10 +339,10 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.tx2_mute_switch = data;
             flag->sys_status.tx2_mute_switch = 1;
         } break;
-        case IN_BOX_STATE_SWITCH_CMD: {
+        case IN_BOX_STATE_VAL_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
-            data_p->sys_status.in_box_state = data;
-            flag->sys_status.in_box_state = 1;
+            data_p->in_box_state = data;
+            flag->in_box_state = 1;
         } break;
         case AUTO_RECORD_PORTECT_SWITCH_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
@@ -350,15 +351,19 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         } break;
         case RX_RF_STATE_VAL_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
-            LOG_D("cmda=%d\r\n", data);
             data_p->rf_net_connect = data;
             flag->rf_net_connect = 1;
+        } break;
+        case LOW_CUT_VAL_CMD: {
+            hl_display_low_cut_e data = *(uint8_t*)ptr;
+            data_p->low_cut = data;
+            flag->low_cut   = 1;
         } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
             break;
     }
-
+    hl_mod_display_mux_release();
     return res;
 }
 
@@ -372,6 +377,7 @@ static void hl_mod_display_task(void* param)
     lv_obj_add_style(lv_scr_act(), &style, 0);
     while (1) {
         hl_mod_screen_rot_scan();
+        hl_mod_page_goto_box_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
@@ -403,6 +409,9 @@ uint8_t hl_mod_display_init(void* display_msq)
     lvgl2rtt_init();
     // hl_mod_display_data_init();
     hl_mod_page_all_init();
+
+    hl_mod_display_mux_init();
+
     hl_drv_qma6100p_init();
     hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,

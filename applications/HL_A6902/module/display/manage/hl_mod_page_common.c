@@ -108,10 +108,29 @@ static hl_display_screen_change_s change_flag = { 0 };
 // 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
-
+static rt_mutex_t display_mux = RT_NULL;
 
 // 返回触摸按键消抖时间
 static hl_timeout_t backtouchkey_debance;
+
+void hl_mod_display_mux_init(void)
+{
+    display_mux = rt_mutex_create("display_mutex", RT_IPC_FLAG_FIFO);
+}
+
+void hl_mod_display_mux_take(void)
+{
+    if (display_mux) {
+        rt_mutex_take(display_mux, RT_WAITING_FOREVER);
+    }
+}
+
+void hl_mod_display_mux_release(void)
+{
+    if (display_mux) {
+        rt_mutex_release(display_mux);
+    }
+}
 
 // 获取当前页面
 hl_screen_page_e hl_mod_display_scr_get_page(void)
@@ -572,6 +591,24 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
     }
 }
 
+// 循环扫描是否进入盒子
+void hl_mod_page_goto_box_scan(void)
+{
+    static hl_display_box_charge_state last_status;
+    hl_display_screen_s*               data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_box_charge_state        new_status;
+
+    new_status = data_ptr->in_box_state;
+
+    if (last_status != new_status) {
+
+        if (new_status != BOX_CHARGE_RX_NOT && last_status == BOX_CHARGE_RX_NOT) {
+            PageManager_PagePush(PAGE_BOX_IN);
+        }
+        last_status = new_status;
+    }
+}
+
 uint8_t hl_mod_display_msq_set(rt_mq_t msq)
 {
     if (msq == NULL) {
@@ -615,6 +652,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_LINE_OUT_STEREO_RIGHT);
     PAGE_REG(PAGE_TX_GAIN_TX1);
     PAGE_REG(PAGE_TX_GAIN_TX2);
+    PAGE_REG(PAGE_BOX_IN);
 }
 
 void lvgl2rtt_init(void)

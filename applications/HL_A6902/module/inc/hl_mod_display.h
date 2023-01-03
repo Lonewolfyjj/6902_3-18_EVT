@@ -138,7 +138,8 @@ typedef enum _hl_screen_page_e
     PAGE_AUTO_POWEROFF,
     /// TXLED亮度调节
     PAGE_TX_LED_BRIGHT,
-    
+    /// @brief 盒子页面
+    PAGE_BOX_IN,
     /// 降噪强度
     PAGE_NOISE_REDUCTION_INTENSITY,
 
@@ -224,6 +225,19 @@ typedef enum _hl_display_voice_monitor_e
 
 }HL_ENUM8(hl_display_voice_monitor_e);
 
+typedef enum _hl_display_box_charge_state
+{
+    /// RX 未入盒子
+    BOX_CHARGE_RX_NOT = 0,
+    /// TX1 2 RX都入盒子
+    BOX_CHARGE_RX_TX12,
+    /// TX1 RX入盒子
+    BOX_CHARGE_RX_TX1,
+    /// TX2 RX入盒子
+    BOX_CHARGE_RX_TX2,
+    /// @brief  RX单独在盒子
+    BOX_CHARGE_RX,
+}HL_ENUM8(hl_display_box_charge_state);
 
 typedef enum _hl_display_sound_module_e
 {
@@ -372,8 +386,8 @@ typedef enum _hl_cmd_e
     /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
-    /// 放入盒子状态 1：盒子中 0 ：正常 uint8_t 
-    IN_BOX_STATE_SWITCH_CMD,
+    /// 放入盒子状态 1：盒子中 0 ：正常 < hl_display_box_charge_state>
+    IN_BOX_STATE_VAL_CMD,
 
     /// 自动录制状态 1：开启  0：关闭 ，
     AUTO_RECORD_SWITCH_CMD,
