@@ -38,6 +38,7 @@ typedef struct _hl_s_rf_info_t
     hl_rf_remote_mac_t   remote;
     hl_rf_version_t      version;
     hl_rf_pair_info_t    mac;
+    hl_rf_rssi_t         rssi;
     hl_rf_bypass_state_t mute;
     hl_rf_bypass_state_t denoise;
     hl_rf_bypass_state_t low_cut;
@@ -76,6 +77,8 @@ static uint8_t* s_telink_fifo_buf;
 static mode_to_app_msg_t app_msg_t;
 /// rf缓冲数据结构体
 static hl_rf_info_t s_rf_info;
+
+static hl_rf_telink_info_t* telink_info;
 
 /// 记录上次配对状态
 static uint8_t old_pair_info = 0x1f;
@@ -132,9 +135,20 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             new_pair_info = (uint8_t)hup_frame.data_addr[0];
             break;
 
+        case HL_RF_APP_INFO_IND:
+            telink_info = (hl_rf_telink_info_t*)hup_frame.data_addr;
+            // 更新Telink模块工作状态和配对状态
+            new_pair_info = telink_info->pair_state;
+            memcpy(&s_rf_info.rssi, &telink_info->remote_rssi, sizeof(hl_rf_rssi_t));
+            app_msg_t.cmd       = HL_RF_RSSI_IND;
+            app_msg_t.len       = sizeof(hl_rf_rssi_t);
+            app_msg_t.param.ptr = &s_rf_info.rssi;
+            break;
+
         case HL_RF_RSSI_IND:
-            app_msg_t.len             = sizeof(uint32_t);
-            app_msg_t.param.u32_param = (uint32_t)hup_frame.data_addr;
+            memcpy(&s_rf_info.rssi, (hl_rf_rssi_t*)hup_frame.data_addr, sizeof(hl_rf_rssi_t));
+            app_msg_t.len       = sizeof(hl_rf_rssi_t);
+            app_msg_t.param.ptr = &s_rf_info.rssi;
             break;
 
         case HL_RF_GET_LOCAL_MAC_IND:
@@ -241,12 +255,12 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
         // 上报透传数据
         ret = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
         // 打印信息
-        rt_kprintf("\n\n[Telink Bypass Cmd]:%02X\n", hup_frame.cmd);
-        rt_kprintf("[Telink Bypass Info]:\n", hup_frame.data_addr);
-        for (uint16_t i = 0; i < data_len; i++) {
-            rt_kprintf(" %02X ", hup_frame.data_addr[i]);
-        }
-        rt_kprintf("\n\n");
+        // rt_kprintf("\n\n[Telink Bypass Cmd]:%02X\n", hup_frame.cmd);
+        // rt_kprintf("[Telink Bypass Info]:\n");
+        // for (uint16_t i = 0; i < data_len; i++) {
+        //     rt_kprintf(" %02X ", hup_frame.data_addr[i]);
+        // }
+        // rt_kprintf("\n\n");
         // 判断消息队列上传结果
         if (RT_EOK != ret) {
             rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, ret);

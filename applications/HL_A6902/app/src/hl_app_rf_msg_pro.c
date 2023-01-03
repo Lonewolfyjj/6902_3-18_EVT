@@ -65,7 +65,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             break;
         case HL_RF_RSSI_IND:
             p_param  = *(uint8_t*)p_msg->param.ptr;
-            LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
+            // LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
             break;
 
         default:
@@ -99,8 +99,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
 
         case HL_RF_RSSI_IND:
             tx1_rssi  = ((uint8_t*)p_msg->param.ptr)[0];
-            tx2_rssi  = ((uint8_t*)p_msg->param.ptr)[0];
-            LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
+            tx2_rssi  = ((uint8_t*)p_msg->param.ptr)[1];
+            // LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
             hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, tx1_rssi, 1);
             hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, tx2_rssi, 1);
             break;

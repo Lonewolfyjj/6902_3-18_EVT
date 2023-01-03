@@ -81,6 +81,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_VERSION_IND = 0x00,
     /// 返回无线模块当前状态：类型hl_rf_pair_state_e
     HL_RF_PAIR_STATE_IND = 0x01,
+    /// 返回无线模块所有信息：类型hl_rf_telink_info_t
+    HL_RF_APP_INFO_IND = 0x02,
     /// 返回RSSI值：类型uint8_t (0~100)
     HL_RF_RSSI_IND = 0x04,
     /// 返回设置结果：类型rt_err_t
@@ -119,6 +121,8 @@ typedef enum _hl_rf_channel_e
     HL_RF_LEFT_CHANNEL = 0x00,
     /// 右声道
     HL_RF_RIGHT_CHANNEL,
+    /// 左右双声道
+    HL_RF_DOUBLE_CHANNEL,
 } HL_ENUM8(hl_rf_channel_e);
 
 typedef enum _hl_rf_onoff_e
@@ -182,6 +186,17 @@ typedef struct
 
 typedef struct
 {
+#if HL_IS_TX_DEVICE()
+    /// RSSI值
+    uint8_t rssi;
+#else
+    /// RSSI值
+    uint8_t rssi[2];
+#endif
+} hl_rf_rssi_t;
+
+typedef struct
+{
     /// 透传声道
     hl_rf_channel_e chn;
     /// 透传状态
@@ -203,6 +218,14 @@ typedef struct
     /// 透传数值
     uint8_t val;
 } hl_rf_bypass_value_t;
+
+typedef struct
+{
+    /// 配对状态
+    hl_rf_state_e pair_state;
+    /// RSSI值
+    hl_rf_rssi_t remote_rssi;
+} hl_rf_telink_info_t;
 
 typedef struct
 {
