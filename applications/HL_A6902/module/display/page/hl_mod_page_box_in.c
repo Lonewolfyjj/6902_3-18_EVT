@@ -52,7 +52,9 @@ static void page_bat_update(hl_display_screen_s* data_ptr, hl_display_screen_cha
 static void charge_status_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
     hl_lvgl_charge_ioctl_t ioctrl;
-
+    if (in_box_state == BOX_CHARGE_RX_NOT) {
+        return;
+    }
     if (!flag->sys_status.box_charge_status && !flag->sys_status.rx_charge_status && !flag->sys_status.tx1_charge_status
         && !flag->sys_status.tx2_charge_status) {
         return;
@@ -83,12 +85,13 @@ static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_
             // 如果没在盒子，直接退出到主页面
             if (new_state == BOX_CHARGE_RX_NOT) {
                 hl_mod_menu_goto_home_page();
-            }
-            hl_lvgl_charge_ioctl_t ioctrl;
-            ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
-            hl_mod_charge_ioctl(&ioctrl);
+            } else {
+                hl_lvgl_charge_ioctl_t ioctrl;
+                ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
+                hl_mod_charge_ioctl(&ioctrl);
 
-            in_box_page_init(new_state,data_ptr);
+                in_box_page_init(new_state,data_ptr);
+            }
         }
     }
 }
@@ -185,7 +188,7 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
     switch (in_box_state) {
         // RX 未入盒子
         case BOX_CHARGE_RX_NOT:
-
+            return;
             break;
         // RX单独在盒子
         case BOX_CHARGE_RX:
