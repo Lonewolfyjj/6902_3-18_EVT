@@ -151,10 +151,16 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case TX1_NOISE_SWITCH_IND:
             // TBD: 透传通道给TX1发出降噪
+            telink_bypass.chn = 0;
+            telink_bypass.val = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX1_NOISE_SWITCH_IND\r\n");
             break;
         case TX2_NOISE_SWITCH_IND:
             // TBD: 透传通道给TX2发出降噪
+            telink_bypass.chn = 1;
+            telink_bypass.val = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX2_NOISE_SWITCH_IND\r\n");
             break;
         case TX1_RECORD_STATE_SWITCH_IND:
@@ -167,38 +173,44 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case TX1_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX1发出MUTE使能/失能
-            telink_bypass.chn        = 0;
+            telink_bypass.chn = 0;
             telink_bypass.val = p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX1_MUTE_SWITCH_SWITCH_IND\r\n");
             break;
         case TX2_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX2发出MUTE使能/失能
-            telink_bypass.chn        = 1;
+            telink_bypass.chn = 1;
             telink_bypass.val = p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX2_MUTE_SWITCH_SWITCH_IND\r\n");
             break;
         case TX1_GAIN_VAL_IND:
-            // TBD: 透传通道给TX1发出codec增益配置
-            telink_bypass.chn        = 0;
+            // : 透传通道给TX1发出codec增益配置
+            telink_bypass.chn = 0;
             telink_bypass.val = p_msg->param.s32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_VOLUME_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX1_GAIN_VAL_IND\r\n");
             break;
         case TX2_GAIN_VAL_IND:
-            // TBD: 透传通道给TX2发出codec增益配置
-            telink_bypass.chn        = 1;
+            // : 透传通道给TX2发出codec增益配置
+            telink_bypass.chn = 1;
             telink_bypass.val = p_msg->param.s32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_VOLUME_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX2_GAIN_VAL_IND\r\n");
             break;
         case TX1_FS_FORMAT_VAL_IND:
             // TBD: 透传通道给TX1发出格式化U盘命令
+            telink_bypass.chn = 0;
+            telink_bypass.val = p_msg->param.s32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_FORMAT_DISK_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX1_FS_FORMAT_VAL_IND\r\n");
             break;
         case TX2_FS_FORMAT_VAL_IND:
             // TBD: 透传通道给TX2发出格式化U盘命令
+            telink_bypass.chn = 1;
+            telink_bypass.val = p_msg->param.s32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_FORMAT_DISK_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX2_FS_FORMAT_VAL_IND\r\n");
             break;
         case VOICE_MODULE_VAL_IND:
@@ -206,7 +218,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("VOICE_MODULE_VAL_IND\r\n");
             break;
         case LOW_CUT_VAL_IND:
-            // TBD: 透传通道给TX发出低切命令
+            // : 透传通道给TX发出低切命令
+            telink_bypass.chn = 2;
+            telink_bypass.val = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_LOWCUT_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("LOW_CUT_VAL_IND\r\n");
             break;
         case TX_NOISE_LEVEL_VAL_IND:
