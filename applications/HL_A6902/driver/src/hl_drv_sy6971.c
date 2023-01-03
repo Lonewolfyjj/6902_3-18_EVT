@@ -43,6 +43,7 @@ static struct rt_i2c_bus_device* i2c_bus = RT_NULL; /* I2C总线设备句柄 */
 
 static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_opt, rt_uint8_t* data)
 {
+    rt_size_t       ret;
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
@@ -60,14 +61,18 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_o
     msgs[1].len   = 1;
     */
     // 调用I2C设备接口传输数据
-    if (rt_i2c_transfer(bus, msgs, 1) == 1)
+    ret = rt_i2c_transfer(bus, msgs, 1);
+    if (ret == 1)
         return HL_SUCCESS;
-    else
+    else{
+        sy_printf("%s ret = %d !\n", __FUNCTION__,ret);
         return HL_FAILED;
+    }   
 }
 
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_opt, rt_uint8_t* rbuf)
 {
+    rt_size_t       ret;
     rt_uint8_t        buf[4];
     struct rt_i2c_msg msgs[2];
 
@@ -82,11 +87,14 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t cfg_op
     msgs[1].len   = 1;
 
     // 调用I2C设备接口传输数据
-    if (rt_i2c_transfer(bus, msgs, 2) == 2) {
+    ret = rt_i2c_transfer(bus, msgs, 2);
+    if (ret == 2) {
         rbuf[0] = buf[0];
         return HL_SUCCESS;
-    } else
+    } else{
+        sy_printf("%s ret = %d !\n", __FUNCTION__,ret);
         return HL_FAILED;
+    }  
 }
 
 static uint8_t hl_reg00_ctl(uint8_t cmd, uint8_t cmd_typ, uint8_t* param)
@@ -1366,6 +1374,12 @@ int hl_drv_sy6971_init(void)
         sy_printf("cfg_opt %d read err !\n", SY_REG07_ADDR);
         goto INIT_ERR;
     }    
+
+    if (hl_i2c_read_reg(i2c_bus, SY_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+        sy_printf("cfg_opt %d read err !\n", SY_REG08_ADDR);
+        goto INIT_ERR;
+    }   
+    
     if (hl_i2c_read_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {
         sy_printf("cfg_opt %d read err !\n", SY_REG0E_ADDR);
         goto INIT_ERR;
@@ -1382,6 +1396,9 @@ int hl_drv_sy6971_init(void)
 
     reg_all.reg05.VREG = 45;
     reg_all.reg07.NTC_JEITA = 1;
+
+    reg_all.reg08.BHOT = 3;
+
     reg_all.reg0E.Q1_FULLON = 1;
     // reg_all.reg07.VINDPM = 2;
 
@@ -1416,6 +1433,10 @@ int hl_drv_sy6971_init(void)
     // }  
     if (hl_i2c_write_reg(i2c_bus, SY_REG07_ADDR, (uint8_t*)&reg_all.reg07)) {
         sy_printf("cfg_opt %d write err !\n", SY_REG07_ADDR);
+        goto INIT_ERR;
+    } 
+    if (hl_i2c_write_reg(i2c_bus, SY_REG08_ADDR, (uint8_t*)&reg_all.reg08)) {
+        sy_printf("cfg_opt %d write err !\n", SY_REG08_ADDR);
         goto INIT_ERR;
     } 
     if (hl_i2c_write_reg(i2c_bus, SY_REG0E_ADDR, (uint8_t*)&reg_all.reg0E)) {

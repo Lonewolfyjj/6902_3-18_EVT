@@ -882,7 +882,9 @@ static int hl_drv_ztw523a_dev_init(void)
 
 rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos)
 {
+#if !TOUCH_ONESHOT_UPGRADE
     rt_device_read(touch_dev, 0, touch_pos, 1);
+#endif
     // rt_kprintf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
     return 0;
 }
@@ -941,7 +943,8 @@ INIT_DEVICE_EXPORT(hl_drv_ztw523a_dev_register);
 
 int hl_drv_ztw523a_botton_status(void)
 {
-    uint16_t button;
+    uint16_t button = BUTTON_UP;
+#if !TOUCH_ONESHOT_UPGRADE
     hl_drv_ztw523a_read_data(0x00AA,(uint8_t *)&button,2);
     switch(button)
     {
@@ -957,6 +960,7 @@ int hl_drv_ztw523a_botton_status(void)
             button = BUTTON_UP;
         break;
     }
+#endif
     return button;
 }
 
