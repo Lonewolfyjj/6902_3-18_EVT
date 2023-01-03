@@ -1,6 +1,8 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <rthw.h>
+#include "finsh_api.h"
+#include "hl_mod_wdog.h"
 
 #define CPU_USAGE_CALC_TICK    10
 #define CPU_USAGE_LOOP        100
@@ -53,6 +55,7 @@ static void cpu_usage_idle_hook()
         cpu_usage_major = 0;
         cpu_usage_minor = 0;
     }
+    hl_mod_feed_dog();
 }
 
 void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor)
@@ -70,7 +73,7 @@ void cpu_usage_init()
     rt_thread_idle_sethook(cpu_usage_idle_hook);
 }
 
-// INIT_COMPONENT_EXPORT(cpu_usage_init);
+INIT_COMPONENT_EXPORT(cpu_usage_init);
 
 static void rt_thread_cpu_used(int argc, char** argv)
 {
@@ -79,4 +82,4 @@ static void rt_thread_cpu_used(int argc, char** argv)
 	rt_kprintf("cpu usage: %u.%u%%  \n", cpu_major, cpu_minor);
 }
 
-// MSH_CMD_EXPORT(rt_thread_cpu_used, run rt_thread_cpu_used);
+MSH_CMD_EXPORT(rt_thread_cpu_used, run rt_thread_cpu_used);
