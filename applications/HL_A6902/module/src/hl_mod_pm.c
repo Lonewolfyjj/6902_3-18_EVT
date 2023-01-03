@@ -335,65 +335,65 @@ static void _hl_mod_pm_input_check(void)
         .cfg_opt = E_FORCE_AICL,
         .param = 1,
     };
-    HL_SY_INPUT_PARAM_T input_reg00 = {
-        .cfg_opt = E_IINLIM, 
-    };
-    HL_SY_INPUT_PARAM_T input_reg01 = {
-        .cfg_opt = E_SYS_MIN, 
-    };
-    HL_SY_INPUT_PARAM_T input_reg02 = {
-        .cfg_opt = E_ICHG, 
-    };
-    HL_SY_INPUT_PARAM_T input_reg04 = {
-        .cfg_opt = E_ITERM, 
-    };
-    HL_SY_INPUT_PARAM_T input_reg05 = {
-        .cfg_opt = E_VREG, 
-    };
-    HL_SY_INPUT_PARAM_T input_reg07 = {
-        .cfg_opt = E_NTC_JEITA, 
-    };
+    // HL_SY_INPUT_PARAM_T input_reg00 = {
+    //     .cfg_opt = E_IINLIM, 
+    // };
+    // HL_SY_INPUT_PARAM_T input_reg01 = {
+    //     .cfg_opt = E_SYS_MIN, 
+    // };
+    // HL_SY_INPUT_PARAM_T input_reg02 = {
+    //     .cfg_opt = E_ICHG, 
+    // };
+    // HL_SY_INPUT_PARAM_T input_reg04 = {
+    //     .cfg_opt = E_ITERM, 
+    // };
+    // HL_SY_INPUT_PARAM_T input_reg05 = {
+    //     .cfg_opt = E_VREG, 
+    // };
+    // HL_SY_INPUT_PARAM_T input_reg07 = {
+    //     .cfg_opt = E_NTC_JEITA, 
+    // };
     pm_ioctl(SY_READ_CMD,&input_stat,1);
-    pm_ioctl(SY_READ_CMD,&input_reg00,1);
-    pm_ioctl(SY_READ_CMD,&input_reg01,1);
-    pm_ioctl(SY_READ_CMD,&input_reg02,1);
-    pm_ioctl(SY_READ_CMD,&input_reg04,1);
-    pm_ioctl(SY_READ_CMD,&input_reg05,1);
-    pm_ioctl(SY_READ_CMD,&input_reg07,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg00,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg01,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg02,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg04,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg05,1);
+    // pm_ioctl(SY_READ_CMD,&input_reg07,1);
     if(input_stat.param == 1){
         pm_ioctl(SY_WRITE_CMD,&input_data,1);
     }
-    if(input_reg00.param != 7){
-        input_reg00.param = 7;
-        pm_ioctl(SY_WRITE_CMD,&input_reg00,1);
-    }
-    if(input_reg01.param != 4){
-        input_reg01.param = 4;
-        pm_ioctl(SY_WRITE_CMD,&input_reg01,1);
-    }
-#if HL_IS_TX_DEVICE()
-    if(input_reg02.param != 14){
-        input_reg02.param = 14;
-        pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-    }
-#else
-    if(input_reg02.param != 22){
-        input_reg02.param = 22;
-        pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-    }
-#endif
-    if(input_reg04.param != 1){
-        input_reg04.param = 1;
-        pm_ioctl(SY_WRITE_CMD,&input_reg04,1);
-    }
-    if(input_reg05.param != 45){
-        input_reg05.param = 45;
-        pm_ioctl(SY_WRITE_CMD,&input_reg05,1);
-    }
-    if(input_reg07.param != 1){
-        input_reg07.param = 1;
-        pm_ioctl(SY_WRITE_CMD,&input_reg07,1);
-    }
+//     if(input_reg00.param != 7){
+//         input_reg00.param = 7;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg00,1);
+//     }
+//     if(input_reg01.param != 4){
+//         input_reg01.param = 4;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg01,1);
+//     }
+// #if HL_IS_TX_DEVICE()
+//     if(input_reg02.param != 14){
+//         input_reg02.param = 14;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
+//     }
+// #else
+//     if(input_reg02.param != 22){
+//         input_reg02.param = 22;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
+//     }
+// #endif
+//     if(input_reg04.param != 1){
+//         input_reg04.param = 1;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg04,1);
+//     }
+//     if(input_reg05.param != 45){
+//         input_reg05.param = 45;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg05,1);
+//     }
+//     if(input_reg07.param != 1){
+//         input_reg07.param = 1;
+//         pm_ioctl(SY_WRITE_CMD,&input_reg07,1);
+//     }
 }
 
 static void _pm_thread_entry(void* arg)
@@ -411,7 +411,7 @@ static void _pm_thread_entry(void* arg)
         if(delay_time++ > 500){
             delay_time = 0;
             _hl_mod_pmwdg();
-            // _hl_mod_pm_input_check();
+            _hl_mod_pm_input_check();
         }
     }
 
