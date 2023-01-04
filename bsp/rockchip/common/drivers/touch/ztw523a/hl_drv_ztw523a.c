@@ -1,4 +1,5 @@
 #include "hl_drv_ztw523a.h"
+#include "hl_drv_touch_firmware.h"
 #if ! HL_IS_TX_DEVICE()
 #include "touch.h"
 #include "hal_pinctrl.h"
