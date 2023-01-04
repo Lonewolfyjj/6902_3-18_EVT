@@ -125,7 +125,9 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         state = 2;
     }
     state = 1;
-    hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
+    if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+        hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
+    }
 #endif
 }
 
