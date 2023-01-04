@@ -93,8 +93,8 @@ static void _hl_app_mng_charger_power_on_stm()
 
 static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state)
 {
-    hl_charge_mode state = 0;
 #if HL_IS_TX_DEVICE()
+    hl_charge_mode state = 0;
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
         LOG_D("no charge!");
         tx_info.charge_flag = 0;
@@ -110,6 +110,7 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
     }
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, sizeof(state));
 #else
+    uint8_t state = 0;
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
         LOG_D("no charge!");
         rx_info.charge_flag = 0;
@@ -123,7 +124,8 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         rx_info.charge_flag = 2;
         state = 2;
     }
-    hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &state, 1);
+    state = 1;
+    hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
 #endif
 }
 
@@ -135,13 +137,15 @@ static void _hl_app_mng_charger_pm_process(mode_to_app_msg_t* p_msg)
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND:
             soc_temp    = *(uint8_t*)p_msg->param.ptr;
-            tx_info.soc = soc_temp;
 #if HL_IS_TX_DEVICE()
+            tx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(LED_BATTERY_VAL_CMD, &soc_temp, 1);
-#else
-            // do sth
-#endif
             LOG_I("current soc:%d", tx_info.soc);
+#else
+            rx_info.soc = soc_temp;
+            hl_mod_display_io_ctrl(RX_BAT_VAL_VAL_CMD, &soc_temp, 1);
+            LOG_I("current soc:%d", rx_info.soc);
+#endif
             break;
 
         case HL_MAX_TEMP_ALERT_IND:

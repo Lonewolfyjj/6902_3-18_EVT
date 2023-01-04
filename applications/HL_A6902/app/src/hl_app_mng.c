@@ -137,9 +137,7 @@ void hl_app_mng_init(void)
     }
 
     hl_mod_input_init(&hl_app_mq);
-#if HL_IS_TX_DEVICE()
     hl_mod_display_init(&hl_app_mq);
-#endif
     // hl_mod_audio_init(&hl_app_mq);
     // hl_mod_telink_init(&hl_app_mq);
     // hl_mod_telink_start();
@@ -163,9 +161,7 @@ void hl_app_mng_powerOn(void)
 {
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
-#if !HL_IS_TX_DEVICE()
-    hl_mod_display_init(&hl_app_mq);
-#endif
+    // hl_mod_display_init(&hl_app_mq);
     hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
