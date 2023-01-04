@@ -113,6 +113,8 @@ typedef enum _hl_screen_page_e
     PAGE_LOGO,
     /// 主页面
     PAGE_HOME,
+    
+    PAGE_POWEROFF_CHARGE,
     /// 一级菜单页面
     PAGE_MAIN_MENU,
     /// 模式选择页面
@@ -486,6 +488,9 @@ typedef enum _hl_cmd_e
 
     /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_CMD,
+
+    /// 关机充电 页面 1 0
+    OUT_BOX_CHARGER_SWITCH_CMD,
 
     MSG_ID_CNT
     

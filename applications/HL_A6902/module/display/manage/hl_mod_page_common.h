@@ -40,7 +40,15 @@ extern "C" {
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
+// bool ：true表示定时器超时的操作，false 表示定时器重新更新计数时间时的操作
+typedef void (*screen_trigfunc)(bool);
 
+typedef struct _hl_screenofftime_t
+{
+    hl_timeout_t   timer;
+    screen_trigfunc trigfunc;//如果是RT_NULL,就不会运行更新函数
+    uint32_t        outtime;
+} hl_screenofftime_t;
 
 //下发的命令
 typedef struct _hl_display_status{
@@ -61,6 +69,7 @@ typedef struct _hl_display_status{
     uint32_t line_out_in:1;
     uint32_t monitor_in:1;
     uint32_t auto_record:1;
+    uint32_t out_box_poweroff_charge:1;
     // 自动录制状态 （1: 开启 0:关闭）
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
@@ -204,6 +213,10 @@ void hl_mod_page_goto_box_scan(void);
 
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
 
+void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer);
+void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer);
+void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer);
+void hl_mod_page_screenofftimer_init(hl_screenofftime_t* timer);
 uint8_t hl_mod_display_msq_set(rt_mq_t msq);
 void hl_mod_page_all_init(void);
 void lvgl2rtt_init(void);

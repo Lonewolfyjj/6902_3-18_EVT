@@ -359,6 +359,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->low_cut = data;
             flag->low_cut   = 1;
         } break;
+        case OUT_BOX_CHARGER_SWITCH_CMD: {
+            uint8_t data = *(uint8_t*)ptr;
+            data_p->sys_status.out_box_poweroff_charge = data;
+            flag->sys_status.out_box_poweroff_charge   = 1;
+        } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
             break;

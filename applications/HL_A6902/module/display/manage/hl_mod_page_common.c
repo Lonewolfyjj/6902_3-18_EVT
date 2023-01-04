@@ -609,6 +609,44 @@ void hl_mod_page_goto_box_scan(void)
     }
 }
 
+void hl_mod_page_screenofftimer_init(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        rt_kprintf("err func_null!\n");
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+// updateflag = 1表示重新计时熄屏时间，
+void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    if (hl_util_timeout_judge(&timer->timer)) {
+        timer->trigfunc(true);
+        hl_util_timeout_close(&timer->timer);
+    } 
+}
+
+void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer)
+{
+    timer->trigfunc = RT_NULL;
+    hl_util_timeout_close(&timer->timer);
+}
+
+
 uint8_t hl_mod_display_msq_set(rt_mq_t msq)
 {
     if (msq == NULL) {
@@ -653,6 +691,8 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_TX_GAIN_TX1);
     PAGE_REG(PAGE_TX_GAIN_TX2);
     PAGE_REG(PAGE_BOX_IN);
+    PAGE_REG(PAGE_LOGO);
+    PAGE_REG(PAGE_POWEROFF_CHARGE);
 }
 
 void lvgl2rtt_init(void)
@@ -668,7 +708,9 @@ void hl_mod_page_all_init(void)
     hl_page_style_bit_init();
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
-    PageManager_PagePush(PAGE_HOME);
+
+
+    PageManager_PagePush(PAGE_LOGO);
 }
 #endif
 /*
