@@ -107,7 +107,7 @@ static int hl_mod_wdog_init(void)
     return ret;
 }
 
-// INIT_ENV_EXPORT(hl_mod_wdog_init);
+INIT_ENV_EXPORT(hl_mod_wdog_init);
 
 /**
  * 

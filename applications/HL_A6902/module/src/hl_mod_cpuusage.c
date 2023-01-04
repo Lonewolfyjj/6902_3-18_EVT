@@ -73,7 +73,7 @@ void cpu_usage_init()
     rt_thread_idle_sethook(cpu_usage_idle_hook);
 }
 
-INIT_COMPONENT_EXPORT(cpu_usage_init);
+INIT_ENV_EXPORT(cpu_usage_init);
 
 static void rt_thread_cpu_used(int argc, char** argv)
 {
