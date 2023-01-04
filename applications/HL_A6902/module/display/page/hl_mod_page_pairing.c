@@ -1,9 +1,9 @@
 /**
- * @file hl_mod_page.h
+ * @file hl_mod_page_pairing.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
+ * @brief 配对中页面，配对成功转到home界面
  * @version V1.0
- * @date 2022-12-05
+ * @date 2023-01-04
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -11,65 +11,85 @@
  * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
  * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
  * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
- * @copyright Copyright (c) 2022 hollyland
+ * @copyright Copyright (c) 2023 hollyland
  * 
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-12-05     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2023-01-04     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
  */ 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HL_MOD_PAGE_H__
-#define __HL_MOD_PAGE_H__
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 
-// void hl_mod_page_home_init(void);
-// void hl_mod_page_menu_init(void);
-// void hl_mod_page_txconf_init(void);
+#include "hl_mod_page_common.h"
 
-PAGE_DEC(PAGE_HOME);
-PAGE_DEC(PAGE_MAIN_MENU);
+#if (!HL_IS_TX_DEVICE())
+#include "hl_mod_display.h"
+#include "lvgl.h"
+#include "hl_mod_page.h"
+#include "lv_port_indev.h"
+#include "page_arc.h"
+#include "hl_util_general_type.h"
 
-PAGE_DEC(PAGE_AUTO_POWEROFF);
-PAGE_DEC(PAGE_AUTO_RECORD);
-PAGE_DEC(PAGE_FAST_TX_CONFIG);
-PAGE_DEC(PAGE_TX_LED_BRIGHT);
-PAGE_DEC(PAGE_TX_LOW_CUT);
-PAGE_DEC(PAGE_MONITOR_SET);
-PAGE_DEC(PAGE_NOISE_REDUCTION_INTENSITY);
-PAGE_DEC(PAGE_OTHER_SET);
-PAGE_DEC(PAGE_PAIR);
-PAGE_DEC(PAGE_RECORD_FORMAT);
-PAGE_DEC(PAGE_RECORD_PROTECT);
-PAGE_DEC(PAGE_RESTORE);
-PAGE_DEC(PAGE_SOUND_EFFECT_MODE);
-PAGE_DEC(PAGE_SOUND_MODULE);
-PAGE_DEC(PAGE_SYS_TIME_SET);
-PAGE_DEC(PAGE_TX_CONF_MENU);
-PAGE_DEC(PAGE_TX_GAIN_CONF);
-PAGE_DEC(PAGE_VERSION);
-PAGE_DEC(PAGE_VOLUME_MENU);
-PAGE_DEC(PAGE_MONITOR_VOLUME_SET);
-// PAGE_DEC(PAGE_UACIN_VOLUME_SET);
-PAGE_DEC(PAGE_UACOUT_VOLUME_SET);
-PAGE_DEC(PAGE_QUICK_SETTINGS);
-PAGE_DEC(PAGE_LINE_OUT_STEREO_LEFT);
-PAGE_DEC(PAGE_LINE_OUT_STEREO_RIGHT);
-PAGE_DEC(PAGE_TX_GAIN_TX1);
-PAGE_DEC(PAGE_TX_GAIN_TX2);
-PAGE_DEC(PAGE_BOX_IN);
-PAGE_DEC(PAGE_LOGO);
-PAGE_DEC(PAGE_POWEROFF_CHARGE);
-PAGE_DEC(PAGE_PARING);
+static void hl_mod_page_setup(void)
+{
+    hl_lvgl_arc_init_t init;
 
-#endif /*__HL_MOD_PAGE_H__*/
+    init.ptr = "配对中";
+
+    hl_mod_arc_init(&init);
+}
+
+static void hl_mod_page_exit(void)
+{
+    hl_lvgl_arc_ioctl_t ioctrl;
+
+    ioctrl.ioctl_cmd = HL_ARC_DELETE_PAGE;
+
+    hl_mod_arc_ioctl(&ioctrl);
+}
+
+static void hl_mod_page_loop(void)
+{
+    hl_rf_state_e               rf_net_connect;
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+
+    if (flag->rf_net_connect) {
+
+        rf_net_connect = data_ptr->rf_net_connect;
+
+        if (HL_RF_L_CONNECT <= rf_net_connect && rf_net_connect <= HL_RF_LR_CONNECT) {
+            hl_mod_menu_goto_home_page();
+        } else if (rf_net_connect == HL_RF_UNCONNECT) {
+            // 失败返回主页面, 主页面不显示TX1/2
+            hl_mod_menu_goto_home_page();
+        }
+    }
+}
+
+PAGE_DEC(PAGE_PARING)
+{
+    bool result;
+
+    result = PageManager_PageRegister(PAGE_PARING, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
+
+    if (result == false) {
+        LV_LOG_USER("PAGE_POWEROFF_CHARGE init fail\n");
+    }
+}
+
+#endif
 /*
  * EOF
  */

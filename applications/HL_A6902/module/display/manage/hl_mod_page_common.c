@@ -693,6 +693,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_BOX_IN);
     PAGE_REG(PAGE_LOGO);
     PAGE_REG(PAGE_POWEROFF_CHARGE);
+    PAGE_REG(PAGE_PARING);
 }
 
 void lvgl2rtt_init(void)

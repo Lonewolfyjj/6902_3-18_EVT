@@ -185,6 +185,8 @@ typedef enum _hl_screen_page_e
     // PAGE_LINE_OUT_MONO,
     // LINE OUT快捷设置
     PAGE_QUICK_SETTINGS,
+    /// 配对中页面
+    PAGE_PARING,
     ///  页面总数
     PAGE_MAX,  
 
