@@ -45,29 +45,11 @@
 static hl_display_box_charge_state in_box_state;
 
 static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_screen_s* data_ptr);
-static void charge_status_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag);
+
 static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag);
 static void page_bat_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag);
 
-static void charge_status_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
-{
-    hl_lvgl_charge_ioctl_t ioctrl;
-    if (in_box_state == BOX_CHARGE_RX_NOT) {
-        return;
-    }
-    if (!flag->sys_status.box_charge_status && !flag->sys_status.rx_charge_status && !flag->sys_status.tx1_charge_status
-        && !flag->sys_status.tx2_charge_status) {
-        return;
-    }
-    if (data_ptr->sys_status.box_charge_status || data_ptr->sys_status.rx_charge_status
-        || data_ptr->sys_status.tx1_charge_status || data_ptr->sys_status.tx2_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_BAT_COLOR_GREEN;
-    } else {
-        ioctrl.charge_cmd = HL_CHARGE_BAT_COLOR_WHITE;
-    }
 
-    hl_mod_charge_ioctl(&ioctrl);
-}
 
 static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
@@ -97,49 +79,143 @@ static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_
 }
 static void rx_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
+    hl_lvgl_charge_ioctl_t ioctrl;
+    uint8_t data;
+
     if (flag->rx_bat_val) {
         hl_mod_display_mux_take();
-        flag->rx_bat_val = 0;
+        flag->rx_bat_val            = 0;
+        ioctrl.electric.electric_rx = data_ptr->rx_bat_val;
         hl_mod_display_mux_release();
-        hl_lvgl_charge_ioctl_t ioctrl;
         ioctrl.charge_cmd = HL_CHARGE_CHANGE_RX_ELEC;
-        ioctrl.electric.electric_rx   = data_ptr->rx_bat_val;
+
         hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (flag->sys_status.rx_charge_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.rx_charge_status = 0;
+        data = data_ptr->sys_status.rx_charge_status;
+
+        hl_mod_display_mux_release();
+
+        if (data) {
+            ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_GREEN;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_RX_ICON_DISHIDE;
+            hl_mod_charge_ioctl(&ioctrl);
+        } else {
+            ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_WHITE;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_RX_ICON_HIDE;
+            hl_mod_charge_ioctl(&ioctrl);
+        }
+        
     }
 }
 static void tx1_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
+    hl_lvgl_charge_ioctl_t ioctrl;
+    uint8_t data;
+
     if (flag->tx1_bat_val) {
         hl_mod_display_mux_take();
-        flag->tx1_bat_val = 0;
+        flag->tx1_bat_val            = 0;
+        ioctrl.electric.electric_tx1 = data_ptr->tx1_bat_val;
         hl_mod_display_mux_release();
-        hl_lvgl_charge_ioctl_t ioctrl;
+
         ioctrl.charge_cmd = HL_CHARGE_CHANGE_TX1_ELEC;
-        ioctrl.electric.electric_tx1   = data_ptr->tx1_bat_val;
+
         hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (flag->sys_status.tx1_charge_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_charge_status = 0;
+        data = data_ptr->sys_status.tx1_charge_status;
+
+        hl_mod_display_mux_release();
+        if (data) {
+            ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_GREEN;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_DISHIDE;
+            hl_mod_charge_ioctl(&ioctrl);            
+        } else {
+            ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_WHITE;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_HIDE;
+            hl_mod_charge_ioctl(&ioctrl);   
+        }
+        
     }
 }
 static void tx2_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
+    hl_lvgl_charge_ioctl_t ioctrl;
+    uint8_t data;
+
     if (flag->tx2_bat_val) {
         hl_mod_display_mux_take();
-        flag->tx2_bat_val = 0;
+        flag->tx2_bat_val            = 0;
+        ioctrl.electric.electric_tx2 = data_ptr->tx2_bat_val;
         hl_mod_display_mux_release();
-        hl_lvgl_charge_ioctl_t ioctrl;
+
         ioctrl.charge_cmd = HL_CHARGE_CHANGE_TX2_ELEC;
-        ioctrl.electric.electric_tx2   = data_ptr->tx2_bat_val;
+
         hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (flag->sys_status.tx2_charge_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx2_charge_status = 0;
+        data = data_ptr->sys_status.tx2_charge_status;
+
+        hl_mod_display_mux_release();
+
+        if (data) {
+            ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_GREEN;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_DISHIDE;
+            hl_mod_charge_ioctl(&ioctrl);
+        } else {
+            ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_WHITE;
+            hl_mod_charge_ioctl(&ioctrl);
+
+            ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_HIDE;
+            hl_mod_charge_ioctl(&ioctrl);
+        }
     }
 }
 static void case_bat_update(hl_display_screen_s* data_ptr, hl_display_screen_change_s* flag)
 {
+    hl_lvgl_charge_ioctl_t ioctrl;
+
     if (flag->case_bat_val) {
         hl_mod_display_mux_take();
-        flag->case_bat_val = 0;
+        flag->case_bat_val           = 0;
+        ioctrl.electric.electric_box = data_ptr->case_bat_val;
         hl_mod_display_mux_release();
-        hl_lvgl_charge_ioctl_t ioctrl;
+
         ioctrl.charge_cmd = HL_CHARGE_CHANGE_BOX_ELEC;
-        ioctrl.electric.electric_box   = data_ptr->case_bat_val;
+
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (flag->sys_status.box_charge_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.box_charge_status = 0;
+        if (data_ptr->sys_status.box_charge_status) {
+            ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_GREEN;
+        } else {
+            ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_WHITE;
+        }
+        hl_mod_display_mux_release();
+
         hl_mod_charge_ioctl(&ioctrl);
     }
 }
@@ -231,14 +307,57 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
             break;
     }
 
-    if (data_ptr->sys_status.box_charge_status || data_ptr->sys_status.rx_charge_status
-        || data_ptr->sys_status.tx1_charge_status || data_ptr->sys_status.tx2_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_BAT_COLOR_GREEN;
+    if (data_ptr->sys_status.box_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
     } else {
-        ioctrl.charge_cmd = HL_CHARGE_BAT_COLOR_WHITE;
+        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
     }
 
-    hl_mod_charge_ioctl(&ioctrl);
+    if (data_ptr->sys_status.rx_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (data_ptr->sys_status.tx1_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    if (data_ptr->sys_status.tx2_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+
+    
 }
 
 static void hl_mod_page_setup(void)
@@ -260,7 +379,6 @@ static void hl_mod_page_loop(void)
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     page_update(data_ptr, flag);
-    charge_status_update(data_ptr, flag);
     page_bat_update(data_ptr, flag);
 }
 
