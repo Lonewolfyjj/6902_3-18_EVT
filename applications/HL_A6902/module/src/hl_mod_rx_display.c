@@ -361,8 +361,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         } break;
         case OUT_BOX_CHARGER_SWITCH_CMD: {
             uint8_t data = *(uint8_t*)ptr;
-            data_p->sys_status.out_box_poweroff_charge = data;
-            flag->sys_status.out_box_poweroff_charge   = 1;
+            data_p->out_box_poweroff_charge = data;
         } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
@@ -382,7 +381,9 @@ static void hl_mod_display_task(void* param)
     lv_obj_add_style(lv_scr_act(), &style, 0);
     while (1) {
         hl_mod_screen_rot_scan();
+        hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
+        
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();

@@ -50,7 +50,8 @@ static lv_obj_t * img_obj;
 static void logo_page_timer_trige(bool updateflag)
 {
     if (updateflag == true) {
-        // 时间到更新页面
+        // 3slogo时间到进入home页面
+        PageManager_PageStackClear();
         PageManager_PagePush(PAGE_HOME);
     } else {
     }
@@ -82,17 +83,6 @@ static void hl_mod_page_loop(void)
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     hl_mod_page_screenofftimer_scan(&logo_page_timer);
-
-    if (flag->sys_status.out_box_poweroff_charge) {
-        hl_mod_display_mux_take();
-        flag->sys_status.out_box_poweroff_charge = 0;
-        data                                     = data_ptr->sys_status.out_box_poweroff_charge;
-        hl_mod_display_mux_release();
-
-        if (data) {
-            PageManager_PagePush(PAGE_POWEROFF_CHARGE);
-        }
-    }
 }
 
 PAGE_DEC(PAGE_LOGO)

@@ -113,7 +113,7 @@ typedef enum _hl_screen_page_e
     PAGE_LOGO,
     /// 主页面
     PAGE_HOME,
-    
+    /// @brief 在盒子外关机充电页面
     PAGE_POWEROFF_CHARGE,
     /// 一级菜单页面
     PAGE_MAIN_MENU,
@@ -242,6 +242,16 @@ typedef enum _hl_display_box_charge_state
     /// @brief  RX单独在盒子
     BOX_CHARGE_RX,
 }HL_ENUM8(hl_display_box_charge_state);
+
+typedef enum _hl_display_out_box_charge_state
+{
+    /// @brief 正常上电空闲态
+    OUTBOX_OFFCHARGE_IDLE = 0,
+    /// @brief 进入关机充电页面
+    OUTBOX_OFFCHARGE_OFFPAGE,
+    /// @brief 进入LOGO页面
+    OUTBOX_OFFCHARGE_LOGO,
+}HL_ENUM8(hl_display_out_box_charge_state);
 
 typedef enum _hl_display_sound_module_e
 {
@@ -491,7 +501,7 @@ typedef enum _hl_cmd_e
     /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_CMD,
 
-    /// 关机充电 页面 1 0
+    /// 关机充电 页面 <hl_display_out_box_charge_state> 1 表示进入充电页面  2表示进入LOGO页面 0表示不进入任何页面
     OUT_BOX_CHARGER_SWITCH_CMD,
 
     MSG_ID_CNT

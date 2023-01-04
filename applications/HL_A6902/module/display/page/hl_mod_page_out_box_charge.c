@@ -56,7 +56,7 @@ static void hl_mod_page_setup(void)
 static void hl_mod_page_exit(void)
 {
     hl_lvgl_arc_ioctl_t ioctrl;
-
+    rt_kprintf("exit_outbox\n");
     ioctrl.ioctl_cmd = HL_ARC_DELETE_PAGE;
     
     hl_mod_arc_ioctl(&ioctrl);

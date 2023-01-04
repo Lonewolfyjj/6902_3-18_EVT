@@ -590,6 +590,40 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+// 在
+void hl_mod_outbox_offcharge_scan(void)
+{
+    static hl_display_out_box_charge_state last_status = OUTBOX_OFFCHARGE_IDLE;
+    hl_display_screen_s*                   data_ptr    = hl_mod_page_get_screen_data_ptr();
+    hl_display_out_box_charge_state        new_status;
+    if (last_status == OUTBOX_OFFCHARGE_LOGO) {
+        return;
+    }
+    new_status = data_ptr->out_box_poweroff_charge;
+
+    switch (last_status) {
+        case OUTBOX_OFFCHARGE_IDLE:
+            if (new_status == OUTBOX_OFFCHARGE_OFFPAGE) {
+                PageManager_PagePush(PAGE_POWEROFF_CHARGE);
+            } else if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_OFFPAGE:
+            if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PageStackClear();
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_LOGO:
+            break;
+        default:
+            break;
+    }
+    last_status = new_status;
+}
+
+
 
 // 循环扫描是否进入盒子
 void hl_mod_page_goto_box_scan(void)
@@ -709,9 +743,6 @@ void hl_mod_page_all_init(void)
     hl_page_style_bit_init();
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
-
-
-    PageManager_PagePush(PAGE_LOGO);
 }
 #endif
 /*

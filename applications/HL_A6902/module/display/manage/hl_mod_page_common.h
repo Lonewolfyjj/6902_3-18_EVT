@@ -69,7 +69,7 @@ typedef struct _hl_display_status{
     uint32_t line_out_in:1;
     uint32_t monitor_in:1;
     uint32_t auto_record:1;
-    uint32_t out_box_poweroff_charge:1;
+    
     // 自动录制状态 （1: 开启 0:关闭）
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
@@ -93,6 +93,7 @@ typedef struct _hl_display_screen_s
     hl_screen_page_e page_id;
     hl_display_box_charge_state in_box_state;
     hl_rf_state_e rf_net_connect;
+    hl_display_out_box_charge_state out_box_poweroff_charge;
     uint8_t tx1_bat_val;
     uint8_t tx2_bat_val;
     uint8_t rx_bat_val;
@@ -212,7 +213,7 @@ void hl_mod_menu_goto_quickset_scan();
 void hl_mod_page_goto_box_scan(void);
 
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
-
+void hl_mod_outbox_offcharge_scan(void);
 void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer);
 void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer);
 void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer);
