@@ -961,6 +961,7 @@ int hl_drv_ztw523a_botton_status(void)
             button = BUTTON_UP;
         break;
     }
+	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
 #endif
     return button;
 }
