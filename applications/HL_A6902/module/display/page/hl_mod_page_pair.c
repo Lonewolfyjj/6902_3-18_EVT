@@ -48,7 +48,7 @@ static int16_t now_num;
 //配对界面
 static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 {
-    uint8_t value = 0;
+    uint32_t value = 0;
     switch(event_num){
         // case HL_S_TWO_ONE_CHECK_LEFT:
         //     value = 0;

@@ -130,10 +130,12 @@ void hl_mod_page_volume_loop(hl_out_msg_e msg, save_func func, int16_t left, int
 
 uint8_t hl_mod_page_volume_send(hl_out_msg_e msg_cmd,int16_t *get_data)
 {
+    int32_t volume;
     if (hl_mode_report_event(&silder_trg_time, AUTO_SILDER_TRG_TIME, last_volume)) {
         LOG_D("c=[%d]volume=[%d]\n",msg_cmd, last_volume);
         *get_data = last_volume;
-        hl_mod_display_send_msg(msg_cmd, &last_volume, 0);
+        volume = last_volume;
+        hl_mod_display_send_msg(msg_cmd, &volume, 0);
         return 1;
     }
     return 0;
