@@ -1018,7 +1018,7 @@ static void _hl_cap2play_thread_entry(void* arg)
             //break;
         }
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 100) {                
+        if (s_vu_en++ == 5) {                
             s_vu_en = 0;    
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
         }       
@@ -1736,7 +1736,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if((count_vu % 20 == 0) && (count_vu != 100)) { 
+        if((count_vu % 1 == 0) && (count_vu != 26)) { 
             if (dsp_config->vu_l > s_vu_l){
                 s_vu_l = dsp_config->vu_l;
             }
@@ -1744,14 +1744,14 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 100) {    
+        if(count_vu >= 25) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {   
                 hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (s_vu_l<-118)?0:s_vu_l+118);//(s_vu_l<-187)?0:s_vu_l+187);
                 hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (s_vu_r<-118)?0:s_vu_r+118);//(s_vu_r<-187)?0:s_vu_r+187);
                 s_vu_l = -187;
                 s_vu_r = -187;
-                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (s_vu_l<-118)?0:s_vu_l+118, (s_vu_r<-118)?0:s_vu_r+118);
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
 #endif
