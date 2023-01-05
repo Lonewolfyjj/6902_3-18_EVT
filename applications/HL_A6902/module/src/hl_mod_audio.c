@@ -767,6 +767,36 @@ static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
     return RT_EOK;
 }
 
+// 声卡清空buff的数据
+static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t *p_param)
+{
+    rt_err_t ret = RT_EOK;
+
+    if (p_param->card == RT_NULL) {
+        LOG_I("audio card param deconfig repeated!");
+        return;
+    }     
+        
+    ret = hl_mod_audio_codec_deconfig(p_param);
+    if(ret != RT_EOK) {
+        LOG_E("audio codec start failed! err: %d", ret);
+        return ret;
+    }
+
+    // rt_memset(&p_param->abuf, 0x0, sizeof(p_param->abuf));
+
+    ret = hl_mod_audio_codec_config(p_param);
+    if(ret != RT_EOK) {
+        LOG_E("audio codec start failed! err: %d", ret);
+        return ret;
+    }
+
+    LOG_I("audio codec buff clear succeed!");
+    return ret;
+}
+
+
+
 // dsp内存申请、参数配置和初始化
 static rt_err_t hl_mod_audio_dsp_config(void)
 {
@@ -1011,6 +1041,9 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #endif
+
+    hl_mod_audio_codec_buff_clear(&play_info);
+    hl_mod_audio_codec_buff_clear(p_card_param);    
 
     while (cap2play_thread_flag != 0) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
