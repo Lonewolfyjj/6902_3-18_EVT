@@ -40,6 +40,8 @@ typedef enum _hl_device_display_t
 typedef struct __device_data_t
 {
     hl_record_status_t record;//录制状态 hl_record_status_t
+    int16_t line_out_value; //
+    int16_t tx_gain; //
     int16_t volume;//Tx音量 -40 - 60 db
     int16_t electric;//电量 0 - 100 %
     hl_signal_int_t signal;//信号强度 0 - 4

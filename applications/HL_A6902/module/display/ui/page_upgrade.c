@@ -2,6 +2,7 @@
 #include "language.h"
 #include "page_style_bit.h"
 
+LV_IMG_DECLARE(Other_upgrade_fail);//
 LV_IMG_DECLARE(Other_upgrade_success);//
 
 static lv_style_t style_indicator,style_main,style_label;
@@ -104,10 +105,13 @@ void hl_mod_lvgl_upgrade_ioctl(void * ctl_data)
             break;
         case HL_UPGRADE_SUCCESS_CMD:
             img = lv_img_creat_fun(lv_scr_act(),&Other_upgrade_success,LV_ALIGN_TOP_MID,0,10);
-            lab1 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,15,"升级成功");
+            lab1 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,15,ptr->ptr);
             lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,43,"请手动重启设备");
             break;
         case HL_UPGRADE_FAIL_CMD:
+            img = lv_img_creat_fun(lv_scr_act(),&Other_upgrade_fail,LV_ALIGN_TOP_MID,0,10);
+            lab1 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,15,ptr->ptr);
+            lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,43,"请手动重启设备");
             break;
         case HL_UPGRADE_CLEAR_CMD:
             hl_obj_delete(lv_scr_act(),false);

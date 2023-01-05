@@ -99,12 +99,12 @@ static rt_err_t hl_i2c_write_data(struct rt_i2c_bus_device* bus, rt_uint16_t reg
 
     rt_uint8_t  * buf = (rt_uint8_t  *)rt_malloc(datalen + 4);
 
-    memset(buf,0,datalen + 4);
+    rt_memset(buf,0,datalen + 4);
 
     buf[1] = (reg >> 8);        // reg
     buf[0] = (reg & 0xFF);      //
 
-    memcpy(&buf[2],data,datalen);
+    rt_memcpy(&buf[2],data,datalen);
 
 	// if(data != RT_NULL){
 	// 	buf[3] = (data[0] >> 8);    // data

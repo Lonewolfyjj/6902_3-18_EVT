@@ -30,7 +30,7 @@ static lv_obj_t * voice_bar_tx1,*voice_bar_tx2;
 static lv_obj_t * power_bar_tx1,*power_bar_tx2;
 static lv_obj_t * voice_img_tx1,*voice_img_tx2;
 static lv_obj_t * power_img_tx1,*power_img_tx2;
-static lv_obj_t * voice_lab_tx1,*voice_lab_tx2;
+static lv_obj_t * voice_lab_tx1,*voice_lab_tx2,*voice_lab_tx3;
 static lv_obj_t * voice_bar_top_tx1,*voice_bar_top_tx2;
 static lv_obj_t * device_lab_tx1,*device_lab_tx2;
 static lv_obj_t * video_dot_tx1,*video_dot_tx2;
@@ -260,12 +260,23 @@ static lv_obj_t * lv_signal_img_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,
     return img;
 }
 
-static lv_obj_t * lv_voice_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_obj_t *bar_obj,lv_coord_t x_offset,lv_coord_t y_offset)
+static lv_obj_t * lv_voice_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,rt_int16_t init_value,lv_coord_t x_offset,lv_coord_t y_offset)
 {
-    char buf[8] = {0,0,0,0,0,0,0,0};
+    // char buf[8] = {0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_voice_label, LV_PART_MAIN);
-    lv_snprintf(buf, sizeof(buf), "%d", lv_bar_get_value(bar_obj));
+    // lv_snprintf(buf, sizeof(buf), "%d", lv_bar_get_value(bar_obj));
+    lv_label_set_text(lab,init_value);
+    lv_obj_align_to(lab,align_obj,LV_ALIGN_OUT_TOP_MID,x_offset,y_offset);
+    return lab;
+}
+
+static lv_obj_t * lv_voice_line_out_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,rt_int16_t init_value,lv_coord_t x_offset,lv_coord_t y_offset)
+{
+    char buf[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    lv_obj_t * lab = lv_label_create(src_obj);
+    lv_obj_add_style(lab, &style_voice_label, LV_PART_MAIN);
+    lv_snprintf(buf, sizeof(buf), "Output: %d", init_value);
     lv_label_set_text(lab,buf);
     lv_obj_align_to(lab,align_obj,LV_ALIGN_OUT_TOP_MID,x_offset,y_offset);
     return lab;
@@ -460,9 +471,11 @@ static void lv_display_tx1(device_data_t * init_data)
     tx1_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx1,voice_bar_tx1,tx1_value_start,ANIMAtION_TIME);
 
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,0,0);
+    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,init_data->tx_gain,0,0);
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
+
+    voice_lab_tx3 = lv_voice_line_out_lab_creat_fun(area_tx1,voice_bar_tx1,init_data->line_out_value,0,-4);
 
     lv_signal_tx1_set(init_data->signal);
 
@@ -483,9 +496,11 @@ static void lv_display_tx2(device_data_t * init_data)
     tx2_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx2,voice_bar_tx2,tx2_value_start,ANIMAtION_TIME);
 
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,0,0);
+    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,init_data->tx_gain,0,0);
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0);
     device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
+
+    voice_lab_tx3 = lv_voice_line_out_lab_creat_fun(area_tx2,voice_bar_tx2,init_data->line_out_value,0,-4);
 
     lv_signal_tx2_set(init_data->signal);
 
@@ -519,8 +534,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
     //音量大小文本
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,voice_bar_tx1,6,0);
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,voice_bar_tx2,6,0);   
+    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_img_tx1,init_tx1->tx_gain,6,0);
+    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_img_tx2,init_tx2->tx_gain,6,0);   
     //电池电量大小文本
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
