@@ -38,6 +38,7 @@
 #include "hl_drv_ztw523a.h"
 #include "math.h"
 #include "page_style_bit.h"
+#include "hl_drv_rm690a0.h"
 
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
@@ -107,10 +108,29 @@ static hl_display_screen_change_s change_flag = { 0 };
 // 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
-
+static rt_mutex_t display_mux = RT_NULL;
 
 // 返回触摸按键消抖时间
 static hl_timeout_t backtouchkey_debance;
+
+void hl_mod_display_mux_init(void)
+{
+    display_mux = rt_mutex_create("display_mutex", RT_IPC_FLAG_FIFO);
+}
+
+void hl_mod_display_mux_take(void)
+{
+    if (display_mux) {
+        rt_mutex_take(display_mux, RT_WAITING_FOREVER);
+    }
+}
+
+void hl_mod_display_mux_release(void)
+{
+    if (display_mux) {
+        rt_mutex_release(display_mux);
+    }
+}
 
 // 获取当前页面
 hl_screen_page_e hl_mod_display_scr_get_page(void)
@@ -570,6 +590,96 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+// 在
+void hl_mod_outbox_offcharge_scan(void)
+{
+    static hl_display_out_box_charge_state last_status = OUTBOX_OFFCHARGE_IDLE;
+    hl_display_screen_s*                   data_ptr    = hl_mod_page_get_screen_data_ptr();
+    hl_display_out_box_charge_state        new_status;
+    if (last_status == OUTBOX_OFFCHARGE_LOGO) {
+        return;
+    }
+    new_status = data_ptr->out_box_poweroff_charge;
+
+    switch (last_status) {
+        case OUTBOX_OFFCHARGE_IDLE:
+            if (new_status == OUTBOX_OFFCHARGE_OFFPAGE) {
+                PageManager_PagePush(PAGE_POWEROFF_CHARGE);
+            } else if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_OFFPAGE:
+            if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PageStackClear();
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_LOGO:
+            break;
+        default:
+            break;
+    }
+    last_status = new_status;
+}
+
+
+
+// 循环扫描是否进入盒子
+void hl_mod_page_goto_box_scan(void)
+{
+    static hl_display_box_charge_state last_status;
+    hl_display_screen_s*               data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_box_charge_state        new_status;
+
+    new_status = data_ptr->in_box_state;
+
+    if (last_status != new_status) {
+
+        if (new_status != BOX_CHARGE_RX_NOT && last_status == BOX_CHARGE_RX_NOT) {
+            PageManager_PagePush(PAGE_BOX_IN);
+        }
+        last_status = new_status;
+    }
+}
+
+void hl_mod_page_screenofftimer_init(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        rt_kprintf("err func_null!\n");
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+// updateflag = 1表示重新计时熄屏时间，
+void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    if (hl_util_timeout_judge(&timer->timer)) {
+        timer->trigfunc(true);
+        hl_util_timeout_close(&timer->timer);
+    } 
+}
+
+void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer)
+{
+    timer->trigfunc = RT_NULL;
+    hl_util_timeout_close(&timer->timer);
+}
+
 
 uint8_t hl_mod_display_msq_set(rt_mq_t msq)
 {
@@ -614,6 +724,10 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_LINE_OUT_STEREO_RIGHT);
     PAGE_REG(PAGE_TX_GAIN_TX1);
     PAGE_REG(PAGE_TX_GAIN_TX2);
+    PAGE_REG(PAGE_BOX_IN);
+    PAGE_REG(PAGE_LOGO);
+    PAGE_REG(PAGE_POWEROFF_CHARGE);
+    PAGE_REG(PAGE_PARING);
 }
 
 void lvgl2rtt_init(void)
@@ -621,14 +735,14 @@ void lvgl2rtt_init(void)
     lv_init();
     lv_port_disp_init();
     lv_port_indev_init();
+    // 上电清屏
+    hl_mod_display_clear_screen();
 }
 void hl_mod_page_all_init(void)
 {
     hl_page_style_bit_init();
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
-
-    PageManager_PagePush(PAGE_HOME);
 }
 #endif
 /*

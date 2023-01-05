@@ -34,7 +34,8 @@
 
 #if !HL_IS_TX_DEVICE()
 #include "lv_port_disp.h"
-
+#include "hl_drv_rm690a0.h"
+#if 0
 // #if LV_USE_FULL_SCREEN == 0
 // #error "Please define LV_USE_FULL_SCREEN in lv_conf.h"
 // #endif
@@ -431,6 +432,153 @@ struct rt_device_graphic_info* lv_port_dgi_get(void)
 {
 	 return disp_ctx.dgi;
 }
+#else
+
+#define USB_VIDEO_MEMORY 1
+#define RT_LV_DISP_BUF_MALLOC	rt_malloc_large
+#define RT_LV_DISP_BUF_FREE		rt_free_large
+
+#define BUF_HIGH_LEN         LV_HOR_RES_MAX
+
+typedef struct {
+	lv_disp_draw_buf_t disp_buf;
+	lv_color_t* buf_1;
+	lv_color_t* buf_2;
+}lv_disp_cntx_t;
+
+lv_disp_drv_t disp_drv;
+lv_disp_cntx_t disp_ctx = {0};
+
+static hl_mod_lvgl_video_mem_t video_mem_t;
+static lv_color_t * video_memory_g;
+
+//上电清屏
+void hl_mod_display_clear_screen(void)
+{
+
+    video_mem_t.format_byte = 2;
+    video_mem_t.hor_max = LV_HOR_RES_MAX;
+    video_mem_t.vor_max = LV_VER_RES_MAX;
+    video_mem_t.src = (const uint8_t*)disp_ctx.buf_1;
+    video_mem_t.dst = (uint8_t *) video_memory_g;
+    video_mem_t.x1 = 0;
+    video_mem_t.x2 = 0;
+    video_mem_t.y1 = 0;
+    video_mem_t.y2 = 0;
+
+
+    hl_drv_rm690a0_write(&video_mem_t);
+}
+
+static void lvgl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
+{
+    /*Return if the area is out the screen*/
+    if (area->x2 < 0) return;
+    if (area->y2 < 0) return;
+    if (area->x1 > LV_HOR_RES_MAX  - 1) return;
+    if (area->y1 > LV_VER_RES_MAX - 1) return;
+
+    // rt_kprintf("x1 = %d\n",area->x1);
+    // rt_kprintf("x2 = %d\n",area->x2);
+    // rt_kprintf("y1 = %d\n",area->y1);
+    // rt_kprintf("y2 = %d\n",area->y2);
+
+    video_mem_t.format_byte = 2;
+    video_mem_t.hor_max = LV_HOR_RES_MAX;
+    video_mem_t.vor_max = LV_VER_RES_MAX;
+    video_mem_t.src = (const uint8_t*)color_p;
+    video_mem_t.dst = (uint8_t *) video_memory_g;
+    video_mem_t.x1 = area->x1;
+    video_mem_t.x2 = area->x2;
+    video_mem_t.y1 = area->y1;
+    video_mem_t.y2 = area->y2;
+
+
+    hl_drv_rm690a0_write(&video_mem_t);
+
+    lv_disp_flush_ready(disp_drv);
+}
+
+static rt_err_t disp_init(void)
+{
+	rt_err_t ret;
+
+    uint32_t total, used, maxm;
+    rt_memory_info(&total, &used, &maxm);
+    rt_kprintf("sram total=%ld, used=%ld, maxm=%ld", total, used, maxm);
+
+	disp_ctx.buf_1 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC( BUF_HIGH_LEN* LV_VER_RES_MAX * sizeof(lv_color_t));
+	RT_ASSERT(disp_ctx.buf_1 != RT_NULL);
+    rt_memset(disp_ctx.buf_1,0x00,BUF_HIGH_LEN* LV_VER_RES_MAX * sizeof(lv_color_t));
+
+#ifdef RT_LV_DISP_DOUBLE_BUF
+    disp_ctx.buf_2 = (lv_color_t *)RT_LV_DISP_BUF_MALLOC(BUF_HIGH_LEN * LV_VER_RES_MAX * sizeof(lv_color_t));
+    RT_ASSERT(disp_ctx.buf_2 != RT_NULL);
+#endif
+
+#if USB_VIDEO_MEMORY
+    video_memory_g = (lv_color_t *)RT_LV_DISP_BUF_MALLOC(LV_HOR_RES_MAX * LV_VER_RES_MAX * sizeof(lv_color_t));
+    rt_kprintf("video_mem = 0x%x\n", (int)video_memory_g);
+    rt_memset(video_memory_g,0x00,LV_HOR_RES_MAX * LV_VER_RES_MAX * sizeof(lv_color_t));
+#endif
+
+	lv_disp_draw_buf_init(&disp_ctx.disp_buf, disp_ctx.buf_1, disp_ctx.buf_2, BUF_HIGH_LEN* LV_VER_RES_MAX);
+
+	rt_kprintf("lvgl buf1 = 0x%x, buf2 = 0x%x", (int)disp_ctx.buf_1, (int)disp_ctx.buf_2);
+
+	return RT_EOK;
+}
+
+rt_err_t lv_port_disp_init(void)
+{
+    rt_err_t ret;
+
+	rt_memset(&disp_ctx, 0x0, sizeof(disp_ctx));
+
+    ret = disp_init();
+    RT_ASSERT(ret == RT_EOK);
+
+    lv_disp_drv_init(&disp_drv);
+
+	disp_drv.hor_res = LV_HOR_RES_MAX;
+	disp_drv.ver_res = LV_VER_RES_MAX;
+	disp_drv.draw_buf = &disp_ctx.disp_buf;
+	disp_drv.flush_cb = lvgl_fb_flush;
+    disp_drv.sw_rotate = 1;
+    // disp_drv.rotated = LV_DISP_ROT_90;
+    disp_drv.rotated = LV_DISP_ROT_270;
+    // disp_drv.full_refresh = 1;
+    lv_disp_drv_register(&disp_drv);
+    
+    return RT_EOK;
+}
+
+rt_err_t lv_port_disp_deinit(void)
+{
+    rt_err_t ret;
+
+	if(disp_ctx.buf_1) {
+		RT_LV_DISP_BUF_FREE(disp_ctx.buf_1);
+		disp_ctx.buf_1 = RT_NULL;
+	}
+
+    if(disp_ctx.buf_2) {
+		RT_LV_DISP_BUF_FREE(disp_ctx.buf_2);
+		disp_ctx.buf_2 = RT_NULL;
+	}
+
+#if USB_VIDEO_MEMORY
+    if(video_memory_g) {
+		RT_LV_DISP_BUF_FREE(video_memory_g);
+		disp_ctx.buf_2 = RT_NULL;
+	}
+#endif
+
+    return ret;
+}
+
+
+#endif
 
 #endif
 
