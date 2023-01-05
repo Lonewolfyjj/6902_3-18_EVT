@@ -26,6 +26,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include "hl_config.h"
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
 /// 模块层发送给APP的消息格式
@@ -127,6 +128,23 @@ void hl_app_mng_powerOn(void);
  * </table>
  */
 void hl_app_mng_powerOff(void);
+
+/**
+ * 
+ * @brief 关机充电APP，Type-C关机充电显示
+ * @param [in] msg_q 消息队列
+ * @date 2023-01-03
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-03      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_entry(void *msg_q);
 
 #endif /* __HL_APP_MNG_H__ */
 /*
