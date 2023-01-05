@@ -55,9 +55,9 @@
 // 单位 毫秒
 #define RTHEAD_DELAY_TIME LV_DISP_DEF_REFR_PERIOD
 
-#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*4 
+#define GSENSOR_DEBANCE_TIMER          ROT_SCAN_IN_TIME*2
 
-#define ROT_SCAN_IN_TIME 5*100
+#define ROT_SCAN_IN_TIME 5*40
 
 static hl_timeout_t rot_scan_in;
 
@@ -66,16 +66,7 @@ static hl_timeout_t sensor_debance;
 
 static rt_thread_t display_tid = RT_NULL;
 
-typedef struct _hl_display_msg_t
-{
-    /// 消息队列句柄
-    rt_mq_t msg_hander;
-    ///  消息
-    mode_to_app_msg_t msg;
 
-} hl_display_msg_t;
-
-static hl_display_msg_t hl_mod_display;
 
 static void hl_mod_screen_rot_scan(void);
 
@@ -119,11 +110,11 @@ static void hl_mod_display_data_init(void)
      now->tx1_remained_record_time = 10;
      now->tx2_remained_record_time = 10;
      now->ota_upgrade_progress = 0;
-     //后续要改
-     rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
-     rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
-     rt_sprintf(now->tx2_ver,"%s","V0.0.0.0");
-     rt_sprintf(now->sn,"%s","00000000000000000000");
+    //  //后续要改
+    //  rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
+    //  rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
+    //  rt_sprintf(now->tx2_ver,"%s","V0.0.0.0");
+    //  rt_sprintf(now->sn,"%s","00000000000000000000");
     //  now->sn[36]; 0
     //  now->device_fault_code[20]; 0
      now->sys_status.auto_record = 0;
@@ -224,6 +215,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     hl_display_screen_s* data_p = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     // LOG_D("cmd=%d\r\n", cmd);
+    hl_mod_display_mux_take();
     switch (cmd) {
         // 更新按鍵的操作
         case MSG_INPUT_UPDATE_CMD: {
@@ -347,10 +339,10 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.tx2_mute_switch = data;
             flag->sys_status.tx2_mute_switch = 1;
         } break;
-        case IN_BOX_STATE_SWITCH_CMD: {
+        case IN_BOX_STATE_VAL_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
-            data_p->sys_status.in_box_state = data;
-            flag->sys_status.in_box_state = 1;
+            data_p->in_box_state = data;
+            flag->in_box_state = 1;
         } break;
         case AUTO_RECORD_PORTECT_SWITCH_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
@@ -359,17 +351,33 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         } break;
         case RX_RF_STATE_VAL_CMD: {
             uint8_t data                        = *(uint8_t*)ptr;
-            LOG_D("cmda=%d\r\n", data);
             data_p->rf_net_connect = data;
             flag->rf_net_connect = 1;
+        } break;
+        case LOW_CUT_VAL_CMD: {
+            hl_display_low_cut_e data = *(uint8_t*)ptr;
+            data_p->low_cut = data;
+            flag->low_cut   = 1;
+        } break;
+        case OUT_BOX_CHARGER_SWITCH_CMD: {
+            uint8_t data = *(uint8_t*)ptr;
+            data_p->out_box_poweroff_charge = data;
         } break;
         default:
             LOG_D("cmd=%d\r\n", cmd);
             break;
     }
-
+    hl_mod_display_mux_release();
     return res;
 }
+
+// static void lv_arc_test(void)
+// {
+//     hl_lvgl_arc_init_t init = {
+//         .ptr = "配对中..."
+//     };
+//     hl_mod_arc_init(&init);
+// }
 
 // RX
 static void hl_mod_display_task(void* param)
@@ -381,6 +389,9 @@ static void hl_mod_display_task(void* param)
     lv_obj_add_style(lv_scr_act(), &style, 0);
     while (1) {
         hl_mod_screen_rot_scan();
+        hl_mod_outbox_offcharge_scan();
+        hl_mod_page_goto_box_scan();
+        
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
@@ -401,14 +412,8 @@ uint8_t hl_mod_display_deinit(void)
 
 uint8_t hl_mod_display_init(void* display_msq)
 {
-    uint32_t frambufferaddr;
-
-    if (display_msq == NULL) {
-        LOG_E("msghander err!");
-        return HL_DISPLAY_FAILED;
-    }
-
-    hl_mod_display.msg_hander = (rt_mq_t)display_msq;
+    hl_mod_display_msq_set((rt_mq_t)display_msq);
+    
 
     hl_drv_aw2016a_deinit();
     // hl_drv_aw2016a_init();
@@ -418,6 +423,9 @@ uint8_t hl_mod_display_init(void* display_msq)
     lvgl2rtt_init();
     // hl_mod_display_data_init();
     hl_mod_page_all_init();
+
+    hl_mod_display_mux_init();
+
     hl_drv_qma6100p_init();
     hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,

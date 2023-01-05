@@ -2363,6 +2363,9 @@ err0:
 static rt_size_t _uac_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size)
 {
     rt_size_t read_size;
+    rt_base_t level = 0;
+
+    level = rt_hw_interrupt_disable();
 
     if (false == uac_dev.p_enable) {
         memset(buffer, 0x00, size);
@@ -2371,6 +2374,8 @@ static rt_size_t _uac_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_
 
     read_size = rt_ringbuffer_get(g_host2dev_rb, buffer, size);
 
+    rt_hw_interrupt_enable(level);
+
     return read_size;
 }
 
@@ -2378,6 +2383,9 @@ static rt_size_t _uac_write(rt_device_t dev, rt_off_t pos, const void *buffer, r
 {
     rt_size_t data_size;
     rt_size_t get_size;
+    rt_base_t level = 0;
+
+    level = rt_hw_interrupt_disable();
 
     rt_ringbuffer_put_force(g_dev2host_rb, buffer, size);
 
@@ -2391,6 +2399,8 @@ static rt_size_t _uac_write(rt_device_t dev, rt_off_t pos, const void *buffer, r
         memset(null_buff, 0x00, NULL_BUFF_SIZE);
     }
 
+    rt_hw_interrupt_enable(level);
+
     return size;
 }
 
@@ -2399,6 +2409,7 @@ static rt_err_t _uac_io_ctrl(rt_device_t dev, int cmd, void *args)
     rt_size_t data_size;
     rt_size_t target_size;
     rt_uint8_t temp8;
+    rt_base_t level = 0;
 
     switch (cmd) {
         case HL_GET_UAC_MB_CMD:
@@ -2418,6 +2429,7 @@ static rt_err_t _uac_io_ctrl(rt_device_t dev, int cmd, void *args)
             break;
 
         case HL_GET_UAC_P_STATE_CMD:
+            level = rt_hw_interrupt_disable();
             data_size = rt_ringbuffer_data_len(g_host2dev_rb);
             target_size  = g_host2dev_rb->buffer_size / 2;
             if (data_size < target_size) {
@@ -2432,13 +2444,16 @@ static rt_err_t _uac_io_ctrl(rt_device_t dev, int cmd, void *args)
                     g_host2dev_rb->read_index = g_host2dev_rb->write_index + target_size;
                 }
             }
+            rt_hw_interrupt_enable(level);
             break;
 
         case HL_SET_UAC_C_START_CMD:
+            level = rt_hw_interrupt_disable();
             rt_ringbuffer_reset(g_dev2host_rb);
             target_size = g_dev2host_rb->buffer_size / 2;                              // 缓存一半静音数据
             g_dev2host_rb->write_index = target_size;
             memset(g_dev2host_rb->buffer_ptr, 0x00, target_size);
+            rt_hw_interrupt_enable(level);
             break;
 
         default:

@@ -31,7 +31,7 @@
 #include "hl_config.h"
 
 #define WORK_QUEUE_STACK_SIZE   512
-#define WORK_QUEUE_PRIORITY     1
+#define WORK_QUEUE_PRIORITY     3
 
 struct rockchip_usbd
 {

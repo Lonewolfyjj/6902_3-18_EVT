@@ -24,8 +24,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hl_mod_page_common.h"
 #include "hl_mod_display_mng.h"
+#include "hl_util_general_type.h"
 #include "hl_mod_input.h"
-
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "lv_port_disp.h"
@@ -36,6 +36,9 @@
 #include "page_test.h"
 #include "lvgl.h"
 #include "hl_drv_ztw523a.h"
+#include "math.h"
+#include "page_style_bit.h"
+#include "hl_drv_rm690a0.h"
 
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
@@ -45,16 +48,18 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-#define BACKTOUCHKEY_DEBANCE_TIMER          20
+#define BACKTOUCHKEY_DEBANCE_TIMER 20
 
-
-typedef struct _hl_input_mod_t
+typedef struct _hl_display_msg_t
 {
     /// 消息队列句柄
     rt_mq_t msg_hander;
     ///  消息
     mode_to_app_msg_t msg;
+
 } hl_display_msg_t;
+
+static hl_display_msg_t hl_mod_display;
 
 // 系统当前的状态和类别
 static hl_display_screen_s hl_screendata = {
@@ -80,14 +85,20 @@ static hl_display_screen_s hl_screendata = {
     .uac_out_volume           = 0,
     .tx1_gain_volume          = 0,
     .tx2_gain_volume          = 0,
+    .monitor_volume           = 0,
     .led_britness             = 127,
     .tx1_remained_record_time = 10,
     .tx2_remained_record_time = 10,
     .ota_upgrade_progress     = 0,
     .tx1_ver                  = "V0.0.0.0",
     .tx2_ver                  = "V0.0.0.0",
+#if A6902_RX_HL_EN || A6902_RX_HL_CH
     .rx_ver                   = A6902_VERSION,
-    .sn                       = "00000000000000000000",
+#else
+    .rx_ver                   = "V0.0.0.0",
+#endif
+
+    .sn = "00000000000000000000",
 
     .sys_status = { 0 },
     .systime    = { 2022, 12, 16, 0, 0 },
@@ -97,14 +108,29 @@ static hl_display_screen_change_s change_flag = { 0 };
 // 下发的输入事件数据
 static hl_scr_in_data_t in_data = { 0 };
 
-// 菜单当前的居中的图标
-static uint8_t now_center_icon = 0;
+static rt_mutex_t display_mux = RT_NULL;
 
-static hl_display_msg_t hl_display_msg = { 0 };
 // 返回触摸按键消抖时间
 static hl_timeout_t backtouchkey_debance;
 
+void hl_mod_display_mux_init(void)
+{
+    display_mux = rt_mutex_create("display_mutex", RT_IPC_FLAG_FIFO);
+}
 
+void hl_mod_display_mux_take(void)
+{
+    if (display_mux) {
+        rt_mutex_take(display_mux, RT_WAITING_FOREVER);
+    }
+}
+
+void hl_mod_display_mux_release(void)
+{
+    if (display_mux) {
+        rt_mutex_release(display_mux);
+    }
+}
 
 // 获取当前页面
 hl_screen_page_e hl_mod_display_scr_get_page(void)
@@ -113,31 +139,13 @@ hl_screen_page_e hl_mod_display_scr_get_page(void)
     return hl_screendata.page_id;
 }
 
-uint8_t hl_mod_menu_icon_event(uint32_t current)
-{
-    rt_kprintf("Page:%x\n",current);
 
-    //未锁屏回主界面
-    if(! (current & 0x80) )  {
-       return 1;
-    } else {
-        now_center_icon = current & 0x7F;
-        return 0;
-    }
-    return 0;
-}
 
-void hl_mod_menu_icon_init()
-{
-    now_center_icon = 0;
-}
-uint32_t hl_mod_menu_get_icon()
-{
-    return now_center_icon;
-}
+
+
 hl_display_screen_s* hl_mod_page_get_screen_data_ptr()
 {
-    return &hl_screendata; 
+    return &hl_screendata;
 }
 
 hl_display_screen_change_s* hl_mod_page_get_screen_change_flag()
@@ -145,45 +153,99 @@ hl_display_screen_change_s* hl_mod_page_get_screen_change_flag()
     return &change_flag;
 }
 
+
+// 设置参数不变更了再发送事件
+uint8_t hl_mode_report_event(hl_timeout_t* timer, uint32_t time, int16_t bar_num)
+{
+
+    static int16_t last_data = 0;
+
+    uint8_t changeflag = 0;
+
+    if (last_data != bar_num) {
+
+        hl_util_timeout_set(timer, time);
+        changeflag = 0;
+        last_data  = bar_num;
+    } else {
+        if (hl_util_timeout_judge(timer) == RT_TRUE) {
+            changeflag = 1;
+            hl_util_timeout_close(timer);
+        }
+    }
+
+    return changeflag;
+}
 // 返回触摸按键消抖功能实现
 uint8_t hl_mod_keypad_touchkey_read()
 {
-    static uint8_t last_key = 0;
+    static uint8_t last_state = 0;
+
     uint8_t        res;
     uint8_t        press = 0;
 
     res = hl_drv_ztw523a_botton_status();
 
-    switch (last_key) {
+    switch (last_state) {
         case 0:
             if (res == 1) {
-                // 出现下降沿，重新计数
+                
                 hl_util_timeout_set(&backtouchkey_debance, BACKTOUCHKEY_DEBANCE_TIMER);
-                last_key = 1;
+                last_state = 1;
+
             }
             break;
         case 1:
             if (hl_util_timeout_judge(&backtouchkey_debance) == RT_TRUE) {
                 //20s内没有上升沿，按键按下
                 if (res == 1) {
-                    LV_LOG_USER("touchkey_en");
-                    press    = 1;
-                    last_key = 0;
+                    LV_LOG_USER("touchkey_down");
+                    press    = 0;
+                    last_state = 2;
                     hl_util_timeout_close(&backtouchkey_debance);
                 } else {
                     hl_util_timeout_close(&backtouchkey_debance);
-                    last_key = 0;
+                    last_state = 0;
                     press    = 0;
                 }
             } else {
                 // 出现上升沿，则清定时器
                 if (res == 0) {
                     hl_util_timeout_close(&backtouchkey_debance);
-                    last_key = 0;
+                    last_state = 0;
                     press    = 0;
                 }
             }
             break;
+        case 2:
+            if (res == 0) {
+                // 出现下降沿，重新计数
+                hl_util_timeout_set(&backtouchkey_debance, BACKTOUCHKEY_DEBANCE_TIMER);
+                last_state = 3;
+            }
+        break;
+        case 3:
+            if (hl_util_timeout_judge(&backtouchkey_debance) == RT_TRUE) {
+                //20s内没有被再次压下
+                if (res == 0) {
+                    LV_LOG_USER("touchkey_up");
+                    press      = 1;
+                    last_state = 0;
+                    hl_util_timeout_close(&backtouchkey_debance);
+                } else {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_state = 2;
+                    press      = 0;
+                }
+            } else {
+                // 又被压下，则清定时器
+                if (res == 1) {
+                    hl_util_timeout_close(&backtouchkey_debance);
+                    last_state = 2;
+                    press      = 0;
+                }
+            }
+        break;
         default:
             press = 0;
             break;
@@ -194,8 +256,7 @@ uint8_t hl_mod_keypad_touchkey_read()
 // 返回按键扫描，（如果触发，则返回上一级菜单）
 void hl_mod_menu_goto_fast_config_scan()
 {
-    if( 1  == hl_mod_keypad_touchkey_read() )
-    {
+    if (1 == hl_mod_keypad_touchkey_read()) {
         PageManager_PagePush(PAGE_FAST_TX_CONFIG);
     }
 }
@@ -204,8 +265,7 @@ void hl_mod_menu_goto_fast_config_scan()
 void hl_mod_menu_goto_quickset_scan()
 {
     int8_t data = hl_mod_get_rx_knob_val();
-    if (data != 0)
-    {
+    if (data != 0) {
         PageManager_PagePush(PAGE_QUICK_SETTINGS);
     }
 }
@@ -213,10 +273,10 @@ void hl_mod_menu_goto_quickset_scan()
 // 选择按键处理
 void hl_mod_page_s_choose_two_one_scan(uint8_t maxnum)
 {
-    static int8_t choose = 0;
+    static int8_t                choose = 0;
     hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl;
 
-    int8_t  data = hl_mod_get_rx_knob_val();
+    int8_t data = hl_mod_get_rx_knob_val();
 
     if (1 == hl_mod_keypad_touchkey_read()) {
     }
@@ -240,10 +300,10 @@ void hl_mod_page_s_choose_two_one_scan(uint8_t maxnum)
 // 选择按键处理
 void hl_mod_page_b_choose_two_one_scan(uint8_t maxnum)
 {
-    static int8_t choose;
+    static int8_t                choose;
     hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl;
 
-    int8_t  data = hl_mod_get_rx_knob_val();
+    int8_t data = hl_mod_get_rx_knob_val();
 
     if (1 == hl_mod_keypad_touchkey_read()) {
 
@@ -269,8 +329,7 @@ void hl_mod_page_b_choose_two_one_scan(uint8_t maxnum)
 // 返回按键扫描，（如果触发，则返回上一级菜单）
 void hl_mod_menu_backbtn_scan()
 {
-    if( 1  == hl_mod_keypad_touchkey_read() )
-    {
+    if (1 == hl_mod_keypad_touchkey_read()) {
         PageManager_PagePop();
     }
 }
@@ -285,8 +344,8 @@ void          hl_mod_rx_knob_val_pro(struct _lv_indev_drv_t* drv, lv_indev_data_
         // LV_LOG_USER("encoder_knob=%d\r\n", in_data.in_inputdev.encoder_knob_diff);
         // LV_LOG_USER("-now=%d\r\n", encoder_knob_diff);
 
-        data->enc_diff    = in_data.in_inputdev.encoder_knob_diff - encoder_knob_diff;
-        now_knob_data     = data->enc_diff;
+        data->enc_diff = in_data.in_inputdev.encoder_knob_diff - encoder_knob_diff;
+        now_knob_data  = data->enc_diff;
         LV_LOG_USER("-knob_val=%d\r\n", now_knob_data);
         encoder_knob_diff = in_data.in_inputdev.encoder_knob_diff;
     }
@@ -299,10 +358,7 @@ int8_t hl_mod_get_rx_knob_val(void)
     now_knob_data = 0;
     return data;
 }
-void hl_mod_menu_icon_set(uint32_t num)
-{
-    now_center_icon = num;
-}
+
 
 // 设定旋钮的值
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num)
@@ -316,44 +372,41 @@ int16_t hl_mod_knob_select_val_get(int16_t* ptr)
     return *ptr;
 }
 
-// 更新旋钮的当前值 left right 分别是上下限
-int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right)
+
+// 更新旋钮的当前值 left right 分别是上下限 true表示开启循环选择， FALSE 表示关闭循环选择
+int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right, bool en)
 {
     int16_t center = hl_mod_knob_select_val_get(ptr);
-    int8_t data   = hl_mod_get_rx_knob_val();
-
+    int8_t  data   = hl_mod_get_rx_knob_val();
+    int16_t delta  = right - left + 1;
     if (data != 0) {
-        center += data;
-        if (center >= right) {
-            center = right;
-        } else if (center <= left) {
-            center = left;
+        if (en == false) {
+            center += data;
+
+            if (center >= right) {
+                center = right;
+            } else if (center <= left) {
+                center = left;
+            }
+        } else {
+
+            center += data;
+            if (center > right) {
+                center = left;
+            } else if (center < left) {
+                center = right;
+            }
         }
-        LV_LOG_USER("knob_val=%d\n", data);
+
+        LV_LOG_USER("knob_val=%d\n", center);
         hl_mod_knob_select_val_set(ptr, center);
-        return center;
+        return 1;
     }
     // 无数据变更
     return 0;
 }
 
-void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum)
-{
-    int8_t data = hl_mod_get_rx_knob_val();
 
-    // LV_LOG_USER("knob1=%d\n",data);
-    if (data != 0) {
-        center += data;
-        if (center >= maxnum) {
-            center = maxnum - 1;
-        } else if (center < 0) {
-            center = 0;
-        }
-        LV_LOG_USER("icon_pos=%d\n",center);
-        lv_set_icon_postion(center, false);
-        hl_mod_menu_icon_set(center);
-    }
-}
 
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb)
 {
@@ -401,16 +454,15 @@ void hl_mod_menu_enterbtn_scan(uint8_t num)
 {
     uint8_t key_event;
 
-    key_event  = hl_mod_get_knob_okkey_val();
+    key_event = hl_mod_get_knob_okkey_val();
 
-    //菜单点击按键   
+    //菜单点击按键
     if (key_event == HL_KEY_EVENT_SHORT) {
         LV_LOG_USER("icon_enter\n");
         //lv_event_send(hl_menu_obj_get(num),LV_EVENT_KEY,NULL);
-        lv_set_icon_postion(num,true);
+        lv_set_icon_postion(num, true);
     }
 }
-
 
 void hl_mod_menu_goto_home_page(void)
 {
@@ -464,30 +516,32 @@ bool hl_mod_next_menu_enter(uint8_t* tab, uint8_t num, uint8_t max_num)
     }
 }
 
-
-void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void *param, uint32_t len)
+void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void* param, uint32_t len)
 {
     rt_err_t res;
 
-    hl_display_msg.msg.sender          = DISPLAY_MODE;
-    hl_display_msg.msg.cmd             = msg_cmd;
-    if (len == 0) {
-        hl_display_msg.msg.param.u32_param = *(uint32_t *)param;
-    } else {
-        hl_display_msg.msg.param.ptr = param;
+    if (hl_mod_display.msg_hander == RT_NULL) {
+        LOG_E("msg no init\n");
     }
-    hl_display_msg.msg.len             = len;
-
-
-    res = rt_mq_send(hl_display_msg.msg_hander, (void*)(&hl_display_msg.msg), sizeof(mode_to_app_msg_t));
+    rt_memset(&hl_mod_display.msg,0,sizeof(hl_mod_display.msg));
+    hl_mod_display.msg.sender = DISPLAY_MODE;
+    hl_mod_display.msg.cmd    = msg_cmd;
+    if (len == 0) {
+        hl_mod_display.msg.param.u32_param = *(uint32_t*)param;
+        LOG_E("msg[%d][%x]\n",hl_mod_display.msg.cmd,*(uint32_t*)param);
+    } else {
+        hl_mod_display.msg.param.ptr = param;
+        LOG_E("msg[%d]\n",msg_cmd);
+    }
+    hl_mod_display.msg.len = len;
+    
+    res = rt_mq_send(hl_mod_display.msg_hander, (void*)(&hl_mod_display.msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
         LOG_E("DISP_MODE msgq full\n");
     } else if (res == -RT_ERROR) {
         LOG_E("DISP_MODE msgq err\n");
     }
 }
-
-
 
 void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
 {
@@ -536,7 +590,107 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+// 在
+void hl_mod_outbox_offcharge_scan(void)
+{
+    static hl_display_out_box_charge_state last_status = OUTBOX_OFFCHARGE_IDLE;
+    hl_display_screen_s*                   data_ptr    = hl_mod_page_get_screen_data_ptr();
+    hl_display_out_box_charge_state        new_status;
+    if (last_status == OUTBOX_OFFCHARGE_LOGO) {
+        return;
+    }
+    new_status = data_ptr->out_box_poweroff_charge;
 
+    switch (last_status) {
+        case OUTBOX_OFFCHARGE_IDLE:
+            if (new_status == OUTBOX_OFFCHARGE_OFFPAGE) {
+                PageManager_PagePush(PAGE_POWEROFF_CHARGE);
+            } else if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_OFFPAGE:
+            if (new_status == OUTBOX_OFFCHARGE_LOGO) {
+                PageManager_PageStackClear();
+                PageManager_PagePush(PAGE_LOGO);
+            }
+            break;
+        case OUTBOX_OFFCHARGE_LOGO:
+            break;
+        default:
+            break;
+    }
+    last_status = new_status;
+}
+
+
+
+// 循环扫描是否进入盒子
+void hl_mod_page_goto_box_scan(void)
+{
+    static hl_display_box_charge_state last_status;
+    hl_display_screen_s*               data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_box_charge_state        new_status;
+
+    new_status = data_ptr->in_box_state;
+
+    if (last_status != new_status) {
+
+        if (new_status != BOX_CHARGE_RX_NOT && last_status == BOX_CHARGE_RX_NOT) {
+            PageManager_PagePush(PAGE_BOX_IN);
+        }
+        last_status = new_status;
+    }
+}
+
+void hl_mod_page_screenofftimer_init(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        rt_kprintf("err func_null!\n");
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    hl_util_timeout_set(&timer->timer, timer->outtime);
+    timer->trigfunc(false);
+}
+
+// updateflag = 1表示重新计时熄屏时间，
+void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer)
+{
+    if (timer->trigfunc == RT_NULL) {
+        return;
+    }
+    if (hl_util_timeout_judge(&timer->timer)) {
+        timer->trigfunc(true);
+        hl_util_timeout_close(&timer->timer);
+    } 
+}
+
+void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer)
+{
+    timer->trigfunc = RT_NULL;
+    hl_util_timeout_close(&timer->timer);
+}
+
+
+uint8_t hl_mod_display_msq_set(rt_mq_t msq)
+{
+    if (msq == NULL) {
+        LOG_E("msghander err!");
+        return HL_DISPLAY_FAILED;
+    }
+
+    hl_mod_display.msg_hander = (rt_mq_t)msq;
+    return HL_DISPLAY_SUCCESS;
+}
 
 
 void hl_mod_page_cb_reg(void)
@@ -566,6 +720,14 @@ void hl_mod_page_cb_reg(void)
     // PAGE_REG(PAGE_UACIN_VOLUME_SET);
     PAGE_REG(PAGE_UACOUT_VOLUME_SET);
     PAGE_REG(PAGE_QUICK_SETTINGS);
+    PAGE_REG(PAGE_LINE_OUT_STEREO_LEFT);
+    PAGE_REG(PAGE_LINE_OUT_STEREO_RIGHT);
+    PAGE_REG(PAGE_TX_GAIN_TX1);
+    PAGE_REG(PAGE_TX_GAIN_TX2);
+    PAGE_REG(PAGE_BOX_IN);
+    PAGE_REG(PAGE_LOGO);
+    PAGE_REG(PAGE_POWEROFF_CHARGE);
+    PAGE_REG(PAGE_PARING);
 }
 
 void lvgl2rtt_init(void)
@@ -573,13 +735,14 @@ void lvgl2rtt_init(void)
     lv_init();
     lv_port_disp_init();
     lv_port_indev_init();
+    // 上电清屏
+    hl_mod_display_clear_screen();
 }
 void hl_mod_page_all_init(void)
 {
+    hl_page_style_bit_init();
     PageManager_Init(PAGE_MAX, 8);
     hl_mod_page_cb_reg();
-
-    PageManager_PagePush(PAGE_HOME);
 }
 #endif
 /*

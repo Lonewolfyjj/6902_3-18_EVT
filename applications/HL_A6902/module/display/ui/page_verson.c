@@ -10,6 +10,7 @@
  */
 #include "page_verson.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 static lv_style_t style_label;
 static lv_style_t style_screen;
@@ -157,6 +158,7 @@ static lv_obj_t * lv_con_scr_creat(lv_coord_t x_size,lv_coord_t y_size)
     lv_obj_t * con;
     con = lv_obj_create(lv_scr_act());
     lv_obj_add_style(con,&style_screen,0);
+    lv_obj_set_scroll_dir(con,LV_DIR_HOR);
     lv_obj_align(con, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);
@@ -252,7 +254,11 @@ void hl_mod_verson_ioctl(void * ctl_data)
 void hl_mod_verson_init(void * init_data)
 {
     hl_lvgl_verson_init_t * ptr = (hl_lvgl_verson_init_t *)init_data;
-    lv_style_page4_init();
+    if (!page_style_bit.page_verson) {
+        page_style_bit.page_verson = 1;
+        lv_style_page4_init();
+    }
+    
     con_src = lv_con_scr_creat(180,100);
     con1 = lv_con_child_creat(con_src,172,90);
     con2 = lv_con_child_creat(con_src,172,90);

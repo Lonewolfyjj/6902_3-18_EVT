@@ -10,6 +10,7 @@
  */
 #include "page_storage.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -253,7 +254,11 @@ void hl_mod_storage_init(void * init_data)
 {    
     hl_lvgl_storage_init_t * ptr = (hl_lvgl_storage_init_t *)init_data;
     hl_storage_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_storage) {
+        page_style_bit.page_storage = 1;
+        lv_style_page4_init();
+    }
+    
 
     con1 = lv_con_creat_fun(LV_ALIGN_LEFT_MID,0,0,144,126);
     con2 = lv_con_creat_fun(LV_ALIGN_RIGHT_MID,0,0,144,126);

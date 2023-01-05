@@ -19,7 +19,7 @@
  * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 #include <rtdevice.h>
@@ -42,6 +42,7 @@
 #include "hl_app_pm_msg_pro.h"
 #include "hl_app_rf_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
+#include "hl_util_general_type.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -53,15 +54,15 @@
 /// 应用层消息队列，用于接收模块的消息
 struct rt_messagequeue hl_app_mq;
 /// 应用层消息队列池
-static char            hl_app_msg_pool[2048];
+static char hl_app_msg_pool[2048];
 
 /// 模块层发送给APP的消息格式
 #if HL_IS_TX_DEVICE()
 /// tx app 状态信息
-tx_app_info_t tx_info = {0};
+tx_app_info_t tx_info = { 0 };
 #else
 /// rx app 状态信息
-rx_app_info_t rx_info = {0};
+rx_app_info_t rx_info = { 0 };
 #endif
 
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -71,6 +72,18 @@ void hl_app_msg_thread(void* parameter)
 {
     mode_to_app_msg_t msg = { 0 };
 
+    hl_app_mng_charger_entry(&hl_app_mq);
+
+    hl_mod_upgrade_init(&hl_app_mq);
+
+#if HL_IS_TX_DEVICE()
+    if (tx_info.mstorage_plug == 0) {
+#else
+    if (rx_info.mstorage_plug == 0) {
+#endif
+        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
+    }
+
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
         if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), RT_WAITING_FOREVER) == RT_EOK) {
@@ -79,8 +92,8 @@ void hl_app_msg_thread(void* parameter)
                 case INPUT_MODE:
                     hl_app_input_msg_pro(&msg);
 #if !HL_IS_TX_DEVICE()
-                    hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg,0);
-#endif                
+                    hl_mod_display_io_ctrl(MSG_INPUT_UPDATE_CMD, &msg, 0);
+#endif
                     break;
                 case DISPLAY_MODE:
                     hl_app_disp_msg_pro(&msg);
@@ -104,7 +117,7 @@ void hl_app_msg_thread(void* parameter)
                     hl_app_pm_msg_pro(&msg);
                     break;
                 default:
-                    LOG_E("sender(%d) unkown!!!",  msg.sender);
+                    LOG_E("sender(%d) unkown!!!", msg.sender);
                     break;
             }
         }
@@ -112,20 +125,19 @@ void hl_app_msg_thread(void* parameter)
     }
 }
 
-
 void hl_app_mng_init(void)
 {
     rt_err_t    ret;
-	rt_thread_t app_task_tid   = RT_NULL;
+    rt_thread_t app_task_tid = RT_NULL;
 
-	ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], 128, sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
+    ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], 128, sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
     if (ret != RT_EOK) {
         LOG_E("message queuecreate init err!!!");
         return;
     }
 
-	hl_mod_input_init(&hl_app_mq);
-    // hl_mod_display_init(&hl_app_mq);
+    hl_mod_input_init(&hl_app_mq);
+    hl_mod_display_init(&hl_app_mq);
     // hl_mod_audio_init(&hl_app_mq);
     // hl_mod_telink_init(&hl_app_mq);
     // hl_mod_telink_start();
@@ -133,9 +145,7 @@ void hl_app_mng_init(void)
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 
-    hl_mod_upgrade_init(&hl_app_mq);       
-
-	app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 15, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -144,13 +154,6 @@ void hl_app_mng_init(void)
 
     rt_thread_mdelay(2000);
     hl_app_info(0, NULL);
-#if HL_IS_TX_DEVICE()
-    if(tx_info.mstorage_plug == 0) {
-#else
-    if(rx_info.mstorage_plug == 0) {
-#endif
-        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
-    } 
 }
 
 // 开机，初始化模块
@@ -158,7 +161,7 @@ void hl_app_mng_powerOn(void)
 {
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
-    hl_mod_display_init(&hl_app_mq);
+    // hl_mod_display_init(&hl_app_mq);
     hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();

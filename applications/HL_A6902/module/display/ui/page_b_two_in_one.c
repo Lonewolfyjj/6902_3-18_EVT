@@ -10,6 +10,7 @@
  */
 #include "page_b_two_in_one.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -223,7 +224,11 @@ void hl_mod_b_two_in_one_init(void * init_data)
 {  
     hl_lvgl_b_two_in_one_init_t * ptr = (hl_lvgl_b_two_in_one_init_t *)init_data;
     hl_b_two_in_one_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_b_two_in_one) {
+        page_style_bit.page_b_two_in_one = 1;
+        lv_style_page4_init();
+    }
+    
 
     if(ptr->b_two_in_one_choose == HL_B_TWO_ONE_CHOOSE_LEFT){
         btn_left_cnt++;

@@ -41,7 +41,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
 
 
 //音效模式界面
@@ -52,7 +52,19 @@ LV_IMG_DECLARE(Other_sound_white);//声音增强
 
 static void hl_soundeffect_test_cb(hl_b_two_in_one_check_t event_num)
 {
-    printf("event_num = %d\n", event_num);
+    uint32_t value = 0;
+    switch(event_num){
+        case HL_B_TWO_ONE_CHECK_LEFT:
+            value = HIGH_FIDELITY;
+            break;
+        case HL_B_TWO_ONE_CHECK_RIGHT:
+            value = SOUND_ENHANCEMENT;
+            break;
+        default:
+            return;
+            break;
+    }
+    hl_mod_display_send_msg(VOICE_MODULE_VAL_IND,&value,0);
 }
 static void soundeffect_test(void)
 {
@@ -91,8 +103,8 @@ static void hl_mod_page_exit(void)
     };
 
     hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
-    two_in_one_test_ctl.b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_DEL_STYLE;
-    hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
+    // two_in_one_test_ctl.b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_DEL_STYLE;
+    // hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 }
 
 static void hl_mod_page_loop(void)

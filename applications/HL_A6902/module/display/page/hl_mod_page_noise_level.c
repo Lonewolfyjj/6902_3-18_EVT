@@ -41,24 +41,32 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "page_menu.h"
-#include "hl_mod_input.h"
+#include "hl_util_general_type.h"
+#include "hl_mod_page_volume_bar_set.h"
+
+//1-7 一共7个档位
+#define MAX_LEVEL       7
+#define MIN_LEVEL       1
+
 
 LV_IMG_DECLARE(Other_mic_black);
 LV_IMG_DECLARE(Other_voice);
-static void hl_bar_test_cb(int16_t bar_num)
-{
-    printf("bar_num = %d\n", bar_num);
-}
+
 
 static void hl_mod_page_setup(void)
 {
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+
+        // 设置当前音量
+    hl_mod_page_volume_init(data_ptr->tx_noise_level);
+
     hl_lvgl_barset_init_t bar_test = {
-        .func_cb    = hl_bar_test_cb,
+        .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_NO_ICON,
-        .init_value = -16,
+        .init_value = hl_mod_page_volume_get(),
         .ptr        = "降噪调节",
-        .range_max  = 40,
-        .range_min  = -60,
+        .range_max  = MAX_LEVEL,
+        .range_min  = MIN_LEVEL,
         .src        = &Other_mic_black,
     };
     hl_mod_barset_init(&bar_test);
@@ -69,10 +77,17 @@ static void hl_mod_page_exit(void)
     lv_menu_exit();
 }
 
+static void save_before_back(void)
+{
+    hl_display_screen_s* ptr = hl_mod_page_get_screen_data_ptr();
+
+    ptr->tx_noise_level = hl_mod_page_volume_get();
+    LOG_D("vol=[%d]\n", ptr->tx_noise_level);
+}
+
 static void hl_mod_page_loop(void)
 {
-    // 返回按键
-    hl_mod_menu_backbtn_scan();
+    hl_mod_page_volume_loop(TX_NOISE_LEVEL_VAL_IND, save_before_back,1,MAX_LEVEL);
 }
 
 PAGE_DEC(PAGE_NOISE_REDUCTION_INTENSITY)
