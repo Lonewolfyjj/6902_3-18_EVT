@@ -51,6 +51,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_IN_BOX_IND: {
             LOG_I("in box!");
         } break;
+        case HL_OUT_BOX_IND: {
+            LOG_I("out box!");
+        } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = tx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
@@ -78,26 +81,30 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 #else
 void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 {
-    uint8_t                   bat_soc_temp = 50;
-    uint8_t                   tx1_bat_info_temp;
-    uint8_t                   tx2_bat_info_temp;
-    uint8_t                   box_bat_info_temp;
-    uint8_t*                  tx1_mac_addr;
-    uint8_t*                  tx2_mac_addr;
-    uint8_t                   dev_mac_temp[6] = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x33 };
-    bool                      tx1_pair_result_temp;
-    bool                      tx2_pair_result_temp;
-    bool                      tx1_in_box_flag_temp;
-    bool                      tx2_in_box_flag_temp;
-    hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
-    hl_mod_euc_charge_state_e tx1_charge_state_temp;
-    hl_mod_euc_charge_state_e tx2_charge_state_temp;
-    hl_mod_euc_charge_state_e box_charge_state_temp;
-    hl_mod_euc_rtc_st         rtc_time_temp = { 0 };
+    uint8_t                    bat_soc_temp = 50;
+    uint8_t                    tx1_bat_info_temp;
+    uint8_t                    tx2_bat_info_temp;
+    uint8_t                    box_bat_info_temp;
+    uint8_t*                   tx1_mac_addr;
+    uint8_t*                   tx2_mac_addr;
+    uint8_t                    dev_mac_temp[6] = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x33 };
+    bool                       tx1_pair_result_temp;
+    bool                       tx2_pair_result_temp;
+    bool                       tx1_in_box_flag_temp;
+    bool                       tx2_in_box_flag_temp;
+    hl_mod_euc_charge_state_e  charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    hl_mod_euc_charge_state_e  tx1_charge_state_temp;
+    hl_mod_euc_charge_state_e  tx2_charge_state_temp;
+    hl_mod_euc_charge_state_e  box_charge_state_temp;
+    hl_mod_euc_rtc_st          rtc_time_temp = { 0 };
+    hl_mod_euc_box_lid_state_e box_lid_state_temp;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
             LOG_I("in box!");
+        } break;
+        case HL_OUT_BOX_IND: {
+            LOG_I("out box!");
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
             bat_soc_temp = rx_info.soc;
@@ -170,6 +177,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         } break;
         case HL_GET_RTC_TIME_REQ_IND: {  //请求设置RTC时间
             hl_mod_euc_ctrl(HL_SET_RTC_TIME_CMD, &rtc_time_temp, sizeof(rtc_time_temp));
+        } break;
+        case HL_BOX_LID_STATE_UPDATE_IND: {  //更新Box开关盖状态
+            box_lid_state_temp = *(hl_mod_euc_box_lid_state_e*)p_msg->param.ptr;
+            LOG_I("Box lid state:%d", box_lid_state_temp);
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

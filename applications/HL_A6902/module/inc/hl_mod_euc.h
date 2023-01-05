@@ -50,8 +50,10 @@ typedef enum _hl_mod_euc_cmd_e
 
 typedef enum _hl_mod_euc_ind_e
 {
-    /// 通知 app 收到收纳盒的探测包，无参数。
+    /// 通知 app 设备放入收纳盒，无参数。
     HL_IN_BOX_IND,
+    /// 通知 app 设备离开收纳盒，无参数。
+    HL_OUT_BOX_IND,
     /// 请求 app 获取设备电量，无参数。
     HL_GET_SOC_REQ_IND,
     /// 请求 app 获取设备配对的mac地址，无参数。
@@ -86,8 +88,10 @@ typedef enum _hl_mod_euc_cmd_e
 
 typedef enum _hl_mod_euc_ind_e
 {
-    /// 通知 app 收到收纳盒的探测包，无参数。
+    /// 通知 app 设备放入收纳盒，无参数。
     HL_IN_BOX_IND,
+    /// 通知 app 设备离开收纳盒，无参数。
+    HL_OUT_BOX_IND,
     /// 请求 app 获取设备电量，无参数。
     HL_GET_SOC_REQ_IND,
     /// 通知 app 收到TX1设备的电池信息更新，参数为<uint8_t *>。
@@ -124,9 +128,17 @@ typedef enum _hl_mod_euc_ind_e
     HL_BOX_CHARGE_STATE_IND,
     /// 请求 app 获取设备的RTC时间，无参数。
     HL_GET_RTC_TIME_REQ_IND,
+    /// 通知 app 收到BOX的开关盖信息更新，参数为<hl_mod_euc_box_lid_state_e>。
+    HL_BOX_LID_STATE_UPDATE_IND,
 } hl_mod_euc_ind_e;
 
 #endif
+
+typedef enum _hl_mod_euc_box_lid_state_e
+{
+    HL_MOD_EUC_BOX_LID_CLOSE = 0,
+    HL_MOD_EUC_BOX_LID_OPEN,
+} hl_mod_euc_box_lid_state_e;
 
 typedef enum _hl_mod_euc_charge_state_e
 {
