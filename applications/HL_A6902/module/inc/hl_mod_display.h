@@ -113,6 +113,8 @@ typedef enum _hl_screen_page_e
     PAGE_LOGO,
     /// 主页面
     PAGE_HOME,
+    /// @brief 在盒子外关机充电页面
+    PAGE_POWEROFF_CHARGE,
     /// 一级菜单页面
     PAGE_MAIN_MENU,
     /// 模式选择页面
@@ -138,7 +140,8 @@ typedef enum _hl_screen_page_e
     PAGE_AUTO_POWEROFF,
     /// TXLED亮度调节
     PAGE_TX_LED_BRIGHT,
-    
+    /// @brief 盒子页面
+    PAGE_BOX_IN,
     /// 降噪强度
     PAGE_NOISE_REDUCTION_INTENSITY,
 
@@ -182,6 +185,8 @@ typedef enum _hl_screen_page_e
     // PAGE_LINE_OUT_MONO,
     // LINE OUT快捷设置
     PAGE_QUICK_SETTINGS,
+    /// 配对中页面
+    PAGE_PARING,
     ///  页面总数
     PAGE_MAX,  
 
@@ -224,6 +229,29 @@ typedef enum _hl_display_voice_monitor_e
 
 }HL_ENUM8(hl_display_voice_monitor_e);
 
+typedef enum _hl_display_box_charge_state
+{
+    /// RX 未入盒子
+    BOX_CHARGE_RX_NOT = 0,
+    /// TX1 2 RX都入盒子
+    BOX_CHARGE_RX_TX12,
+    /// TX1 RX入盒子
+    BOX_CHARGE_RX_TX1,
+    /// TX2 RX入盒子
+    BOX_CHARGE_RX_TX2,
+    /// @brief  RX单独在盒子
+    BOX_CHARGE_RX,
+}HL_ENUM8(hl_display_box_charge_state);
+
+typedef enum _hl_display_out_box_charge_state
+{
+    /// @brief 正常上电空闲态
+    OUTBOX_OFFCHARGE_IDLE = 0,
+    /// @brief 进入关机充电页面
+    OUTBOX_OFFCHARGE_OFFPAGE,
+    /// @brief 进入LOGO页面
+    OUTBOX_OFFCHARGE_LOGO,
+}HL_ENUM8(hl_display_out_box_charge_state);
 
 typedef enum _hl_display_sound_module_e
 {
@@ -372,8 +400,8 @@ typedef enum _hl_cmd_e
     /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
-    /// 放入盒子状态 1：盒子中 0 ：正常 uint8_t 
-    IN_BOX_STATE_SWITCH_CMD,
+    /// 放入盒子状态 1：盒子中 0 ：正常 < hl_display_box_charge_state>
+    IN_BOX_STATE_VAL_CMD,
 
     /// 自动录制状态 1：开启  0：关闭 ，
     AUTO_RECORD_SWITCH_CMD,
@@ -472,6 +500,9 @@ typedef enum _hl_cmd_e
 
     /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_CMD,
+
+    /// 关机充电 页面 <hl_display_out_box_charge_state> 1 表示进入充电页面  2表示进入LOGO页面 0表示不进入任何页面
+    OUT_BOX_CHARGER_SWITCH_CMD,
 
     MSG_ID_CNT
     
