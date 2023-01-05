@@ -158,6 +158,7 @@ static lv_obj_t * lv_con_scr_creat(lv_coord_t x_size,lv_coord_t y_size)
     lv_obj_t * con;
     con = lv_obj_create(lv_scr_act());
     lv_obj_add_style(con,&style_screen,0);
+    lv_obj_set_scroll_dir(con,LV_DIR_HOR);
     lv_obj_align(con, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);

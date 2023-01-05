@@ -47,8 +47,8 @@ static uint8_t charger_alive = 1;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
+    uint8_t                          param      = OUTBOX_OFFCHARGE_LOGO;
     static uint16_t                  hold_times = 0;
-    uint8_t param = OUTBOX_OFFCHARGE_LOGO;
     static hl_charger_power_on_stm_e state      = EM_CHARGER_POWER_ON_STM_IDLE;
     switch (state) {
         case EM_CHARGER_POWER_ON_STM_IDLE:
@@ -141,7 +141,7 @@ static void _hl_app_mng_charger_pm_process(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND:
-            soc_temp    = *(uint8_t*)p_msg->param.ptr;
+            soc_temp = *(uint8_t*)p_msg->param.ptr;
 #if HL_IS_TX_DEVICE()
             tx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(LED_BATTERY_VAL_CMD, &soc_temp, 1);
