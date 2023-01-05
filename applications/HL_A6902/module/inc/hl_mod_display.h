@@ -251,6 +251,8 @@ typedef enum _hl_display_out_box_charge_state
     OUTBOX_OFFCHARGE_OFFPAGE,
     /// @brief 进入LOGO页面
     OUTBOX_OFFCHARGE_LOGO,
+    /// @brief 关机的RX放入盒子
+    INBOX_OFFCHARGE_BOXPAGE
 }HL_ENUM8(hl_display_out_box_charge_state);
 
 typedef enum _hl_display_sound_module_e
@@ -400,8 +402,11 @@ typedef enum _hl_cmd_e
     /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
-    /// 放入盒子状态 1：盒子中 0 ：正常 < hl_display_box_charge_state>
+    /// 放入盒子状态  < hl_display_box_charge_state>
     IN_BOX_STATE_VAL_CMD,
+    /// @brief 放入盒子盖子状态  0盖子打开   1 盖子关闭
+    IN_BOX_CAP_STATE_SWITCH_CMD,
+    
 
     /// 自动录制状态 1：开启  0：关闭 ，
     AUTO_RECORD_SWITCH_CMD,
