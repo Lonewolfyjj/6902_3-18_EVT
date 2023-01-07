@@ -657,8 +657,8 @@ void hl_mod_main_ioctl(void * ctl_data)
                 lv_bar_anim_ctl(&animation_tx1,tx1_value_start,ptr->tx_device_1.volume,ANIMAtION_TIME_DOWN);
                 lv_topbar_anim_ctl(&animation_top_tx1,tx1_value_start,ptr->tx_device_1.volume,VOICE_TOP_BAR_DELAY);
             } 
-            lv_snprintf(buf, sizeof(buf), "%d", ptr->tx_device_1.volume);
-            lv_label_set_text(voice_lab_tx1,buf);
+            // lv_snprintf(buf, sizeof(buf), "%d", ptr->tx_device_1.volume);
+            // lv_label_set_text(voice_lab_tx1,buf);
             tx1_value_start = ptr->tx_device_1.volume;
             main_init.tx_device_1.volume = ptr->tx_device_1.volume; 
             break;
@@ -692,8 +692,8 @@ void hl_mod_main_ioctl(void * ctl_data)
                 lv_bar_anim_ctl(&animation_tx2,tx2_value_start,ptr->tx_device_2.volume,ANIMAtION_TIME_DOWN);
                 lv_topbar_anim_ctl(&animation_top_tx2,tx2_value_start,ptr->tx_device_2.volume,VOICE_TOP_BAR_DELAY);
             } 
-            lv_snprintf(buf, sizeof(buf), "%d", ptr->tx_device_2.volume);
-            lv_label_set_text(voice_lab_tx2,buf);
+            // lv_snprintf(buf, sizeof(buf), "%d", ptr->tx_device_2.volume);
+            // lv_label_set_text(voice_lab_tx2,buf);
             tx2_value_start = ptr->tx_device_2.volume;
             main_init.tx_device_2.volume = ptr->tx_device_2.volume; 
             break;
