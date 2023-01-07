@@ -31,7 +31,7 @@
  * EOF
  */
 #include "hl_mod_display.h"
-#include "page_holding.h"
+
 #if !HL_IS_TX_DEVICE()
 
 #include "hl_drv_aw2016a.h"
@@ -378,13 +378,7 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 //     };
 //     hl_mod_arc_init(&init);
 // }
-void fafasf(void)
-{
-    hl_lvgl_holding_init_t ini = {
-        .electric = 100,
-    };
-    hl_mod_holding_init(&ini);
-}
+
 // RX
 static void hl_mod_display_task(void* param)
 {
@@ -393,11 +387,10 @@ static void hl_mod_display_task(void* param)
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
     lv_obj_add_style(lv_scr_act(), &style, 0);
-    fafasf();
     while (1) {
-        // hl_mod_screen_rot_scan();
-        // hl_mod_outbox_offcharge_scan();
-        // hl_mod_page_goto_box_scan();
+        hl_mod_screen_rot_scan();
+        hl_mod_outbox_offcharge_scan();
+        hl_mod_page_goto_box_scan();
         
         // PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
