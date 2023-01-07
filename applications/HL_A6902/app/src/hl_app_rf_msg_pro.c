@@ -82,6 +82,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     uint8_t            tx2_rssi;
     uint8_t            *ptr;
     hl_rf_state_e      rf_state;
+    hl_rf_bypass_value_t *ptr_rf_value;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -124,6 +125,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             
         case HL_RF_BYPASS_SETTING_IND:
             LOG_D("app get setting indicate");
+            break;
+            
+        case HL_RF_BYPASS_BATTERY_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            LOG_D("app get TX%d battery(%d)", ptr_rf_value->chn, ptr_rf_value->val);
             break;
 
         default:
