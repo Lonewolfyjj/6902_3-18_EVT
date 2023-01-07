@@ -91,13 +91,14 @@ static hl_display_screen_s hl_screendata = {
     .led_britness             = 127,
     .tx1_remained_record_time = 10,
     .tx2_remained_record_time = 10,
-    .ota_upgrade_progress     = 0,
+    .upgrade_progress         = 0,
+    .upgrade_status           = HL_UPGRADE_STATUS_NORMAL,
     .tx1_ver                  = "V0.0.0.0",
     .tx2_ver                  = "V0.0.0.0",
 #if A6902_RX_HL_EN || A6902_RX_HL_CH
-    .rx_ver                   = A6902_VERSION,
+    .rx_ver = A6902_VERSION,
 #else
-    .rx_ver                   = "V0.0.0.0",
+    .rx_ver = "V0.0.0.0",
 #endif
 
     .sn = "00000000000000000000",
@@ -701,6 +702,25 @@ void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer)
     hl_util_timeout_close(&timer->timer);
 }
 
+void hl_mod_display_upgrade_enter(void)
+{
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+
+    if (PAGE_UPGRADE == PageManager_GetNowPage()) {
+        return;
+    }
+
+    if (flag->upgrade_status) {
+        hl_mod_display_mux_take();
+        flag->upgrade_status = 0;
+        rt_kprintf("upgrade");
+        if (data_ptr->upgrade_status != HL_UPGRADE_STATUS_NORMAL) {
+            PageManager_PagePush(PAGE_UPGRADE);
+        }
+        hl_mod_display_mux_release();
+    }
+}
 
 uint8_t hl_mod_display_msq_set(rt_mq_t msq)
 {
@@ -749,6 +769,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_LOGO);
     PAGE_REG(PAGE_POWEROFF_CHARGE);
     PAGE_REG(PAGE_PARING);
+    PAGE_REG(PAGE_UPGRADE);
 }
 
 void lvgl2rtt_init(void)

@@ -106,7 +106,7 @@ static void hl_mod_display_data_init(void)
     now->led_britness             = 127;
     now->tx1_remained_record_time = 10;
     now->tx2_remained_record_time = 10;
-    now->ota_upgrade_progress     = 0;
+    now->upgrade_progress         = 0;
     //  //后续要改
     //  rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
     //  rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
@@ -392,6 +392,17 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                     break;
             }
         } break;
+        case UPDATE_REMAINED_VAL_CMD: {
+            uint8_t data             = *(uint8_t*)ptr;
+            data_p->upgrade_progress = data;
+            flag->upgrade_progress   = 1;
+
+        } break;
+        case UPDATE_STATE_CMD: {
+            hl_upgrade_status data = *(hl_upgrade_status*)ptr;
+            data_p->upgrade_status = data;
+            flag->upgrade_status = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -418,9 +429,10 @@ static void hl_mod_display_task(void* param)
     lv_obj_add_style(lv_scr_act(), &style, 0);
     while (1) {
         hl_mod_screen_rot_scan();
+        hl_mod_display_upgrade_enter();
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
-
+        
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();

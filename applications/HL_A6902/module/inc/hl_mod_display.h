@@ -182,7 +182,8 @@ typedef enum _hl_screen_page_e
     /// 快捷LINE OUT输出音量页面(立体声,右声道)
     PAGE_LINE_OUT_STEREO_RIGHT,
     // /// 快捷LINE OUT输出音量页面(单声道)
-    // PAGE_LINE_OUT_MONO,
+    /// 设备升级页面
+    PAGE_UPGRADE,
     // LINE OUT快捷设置
     PAGE_QUICK_SETTINGS,
     /// 配对中页面
@@ -210,6 +211,18 @@ typedef enum _hl_display_low_cut_e
     LOW_CUT_150HZ,
 
 }HL_ENUM8(hl_display_low_cut_e);
+
+typedef enum _hl_upgrade_status
+{
+    /// @brief  未升级
+    HL_UPGRADE_STATUS_NORMAL,
+    /// @brief 升级中
+    HL_UPGRADE_STATUS_UPGRADE,
+    /// @brief 升级成功
+    HL_UPGRADE_STATUS_SUCCESS,
+    /// @brief 升级失败
+    HL_UPGRADE_STATUS_FAIL
+} HL_ENUM8(hl_upgrade_status);
 
 typedef enum _hl_display_vocie_mode_e
 {
@@ -397,8 +410,7 @@ typedef enum _hl_cmd_e
     TX1_MUTE_SWITCH_SWITCH_CMD,
     TX2_MUTE_SWITCH_SWITCH_CMD,
 
-    /// 升级状态 <uint8_t>类型 1：升级中 0 ：正常
-    OTA_UPDATE_STATE_SWITCH_CMD,
+
     /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
@@ -422,9 +434,10 @@ typedef enum _hl_cmd_e
     /* *******************************参数相关******************/
     // Rx当前无线通讯状态，参数<hl_rf_state_e>
     RX_RF_STATE_VAL_CMD,
-
+    /// 升级状态下发 <hl_upgrade_status>
+    UPDATE_STATE_CMD,
     /// 升级进度下发 0-100 <uint8_t>
-    OTA_UPDATE_REMAINED_VAL_CMD,
+    UPDATE_REMAINED_VAL_CMD,
 
     /// 整个系统的故障信息(故障码) 单个故障信息传入，<uint8_t>
     DEVICE_FAULT_CODE_VAL_CMD,
