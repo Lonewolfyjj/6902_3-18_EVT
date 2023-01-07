@@ -47,7 +47,6 @@ static uint8_t charger_alive = 1;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
-    uint8_t                          param      = OUTBOX_OFFCHARGE_LOGO;
     static uint16_t                  hold_times = 0;
     static hl_charger_power_on_stm_e state      = EM_CHARGER_POWER_ON_STM_IDLE;
     switch (state) {
@@ -78,14 +77,15 @@ static void _hl_app_mng_charger_power_on_stm()
         case EM_CHARGER_POWER_ON_STM_PROCESS:
             LOG_D("charge process\r\n");
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
-                // 告诉显示模块正常开机
-                hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &param, 1);
-                hl_app_mng_powerOn();
 #if HL_IS_TX_DEVICE()
                 tx_info.on_off_flag = 1;
 #else
+                uint8_t param = OUTBOX_OFFCHARGE_LOGO;
+                // 告诉显示模块正常开机
+                hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &param, 1);
                 rx_info.on_off_flag = 1;
 #endif
+                hl_app_mng_powerOn();
                 charger_alive = 0;
             } else {
             }
