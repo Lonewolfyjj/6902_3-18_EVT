@@ -34,19 +34,21 @@
 
 typedef struct _hl_s_rf_info_t
 {
-    uint8_t              local_mac[6];
-    hl_rf_remote_mac_t   remote;
-    hl_rf_version_t      version;
-    hl_rf_pair_info_t    mac;
-    hl_rf_rssi_t         rssi;
-    hl_rf_bypass_state_t mute;
-    hl_rf_bypass_state_t denoise;
-    hl_rf_bypass_state_t low_cut;
-    hl_rf_bypass_state_t record;
-    hl_rf_bypass_state_t auto_record;
-    hl_rf_bypass_state_t record_protect;
-    hl_rf_bypass_value_t volume;
-    hl_rf_bypass_value_t battery;
+    uint8_t                local_mac[6];
+    hl_rf_remote_mac_t     remote_mac;
+    hl_rf_version_t        version;
+    hl_rf_pair_info_t      mac;
+    hl_rf_rssi_t           rssi;
+    hl_rf_bypass_version_t remote_version;
+    hl_rf_bypass_state_t   mute;
+    hl_rf_bypass_state_t   denoise;
+    hl_rf_bypass_state_t   low_cut;
+    hl_rf_bypass_state_t   record;
+    hl_rf_bypass_state_t   auto_record;
+    hl_rf_bypass_state_t   record_protect;
+    hl_rf_bypass_value_t   volume;
+    hl_rf_bypass_value_t   battery;
+    hl_rf_bypass_value_t   auto_poweroff;
 } hl_rf_info_t;
 
 /* define --------------------------------------------------------------------*/
@@ -164,15 +166,15 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 
         case HL_RF_GET_REMOTE_MAC_IND:
 #if HL_IS_TX_DEVICE()
-            memcpy(s_rf_info.remote.rx_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->rx_mac, 6);
+            memcpy(s_rf_info.remote_mac.rx_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->rx_mac, 6);
             rt_kprintf("\n\nTelink Remote MAC Addr:\n[RX]: ");
             for (int i = 0; i < 6; i++) {
                 rt_kprintf("%02X ", hup_frame.data_addr[i]);
             }
             rt_kprintf("\n\n\n");
 #else
-            memcpy(s_rf_info.remote.tx1_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx1_mac, 6);
-            memcpy(s_rf_info.remote.tx2_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx2_mac, 6);
+            memcpy(s_rf_info.remote_mac.tx1_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx1_mac, 6);
+            memcpy(s_rf_info.remote_mac.tx2_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx2_mac, 6);
             rt_kprintf("\n\nTelink Remote MAC Addr:\n[TX_L]: ");
             for (int i = 0; i < 12; i++) {
                 rt_kprintf("%02X ", hup_frame.data_addr[i]);
@@ -182,8 +184,8 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             }
             rt_kprintf("\n\n\n");
 #endif
-            app_msg_t.len       = sizeof(s_rf_info.remote);
-            app_msg_t.param.ptr = (uint8_t*)&s_rf_info.remote;
+            app_msg_t.len       = sizeof(s_rf_info.remote_mac);
+            app_msg_t.param.ptr = (uint8_t*)&s_rf_info.remote_mac;
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -245,6 +247,21 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
         case HL_RF_BYPASS_FORMAT_DISK_IND:
             app_msg_t.len             = sizeof(uint32_t);
             app_msg_t.param.u32_param = (uint32_t)hup_frame.data_addr[0];
+            break;
+
+        case HL_RF_BYPASS_AUTO_POWEROFF_IND:
+            s_rf_info.auto_poweroff.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.auto_poweroff.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len               = sizeof(s_rf_info.auto_poweroff);
+            app_msg_t.param.ptr         = (uint8_t*)&s_rf_info.auto_poweroff;
+            break;
+
+        case HL_RF_BYPASS_VERSION_IND:
+            s_rf_info.remote_version.chn     = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->chn;
+            s_rf_info.remote_version.mcu_ver = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->mcu_ver;
+            s_rf_info.remote_version.rf_ver  = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->rf_ver;
+            app_msg_t.len                    = sizeof(s_rf_info.remote_version);
+            app_msg_t.param.ptr              = (uint8_t*)&s_rf_info.remote_version;
             break;
 
         default:

@@ -73,6 +73,10 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_FORMAT_DISK_CMD = 0x28,
     /// 透传低切开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_LOWCUT_CMD = 0x29,
+    /// 透传自动关机时间：类型hl_rf_bypass_value_t
+    HL_RF_BYPASS_AUTO_POWEROFF_CMD = 0x2a,
+    /// 透传版本信息：类型hl_rf_bypass_version_t
+    HL_RF_BYPASS_VERSION_CMD = 0x2b,
 } HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -113,6 +117,10 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_FORMAT_DISK_IND = 0x28,
     /// 返回低切开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_LOWCUT_IND = 0x29,
+    /// 返回自动关机时间：类型hl_rf_bypass_value_t
+    HL_RF_BYPASS_AUTO_POWEROFF_IND = 0x2a,
+    /// 返回版本信息：类型hl_rf_bypass_version_t
+    HL_RF_BYPASS_VERSION_IND = 0x2b,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_channel_e
@@ -218,6 +226,16 @@ typedef struct
     /// 透传数值
     uint8_t val;
 } hl_rf_bypass_value_t;
+
+typedef struct
+{
+    /// 透传声道
+    hl_rf_channel_e chn;
+    /// 透传MCU版本号
+    hl_rf_version_t mcu_ver;
+    /// 透传RF版本号
+    hl_rf_version_t rf_ver;
+} hl_rf_bypass_version_t;
 
 typedef struct
 {
