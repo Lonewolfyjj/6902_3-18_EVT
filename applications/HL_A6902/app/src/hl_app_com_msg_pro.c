@@ -29,6 +29,7 @@
 
 #include "hl_mod_euc.h"
 #include "hl_mod_display.h"
+#include "hl_mod_telink.h"
 
 #define DBG_SECTION_NAME "app_com"
 #define DBG_LEVEL DBG_LOG
@@ -38,9 +39,10 @@
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 
-static bool _rx_in_box_flag = false;
-static bool _tx1_in_box_flag = false;
-static bool _tx2_in_box_flag = false;
+static bool    _rx_in_box_flag  = false;
+static bool    _tx1_in_box_flag = false;
+static bool    _tx2_in_box_flag = false;
+static uint8_t _dev_num;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 #if HL_IS_TX_DEVICE()
@@ -75,26 +77,55 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t*                  rx_mac_addr;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
 
+    hl_rf_work_mode_e telink_work_mode;
+    hl_rf_pair_info_t telink_pair_info;
+
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            LOG_I("in box!");
+            _dev_num = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", _dev_num);
+
+            telink_work_mode = HL_RF_LOW_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
+
+            telink_work_mode = HL_RF_FULL_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = tx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
         case HL_GET_PAIR_MAC_REQ_IND: {  // 请求获取已经配对的mac地址
+            hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &pair_mac_temp, sizeof(pair_mac_temp));
+
+            LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", pair_mac_temp[0], pair_mac_temp[1],
+                  pair_mac_temp[2], pair_mac_temp[3], pair_mac_temp[4], pair_mac_temp[5]);
+
             hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
         } break;
         case HL_SET_PAIR_MAC_REQ_IND: {  // 请求设置rx的mac地址，为有线配对的流程
             rx_mac_addr = (uint8_t*)p_msg->param.ptr;
+
+            if (_dev_num == 1) {    // tx1 左声道
+                telink_pair_info.chn = HL_RF_LEFT_CHANNEL;
+            } else {                // tx2 右声道
+                telink_pair_info.chn = HL_RF_RIGHT_CHANNEL;
+            }
+            rt_memcpy(telink_pair_info.mac, rx_mac_addr, sizeof(telink_pair_info.mac));
+            hl_mod_telink_ioctl(HL_RF_SET_REMOTE_MAC_CMD, &telink_pair_info, sizeof(telink_pair_info));
+
             LOG_I("rx mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", rx_mac_addr[0],
                   rx_mac_addr[1], rx_mac_addr[2], rx_mac_addr[3], rx_mac_addr[4], rx_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
+            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+
+            LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0], dev_mac_temp[1],
+                  dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
+
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
@@ -127,17 +158,29 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_rtc_st          rtc_time_temp = { 0 };
     hl_mod_euc_box_lid_state_e box_lid_state_temp;
 
-    uint8_t temp;
+    uint8_t           temp;
+    hl_rf_work_mode_e telink_work_mode;
+    hl_rf_pair_info_t telink_pair_info;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            LOG_I("in box!");
             _rx_in_box_flag = true;
+            _dev_num = *(uint8_t*)p_msg->param.ptr;
+
+            LOG_I("in box! dev_num:%d", _dev_num);
+
+            telink_work_mode = HL_RF_LOW_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+
             _display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
             _rx_in_box_flag = false;
+
+            telink_work_mode = HL_RF_FULL_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+
             _display_in_box_state_set();
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
@@ -164,27 +207,42 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         } break;
         case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
             tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
-            _tx1_in_box_flag = tx1_in_box_flag_temp;
+            _tx1_in_box_flag     = tx1_in_box_flag_temp;
             _display_in_box_state_set();
             LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
         } break;
         case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
             tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
-            _tx2_in_box_flag = tx2_in_box_flag_temp;
+            _tx2_in_box_flag     = tx2_in_box_flag_temp;
             _display_in_box_state_set();
             LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
         } break;
         case HL_SET_PAIR_MAC_TX1_REQ_IND: {  //请求设置tx1的mac地址来配对
             tx1_mac_addr = (uint8_t*)p_msg->param.ptr;
+
+            telink_pair_info.chn = HL_RF_LEFT_CHANNEL;
+            rt_memcpy(telink_pair_info.mac, tx1_mac_addr, sizeof(telink_pair_info.mac));
+            hl_mod_telink_ioctl(HL_RF_SET_REMOTE_MAC_CMD, &telink_pair_info, sizeof(telink_pair_info));
+
             LOG_I("tx1 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", tx1_mac_addr[0],
                   tx1_mac_addr[1], tx1_mac_addr[2], tx1_mac_addr[3], tx1_mac_addr[4], tx1_mac_addr[5]);
         } break;
         case HL_SET_PAIR_MAC_TX2_REQ_IND: {  //请求设置tx2的mac地址来配对
             tx2_mac_addr = (uint8_t*)p_msg->param.ptr;
+
+            telink_pair_info.chn = HL_RF_RIGHT_CHANNEL;
+            rt_memcpy(telink_pair_info.mac, tx2_mac_addr, sizeof(telink_pair_info.mac));
+            hl_mod_telink_ioctl(HL_RF_SET_REMOTE_MAC_CMD, &telink_pair_info, sizeof(telink_pair_info));
+
             LOG_I("tx2 mac addr write success! [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", tx2_mac_addr[0],
                   tx2_mac_addr[1], tx2_mac_addr[2], tx2_mac_addr[3], tx2_mac_addr[4], tx2_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  //请求获取自己的Mac地址
+            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+
+            LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", dev_mac_temp[0], dev_mac_temp[1],
+                  dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
+
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
         } break;
         case HL_TX1_PAIR_START_IND: {  //请求开始Tx1有线配对

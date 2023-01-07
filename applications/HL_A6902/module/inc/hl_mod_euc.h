@@ -50,7 +50,7 @@ typedef enum _hl_mod_euc_cmd_e
 
 typedef enum _hl_mod_euc_ind_e
 {
-    /// 通知 app 设备放入收纳盒，无参数。
+    /// 通知 app 设备放入收纳盒，参数为<uint8_t> (0:Rx 1:tx1 2:tx2)。
     HL_IN_BOX_IND,
     /// 通知 app 设备离开收纳盒，无参数。
     HL_OUT_BOX_IND,
@@ -88,7 +88,7 @@ typedef enum _hl_mod_euc_cmd_e
 
 typedef enum _hl_mod_euc_ind_e
 {
-    /// 通知 app 设备放入收纳盒，无参数。
+    /// 通知 app 设备放入收纳盒，参数为<uint8_t> (0:Rx 1:tx1 2:tx2)。
     HL_IN_BOX_IND,
     /// 通知 app 设备离开收纳盒，无参数。
     HL_OUT_BOX_IND,
@@ -142,6 +142,7 @@ typedef enum _hl_mod_euc_box_lid_state_e
 
 typedef enum _hl_mod_euc_charge_state_e
 {
+    HL_MOD_EUC_CHARGE_STATE_UNKNOWN   = 0,
     HL_MOD_EUC_CHARGE_STATE_NO_CHARGE = 1,
     HL_MOD_EUC_CHARGE_STATE_CHARGING,
     HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL,
@@ -164,7 +165,6 @@ typedef struct _hl_mod_euc_rtc_st
     ///年
     uint8_t year;
 } hl_mod_euc_rtc_st;
-
 /* define --------------------------------------------------------------------*/
 
 #define HL_MOD_EUC_FUNC_RET_ERR 1

@@ -77,6 +77,7 @@ typedef struct _hl_mod_euc
 {
     bool                       init_flag;
     bool                       start_flag;
+    uint8_t                    dev_num;
     uint8_t                    tx1_bat_info;
     uint8_t                    tx2_bat_info;
     uint8_t                    box_bat_info;
@@ -220,13 +221,18 @@ static int _hid_send_hup_data(char cmd, char* buf, int len)
 static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
     uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
-    uint8_t  tx_num = 1;
     uint8_t  result = 0;
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &tx_num, sizeof(tx_num));
-            _mod_msg_send(HL_IN_BOX_IND, NULL, 0);
+            if (hup_frame.data_addr[0] == 0) {
+                break;
+            }
+
+            _euc_mod.dev_num = hup_frame.data_addr[0];
+
+            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
@@ -271,8 +277,14 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &rx_num, sizeof(rx_num));
-            _mod_msg_send(HL_IN_BOX_IND, NULL, 0);
+            if (hup_frame.data_addr[0] != 0) {
+                break;
+            }
+
+            _euc_mod.dev_num = 0;
+
+            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
