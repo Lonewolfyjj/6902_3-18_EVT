@@ -87,6 +87,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 
             telink_work_mode = HL_RF_LOW_POWER;
             hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+
+            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, NULL, 0);
+            hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, NULL, 0);
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
@@ -99,7 +102,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
         case HL_GET_PAIR_MAC_REQ_IND: {  // 请求获取已经配对的mac地址
-            hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &pair_mac_temp, sizeof(pair_mac_temp));
+            rt_memcpy(pair_mac_temp, tx_info.remote_mac, sizeof(pair_mac_temp));
 
             LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", pair_mac_temp[0], pair_mac_temp[1],
                   pair_mac_temp[2], pair_mac_temp[3], pair_mac_temp[4], pair_mac_temp[5]);
@@ -121,7 +124,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   rx_mac_addr[1], rx_mac_addr[2], rx_mac_addr[3], rx_mac_addr[4], rx_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
-            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            rt_memcpy(dev_mac_temp, rx_info.local_mac, sizeof(dev_mac_temp));
 
             LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0], dev_mac_temp[1],
                   dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
@@ -171,6 +174,8 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 
             telink_work_mode = HL_RF_LOW_POWER;
             hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+
+            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
 
             _display_in_box_state_set();
         } break;
@@ -238,7 +243,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   tx2_mac_addr[1], tx2_mac_addr[2], tx2_mac_addr[3], tx2_mac_addr[4], tx2_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  //请求获取自己的Mac地址
-            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            rt_memcpy(dev_mac_temp, rx_info.local_mac, sizeof(dev_mac_temp));
 
             LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", dev_mac_temp[0], dev_mac_temp[1],
                   dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
