@@ -73,6 +73,7 @@ static void hl_mod_page_exit(void)
 {
     rt_kprintf("exitPAGE_LOGO\n");
     hl_mod_page_screenofftimer_close(&logo_page_timer);
+    lv_obj_add_flag(img_obj,LV_OBJ_FLAG_HIDDEN);
     lv_obj_del_delayed(img_obj,0);   
 }
 
