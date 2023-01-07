@@ -50,7 +50,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     uint8_t         *ptr;
     hl_rf_state_e   rf_state;
 
-    LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
+    // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
             ptr = (uint8_t *)p_msg->param.ptr;
@@ -83,7 +83,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     uint8_t            *ptr;
     hl_rf_state_e      rf_state;
 
-    LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
+    // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
             ptr = (uint8_t *)p_msg->param.ptr;
