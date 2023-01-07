@@ -121,6 +121,11 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   rx_mac_addr[1], rx_mac_addr[2], rx_mac_addr[3], rx_mac_addr[4], rx_mac_addr[5]);
         } break;
         case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
+            hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+
+            LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0], dev_mac_temp[1],
+                  dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
+
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
