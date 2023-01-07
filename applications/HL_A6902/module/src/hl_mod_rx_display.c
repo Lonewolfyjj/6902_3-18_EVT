@@ -392,7 +392,7 @@ static void hl_mod_display_task(void* param)
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
         
-        // PageManager_Running();
+        PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
