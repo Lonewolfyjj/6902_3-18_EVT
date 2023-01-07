@@ -218,34 +218,28 @@ static void hl_mod_page_state_update(void)
     }
 }
 
-static  void fast_conf_init(void)
-{    
-    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+static void hl_mod_page_setup(void)
+{
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     opt1_choose = tx1_record_switch(data_ptr);
     opt2_choose = tx1_mute_switch(data_ptr);
     opt3_choose = tx1_noise_switch(data_ptr);
 
-    hl_lvgl_moreone_init_t data = 
-    {
-        .func_cb = hl_moreone_test_cb,
-        .moreone_choose_opt.option_one = opt1_choose,
-        .moreone_choose_opt.option_two = opt2_choose,
+    hl_lvgl_moreone_init_t data = {
+        .func_cb                         = hl_moreone_test_cb,
+        .moreone_choose_opt.option_one   = opt1_choose,
+        .moreone_choose_opt.option_two   = opt2_choose,
         .moreone_choose_opt.option_three = opt3_choose,
-        .moreone_mid_opt = HL_MOREONE_OPTION_ONE,
+        .moreone_mid_opt                 = HL_MOREONE_OPTION_ONE,
+        .device_ptr                      = "TX1",
     };
 
     hl_mod_moreone_init(&data);
 
-    now_opt.moreone_choose = opt1_choose;
+    now_opt.moreone_choose     = opt1_choose;
     now_opt.moreone_choose_opt = data.moreone_mid_opt;
     hl_mod_knob_select_val_set(&now_num, opt1_choose);
-}
-
-
-static void hl_mod_page_setup(void)
-{
-    fast_conf_init();
 }
 
 static void hl_mod_page_exit(void)
@@ -288,7 +282,6 @@ static void hl_mod_page_loop(void)
     if (1 == hl_mod_keypad_touchkey_read()) {
         now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
         hl_mod_moreone_ioctl(&now_opt);
-        rt_thread_mdelay(50);
         PageManager_PagePop();
     }
 

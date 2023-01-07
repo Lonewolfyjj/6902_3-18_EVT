@@ -128,6 +128,7 @@ typedef struct _hl_display_screen_s
     char tx1_ver[10];
     char tx2_ver[10];
     char rx_ver[10];
+    char case_ver[10];
     char sn[36];
     char device_fault_code[20];
     // 显示系统当前状态信息
@@ -172,6 +173,11 @@ typedef struct _hl_display_screen_change_s{
     // 菜单复位时的状态
     uint32_t menu_defaut:1;
     uint32_t systime:1;
+    uint32_t tx1_ver:1;
+    uint32_t tx2_ver:1;
+    uint32_t rx_ver:1;
+    uint32_t case_ver:1;
+    uint32_t rx_sn:1;
 }hl_display_screen_change_s;
 
 

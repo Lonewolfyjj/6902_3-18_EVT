@@ -43,6 +43,7 @@
 #include "hl_util_msg_type.h"
 #include "hl_drv_qma6100p.h"
 #include "hl_util_timeout.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -68,57 +69,25 @@ static rt_thread_t display_tid = RT_NULL;
 
 static void hl_mod_screen_rot_scan(void);
 
-uint8_t hl_mod_display_out_task()
+static void hl_mod_display_get_version(void)
 {
-    return HL_DISPLAY_SUCCESS;
-}
-static void hl_mod_display_data_init(void)
-{
-    hl_display_screen_s*        now  = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_s*        data_ptr  = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
 
-    rt_memset(flag, 0, sizeof(*flag));
-    rt_memset(now, 0, sizeof(*now));
+    char sn_buf[36]     = { 0 };
+    char rx_ver_buf[36] = { 0 };
 
-    now->display_fault_code = 0;
-    now->monitor_category   = MONITOR_TX_IN;  //默认TX输入
-    now->voice_module       = HIGH_FIDELITY;
-    now->now_sound_module   = MONO;
-    now->down_sound_module  = MONO;
-    now->low_cut            = LOW_CUT_OFF;
-    now->page_id            = PAGE_NONE;
+    // 从NVRAM获取当前RX版本号
+    if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
+        rt_kprintf("HL_SN : %s\r\n", sn_buf);
+    }
+    if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
+        rt_kprintf("HL_VER : %s\r\n", rx_ver_buf);
+    }
 
-    now->tx1_bat_val              = 0;
-    now->tx2_bat_val              = 0;
-    now->rx_bat_val               = 0;
-    now->case_bat_val             = 0;
-    now->tx1_vu                   = 0;
-    now->tx2_vu                   = 0;
-    now->tx1_signal               = 0;
-    now->tx2_signal               = 0;
-    now->tx_noise_level           = 4;
-    now->tx1_line_out_volume      = 0;
-    now->tx2_line_out_volume      = 0;
-    now->uac_in_volume            = 0;
-    now->uac_out_volume           = 0;
-    now->tx1_gain_volume          = 0;
-    now->tx2_gain_volume          = 0;
-    now->led_britness             = 127;
-    now->tx1_remained_record_time = 10;
-    now->tx2_remained_record_time = 10;
-    now->upgrade_progress         = 0;
-    //  //后续要改
-    //  rt_sprintf(now->rx_ver,"%s",A6902_VERSION);
-    //  rt_sprintf(now->tx1_ver,"%s","V0.0.0.0");
-    //  rt_sprintf(now->tx2_ver,"%s","V0.0.0.0");
-    //  rt_sprintf(now->sn,"%s","00000000000000000000");
-    //  now->sn[36]; 0
-    //  now->device_fault_code[20]; 0
-    now->sys_status.auto_record = 0;
-    now->rf_net_connect         = 0;
-
-    now->sys_status.tx1_charge_status = 0;
-    LOG_D("init_data\n");
+    hl_mod_display_mux_take();
+    data_ptr->
+    hl_mod_display_mux_release();
 }
 
 static device_pose_t hl_mod_device_pose_val(void)
@@ -401,7 +370,37 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case UPDATE_STATE_CMD: {
             hl_upgrade_status data = *(hl_upgrade_status*)ptr;
             data_p->upgrade_status = data;
-            flag->upgrade_status = 1;
+            flag->upgrade_status   = 1;
+        } break;
+        case TX1_VER_STRING_CMD: {
+            char* buf = (char*)ptr;
+            len       = len > 10 ? 10 : len;
+            rt_memcpy(data_p->tx1_ver, buf, len);
+            flag->tx1_ver = 1;
+        } break;
+        case TX2_VER_STRING_CMD: {
+            char* buf = (char*)ptr;
+            len       = len > 10 ? 10 : len;
+            rt_memcpy(data_p->tx2_ver, buf, len);
+            flag->tx2_ver = 1;
+        } break;
+        case RX_VER_STRING_CMD: {
+            char* buf = (char*)ptr;
+            len       = len > 10 ? 10 : len;
+            rt_memcpy(data_p->rx_ver, buf, len);
+            flag->rx_ver = 1;
+        } break;
+        case CASE_VER_STRING_CMD: {
+            char* buf = (char*)ptr;
+            len       = len > 10 ? 10 : len;
+            rt_memcpy(data_p->case_ver, buf, len);
+            flag->case_ver = 1;
+        } break;
+        case RX_SN_STRING_CMD: {
+            char* buf = (char*)ptr;
+            len       = len > 36 ? 36 : len;
+            rt_memcpy(data_p->sn, buf, len);
+            flag->rx_sn = 1;
         } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
@@ -461,7 +460,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     // RX
     hl_drv_rm690a0_init();
     lvgl2rtt_init();
-    // hl_mod_display_data_init();
+
     hl_mod_page_all_init();
 
     hl_mod_display_mux_init();

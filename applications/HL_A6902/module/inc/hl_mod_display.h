@@ -173,6 +173,8 @@ typedef enum _hl_screen_page_e
     PAGE_OTHER_SET,
     /// TX快捷配置页面
     PAGE_FAST_TX_CONFIG,
+    /// TX快捷配置页面
+    PAGE_FAST_TX2_CONFIG,
     /// 单声道 立体声选择界面
     PAGE_SOUND_MODULE,
     //// 快捷LINE OUT输出音量页面(安全音轨)
@@ -495,15 +497,15 @@ typedef enum _hl_cmd_e
 
 
     /* *******************************字符相关******************/
-    /// TX1版本信息 ASCII码 10字节的BUF<char*>
+    /// TX1版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     TX1_VER_STRING_CMD,
-    /// TX2版本信息 ASCII码 10字节的BUF<char*>
+    /// TX2版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     TX2_VER_STRING_CMD,
-    /// RX版本信息 ASCII码 10字节的BUF<char*>
+    /// RX版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     RX_VER_STRING_CMD,
-    /// 盒子版本 （盒子中显示）ASCII码 10字节的BUF<char*>
+    /// 盒子版本 （盒子中显示）ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     CASE_VER_STRING_CMD,
-    /// SN号 ASCII码 32字节的BUF<char*>
+    /// SN号 ASCII码 32字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     RX_SN_STRING_CMD,
 
 

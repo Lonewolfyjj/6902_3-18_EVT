@@ -770,6 +770,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_POWEROFF_CHARGE);
     PAGE_REG(PAGE_PARING);
     PAGE_REG(PAGE_UPGRADE);
+    // PAGE_REG(PAGE_FAST_TX2_CONFIG);
 }
 
 void lvgl2rtt_init(void)

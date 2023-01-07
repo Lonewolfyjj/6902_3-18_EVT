@@ -97,6 +97,7 @@ static void hl_mod_page_loop(void)
             break;
         case HL_UPGRADE_STATUS_FAIL:
             ioctrl.upgrade_ioctl = HL_UPGRADE_CLEAR_CMD;
+            ioctrl.ptr = "升级失败";
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
             if (!status) {
                 status = 1;
