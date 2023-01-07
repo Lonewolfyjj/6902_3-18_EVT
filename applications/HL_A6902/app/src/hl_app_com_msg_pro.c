@@ -43,7 +43,9 @@ static bool _tx1_in_box_flag = false;
 static bool _tx2_in_box_flag = false;
 
 /* Private function(only *.c)  -----------------------------------------------*/
+#if HL_IS_TX_DEVICE()
 
+#else
 static void _display_in_box_state_set(void)
 {
     hl_display_box_charge_state display_box_charge_state;
@@ -62,7 +64,7 @@ static void _display_in_box_state_set(void)
 
     hl_mod_display_io_ctrl(IN_BOX_STATE_VAL_CMD, &display_box_charge_state, sizeof(display_box_charge_state));
 }
-
+#endif
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
