@@ -54,7 +54,7 @@ static lv_style_t style_power_bar_indicator,style_power_bar_main;
 static lv_style_t style_voice_label;
 static lv_style_t style_power_label;
 static lv_style_t style_device_label;
-static lv_style_t style_video_dot;
+static lv_style_t style_video_dot,style_power_bar_white_indicator,style_power_bar_red_indicator;
     
 static hl_lvgl_main_init_t main_init;
 /***************************************************************************************************/
@@ -152,6 +152,16 @@ static void lv_style_page1_init(void)
     lv_style_set_bg_opa(&style_video_dot, LV_OPA_COVER);
     lv_style_set_bg_color(&style_video_dot, lv_palette_main(LV_PALETTE_RED));//LV_RADIUS_CIRCLE
     lv_style_set_radius(&style_video_dot, LV_RADIUS_CIRCLE);
+
+    lv_style_init(&style_power_bar_white_indicator);
+    lv_style_set_bg_opa(&style_power_bar_white_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_white_indicator, lv_color_white());
+    lv_style_set_radius(&style_power_bar_white_indicator, 0);
+
+    lv_style_init(&style_power_bar_red_indicator);
+    lv_style_set_bg_opa(&style_power_bar_red_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_red_indicator, lv_palette_main(LV_PALETTE_RED));
+    lv_style_set_radius(&style_power_bar_red_indicator, 0);
 }
 
 static lv_obj_t * lv_area_creat_fun(lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high)
@@ -566,6 +576,8 @@ static void lv_delete_style(void)
     lv_style_reset(&style_power_label);
     lv_style_reset(&style_device_label);
     lv_style_reset(&style_video_dot);
+    lv_style_reset(&style_power_bar_white_indicator);
+    lv_style_reset(&style_power_bar_red_indicator);
 }
 
 static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
@@ -641,7 +653,14 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_set_vodeo_dot_status_cb(video_dot_tx1,ptr->tx_device_1.record);
             main_init.tx_device_1.record = ptr->tx_device_1.record; 
             break;
-
+        case HL_CHANGE_TX1_BAR_RED:
+            lv_obj_remove_style(power_bar_tx1,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx1,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            break;
+        case HL_CHANGE_TX1_BAR_WHITE:
+            lv_obj_remove_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            break;
 
         case HL_CHANGE_TX2_SIGNAL:
             lv_signal_tx2_set(ptr->tx_device_2.signal);
@@ -665,6 +684,16 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_set_vodeo_dot_status_cb(video_dot_tx2,ptr->tx_device_2.record);
             main_init.tx_device_2.record = ptr->tx_device_2.record; 
             break;
+        case HL_CHANGE_TX2_BAR_RED:
+            lv_obj_remove_style(power_bar_tx2,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx2,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            break;
+        case HL_CHANGE_TX2_BAR_WHITE:
+            lv_obj_remove_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            break;
+
+
         case HL_CHANGE_DELETE_TX1:
             hl_obj_delete(area_tx1,true);
         break;
