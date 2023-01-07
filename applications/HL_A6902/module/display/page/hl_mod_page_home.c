@@ -427,19 +427,30 @@ static void hl_mod_main_two_init()
 // top层初始化
 static void hl_mod_page_top_init(void)
 {
-
-    hl_lvgl_top_init_t top_init;
+    hl_display_sound_module_e now;
+    hl_lvgl_top_init_t        top_init;
 
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
 
     // 更新当前的RX电量信息
     top_init.electric_top = data_ptr->rx_bat_val;
     hl_mod_top_init(&top_init);
 
-    if (data_ptr->sound_module == STEREO) {
+    now = data_ptr->now_sound_module;
 
-        hl_mod_icon_deal(HL_TOP_ICON_TRACK_MOD, HL_TOP_ADD_ICON_CMD);
+    switch (now) {
+        case STEREO:
+            hl_mod_icon_deal(HL_TOP_ICON_STEREO_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+
+        case MONO:
+            hl_mod_icon_deal(HL_TOP_ICON_SINGLE_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+        case SAFE_TRACK:
+            hl_mod_icon_deal(HL_TOP_ICON_TRACK_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+        default:
+            break;
     }
 
     if (data_ptr->sys_status.tx1_noise || data_ptr->sys_status.tx2_noise) {

@@ -257,15 +257,13 @@ typedef enum _hl_display_out_box_charge_state
 
 typedef enum _hl_display_sound_module_e
 {
-    /// 立体声
-    STEREO = 0,
     /// 单声道,
-    MONO,
+    MONO = 0,
+    /// 立体声
+    STEREO,
     /// 安全音轨
     SAFE_TRACK,
-
-
-}HL_ENUM8(hl_display_sound_module_e);
+} HL_ENUM8(hl_display_sound_module_e);
 
 typedef enum _hl_display_fault_code_e
 {
@@ -319,7 +317,7 @@ typedef enum _hl_out_msg_e
     /// 降噪等级 uint8_t 
     TX_NOISE_LEVEL_VAL_IND,
 
-    /// TX lineout音量   int8_t
+    /// 立体声TX lineout音量   int8_t
     TX1_LINE_OUT_VOLUME_VAL_IND,
     TX2_LINE_OUT_VOLUME_VAL_IND,
 
@@ -328,8 +326,10 @@ typedef enum _hl_out_msg_e
 
     /// UAC 输出音量设置
     UAC_OUT_VOLUME_VAL_IND,
-    /// LINE_OUT音频音量 int8_t
-    LINE_OUT_VOLUME_VAL_IND,
+    /// 单声道LINE_OUT音频音量 int8_t
+    MONO_LINE_OUT_VOLUME_VAL_IND,
+    /// 安全音轨LINE_OUT音频音量 int8_t
+    SAFETRACK_LINE_OUT_VOLUME_VAL_IND,
 
     ///监听音量 int8_t
     MONITOR_VOLUME_VAL_IND,
@@ -458,12 +458,9 @@ typedef enum _hl_cmd_e
     TX1_GAIN_VAL_CMD,
     TX2_GAIN_VAL_CMD,
 
-    /// TX lineout音量   int8_t
+    /// TX lineout音量 (如果是单声道模式和安全音轨就是用TX1_LINE_OUT_VOLUME_VAL_CMD)  int8_t
     TX1_LINE_OUT_VOLUME_VAL_CMD,
     TX2_LINE_OUT_VOLUME_VAL_CMD,
-
-    /// LINE_OUT音频音量设置 int8_t
-    LINE_OUT_VOLUME_VAL_CMD,
 
     ///监听口音量设置 int8_t
     MONITOR_VOLUME_VAL_CMD,

@@ -88,7 +88,8 @@ typedef struct _hl_display_screen_s
     /// 监听类别
     hl_display_voice_monitor_e monitor_category;
     hl_display_vocie_mode_e voice_module;
-    hl_display_sound_module_e sound_module;
+    hl_display_sound_module_e down_sound_module;
+    hl_display_sound_module_e now_sound_module;
     hl_display_low_cut_e low_cut;
     hl_screen_page_e page_id;
     hl_display_box_charge_state in_box_state;
@@ -104,9 +105,14 @@ typedef struct _hl_display_screen_s
     uint8_t tx2_signal;
     /// 降噪等级设置
     uint8_t tx_noise_level;
+    /// @brief 立体声的左声道的音量
     int8_t tx1_line_out_volume;
+    /// @brief 立体声的右声道的音量
     int8_t tx2_line_out_volume;
+    /// @brief 单声道的音量
     int8_t mono_line_out_volume;
+    /// @brief 安全音轨的音量
+    int8_t  track_line_out_volume;
     int8_t uac_in_volume;
     int8_t uac_out_volume;
     int8_t tx1_gain_volume;
@@ -149,6 +155,8 @@ typedef struct _hl_display_screen_change_s{
     uint32_t tx_noise_level:1;
     uint32_t tx1_line_out_volume:1;
     uint32_t tx2_line_out_volume:1;
+    uint32_t mono_line_out_volume:1;
+    uint32_t track_line_out_volume:1;
     uint32_t uac_in_volume:1;
     uint32_t uac_out_volume:1;
     uint32_t tx1_gain_volume:1;

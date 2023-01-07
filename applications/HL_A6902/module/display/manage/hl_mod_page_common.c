@@ -66,7 +66,8 @@ static hl_display_screen_s hl_screendata = {
     .display_fault_code       = 0,
     .monitor_category         = 0,
     .voice_module             = HIGH_FIDELITY,
-    .sound_module             = STEREO,
+    .now_sound_module         = MONO,
+    .down_sound_module        = MONO,
     .low_cut                  = LOW_CUT_OFF,
     .page_id                  = PAGE_NONE,
     .tx1_bat_val              = 0,
@@ -81,6 +82,7 @@ static hl_display_screen_s hl_screendata = {
     .tx1_line_out_volume      = 0,
     .tx2_line_out_volume      = 0,
     .mono_line_out_volume     = 0,
+    .track_line_out_volume    = 0,
     .uac_in_volume            = 0,
     .uac_out_volume           = 0,
     .tx1_gain_volume          = 0,
@@ -264,9 +266,28 @@ void hl_mod_menu_goto_fast_config_scan()
 // 旋钮进入快捷LINW OUT设置
 void hl_mod_menu_goto_quickset_scan()
 {
-    int8_t data = hl_mod_get_rx_knob_val();
-    if (data != 0) {
-        PageManager_PagePush(PAGE_QUICK_SETTINGS);
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+
+    int8_t knob = hl_mod_get_rx_knob_val();
+
+    if (knob != 0) {
+        switch (data_ptr->now_sound_module) {
+            case STEREO:
+                LOG_D("STEREO\n");
+                PageManager_PagePush(PAGE_QUICK_SETTINGS);
+                break;
+            case MONO:
+                LOG_D("MONO\n");
+                PageManager_PagePush(PAGE_LINE_OUT_STEREO_LEFT);
+                break;
+            case SAFE_TRACK:
+                LOG_D("SAFE_TRACK\n");
+                PageManager_PagePush(PAGE_LINE_OUT_STEREO_LEFT);
+                break;
+            default:
+                break;
+        }
     }
 }
 
