@@ -132,11 +132,6 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr         = (uint8_t*)&s_rf_info.version;
             break;
 
-        case HL_RF_PAIR_STATE_IND:
-            // 更新Telink模块工作状态和配对状态
-            new_pair_info = (uint8_t)hup_frame.data_addr[0];
-            break;
-
         case HL_RF_APP_INFO_IND:
             telink_info = (hl_rf_telink_info_t*)hup_frame.data_addr;
             // 更新Telink模块工作状态和配对状态
@@ -145,6 +140,11 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.cmd       = HL_RF_RSSI_IND;
             app_msg_t.len       = sizeof(hl_rf_rssi_t);
             app_msg_t.param.ptr = &s_rf_info.rssi;
+            break;
+
+        case HL_RF_PAIR_STATE_IND:
+            // 更新Telink模块工作状态和配对状态
+            new_pair_info = (uint8_t)hup_frame.data_addr[0];
             break;
 
         case HL_RF_RSSI_IND:

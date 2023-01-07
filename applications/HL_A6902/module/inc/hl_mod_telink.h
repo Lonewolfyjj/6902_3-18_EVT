@@ -83,10 +83,10 @@ typedef enum _hl_mod_telink_ctrl_ind
 {
     /// 返回版本号：类型uint8_t version[4]
     HL_RF_VERSION_IND = 0x00,
-    /// 返回无线模块当前状态：类型hl_rf_pair_state_e
-    HL_RF_PAIR_STATE_IND = 0x01,
     /// 返回无线模块所有信息：类型hl_rf_telink_info_t
-    HL_RF_APP_INFO_IND = 0x02,
+    HL_RF_APP_INFO_IND = 0x01,
+    /// 返回无线模块当前状态：类型hl_rf_pair_state_e
+    HL_RF_PAIR_STATE_IND = 0x02,
     /// 返回RSSI值：类型uint8_t (0~100)
     HL_RF_RSSI_IND = 0x04,
     /// 返回设置结果：类型rt_err_t
