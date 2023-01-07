@@ -69,25 +69,30 @@ static rt_thread_t display_tid = RT_NULL;
 
 static void hl_mod_screen_rot_scan(void);
 
-static void hl_mod_display_get_version(void)
+// 在nvrma获取sn和rx版本号
+static void hl_mod_display_get_sn_version(void)
 {
-    hl_display_screen_s*        data_ptr  = hl_mod_page_get_screen_data_ptr();
-    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
-    char rx_ver_buf[36] = { 0 };
+    char rx_ver_buf[10] = { 0 };
 
     // 从NVRAM获取当前RX版本号
     if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
-        rt_kprintf("HL_SN : %s\r\n", sn_buf);
+        rt_kprintf("disp HL_SN : %s\r\n", sn_buf);
+
+        hl_mod_display_mux_take();
+        rt_memcpy(data_ptr->sn, sn_buf, sizeof(sn_buf));
+        hl_mod_display_mux_release();
     }
     if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
-        rt_kprintf("HL_VER : %s\r\n", rx_ver_buf);
-    }
+        rt_kprintf("disp HL_VER : %s\r\n", rx_ver_buf);
 
-    hl_mod_display_mux_take();
-    data_ptr->
-    hl_mod_display_mux_release();
+        hl_mod_display_mux_take();
+        rt_memcpy(data_ptr->rx_ver, rx_ver_buf, sizeof(rx_ver_buf));
+        hl_mod_display_mux_release();
+    }
 }
 
 static device_pose_t hl_mod_device_pose_val(void)
@@ -462,10 +467,13 @@ uint8_t hl_mod_display_init(void* display_msq)
     lvgl2rtt_init();
 
     hl_mod_page_all_init();
-
+    
     hl_mod_display_mux_init();
-
+    
     hl_drv_qma6100p_init();
+
+    hl_mod_display_get_sn_version();
+
     hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     display_tid = rt_thread_create("display_thread", hl_mod_display_task, RT_NULL, DISPLAY_THREAD_STACK_SIZE,
                                    DISPLAY_THREAD_PRIORITY, DISPLAY_THREAD_TIMESLICE);

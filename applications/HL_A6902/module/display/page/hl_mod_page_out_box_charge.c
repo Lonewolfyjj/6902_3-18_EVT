@@ -74,7 +74,7 @@ static void hl_mod_page_loop(void)
     if (flag->sys_status.rx_charge_status) {
         hl_mod_display_mux_take();
         flag->sys_status.rx_charge_status = 0;
-        rx_bat_val                        = data_ptr->sys_status.rx_charge_status;
+        rx_bat_val                        = data_ptr->rx_bat_val;
         hl_mod_display_mux_release();
 
         hl_lvgl_holding_ioctl_t ioctrl;
@@ -103,6 +103,7 @@ static void hl_mod_page_loop(void)
         hl_lvgl_holding_ioctl_t ioctrl;
 
         ioctrl.holding_cmd = HL_HOLDING_RX_ELEC;
+        ioctrl.electric = rx_bat_val;
         hl_mod_holding_ioctl(&ioctrl);
     }
 }
