@@ -51,6 +51,11 @@ static void hl_mod_wdog_idle_hook(void)
     rt_device_control(wdg_dev, RT_DEVICE_CTRL_WDT_KEEPALIVE, NULL);
 }
 
+void hl_mod_feed_dog(void)
+{
+    rt_device_control(wdg_dev, RT_DEVICE_CTRL_WDT_KEEPALIVE, NULL);
+}
+
 /**
  * 
  * @brief 看门狗初始化函数，系统自动调用
@@ -97,7 +102,7 @@ static int hl_mod_wdog_init(void)
         return -RT_ERROR;
     }
     /* 设置空闲线程回调函数 */
-    rt_thread_idle_sethook(hl_mod_wdog_idle_hook);
+    // rt_thread_idle_sethook(hl_mod_wdog_idle_hook);
 
     return ret;
 }

@@ -78,7 +78,7 @@ static hl_moreone_choose_t tx1_noise_switch(hl_display_screen_s* data_ptr)
 static void hl_moreone_test_cb(hl_moreone_check_t event_num)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-    uint8_t              value    = 0;
+    uint32_t              value    = 0;
     hl_out_msg_e         msg_cmd;
     LOG_E("event=%x", event_num);
     if (event_num > HL_MOREONE_CHECK_THREE_RIGHT) {

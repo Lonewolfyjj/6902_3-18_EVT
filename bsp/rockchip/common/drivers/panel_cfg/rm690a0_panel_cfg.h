@@ -57,6 +57,8 @@ const static struct rockchip_cmd cmd_on[] = {
     { 0x05, 0x50, 0x01, { 0x29 } },
 };
 
+
+
 const static struct rockchip_cmd cmd_off[] = {};
 
 #endif /* __RM690A0_PANEL_CFG_H__ */

@@ -13,6 +13,10 @@ LV_IMG_DECLARE(Main_signal_2);//信号
 LV_IMG_DECLARE(Main_signal_3);//信号
 LV_IMG_DECLARE(Main_signal_4);//信号
 
+#define VOICE_TOP_BAR_WITH  4
+#define VOICE_TOP_BAR_DELAY  1000
+#define ANIMAtION_TOP_TIME_DOWN  3000
+
 #define SAFETY_VOICE    0
 #define NORMAL_VOICE    1
 
@@ -27,17 +31,21 @@ static lv_obj_t * power_bar_tx1,*power_bar_tx2;
 static lv_obj_t * voice_img_tx1,*voice_img_tx2;
 static lv_obj_t * power_img_tx1,*power_img_tx2;
 static lv_obj_t * voice_lab_tx1,*voice_lab_tx2;
-// static lv_obj_t * power_lab_tx1,*power_lab_tx2;
+static lv_obj_t * voice_bar_top_tx1,*voice_bar_top_tx2;
 static lv_obj_t * device_lab_tx1,*device_lab_tx2;
 static lv_obj_t * video_dot_tx1,*video_dot_tx2;
 static lv_obj_t * tx1_signal_obj[5];
 static lv_obj_t * tx2_signal_obj[5];
 
-
+static int16_t tx1_value_max;
+static int16_t tx2_value_max;
 static int16_t tx1_value_start;
 static int16_t tx2_value_start;
 static lv_anim_t animation_tx1;
 static lv_anim_t animation_tx2;
+
+static lv_anim_t animation_top_tx1;
+static lv_anim_t animation_top_tx2;
 
 static lv_style_t style_area_main;
 static lv_style_t style_voice_sbar_indicator,style_voice_bar_main;
@@ -167,7 +175,6 @@ static lv_obj_t * lv_voice_sbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,
     lv_obj_set_size(bar, width, high);
     lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
-    // lv_bar_set_range(bar,0,118);
     return bar;
 }
 
@@ -180,7 +187,34 @@ static lv_obj_t * lv_voice_lbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,
     lv_obj_set_size(bar, width, high);
     lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
-    // lv_bar_set_range(bar,0,118);
+    return bar;
+}
+
+static lv_obj_t * lv_voice_stopbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
+{
+    lv_obj_t * bar = lv_bar_create(src_obj);
+    lv_obj_add_style(bar, &style_power_bar_main, LV_PART_MAIN);
+    lv_obj_add_style(bar, &style_voice_sbar_indicator, LV_PART_INDICATOR);
+    lv_bar_set_range(bar,0,118);
+    lv_obj_set_size(bar, width, high);
+    lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
+    lv_bar_set_mode(bar, LV_BAR_MODE_RANGE);
+    lv_bar_set_start_value(bar,init_value - VOICE_TOP_BAR_WITH,LV_ANIM_ON);
+    lv_bar_set_value(bar, init_value, LV_ANIM_ON);
+    return bar;
+}
+
+static lv_obj_t * lv_voice_ltopbar_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
+{
+    lv_obj_t * bar = lv_bar_create(src_obj);
+    lv_obj_add_style(bar, &style_power_bar_main, LV_PART_MAIN);
+    lv_obj_add_style(bar, &style_voice_lbar_indicator, LV_PART_INDICATOR);
+    lv_bar_set_range(bar,0,118);
+    lv_obj_set_size(bar, width, high);
+    lv_obj_align_to(bar,align_obj,LV_ALIGN_OUT_RIGHT_MID,x_offset,y_offset);
+    lv_bar_set_mode(bar, LV_BAR_MODE_RANGE);
+    lv_bar_set_start_value(bar,init_value - VOICE_TOP_BAR_WITH,LV_ANIM_ON);
+    lv_bar_set_value(bar, init_value, LV_ANIM_ON);
     return bar;
 }
 
@@ -269,6 +303,59 @@ static lv_obj_t * lv_video_dot_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset
     return dot;
 }
 
+
+static void lv_topbar_set_value_cb(void * bar, int32_t temp)
+{
+    if(temp == 0){
+        // lv_bar_set_start_value(bar,temp - VOICE_TOP_BAR_WITH,LV_ANIM_ON);
+        lv_bar_set_value(bar, temp, LV_ANIM_ON);
+    }else{
+        lv_bar_set_start_value(bar,temp,LV_ANIM_ON);
+        lv_bar_set_value(bar, temp + VOICE_TOP_BAR_WITH, LV_ANIM_ON);
+    }
+    
+    if((lv_obj_t *)bar == voice_bar_top_tx1){
+        tx1_value_max = temp;
+    }
+    if((lv_obj_t *)bar == voice_bar_top_tx2){
+        tx2_value_max = temp;
+    }
+}
+
+static void lv_topbar_anim_init(lv_anim_t * anim_obj,lv_obj_t * bar_obj,int16_t init_value,uint32_t anim_time)
+{    
+    lv_anim_init(anim_obj);
+    lv_anim_set_exec_cb(anim_obj, lv_topbar_set_value_cb);
+    lv_anim_set_time(anim_obj, anim_time);
+    lv_anim_set_var(anim_obj, bar_obj);
+    lv_anim_set_values(anim_obj, init_value, 0);
+    lv_anim_set_repeat_count(anim_obj, 0);
+    lv_anim_set_delay(anim_obj, VOICE_TOP_BAR_DELAY);
+    lv_anim_start(anim_obj);
+}
+
+static void lv_topbar_anim_ctl(lv_anim_t * anim_obj,int16_t value_start,int16_t value_end,uint32_t anim_time)
+{
+    if(anim_obj == &animation_top_tx1 && tx1_value_max < value_start){
+        lv_anim_set_values(anim_obj, value_start, 0);
+        lv_anim_set_repeat_count(anim_obj, 1);
+        lv_anim_set_delay(&animation_top_tx1, anim_time);
+        lv_anim_start(&animation_top_tx1);
+        lv_bar_set_start_value(voice_bar_top_tx1,tx1_value_start - VOICE_TOP_BAR_WITH,LV_ANIM_ON);
+        lv_bar_set_value(voice_bar_top_tx1, tx1_value_start, LV_ANIM_ON);    
+        tx1_value_max = value_start;    
+    }
+    if(anim_obj == &animation_top_tx2 && tx2_value_max < value_start){
+        lv_anim_set_values(anim_obj, value_start, 0);
+        lv_anim_set_repeat_count(anim_obj, 1);
+        lv_anim_set_delay(&animation_top_tx2, anim_time);
+        lv_anim_start(&animation_top_tx2);
+        lv_bar_set_start_value(voice_bar_top_tx2,tx2_value_start - VOICE_TOP_BAR_WITH,LV_ANIM_ON);
+        lv_bar_set_value(voice_bar_top_tx2, tx2_value_start, LV_ANIM_ON);      
+        tx2_value_max = value_start;          
+    }
+}
+
 static void lv_bar_set_value_cb(void * bar, int32_t temp)
 {
     lv_bar_set_value(bar, temp, LV_ANIM_ON);
@@ -284,6 +371,7 @@ static void lv_bar_anim_init(lv_anim_t * anim_obj,lv_obj_t * bar_obj,int16_t ini
     lv_anim_set_values(anim_obj, init_value, init_value);
     lv_anim_set_repeat_count(anim_obj, 0);
     lv_anim_start(anim_obj);
+    
 }
 
 static void lv_bar_anim_ctl(lv_anim_t * anim_obj,int16_t value_start,int16_t value_end)
@@ -367,6 +455,8 @@ static void lv_display_tx1(device_data_t * init_data)
     voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
     
+    voice_bar_top_tx1 = lv_voice_ltopbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
+
     tx1_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx1,voice_bar_tx1,tx1_value_start,ANIMAtION_TIME);
 
@@ -388,6 +478,8 @@ static void lv_display_tx2(device_data_t * init_data)
     voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
     
+    voice_bar_top_tx2 = lv_voice_ltopbar_creat_fun(area_tx2,voice_img_tx2,4,-40,251,14,init_data->volume);
+
     tx2_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx2,voice_bar_tx2,tx2_value_start,ANIMAtION_TIME);
 
@@ -414,6 +506,9 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     //音量大小进度条
     voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
     voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
+
+    voice_bar_top_tx1 = lv_voice_stopbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
+    voice_bar_top_tx2 = lv_voice_stopbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
 
     tx1_value_start = init_tx1->volume;
     tx2_value_start = init_tx2->volume;
@@ -579,6 +674,8 @@ void hl_mod_main_init(void * init_data)
         lv_style_page1_init();
         page_style_bit.page_main = 1;
     }
+    tx1_value_max = 0;
+    tx2_value_max = 0;
     if(ptr->display_tx_device == HL_DISPLAY_TX1){
         lv_display_tx1(&ptr->tx_device_1);
     }
