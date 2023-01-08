@@ -1175,7 +1175,6 @@ err:
     uac2play_thread_id = RT_NULL;
     LOG_D("audio uac2play thread exit");
 }
-#endif
 
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
@@ -1227,6 +1226,7 @@ err:
     cap2play2uac_thread_id = RT_NULL;
     LOG_D("audio cap2play2uac thread exit");
 }
+#endif
 
 // 设置声卡增益
 static void hl_mod_audio_set_codec_gain(int dB, uint8_t ch)
@@ -1386,6 +1386,7 @@ static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
 
 static void hl_uac2play_thread_setup(void)
 {
+#ifdef RT_USB_DEVICE_UAC1
     uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 0, 8);
     if (uac2play_thread_id != RT_NULL) {
         uac2play_thread_flag = 1;
@@ -1393,10 +1394,14 @@ static void hl_uac2play_thread_setup(void)
     } else {
         LOG_E("uac2play thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2uac_thread_setup(void)
 {
+#ifdef RT_USB_DEVICE_UAC1
     cap2uac_thread_id = rt_thread_create("cap2uac", _hl_cap2uac_thread_entry, RT_NULL, 2048, 0, 8);
     if (cap2uac_thread_id != RT_NULL) {
         cap2uac_thread_flag = 1;
@@ -1404,10 +1409,14 @@ static void hl_cap2uac_thread_setup(void)
     } else {
         LOG_E("cap2uac thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2play2uac_thread_setup(void)
 {
+#ifdef RT_USB_DEVICE_UAC1
     cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 0, 8);
     if (cap2play2uac_thread_id != RT_NULL) {
         cap2play2uac_thread_flag = 1;
@@ -1415,6 +1424,9 @@ static void hl_cap2play2uac_thread_setup(void)
     } else {
         LOG_E("cap2p2u thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2play_thread_stop(void)
