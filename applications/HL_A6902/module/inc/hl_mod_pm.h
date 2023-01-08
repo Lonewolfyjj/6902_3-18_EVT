@@ -40,6 +40,8 @@ typedef enum _hl_mod_pm_cmd_e
     HL_PM_POWER_UP_CMD,
     /// 关闭总电源，无参数
     HL_PM_POWER_DOWN_CMD,
+    /// 更新一次电池信息到App，无参数
+    HL_PM_BAT_INFO_UPDATE_CMD,
 } hl_mod_pm_cmd_e;
 
 typedef enum _hl_mod_pm_ind_e

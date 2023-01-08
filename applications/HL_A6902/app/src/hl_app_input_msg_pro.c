@@ -88,10 +88,12 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 
         case HL_KEY_EVENT_LONG:
             if (tx_info.on_off_flag == 1) {
-                hl_app_mng_powerOff();
+                // hl_app_mng_powerOff();
+                extern void rt_hw_cpu_reset(void);
                 tx_info.on_off_flag = 0;
+                rt_hw_cpu_reset();
             } else {
-                hl_app_mng_powerOn();
+                // hl_app_mng_powerOn();
                 tx_info.on_off_flag = 1;
             }
             break;
@@ -252,10 +254,12 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
             break;
         case HL_KEY_EVENT_LONG:
             if (rx_info.on_off_flag == 1) {
-                hl_app_mng_powerOff();
+                // hl_app_mng_powerOff();
+                extern void rt_hw_cpu_reset(void);
                 rx_info.on_off_flag = 0;
+                rt_hw_cpu_reset();
             } else {
-                hl_app_mng_powerOn();
+                // hl_app_mng_powerOn();
                 rx_info.on_off_flag = 1;
             }
             break;

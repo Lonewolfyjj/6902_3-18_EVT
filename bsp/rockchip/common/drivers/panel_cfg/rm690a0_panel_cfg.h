@@ -3,7 +3,7 @@
 
 #define RT_HW_LCD_XRES 126         /* LCD PIXEL WIDTH             */
 #define RT_HW_LCD_YRES 294         /* LCD PIXEL HEIGHT            */
-#define RT_HW_LCD_PIXEL_CLOCK 4000 /* pixel clock in khz          */
+#define RT_HW_LCD_PIXEL_CLOCK 9000 /* pixel clock in khz          */
 #define RT_HW_LCD_LANE_MBPS 240    /* DSI per lane Mbps           */
 #define RT_HW_LCD_LEFT_MARGIN 40   /* Horizontal back porch       */
 #define RT_HW_LCD_RIGHT_MARGIN 40  /* Horizontal front porch      */
@@ -56,6 +56,8 @@ const static struct rockchip_cmd cmd_on[] = {
     { 0x05, 0x78, 0x01, { 0x11 } },
     { 0x05, 0x50, 0x01, { 0x29 } },
 };
+
+
 
 const static struct rockchip_cmd cmd_off[] = {};
 
