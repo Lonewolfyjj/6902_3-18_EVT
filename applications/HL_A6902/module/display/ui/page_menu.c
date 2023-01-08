@@ -236,7 +236,7 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
         }        
     }
 }
-
+// FALSE 表示切换居中的图标，  true表示选中图标  都会触发中断
 void lv_set_icon_postion(uint8_t pos, bool en)
 {
     if (en == true) {

@@ -260,7 +260,18 @@ static lv_obj_t * lv_signal_img_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,
     return img;
 }
 
-static lv_obj_t * lv_voice_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_obj_t *bar_obj,lv_coord_t x_offset,lv_coord_t y_offset)
+static lv_obj_t * lv_voice_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,rt_int16_t init_value,lv_coord_t x_offset,lv_coord_t y_offset)
+{
+    char buf[8] = {0,0,0,0,0,0,0,0};
+    lv_obj_t * lab = lv_label_create(src_obj);
+    lv_obj_add_style(lab, &style_voice_label, LV_PART_MAIN);
+    lv_snprintf(buf, sizeof(buf), "%d", buf);
+    lv_label_set_text(lab,init_value);
+    lv_obj_align_to(lab,align_obj,LV_ALIGN_OUT_TOP_MID,x_offset,y_offset);
+    return lab;
+}
+
+static lv_obj_t * lv_voice_line_out_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,rt_int16_t init_value,lv_coord_t x_offset,lv_coord_t y_offset)
 {
     char buf[8] = {0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);

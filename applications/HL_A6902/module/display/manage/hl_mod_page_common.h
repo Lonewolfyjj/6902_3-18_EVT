@@ -88,7 +88,8 @@ typedef struct _hl_display_screen_s
     /// 监听类别
     hl_display_voice_monitor_e monitor_category;
     hl_display_vocie_mode_e voice_module;
-    hl_display_sound_module_e sound_module;
+    hl_display_sound_module_e down_sound_module;
+    hl_display_sound_module_e now_sound_module;
     hl_display_low_cut_e low_cut;
     hl_screen_page_e page_id;
     hl_display_box_charge_state in_box_state;
@@ -104,9 +105,14 @@ typedef struct _hl_display_screen_s
     uint8_t tx2_signal;
     /// 降噪等级设置
     uint8_t tx_noise_level;
+    /// @brief 立体声的左声道的音量
     int8_t tx1_line_out_volume;
+    /// @brief 立体声的右声道的音量
     int8_t tx2_line_out_volume;
+    /// @brief 单声道的音量
     int8_t mono_line_out_volume;
+    /// @brief 安全音轨的音量
+    int8_t  track_line_out_volume;
     int8_t uac_in_volume;
     int8_t uac_out_volume;
     int8_t tx1_gain_volume;
@@ -115,11 +121,14 @@ typedef struct _hl_display_screen_s
     uint8_t led_britness;
     uint8_t tx1_remained_record_time;
     uint8_t tx2_remained_record_time;
-    uint8_t ota_upgrade_progress;
+    // OTA升级进度
+    uint8_t upgrade_progress;
+    hl_upgrade_status upgrade_status;
     
     char tx1_ver[10];
     char tx2_ver[10];
     char rx_ver[10];
+    char case_ver[10];
     char sn[36];
     char device_fault_code[20];
     // 显示系统当前状态信息
@@ -149,6 +158,8 @@ typedef struct _hl_display_screen_change_s{
     uint32_t tx_noise_level:1;
     uint32_t tx1_line_out_volume:1;
     uint32_t tx2_line_out_volume:1;
+    uint32_t mono_line_out_volume:1;
+    uint32_t track_line_out_volume:1;
     uint32_t uac_in_volume:1;
     uint32_t uac_out_volume:1;
     uint32_t tx1_gain_volume:1;
@@ -156,11 +167,17 @@ typedef struct _hl_display_screen_change_s{
     uint32_t led_britness:1;
     uint32_t tx1_remained_record_time:1;
     uint32_t tx2_remained_record_time:1;
-    uint32_t ota_upgrade_progress:1;
+    uint32_t upgrade_progress:1;
+    uint32_t upgrade_status:1;
     uint32_t device_fault_code:1;
     // 菜单复位时的状态
     uint32_t menu_defaut:1;
     uint32_t systime:1;
+    uint32_t tx1_ver:1;
+    uint32_t tx2_ver:1;
+    uint32_t rx_ver:1;
+    uint32_t case_ver:1;
+    uint32_t rx_sn:1;
 }hl_display_screen_change_s;
 
 
@@ -211,7 +228,7 @@ void hl_mod_menu_goto_fast_config_scan();
 void hl_mod_menu_goto_quickset_scan();
 
 void hl_mod_page_goto_box_scan(void);
-
+void hl_mod_display_upgrade_enter(void);
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
 void hl_mod_outbox_offcharge_scan(void);
 void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer);
