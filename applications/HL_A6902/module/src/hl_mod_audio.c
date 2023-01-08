@@ -163,7 +163,11 @@ rt_mq_t s_audio_to_app_mq = RT_NULL;
 /// 当前音频流模式
 volatile static hl_stream_mode_e  s_stream_mode_cur           = HL_STREAM_IDLE;
 /// 下个音频流模式
-volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_CAP2PLAY;
+#if HL_IS_TX_DEVICE()
+volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_PDM2PLAY;
+#else
+volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_CAP2PLAY_CAP2UAC;
+#endif
 /// 播放声卡参数信息
 volatile static hl_card_param_t        play_info;
 /// 捕获声卡参数信息
@@ -1171,7 +1175,6 @@ err:
     uac2play_thread_id = RT_NULL;
     LOG_D("audio uac2play thread exit");
 }
-#endif
 
 static void _hl_cap2play2uac_thread_entry(void* arg)
 {
@@ -1223,6 +1226,7 @@ err:
     cap2play2uac_thread_id = RT_NULL;
     LOG_D("audio cap2play2uac thread exit");
 }
+#endif
 
 // 设置声卡增益
 static void hl_mod_audio_set_codec_gain(int dB, uint8_t ch)
@@ -1371,7 +1375,7 @@ static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param)
 
 static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
 {
-    cap2play_thread_id = rt_thread_create("cap2play", _hl_cap2play_thread_entry, p_card_info, 2048, 1, 8);
+    cap2play_thread_id = rt_thread_create("cap2play", _hl_cap2play_thread_entry, p_card_info, 2048, 0, 8);
     if (cap2play_thread_id != RT_NULL) {
         cap2play_thread_flag = 1;
         rt_thread_startup(cap2play_thread_id);
@@ -1382,35 +1386,47 @@ static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
 
 static void hl_uac2play_thread_setup(void)
 {
-    uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 1, 8);
+#ifdef RT_USB_DEVICE_UAC1
+    uac2play_thread_id = rt_thread_create("uac2play", _hl_uac2play_thread_entry, RT_NULL, 2048, 0, 8);
     if (uac2play_thread_id != RT_NULL) {
         uac2play_thread_flag = 1;
         rt_thread_startup(uac2play_thread_id);
     } else {
         LOG_E("uac2play thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2uac_thread_setup(void)
 {
-    cap2uac_thread_id = rt_thread_create("cap2uac", _hl_cap2uac_thread_entry, RT_NULL, 2048, 1, 8);
+#ifdef RT_USB_DEVICE_UAC1
+    cap2uac_thread_id = rt_thread_create("cap2uac", _hl_cap2uac_thread_entry, RT_NULL, 2048, 0, 8);
     if (cap2uac_thread_id != RT_NULL) {
         cap2uac_thread_flag = 1;
         rt_thread_startup(cap2uac_thread_id);
     } else {
         LOG_E("cap2uac thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2play2uac_thread_setup(void)
 {
-    cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 1, 8);
+#ifdef RT_USB_DEVICE_UAC1
+    cap2play2uac_thread_id = rt_thread_create("cap2p2u", _hl_cap2play2uac_thread_entry, RT_NULL, 2048, 0, 8);
     if (cap2play2uac_thread_id != RT_NULL) {
         cap2play2uac_thread_flag = 1;
         rt_thread_startup(cap2play2uac_thread_id);
     } else {
         LOG_E("cap2p2u thread create failed!");
     }
+#else
+    LOG_E("uac device not enable！！！");
+#endif
 }
 
 static void hl_cap2play_thread_stop(void)
@@ -1463,6 +1479,7 @@ static void hl_cap2uac_uac2play_thread_stop(void)
     i = 100;
     while (cap2uac_thread_id != RT_NULL){
         rt_thread_mdelay(1);
+        i--;
         if (i == 0) {
             rt_thread_delete(cap2uac_thread_id);
             cap2uac_thread_id = RT_NULL;
@@ -1478,9 +1495,10 @@ static void hl_cap2play2uac_thread_stop(void)
     cap2play2uac_thread_flag = 0;
     while (cap2play2uac_thread_id != RT_NULL){
         rt_thread_mdelay(1);
+        i--;
         if (i == 0) {
-            rt_thread_delete(cap2uac_thread_id);
-            cap2uac_thread_id = RT_NULL;
+            rt_thread_delete(cap2play2uac_thread_id);
+            cap2play2uac_thread_id = RT_NULL;
             LOG_E("uac2play exit timeout!");
         }
     }
@@ -1885,7 +1903,34 @@ void hl_mod_audio_show_info(void)
 #if HL_IS_TX_DEVICE()
     // TBD
 #else
-    // TBD
+    LOG_I("------show audio mod info------");
+
+    LOG_I("play_info.card_name = %s", play_info.card_name);
+    LOG_I("play_info.card_type = %d ", play_info.card_type);
+    LOG_I("play_info.card = %d ", play_info.card);
+
+    LOG_I("play_info.abuf.buf = %d ", play_info.abuf.buf);
+    LOG_I("play_info.abuf.buf_size = %d ", play_info.abuf.buf_size);
+    LOG_I("play_info.abuf.period_size = %d ", play_info.abuf.period_size);
+
+    LOG_I("play_info.param.channels = %d ",  play_info.param.channels);
+    LOG_I("play_info.param.sampleBits = %d ", play_info.param.sampleBits);
+    LOG_I("play_info.param.sampleRate = %d ", play_info.param.sampleRate);
+
+    LOG_I("cap_info.card_name = %s", cap_info.card_name);
+    LOG_I("cap_info.card_type = %d ", cap_info.card_type);
+    LOG_I("cap_info.card = %d ", cap_info.card);
+
+    LOG_I("cap_info.abuf.buf = %d ", cap_info.abuf.buf);
+    LOG_I("cap_info.abuf.buf_size = %d ", cap_info.abuf.buf_size);
+    LOG_I("cap_info.abuf.period_size = %d ", cap_info.abuf.period_size);
+
+    LOG_I("cap_info.param.channels = %d ",  cap_info.param.channels);
+    LOG_I("cap_info.param.sampleBits = %d ", cap_info.param.sampleBits);
+    LOG_I("cap_info.param.sampleRate = %d ", cap_info.param.sampleRate);
+
+    LOG_I("uac_info.card = %d ", uac_info.card);
+
 #endif
 }
 
@@ -2070,7 +2115,9 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             }
             break;
         case HL_USB_MSTORAGE_DISABLE_CMD:
+#ifdef RT_USB_DEVICE_MSTORAGE
             rt_usbd_msc_disable();
+#endif
             break;
         case HL_AUDIO_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
