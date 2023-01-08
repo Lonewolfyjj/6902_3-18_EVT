@@ -173,6 +173,8 @@ typedef enum _hl_screen_page_e
     PAGE_OTHER_SET,
     /// TX快捷配置页面
     PAGE_FAST_TX_CONFIG,
+    /// TX快捷配置页面
+    PAGE_FAST_TX2_CONFIG,
     /// 单声道 立体声选择界面
     PAGE_SOUND_MODULE,
     //// 快捷LINE OUT输出音量页面(安全音轨)
@@ -182,7 +184,8 @@ typedef enum _hl_screen_page_e
     /// 快捷LINE OUT输出音量页面(立体声,右声道)
     PAGE_LINE_OUT_STEREO_RIGHT,
     // /// 快捷LINE OUT输出音量页面(单声道)
-    // PAGE_LINE_OUT_MONO,
+    /// 设备升级页面
+    PAGE_UPGRADE,
     // LINE OUT快捷设置
     PAGE_QUICK_SETTINGS,
     /// 配对中页面
@@ -210,6 +213,18 @@ typedef enum _hl_display_low_cut_e
     LOW_CUT_150HZ,
 
 }HL_ENUM8(hl_display_low_cut_e);
+
+typedef enum _hl_upgrade_status
+{
+    /// @brief  未升级
+    HL_UPGRADE_STATUS_NORMAL,
+    /// @brief 升级中
+    HL_UPGRADE_STATUS_UPGRADE,
+    /// @brief 升级成功
+    HL_UPGRADE_STATUS_SUCCESS,
+    /// @brief 升级失败
+    HL_UPGRADE_STATUS_FAIL
+} HL_ENUM8(hl_upgrade_status);
 
 typedef enum _hl_display_vocie_mode_e
 {
@@ -251,19 +266,19 @@ typedef enum _hl_display_out_box_charge_state
     OUTBOX_OFFCHARGE_OFFPAGE,
     /// @brief 进入LOGO页面
     OUTBOX_OFFCHARGE_LOGO,
+    /// @brief 关机的RX放入盒子
+    INBOX_OFFCHARGE_BOXPAGE
 }HL_ENUM8(hl_display_out_box_charge_state);
 
 typedef enum _hl_display_sound_module_e
 {
-    /// 立体声
-    STEREO = 0,
     /// 单声道,
-    MONO,
+    MONO = 0,
+    /// 立体声
+    STEREO,
     /// 安全音轨
     SAFE_TRACK,
-
-
-}HL_ENUM8(hl_display_sound_module_e);
+} HL_ENUM8(hl_display_sound_module_e);
 
 typedef enum _hl_display_fault_code_e
 {
@@ -317,7 +332,7 @@ typedef enum _hl_out_msg_e
     /// 降噪等级 uint8_t 
     TX_NOISE_LEVEL_VAL_IND,
 
-    /// TX lineout音量   int8_t
+    /// 立体声TX lineout音量   int8_t
     TX1_LINE_OUT_VOLUME_VAL_IND,
     TX2_LINE_OUT_VOLUME_VAL_IND,
 
@@ -326,8 +341,10 @@ typedef enum _hl_out_msg_e
 
     /// UAC 输出音量设置
     UAC_OUT_VOLUME_VAL_IND,
-    /// LINE_OUT音频音量 int8_t
-    LINE_OUT_VOLUME_VAL_IND,
+    /// 单声道LINE_OUT音频音量 int8_t
+    MONO_LINE_OUT_VOLUME_VAL_IND,
+    /// 安全音轨LINE_OUT音频音量 int8_t
+    SAFETRACK_LINE_OUT_VOLUME_VAL_IND,
 
     ///监听音量 int8_t
     MONITOR_VOLUME_VAL_IND,
@@ -395,13 +412,15 @@ typedef enum _hl_cmd_e
     TX1_MUTE_SWITCH_SWITCH_CMD,
     TX2_MUTE_SWITCH_SWITCH_CMD,
 
-    /// 升级状态 <uint8_t>类型 1：升级中 0 ：正常
-    OTA_UPDATE_STATE_SWITCH_CMD,
+
     /// 重新开始熄屏计数 设置 （无参数）
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
-    /// 放入盒子状态 1：盒子中 0 ：正常 < hl_display_box_charge_state>
+    /// 放入盒子状态  < hl_display_box_charge_state>
     IN_BOX_STATE_VAL_CMD,
+    /// @brief 放入盒子盖子状态  0盖子打开   1 盖子关闭
+    IN_BOX_CAP_STATE_SWITCH_CMD,
+    
 
     /// 自动录制状态 1：开启  0：关闭 ，
     AUTO_RECORD_SWITCH_CMD,
@@ -417,9 +436,10 @@ typedef enum _hl_cmd_e
     /* *******************************参数相关******************/
     // Rx当前无线通讯状态，参数<hl_rf_state_e>
     RX_RF_STATE_VAL_CMD,
-
+    /// 升级状态下发 <hl_upgrade_status>
+    UPDATE_STATE_CMD,
     /// 升级进度下发 0-100 <uint8_t>
-    OTA_UPDATE_REMAINED_VAL_CMD,
+    UPDATE_REMAINED_VAL_CMD,
 
     /// 整个系统的故障信息(故障码) 单个故障信息传入，<uint8_t>
     DEVICE_FAULT_CODE_VAL_CMD,
@@ -453,12 +473,9 @@ typedef enum _hl_cmd_e
     TX1_GAIN_VAL_CMD,
     TX2_GAIN_VAL_CMD,
 
-    /// TX lineout音量   int8_t
+    /// TX lineout音量 (如果是单声道模式和安全音轨就是用TX1_LINE_OUT_VOLUME_VAL_CMD)  int8_t
     TX1_LINE_OUT_VOLUME_VAL_CMD,
     TX2_LINE_OUT_VOLUME_VAL_CMD,
-
-    /// LINE_OUT音频音量设置 int8_t
-    LINE_OUT_VOLUME_VAL_CMD,
 
     ///监听口音量设置 int8_t
     MONITOR_VOLUME_VAL_CMD,
@@ -480,15 +497,15 @@ typedef enum _hl_cmd_e
 
 
     /* *******************************字符相关******************/
-    /// TX1版本信息 ASCII码 10字节的BUF<char*>
+    /// TX1版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     TX1_VER_STRING_CMD,
-    /// TX2版本信息 ASCII码 10字节的BUF<char*>
+    /// TX2版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     TX2_VER_STRING_CMD,
-    /// RX版本信息 ASCII码 10字节的BUF<char*>
+    /// RX版本信息 ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     RX_VER_STRING_CMD,
-    /// 盒子版本 （盒子中显示）ASCII码 10字节的BUF<char*>
+    /// 盒子版本 （盒子中显示）ASCII码 10字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     CASE_VER_STRING_CMD,
-    /// SN号 ASCII码 32字节的BUF<char*>
+    /// SN号 ASCII码 32字节的BUF<char*> ioctrl的len参数需要设置为字符长度
     RX_SN_STRING_CMD,
 
 

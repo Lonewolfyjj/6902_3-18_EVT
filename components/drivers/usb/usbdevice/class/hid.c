@@ -23,6 +23,7 @@
 #include <ipc/ringbuffer.h>
 #include "hl_config.h"
 #include "hl_util_nvram.h"
+#include "hl_board_commom.h"
 
 #ifdef RT_USB_DEVICE_HID
 
@@ -906,8 +907,6 @@ ufunction_t rt_usbd_function_hid_create(udevice_t device)
 
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
-
-    extern uint8_t hl_board_nvram_init();
 
     hl_board_nvram_init();
 
