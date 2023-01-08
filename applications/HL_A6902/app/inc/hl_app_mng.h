@@ -55,6 +55,10 @@ typedef struct _tx_app_info_t
     /// 当前电量
     uint8_t             soc;
 
+    /// 本地Mac地址
+    uint8_t             local_mac[6];
+    /// 配对Mac地址
+    uint8_t             remote_mac[6];
 } tx_app_info_t;
 extern tx_app_info_t tx_info;
 #else
@@ -93,6 +97,9 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
+
+    /// 本地Mac地址
+    uint8_t             local_mac[6];
 } rx_app_info_t;
 extern rx_app_info_t rx_info;
 #endif

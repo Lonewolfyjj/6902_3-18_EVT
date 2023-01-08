@@ -61,6 +61,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_SET_CHARGE_STATE  = 0x0B,
     HL_HUP_CMD_SET_RTC_TIME      = 0x0C,
     HL_HUP_CMD_SET_RTC_TIME_BACK = 0x0D,
+    HL_HUP_CMD_SET_BOX_LID_STATE = 0x0E,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -74,26 +75,29 @@ typedef enum _hl_euc_mod_dev_e
 
 typedef struct _hl_mod_euc
 {
-    bool                      init_flag;
-    bool                      start_flag;
-    uint8_t                   tx1_bat_info;
-    uint8_t                   tx2_bat_info;
-    uint8_t                   box_bat_info;
-    hl_mod_euc_charge_state_e tx1_charge_state;
-    hl_mod_euc_charge_state_e tx2_charge_state;
-    hl_mod_euc_charge_state_e box_charge_state;
-    bool                      tx1_in_box_flag;
-    bool                      tx2_in_box_flag;
-    bool                      tx1_pair_ok_flag;
-    bool                      tx2_pair_ok_flag;
-    rt_thread_t               euc_thread;
-    int                       thread_exit_flag;
-    hl_util_hup_t             uart_hup;
-    hl_util_hup_t             hid_hup;
-    rt_mq_t                   msg_handle;
-    rt_device_t               uart_dev;
-    rt_device_t               hid_dev;
-    struct serial_configure   uart_config;
+    bool                       init_flag;
+    bool                       start_flag;
+    uint8_t                    dev_num;
+    uint8_t                    tx1_bat_info;
+    uint8_t                    tx2_bat_info;
+    uint8_t                    box_bat_info;
+    hl_mod_euc_charge_state_e  tx1_charge_state;
+    hl_mod_euc_charge_state_e  tx2_charge_state;
+    hl_mod_euc_charge_state_e  box_charge_state;
+    hl_mod_euc_box_lid_state_e box_lid_state;
+    bool                       tx1_in_box_flag;
+    bool                       tx2_in_box_flag;
+    bool                       tx1_pair_ok_flag;
+    bool                       tx2_pair_ok_flag;
+    struct rt_timer            timer;
+    rt_thread_t                euc_thread;
+    int                        thread_exit_flag;
+    hl_util_hup_t              uart_hup;
+    hl_util_hup_t              hid_hup;
+    rt_mq_t                    msg_handle;
+    rt_device_t                uart_dev;
+    rt_device_t                hid_dev;
+    struct serial_configure    uart_config;
 } hl_mod_euc_st;
 
 /* define --------------------------------------------------------------------*/
@@ -217,16 +221,23 @@ static int _hid_send_hup_data(char cmd, char* buf, int len)
 static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
     uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
-    uint8_t  tx_num = 1;
     uint8_t  result = 0;
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &tx_num, sizeof(tx_num));
-            _mod_msg_send(HL_IN_BOX_IND, NULL, 0);
+            if (hup_frame.data_addr[0] == 0) {
+                break;
+            }
+
+            _euc_mod.dev_num = hup_frame.data_addr[0];
+
+            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
+            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_GET_PAIR_INFO: {
             _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
@@ -267,11 +278,19 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &rx_num, sizeof(rx_num));
-            _mod_msg_send(HL_IN_BOX_IND, NULL, 0);
+            if (hup_frame.data_addr[0] != 0) {
+                break;
+            }
+
+            _euc_mod.dev_num = 0;
+
+            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
+            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_SET_BAT_INFO: {
             if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
@@ -367,6 +386,19 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             result = 0;
 
             _uart_send_hup_data(HL_HUP_CMD_SET_RTC_TIME, &result, sizeof(result));
+        } break;
+        case HL_HUP_CMD_SET_BOX_LID_STATE: {
+            if (hup_frame.data_addr[0] == 0) {
+                _euc_mod.box_lid_state = HL_MOD_EUC_BOX_LID_CLOSE;
+            } else {
+                _euc_mod.box_lid_state = HL_MOD_EUC_BOX_LID_OPEN;
+            }
+
+            _mod_msg_send(HL_BOX_LID_STATE_UPDATE_IND, &(_euc_mod.box_lid_state), sizeof(_euc_mod.box_lid_state));
+
+            result = 0;
+
+            _uart_send_hup_data(HL_HUP_CMD_SET_BOX_LID_STATE, &result, sizeof(result));
         } break;
         default:
             break;
@@ -534,6 +566,12 @@ static void _record_hid_cmd_send_poll(void)
 }
 #endif
 
+static void _timer_timeout_handle(void* arg)
+{
+    LOG_I("euc timeout");
+    _mod_msg_send(HL_OUT_BOX_IND, NULL, 0);
+}
+
 static void _euc_thread_entry(void* arg)
 {
     while (_euc_mod.thread_exit_flag == 0) {
@@ -572,6 +610,9 @@ int hl_mod_euc_init(rt_mq_t msg_hd)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
+    rt_timer_init(&(_euc_mod.timer), "euc_timer", _timer_timeout_handle, RT_NULL, 1500,
+                  RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
+
     _euc_mod.msg_handle = msg_hd;
 
     LOG_D("euc init success");
@@ -591,6 +632,8 @@ int hl_mod_euc_deinit(void)
     hl_mod_euc_stop();
 
     _hl_mod_euc_hup_deinit();
+
+    rt_timer_detach(&(_euc_mod.timer));
 
     LOG_D("euc deinit success");
 
