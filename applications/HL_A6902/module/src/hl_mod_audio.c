@@ -127,7 +127,7 @@ typedef enum _play_uac_state_e
 #define HL_MOD_AUDIO_BITS (32)  /// 24BIT
 #define HL_MOD_AUDIO_CHANNELS (2)
 #define HL_MOD_AUDIO_PERIOD_SIZE (96) //(120)
-#define HL_MOD_AUDIO_PERIOD_COUNT (4)
+#define HL_MOD_AUDIO_PERIOD_COUNT (3)
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
@@ -157,6 +157,7 @@ static uint32_t                        s_record_bypass_size      = 0;
 #else
 static uint32_t                        s_vu_en                   = 0;
 #endif
+
 
 ///  app层消息队列
 rt_mq_t s_audio_to_app_mq = RT_NULL;
@@ -1045,7 +1046,6 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #endif
-
     hl_mod_audio_codec_buff_clear(&play_info);
     hl_mod_audio_codec_buff_clear(p_card_param);    
 
@@ -1823,15 +1823,11 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     hl_mod_audio_dfs_sd();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
-    hl_hal_gpio_low(GPIO_MIC_SW);
-    
-    
+    hl_hal_gpio_low(GPIO_MIC_SW);    
 #else
-    // hl_hal_gpio_init(GPIO_AMP_EN);
-    // hl_hal_gpio_high(GPIO_AMP_EN);
 #endif
     hl_drv_rtc_pcf85063_init();
-   hl_mod_audio_system_rtc_set();
+    hl_mod_audio_system_rtc_set();
 
     ret = hl_mod_audio_param_config();
     if (RT_EOK != ret) {
@@ -1909,7 +1905,7 @@ uint8_t hl_mod_audio_deinit(void)
 
     // hl_mod_audio_codec_deconfig(&cap_info);
     // hl_mod_audio_codec_deconfig(&play_info);
-
+    
     rt_thread_delete(audio_ctrl_thread_id);
 
     s_stream_mode_next = HL_STREAM_IDLE;
