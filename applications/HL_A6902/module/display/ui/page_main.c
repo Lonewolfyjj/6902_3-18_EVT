@@ -419,12 +419,19 @@ static void lv_set_vodeo_dot_status_cb(lv_obj_t * dot_obj,uint8_t hide)
 
 static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
 {
+    static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
     switch(signal_group){
         case 1:
-        lv_signal_group1_hide_set(hide_num);
+        if(sign_1 != hide_num){
+            sign_1 = hide_num;
+            lv_signal_group1_hide_set(hide_num);
+        }        
         break;
         case 2:
-        lv_signal_group2_hide_set(hide_num);
+        if(sign_2 != hide_num){
+            sign_2 = hide_num;
+            lv_signal_group2_hide_set(hide_num);
+        }          
         break;
         default:
         break;
@@ -641,7 +648,7 @@ void hl_mod_main_ioctl(void * ctl_data)
 
 
         case HL_CHANGE_TX1_SIGNAL:
-            lv_signal_tx1_set(ptr->tx_device_1.signal);
+            lv_signal_hide_set(1,ptr->tx_device_1.signal);
             main_init.tx_device_1.signal = ptr->tx_device_1.signal;
             break;
         case HL_CHANGE_TX1_ELEC:
@@ -676,7 +683,7 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
 
         case HL_CHANGE_TX2_SIGNAL:
-            lv_signal_tx2_set(ptr->tx_device_2.signal);
+            lv_signal_hide_set(2,ptr->tx_device_2.signal);
             main_init.tx_device_2.signal = ptr->tx_device_2.signal;
             break;
         case HL_CHANGE_TX2_ELEC:
