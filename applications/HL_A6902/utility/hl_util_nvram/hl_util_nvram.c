@@ -177,7 +177,7 @@ uint8_t hl_util_nvram_param_deinit()
 uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* default_value, uint16_t value_len)
 {
     if (!sg_nvram_handle || NULL == param_key || NULL == param_value || NULL == default_value || value_len == 0) {
-        sg_nvram_handle->std_printf("error: nvram not init\r\n");
+        // sg_nvram_handle->std_printf("error: nvram not init\r\n");
         return 1;
     }
 
@@ -215,7 +215,7 @@ uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* defaul
 uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int default_value)
 {
     if (!sg_nvram_handle || NULL == param_key || NULL == param_value) {
-        sg_nvram_handle->std_printf("error: nvram not init\r\n");
+        // sg_nvram_handle->std_printf("error: nvram not init\r\n");
         return 1;
     }
 
@@ -232,7 +232,8 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
     check_ret = cJSON_HasObjectItem(sg_json_paramaters, param_key);
     if (check_ret) {
         item = cJSON_GetObjectItem(sg_json_paramaters, param_key);
-        strcpy(param_value, item->valueint);
+        // strcpy(param_value, item->valueint);
+        *param_value = atoi(item->valuestring);
     } else {
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
         ret = 2;
@@ -248,7 +249,7 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
 uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
 {
     if (!sg_nvram_handle || NULL == param_key || NULL == param_value) {
-        sg_nvram_handle->std_printf("error: nvram not init\r\n");
+        // sg_nvram_handle->std_printf("error: nvram not init\r\n");
         return 1;
     }
 
