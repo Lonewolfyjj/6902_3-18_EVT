@@ -251,9 +251,13 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             }
             LOG_D("MONITOR_CATEGORY_VAL_IND\r\n");
             break;
-        case LINE_OUT_VOLUME_VAL_IND:
-            // TBD: audio模块设置相机口音量
-            LOG_D("LINE_OUT_VOLUME_VAL_IND\r\n");
+        case MONO_LINE_OUT_VOLUME_VAL_IND:
+            // TBD: MONO设置相机口音量
+            LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
+            break;
+        case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
+            // TBD: SAFETRACK设置相机口音量
+            LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_VOLUME_VAL_IND:
             // TBD: audio模块设置监听口音量
