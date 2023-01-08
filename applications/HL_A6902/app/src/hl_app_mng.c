@@ -160,13 +160,13 @@ void hl_app_mng_powerOn(void)
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
     hl_mod_display_init(&hl_app_mq);
-    hl_mod_audio_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
+    hl_mod_audio_init(&hl_app_mq);
     hl_mod_apple_auth_init(&hl_app_mq);
     hl_mod_apple_auth_start();
     hl_mod_euc_init(&hl_app_mq);
-    hl_mod_euc_start();
+    hl_mod_euc_start();    
 
 #if HL_IS_TX_DEVICE()
 #else
@@ -177,15 +177,15 @@ void hl_app_mng_powerOn(void)
 // 关机，去初始化模块
 void hl_app_mng_powerOff(void)
 {
-    LOG_I("power off");
-    hl_mod_pm_ctrl(HL_PM_POWER_DOWN_CMD, NULL, 0);
-    hl_mod_input_deinit();
-    hl_mod_display_deinit();
+    LOG_I("power off");    
+    hl_mod_euc_stop();
+    hl_mod_euc_deinit();
     hl_mod_audio_deinit();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
-    hl_mod_euc_stop();
-    hl_mod_euc_deinit();
+    hl_mod_input_deinit();
+    hl_mod_display_deinit();    
+    hl_mod_pm_ctrl(HL_PM_POWER_DOWN_CMD, NULL, 0);
     //hl_mod_pm_stop();
     //hl_mod_pm_deinit();
 }
