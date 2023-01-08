@@ -102,8 +102,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             tx1_rssi  = ((uint8_t*)p_msg->param.ptr)[0];
             tx2_rssi  = ((uint8_t*)p_msg->param.ptr)[1];
             // LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
-            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, tx1_rssi, 1);
-            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, tx2_rssi, 1);
+            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, &tx1_rssi, 1);
+            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1);
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
