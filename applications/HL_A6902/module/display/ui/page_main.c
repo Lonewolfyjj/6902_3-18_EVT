@@ -746,6 +746,8 @@ void hl_mod_main_init(void * init_data)
         lv_style_page1_init();
         page_style_bit.page_main = 1;
     }
+    sign_1 = 0xFF;
+    sign_2 = 0xFF;
     tx1_value_max = 0;
     tx2_value_max = 0;
     if(ptr->display_tx_device == HL_DISPLAY_TX1){
