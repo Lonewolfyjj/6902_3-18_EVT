@@ -29,6 +29,7 @@
 
 #include "hl_mod_pm.h"
 #include "hl_mod_display.h"
+#include "hl_mod_telink.h"
 
 #define DBG_SECTION_NAME "app_pm"
 #define DBG_LEVEL DBG_LOG
@@ -80,12 +81,16 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
     uint8_t                  soc_temp;
     int8_t                   temperature_temp;
+    hl_rf_bypass_value_t     tx_bat;
 
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND:
             soc_temp    = *(uint8_t*)p_msg->param.ptr;
             tx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(LED_BATTERY_VAL_CMD, &soc_temp, 1);
+            tx_bat.chn = tx_info.rf_state - 1;
+            tx_bat.val = soc_temp;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, &tx_bat, sizeof(tx_bat));
             LOG_I("current soc:%d", tx_info.soc);
             break;
 

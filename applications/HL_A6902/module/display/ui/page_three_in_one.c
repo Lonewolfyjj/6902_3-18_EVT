@@ -132,7 +132,7 @@ static void btn_left_cb(lv_event_t * e)
             btn_left_cnt++;
             btn_mid_cnt = 0;
             btn_right_cnt = 0;
-            if(btn_left_cnt > 1){
+            if(btn_left_cnt >= 1){
                 LV_LOG_USER("btn_mid Clicked\n");
                 hl_three_in_one_func(HL_THREE_ONE_CHECK_LEFT);                
             } 
@@ -161,7 +161,7 @@ static void btn_mid_cb(lv_event_t * e)
             btn_left_cnt = 0;
             btn_mid_cnt++;
             btn_right_cnt = 0;
-            if(btn_mid_cnt > 1){
+            if(btn_mid_cnt >= 1){
                 LV_LOG_USER("btn_mid Clicked\n");
                 hl_three_in_one_func(HL_THREE_ONE_CHECK_MID);                
             } 
@@ -186,7 +186,7 @@ static void btn_right_cb(lv_event_t * e)
             btn_left_cnt = 0;
             btn_mid_cnt = 0;
             btn_right_cnt++;
-            if(btn_right_cnt > 1){
+            if(btn_right_cnt >= 1){
                 LV_LOG_USER("btn_right Clicked\n");
                 hl_three_in_one_func(HL_THREE_ONE_CHECK_RIGHT);                
             } 
@@ -210,12 +210,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }

@@ -127,7 +127,7 @@ typedef enum _play_uac_state_e
 #define HL_MOD_AUDIO_BITS (32)  /// 24BIT
 #define HL_MOD_AUDIO_CHANNELS (2)
 #define HL_MOD_AUDIO_PERIOD_SIZE (96) //(120)
-#define HL_MOD_AUDIO_PERIOD_COUNT (4)
+#define HL_MOD_AUDIO_PERIOD_COUNT (3)
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
@@ -157,6 +157,7 @@ static uint32_t                        s_record_bypass_size      = 0;
 #else
 static uint32_t                        s_vu_en                   = 0;
 #endif
+
 
 ///  app层消息队列
 rt_mq_t s_audio_to_app_mq = RT_NULL;
@@ -771,6 +772,36 @@ static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
     return RT_EOK;
 }
 
+// 声卡清空buff的数据
+static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t *p_param)
+{
+    rt_err_t ret = RT_EOK;
+
+    if (p_param->card == RT_NULL) {
+        LOG_I("audio card param deconfig repeated!");
+        return;
+    }     
+        
+    ret = hl_mod_audio_codec_deconfig(p_param);
+    if(ret != RT_EOK) {
+        LOG_E("audio codec start failed! err: %d", ret);
+        return ret;
+    }
+
+    // rt_memset(&p_param->abuf, 0x0, sizeof(p_param->abuf));
+
+    ret = hl_mod_audio_codec_config(p_param);
+    if(ret != RT_EOK) {
+        LOG_E("audio codec start failed! err: %d", ret);
+        return ret;
+    }
+
+    LOG_I("audio codec buff clear succeed!");
+    return ret;
+}
+
+
+
 // dsp内存申请、参数配置和初始化
 static rt_err_t hl_mod_audio_dsp_config(void)
 {
@@ -1015,6 +1046,8 @@ static void _hl_cap2play_thread_entry(void* arg)
     }
 
 #endif
+    hl_mod_audio_codec_buff_clear(&play_info);
+    hl_mod_audio_codec_buff_clear(p_card_param);    
 
     while (cap2play_thread_flag != 0) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
@@ -1022,7 +1055,7 @@ static void _hl_cap2play_thread_entry(void* arg)
             //break;
         }
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 100) {                
+        if (s_vu_en++ == 5) {                
             s_vu_en = 0;    
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
         }       
@@ -1754,7 +1787,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if((count_vu % 20 == 0) && (count_vu != 100)) { 
+        if((count_vu % 1 == 0) && (count_vu != 26)) { 
             if (dsp_config->vu_l > s_vu_l){
                 s_vu_l = dsp_config->vu_l;
             }
@@ -1762,14 +1795,14 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 100) {    
+        if(count_vu >= 25) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {   
                 hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (s_vu_l<-118)?0:s_vu_l+118);//(s_vu_l<-187)?0:s_vu_l+187);
                 hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (s_vu_r<-118)?0:s_vu_r+118);//(s_vu_r<-187)?0:s_vu_r+187);
                 s_vu_l = -187;
                 s_vu_r = -187;
-                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (s_vu_l<-118)?0:s_vu_l+118, (s_vu_r<-118)?0:s_vu_r+118);
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
 #endif
@@ -1790,15 +1823,11 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     hl_mod_audio_dfs_sd();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
-    hl_hal_gpio_low(GPIO_MIC_SW);
-    
-    
+    hl_hal_gpio_low(GPIO_MIC_SW);    
 #else
-    // hl_hal_gpio_init(GPIO_AMP_EN);
-    // hl_hal_gpio_high(GPIO_AMP_EN);
 #endif
     hl_drv_rtc_pcf85063_init();
-   hl_mod_audio_system_rtc_set();
+    hl_mod_audio_system_rtc_set();
 
     ret = hl_mod_audio_param_config();
     if (RT_EOK != ret) {
@@ -1876,7 +1905,7 @@ uint8_t hl_mod_audio_deinit(void)
 
     // hl_mod_audio_codec_deconfig(&cap_info);
     // hl_mod_audio_codec_deconfig(&play_info);
-
+    
     rt_thread_delete(audio_ctrl_thread_id);
 
     s_stream_mode_next = HL_STREAM_IDLE;

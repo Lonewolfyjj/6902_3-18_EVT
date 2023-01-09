@@ -54,6 +54,7 @@ typedef struct __hl_lvgl_moreone_option_t
 
 typedef struct __hl_lvgl_moreone_init_t
 {
+    char * device_ptr;
     hl_lvgl_moreone_option_t moreone_choose_opt;//
     hl_moreone_mid_opt_t moreone_mid_opt;
     hl_moreone_event_cb func_cb;
