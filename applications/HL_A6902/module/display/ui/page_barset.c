@@ -80,7 +80,7 @@ static void lv_style_barset_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,1));
     lv_style_set_radius(&style_back, 3);
 
     lv_style_init(&style_indicator);
@@ -166,7 +166,7 @@ void hl_mod_barset_init(void * init_data)
     slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,30,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
     img1 = lv_img_creat_fun(slider1,ptr->src,LV_ALIGN_LEFT_MID,10,0);
     lab1 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_LEFT,0,-4,ptr->ptr);
-    lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,0,-4,buf);
+    lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,-6,-4,buf);
 
     switch(ptr->icontyp){
         case HL_NO_ICON:

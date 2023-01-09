@@ -540,7 +540,6 @@
 /* PKG_USING_AGILE_FTP is not set */
 /* PKG_USING_EMBEDDEDPROTO is not set */
 /* PKG_USING_RT_LINK_HW is not set */
-/* PKG_USING_RYANMQTT is not set */
 /* PKG_USING_LORA_PKT_FWD is not set */
 /* PKG_USING_LORA_GW_DRIVER_LIB is not set */
 /* PKG_USING_LORA_PKT_SNIFFER is not set */
@@ -548,7 +547,6 @@
 /* PKG_USING_SMALL_MODBUS is not set */
 /* PKG_USING_NET_SERVER is not set */
 /* PKG_USING_ZFTP is not set */
-/* PKG_USING_WOL is not set */
 
 /* security packages */
 
@@ -968,17 +966,13 @@
 
 /* Sensors */
 
-/* PKG_USING_ARDUINO_SENSOR_DEVICE_DRIVERS is not set */
 /* PKG_USING_ARDUINO_CAPACITIVESENSOR is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_ADXL375 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_VL53L0X is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_VL53L1X is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_SENSOR is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_VL6180X is not set */
 /* PKG_USING_ADAFRUIT_MAX31855 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MAX31865 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MAX31856 is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_MAX6675 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MLX90614 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_LSM9DS1 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_AHTX0 is not set */
@@ -1102,7 +1096,6 @@
 /* PKG_USING_ARDUINO_SEEED_HM3301 is not set */
 /* PKG_USING_ARDUINO_SEEED_MCP9600 is not set */
 /* PKG_USING_ARDUINO_SEEED_LTC2941 is not set */
-/* PKG_USING_ARDUINO_SEEED_LDC1612 is not set */
 
 /* Display */
 
@@ -1158,7 +1151,7 @@
 /* HAL_DBG_ON is not set */
 /* RT_USING_SND_GLB_RST is not set */
 #define RT_USING_RESET
-/* RT_USING_CRU_DUMP is not set */
+#define RT_USING_CRU_DUMP
 /* RT_USING_REGULATOR_DUMP is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
