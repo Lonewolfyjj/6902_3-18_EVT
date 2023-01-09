@@ -26,6 +26,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include "hl_config.h"
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
 /// 模块层发送给APP的消息格式
@@ -54,6 +55,10 @@ typedef struct _tx_app_info_t
     /// 当前电量
     uint8_t             soc;
 
+    /// 本地Mac地址
+    uint8_t             local_mac[6];
+    /// 配对Mac地址
+    uint8_t             remote_mac[6];
 } tx_app_info_t;
 extern tx_app_info_t tx_info;
 #else
@@ -92,6 +97,9 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
+
+    /// 本地Mac地址
+    uint8_t             local_mac[6];
 } rx_app_info_t;
 extern rx_app_info_t rx_info;
 #endif
@@ -127,6 +135,23 @@ void hl_app_mng_powerOn(void);
  * </table>
  */
 void hl_app_mng_powerOff(void);
+
+/**
+ * 
+ * @brief 关机充电APP，Type-C关机充电显示
+ * @param [in] msg_q 消息队列
+ * @date 2023-01-03
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-03      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_entry(void *msg_q);
 
 #endif /* __HL_APP_MNG_H__ */
 /*

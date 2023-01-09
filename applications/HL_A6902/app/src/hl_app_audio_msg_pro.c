@@ -137,14 +137,14 @@ void hl_app_audio_stream_updata(void)
         hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e)); 
     }
 #else
-    if (rx_info.uac_link_flag != 0) {
-        stream_mode = HL_STREAM_CAP2UAC_UAC2PLAY;
-        // stream_mode = HL_STREAM_CAP2PLAY_CAP2UAC;
-        hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e)); 
-    } else {
-        stream_mode = HL_STREAM_CAP2PLAY;
-        hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e));         
-    }
+    // if (rx_info.uac_link_flag != 0) {
+    //     stream_mode = HL_STREAM_CAP2UAC_UAC2PLAY;
+    //     // stream_mode = HL_STREAM_CAP2PLAY_CAP2UAC;
+    //     hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e)); 
+    // } else {
+    //     stream_mode = HL_STREAM_CAP2PLAY;
+    //     hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e));         
+    // }
 #endif
 }
 

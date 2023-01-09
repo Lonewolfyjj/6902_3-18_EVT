@@ -1,7 +1,7 @@
 /**
  * @file hl_mod_page_volume_bar_set.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
+ * @brief lineout页面，立体声的左声道或者安全音轨和单声道的声道
  * @version V1.0
  * @date 2022-12-20
  * 
@@ -70,89 +70,63 @@ static void page_voc_bar_left_init()
     hl_mod_barset_init(&bar_test);
 }
 
-// //右声道设置界面
-// static void page_voc_bar_right_init()
-// {
+//mono声道设置界面
+static void page_voc_bar_mono_init()
+{
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
 
-//     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    hl_mod_page_volume_init(data->mono_line_out_volume);
 
-//     // 设置当前音量
-//     hl_mod_knob_select_val_set(&now_volume, data->tx2_line_out_volume);
+    hl_lvgl_barset_init_t bar_test = {
+        .func_cb    = hl_mod_page_volume_update,
+        .icontyp    = HL_SINGLE_ICON,
+        .init_value = hl_mod_page_volume_get(),
+        .ptr        = "单声道",
+        .range_max  = MAX_LINEOUT_VOLUME,
+        .range_min  = MIN_LINEOUT_VOLUME,
+        .src        = &Other_voice,
+    };
+    hl_mod_barset_init(&bar_test);
+}
 
-//     hl_lvgl_barset_init_t bar_test = {
-//         .func_cb    = hl_bar_test_cb,
-//         .icontyp    = HL_STEREO_ICON,
-//         .init_value = hl_mod_knob_select_val_get(&now_volume),
-//         .ptr        = "右声道",
-//         .range_max  = MAX_LINEOUT_VOLUME,
-//         .range_min  = MIN_LINEOUT_VOLUME,
-//         .src        = &Other_voice,
-//     };
-//     hl_mod_barset_init(&bar_test);
-// }
+//安全音轨设置界面
+static void page_voc_bar_safe_track_init()
+{
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
 
-// //右声道设置界面
-// static void page_voc_bar_right_init()
-// {
+    hl_mod_page_volume_init(data->track_line_out_volume);
 
-//     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    hl_lvgl_barset_init_t bar_test = {
+        .func_cb    = hl_mod_page_volume_update,
+        .icontyp    = HL_SAYFT_ICON,
+        .init_value = hl_mod_page_volume_get(),
+        .ptr        = "安全音轨",
+        .range_max  = MAX_LINEOUT_VOLUME,
+        .range_min  = MIN_LINEOUT_VOLUME,
+        .src        = &Other_voice,
+    };
+    hl_mod_barset_init(&bar_test);
+}
 
-//     // 设置当前音量
-//     hl_mod_knob_select_val_set(&now_volume, data->tx2_line_out_volume);
 
-//     hl_lvgl_barset_init_t bar_test = {
-//         .func_cb    = hl_bar_test_cb,
-//         .icontyp    = HL_STEREO_ICON,
-//         .init_value = hl_mod_knob_select_val_get(&now_volume),
-//         .ptr        = "右声道",
-//         .range_max  = MAX_LINEOUT_VOLUME,
-//         .range_min  = MIN_LINEOUT_VOLUME,
-//         .src        = &Other_voice,
-//     };
-//     hl_mod_barset_init(&bar_test);
-// }
-
-// static void page_voc_bar_tx1_init(void)
-// {
-//     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
-//     // 设置当前音量
-//     hl_mod_knob_select_val_set(&now_volume, data->tx1_gain_volume);
-
-//     hl_lvgl_barset_init_t bar_test = 
-//     {
-//         .func_cb = hl_bar_test_cb,
-//         .icontyp = HL_NO_ICON,
-//         .init_value = hl_mod_knob_select_val_get(&now_volume),
-//         .ptr = "TX1",
-//         .range_max = MAX_LINEOUT_VOLUME,
-//         .range_min = MIN_LINEOUT_VOLUME,
-//         .src = &Other_mic_black,
-//     };
-//     hl_mod_barset_init(&bar_test);
-// }
-
-// static void page_voc_bar_tx2_init(void)
-// {
-//     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
-//     // 设置当前音量
-//     hl_mod_knob_select_val_set(&now_volume, data->tx2_gain_volume);
-
-//     hl_lvgl_barset_init_t bar_test = 
-//     {
-//         .func_cb = hl_bar_test_cb,
-//         .icontyp = HL_NO_ICON,
-//         .init_value = hl_mod_knob_select_val_get(&now_volume),
-//         .ptr = "TX2",
-//         .range_max = MAX_LINEOUT_VOLUME,
-//         .range_min = MIN_LINEOUT_VOLUME,
-//         .src = &Other_mic_black,
-//     };
-//     hl_mod_barset_init(&bar_test);
-// }
 
 static void hl_mod_page_setup(void)
-{    
-    page_voc_bar_left_init();
+{
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+
+    switch (data->now_sound_module) {
+        case STEREO:
+            page_voc_bar_left_init();
+            break;
+        case MONO:
+            page_voc_bar_mono_init();
+            break;
+        case SAFE_TRACK:
+            page_voc_bar_safe_track_init();
+            break;
+        default:
+            break;
+    }
 }
 
 static void hl_mod_page_exit(void)
@@ -162,14 +136,45 @@ static void hl_mod_page_exit(void)
 
 static void save_before_back(void)
 {
-    hl_display_screen_s* ptr = hl_mod_page_get_screen_data_ptr();
-    ptr->tx1_line_out_volume = hl_mod_page_volume_get();
-    LOG_D("vol=[%d]\n",ptr->tx1_line_out_volume);
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+
+    hl_mod_display_mux_take();
+    switch (data->now_sound_module) {
+        case STEREO:
+            data->tx1_line_out_volume = hl_mod_page_volume_get();
+            break;
+        case MONO:
+            data->mono_line_out_volume = hl_mod_page_volume_get();
+            break;
+        case SAFE_TRACK:
+            data->track_line_out_volume = hl_mod_page_volume_get();
+            break;
+        default:
+            break;
+    }
+    hl_mod_display_mux_release();
 }
 
 static void hl_mod_page_loop(void)
 {
-    hl_mod_page_volume_loop(TX1_LINE_OUT_VOLUME_VAL_IND,save_before_back,MIN_LINEOUT_VOLUME,MAX_LINEOUT_VOLUME);
+    hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+
+    switch (data->now_sound_module) {
+        case STEREO:
+            hl_mod_page_volume_loop(TX1_LINE_OUT_VOLUME_VAL_IND, save_before_back, MIN_LINEOUT_VOLUME,
+                                    MAX_LINEOUT_VOLUME);
+            break;
+        case MONO:
+            hl_mod_page_volume_loop(MONO_LINE_OUT_VOLUME_VAL_IND, save_before_back, MIN_LINEOUT_VOLUME,
+                                    MAX_LINEOUT_VOLUME);
+            break;
+        case SAFE_TRACK:
+            hl_mod_page_volume_loop(SAFETRACK_LINE_OUT_VOLUME_VAL_IND, save_before_back, MIN_LINEOUT_VOLUME,
+                                    MAX_LINEOUT_VOLUME);
+            break;
+        default:
+            break;
+    }
 }
 
 PAGE_DEC(PAGE_LINE_OUT_STEREO_LEFT)

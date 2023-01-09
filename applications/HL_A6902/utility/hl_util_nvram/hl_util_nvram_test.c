@@ -27,7 +27,7 @@
 #define HL_UTIL_SNOR_NVRAM_SIZE 4096
 #define HL_UTIL_NVRAM_JSON_ADDR 0x120000
 
-#if 0
+#if 1
 /* variables -----------------------------------------------------------------*/
 static struct rt_mtd_nor_device* snor_device = RT_NULL;
 static uint8_t*                  snor_buf    = NULL;

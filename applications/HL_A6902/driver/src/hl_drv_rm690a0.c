@@ -42,6 +42,10 @@
 #define OLED_RST_H() hl_hal_gpio_high(GPIO_OLED_RST)
 #define OLED_RST_L() hl_hal_gpio_low(GPIO_OLED_RST)
 
+
+
+
+
 #define MAKE_RGB_INFO(rl, ro, gl, go, bl, bo, al, ao) \
     .rgb = { { (rl), (ro) }, { (gl), (go) }, { (bl), (bo) }, { (al), (ao) } }
 
@@ -58,8 +62,10 @@ typedef struct _hl_drv_mipi_screen
     struct rt_device*           g_display_dev;
     struct CRTC_WIN_STATE*      win_config;
     struct VOP_POST_SCALE_INFO* post_scale;
-
+    struct rt_device_graphic_info dgi;
+    uint32_t mipi_data_len;
 } hl_drv_mipi_screen;
+
 
 static hl_drv_mipi_screen mipi_screen;
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -120,7 +126,7 @@ const struct hl_util_format_info* hl_util_format_info_find(uint32_t format)
 #define HL_MAKE_RGB16(rgb, r, g, b) HL_MAKE_RGBA(rgb, r, g, b, 0)
 
 static uint8_t get_color_format_byte(uint8_t format);
-
+static void hl_drv_rm690a0_hardware_rst(void);
 static void hl_fill_pix_rgb(uint8_t* buf1, uint8_t* data, uint32_t size, uint32_t byte)
 {
     uint32_t x;
@@ -201,23 +207,35 @@ static int32_t AlignDown(int32_t value, int32_t align)
     return value / align * align;
 }
 
-static void hl_drv_rm690a0_gpio_init(void)
+
+void hl_drv_rm690a0_poweron_seq(void)
 {
+    // 初始化放在RTTHREEAD的INIT_PREV_EXPORT部分
+    // 屏幕上电时序 屏幕相关代码初始化
     hl_hal_gpio_init(GPIO_OLED_RST);
+    hl_hal_gpio_low(GPIO_OLED_RST);
+    hl_hal_gpio_init(GPIO_OLED_SWIRE);
+    hl_hal_gpio_low(GPIO_OLED_SWIRE);
+    
+    hl_hal_gpio_init(GPIO_OLED_DCX);
+    hl_hal_gpio_low(GPIO_OLED_DCX);
 
-    OLED_RST_H();
+    rt_pin_mode(GPIO1_C5, PIN_MODE_OUTPUT);
+    rt_pin_write(GPIO1_C5, PIN_LOW);
 
-    rt_thread_mdelay(10);
-    OLED_PWR_ON(); // 延时不要去，1线去掉延时容易被识别成脉冲
+    rt_pin_mode(GPIO1_C6, PIN_MODE_OUTPUT);
+    rt_pin_write(GPIO1_C6, PIN_LOW);
+    rt_pin_mode(GPIO1_C4, PIN_MODE_OUTPUT);
+    rt_pin_write(GPIO1_C4, PIN_LOW);
+}
 
-    rt_thread_mdelay(10);
+INIT_PREV_EXPORT(hl_drv_rm690a0_poweron_seq);
 
-    OLED_RST_L();
-    rt_thread_mdelay(100);  // 10ms
-
-    OLED_RST_H();
-    rt_thread_mdelay(500);  // 400ms
-
+static void hl_drv_rm690a0_gpio_init(void)
+{    
+    rt_thread_mdelay(100);
+    hl_drv_rm690a0_hardware_rst();
+    rt_thread_mdelay(100);  
 }
 
 static void hl_drv_rm690a0_hardware_rst(void)
@@ -280,6 +298,34 @@ static void framebuffer_free(void* base)
 #endif
 }
 
+// 显存缓存
+void hl_mod_lvgl_video_memory(hl_mod_lvgl_video_mem_t* video_mem_p)
+{
+    // uint32_t src_w = video_mem_p->x2 - video_mem_p->x1 + 1;
+    // uint32_t src_h = video_mem_p->y2 - video_mem_p->y1 + 1;
+    uint32_t i;
+    uint32_t j;
+    uint8_t  byte;
+    // uint32_t src_index;
+    uint32_t dst_index;
+
+    // if (video_mem_p->dst_len < (src_w * src_h * video_mem_p->format_byte)) {
+    //     return;
+    // }
+    for (j = video_mem_p->y1; j <= video_mem_p->y2; j++) {
+        for (i = video_mem_p->x1; i <= video_mem_p->x2; i++) {
+
+            // src_index = (j * src_w + i) * video_mem_p->format_byte;
+            dst_index = (j * video_mem_p->hor_max + i) * video_mem_p->format_byte;
+
+            for (byte = 0; byte < video_mem_p->format_byte; byte++) {
+                video_mem_p->dst[(uint32_t)byte + dst_index] =
+                    *video_mem_p->src;  //video_mem_p->src[(uint32_t)byte + src_index];
+                video_mem_p->src++;
+            }
+        }
+    }
+}
 static void hl_drv_vop_win_init(struct CRTC_WIN_STATE* win_config, struct VOP_POST_SCALE_INFO* post_scale)
 {
 
@@ -293,7 +339,7 @@ static void hl_drv_vop_win_init(struct CRTC_WIN_STATE* win_config, struct VOP_PO
 
     win_config->yrgbLength = 0;
     win_config->cbcrLength = 0;
-    win_config->xVir       = 0;
+    win_config->xVir       = MIPI_OLED_WIDTH;
 
     win_config->srcX = 0;
     win_config->srcY = 0;
@@ -309,8 +355,8 @@ static void hl_drv_vop_win_init(struct CRTC_WIN_STATE* win_config, struct VOP_PO
     win_config->yLoopOffset = 0;
 
     win_config->alphaEn     = 0;
-    win_config->alphaMode   = 0;
-    win_config->alphaPreMul = 0;
+    win_config->alphaMode = VOP_ALPHA_MODE_PER_PIXEL;
+    win_config->alphaPreMul = VOP_NON_PREMULT_ALPHA;
 
     post_scale->srcW = win_config->srcW;
     post_scale->srcH = win_config->srcH;
@@ -320,11 +366,14 @@ static void hl_drv_vop_win_init(struct CRTC_WIN_STATE* win_config, struct VOP_PO
     post_scale->dstH = win_config->srcH;
 
     rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_SET_SCALE, post_scale);
-    win_config->winEn     = 0;
+
+    win_config->winEn = 0;
     win_config->winUpdate = 1;
     rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_SET_PLANE, win_config);
+    
     rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_COMMIT, NULL);
-    rt_thread_mdelay(40);
+    
+    rt_thread_delay(33);
 }
 
 static uint8_t hl_drv_rm690a0_set_bl(uint16_t val)
@@ -354,9 +403,8 @@ static void hl_drv_rm690a0_free(uint32_t* base)
     rt_dma_free_large((void*)base);
 #endif
 }
-
 /* Exported functions --------------------------------------------------------*/
-
+#if 0
 uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic)
 {
     uint8_t ret = RT_ERROR;
@@ -378,29 +426,21 @@ uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start,
         return RT_ERROR;
     }
 
-    rt_kprintf("set!\r\n");
     mipi_screen.win_config->winId = 0;
     mipi_screen.win_config->winEn = 1;
-    rt_kprintf("p_pic = %x\n", p_pic);
+
     mipi_screen.win_config->xLoopOffset = 0;
     mipi_screen.win_config->yLoopOffset = 0;
-    mipi_screen.win_config->xVir        = 0;
+    mipi_screen.win_config->xVir        = MIPI_OLED_WIDTH;
     mipi_screen.win_config->yrgbAddr    = (uint32_t)p_pic;
-    rt_kprintf("%s: %x\n", __FUNCTION__, mipi_screen.win_config->yrgbAddr);
     mipi_screen.win_config->yrgbLength =
         (uint32_t)(x_end - x_start + 1) * (y_end - y_start + 1) * get_color_format_byte(MIPI_OLED_DATA_FMT);
 
-    // HAL_DCACHE_CleanByRange((uint32_t)p_pic,mipi_screen.win_config->yrgbLength);
-    //         rt_kprintf("%s: %d\n", __FUNCTION__,mipi_screen.win_config->yrgbLength);
+    
     mipi_screen.win_config->srcX = x_start;
     mipi_screen.win_config->srcY = y_start;
     mipi_screen.win_config->srcW = x_end - x_start + 1;
     mipi_screen.win_config->srcH = y_end - y_start + 1;
-
-    rt_kprintf("win_config->srcX=%d\r\n", mipi_screen.win_config->srcX);
-    rt_kprintf("win_config->srcY=%d\r\n", mipi_screen.win_config->srcY);
-    rt_kprintf("win_config->srcW=%d\r\n", mipi_screen.win_config->srcW);
-    rt_kprintf("win_config->srcH=%d\r\n", mipi_screen.win_config->srcH);
 
     mipi_screen.post_scale->srcW = MIPI_OLED_WIDTH;
     mipi_screen.post_scale->srcH = mipi_screen.win_config->srcH;
@@ -415,7 +455,54 @@ uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start,
 
     ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_COMMIT, NULL);
 
+    struct display_state *disp_state = (struct display_state *)mipi_screen.g_display_dev->user_data;
+    if (disp_state->panel_state.display_mode == DISPLAY_CMD_MODE)
+    {
+		struct display_sync display_sync_data;
+
+        // rt_kprintf(" sync\n");
+        display_sync_data.cmd = DISPLAY_SYNC;
+        ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_DISPLAY_SYNC, &display_sync_data);
+        if (ret != RT_EOK)
+            rt_kprintf("rt_display_sync_hook time out\n");
+    }
+
     rt_thread_mdelay(5);
+
+    return ret;
+}
+#endif 
+uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
+{
+    uint8_t ret = RT_ERROR;
+
+    hl_mod_lvgl_video_memory(video_mem_p);
+    mipi_screen.win_config->winId = 0;
+    mipi_screen.win_config->winEn = 1;
+
+    mipi_screen.win_config->yrgbAddr    = (uint32_t)video_mem_p->dst;
+    mipi_screen.win_config->yrgbLength = mipi_screen.mipi_data_len;
+
+    ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_SET_SCALE, mipi_screen.post_scale);
+
+    ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_SET_PLANE, mipi_screen.win_config);
+
+    ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_COMMIT, NULL);
+
+// 优化写入时间，先注释
+#if 0
+    struct display_state *disp_state = (struct display_state *)mipi_screen.g_display_dev->user_data;
+    if (disp_state->panel_state.display_mode == DISPLAY_CMD_MODE)
+    {
+		struct display_sync display_sync_data;
+
+        // rt_kprintf(" sync\n");
+        display_sync_data.cmd = DISPLAY_SYNC;
+        ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_DISPLAY_SYNC, &display_sync_data);
+        if (ret != RT_EOK)
+            rt_kprintf("rt_display_sync_hook time out\n");
+    }
+#endif
 
     return ret;
 }
@@ -436,22 +523,22 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
         }
 
         break;
-        case DISPLAY_FULL_COLOR_CMD: {
-            hl_drv_fill_pattern_t* color_patten = (hl_drv_fill_pattern_t*)ptr;
-            if (color_patten != RT_NULL && color_patten->buf != RT_NULL) {
+        // case DISPLAY_FULL_COLOR_CMD: {
+        //     hl_drv_fill_pattern_t* color_patten = (hl_drv_fill_pattern_t*)ptr;
+        //     if (color_patten != RT_NULL && color_patten->buf != RT_NULL) {
 
-                hl_drv_color_fill_pattern(color_patten);
+        //         hl_drv_color_fill_pattern(color_patten);
 
-                result = hl_drv_rm690a0_write(0, MIPI_OLED_WIDTH - 1, 0, MIPI_OLED_HEIGHT - 1,
-                                              (const uint8_t*)(color_patten->buf));
+        //         result = hl_drv_rm690a0_write(0, MIPI_OLED_WIDTH - 1, 0, MIPI_OLED_HEIGHT - 1,
+        //                                       (const uint8_t*)(color_patten->buf));
 
-            } else {
-                rt_kprintf("rm690a0 err! need create buf first\r\n");
-                result = RT_ERROR;
-            }
-        }
+        //     } else {
+        //         rt_kprintf("rm690a0 err! need create buf first\r\n");
+        //         result = RT_ERROR;
+        //     }
+        // }
 
-        break;
+        // break;
         case FRAMEBUF_MALLOC_CMD: {
 
             uint32_t framebufferaddr;
@@ -520,49 +607,82 @@ uint8_t hl_drv_rm690a0_deinit(void)
 uint8_t hl_drv_rm690a0_init(void)
 {
     uint8_t ret = RT_NULL;
+    int path = 0;
+    struct display_state *state;
 
     hl_drv_rm690a0_gpio_init();
 
-    hl_drv_rm690a0_hardware_rst();
+    mipi_screen.g_display_dev = rt_device_find("lcd");
 
-    // mipi_screen.g_display_dev = rt_device_find("lcd");
+    if (mipi_screen.g_display_dev == RT_NULL) {
+        rt_kprintf("mipi init err 1!\r\n");
+        return RT_ERROR;
+    }
 
-    // if (mipi_screen.g_display_dev == RT_NULL) {
-    //     rt_kprintf("mipi init err 1!\r\n");
-    //     return RT_ERROR;
-    // }
+    ret = rt_device_open(mipi_screen.g_display_dev, RT_DEVICE_OFLAG_RDWR);
 
-    // ret = rt_device_open(mipi_screen.g_display_dev, RT_DEVICE_FLAG_RDWR);
+    if (ret != RT_EOK) {
+        rt_kprintf("mipi init err 2!\r\n");
+        return RT_ERROR;
+    }
 
-    // if (ret != RT_EOK) {
-    //     rt_kprintf("mipi init err 2!\r\n");
-    //     return RT_ERROR;
-    // }
+    state = (struct display_state *)mipi_screen.g_display_dev->user_data;
+    mipi_screen.dgi = state->graphic_info;
 
-    // ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_AP_COP_MODE, (uint8_t*)0);
+    mipi_screen.dgi.bits_per_pixel = 16;
+    mipi_screen.dgi.width          = RT_LV_HOR_RES;
+    mipi_screen.dgi.height         = RT_LV_VER_RES;
+    
+    ret |= rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_AP_COP_MODE, (uint8_t*)1);
+    
+    if (ret != RT_EOK) {
+        rt_kprintf("mipi init err 3!\r\n");
+        return RT_ERROR;
+    }
+	ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_ENABLE, NULL);
+	path = SWITCH_TO_INTERNAL_DPHY;
+	ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_MIPI_SWITCH, &path);
 
-    // ret |= rt_device_control(mipi_screen.g_display_dev, RTGRAPHIC_CTRL_POWERON, NULL);
+    if (ret != RT_EOK) {
+        rt_kprintf("mipi init err 3!\r\n");
+        return RT_ERROR;
+    }
+    ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_DISABLE, NULL);
 
-    // if (ret != RT_EOK) {
-    //     rt_kprintf("mipi init err 3!\r\n");
-    //     return RT_ERROR;
-    // }
+	ret = rt_device_control(mipi_screen.g_display_dev, RK_DISPLAY_CTRL_AP_COP_MODE, (uint8_t *)0);
+	ret = rt_device_control(mipi_screen.g_display_dev, RTGRAPHIC_CTRL_POWERON, NULL);
+    if (ret != RT_EOK) {
+        rt_kprintf("mipi init err 3!\r\n");
+        return RT_ERROR;
+    }
 
-    // mipi_screen.win_config = (struct CRTC_WIN_STATE*)rt_calloc(1, sizeof(struct CRTC_WIN_STATE));
+    // 开启正负电压供电
+    rt_thread_mdelay(100);
+    OLED_PWR_ON();
 
-    // if (mipi_screen.win_config == RT_NULL) {
-    //     rt_kprintf("mipi init err 6!\r\n");
-    //     return RT_ERROR;
-    // }
+	mipi_screen.win_config = (struct CRTC_WIN_STATE *)rt_calloc(1, sizeof(struct CRTC_WIN_STATE));
 
-    // mipi_screen.post_scale = (struct VOP_POST_SCALE_INFO*)rt_calloc(1, sizeof(struct VOP_POST_SCALE_INFO));
 
-    // if (mipi_screen.post_scale == RT_NULL) {
-    //     rt_kprintf("mipi init err 7!\r\n");
-    //     return RT_ERROR;
-    // }
 
-    // hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
+    if (mipi_screen.win_config == RT_NULL) {
+        rt_kprintf("mipi init err 6!\r\n");
+        return RT_ERROR;
+    }
+
+
+    mipi_screen.post_scale = (struct VOP_POST_SCALE_INFO*)rt_calloc(1, sizeof(struct VOP_POST_SCALE_INFO));
+
+    if (mipi_screen.post_scale == RT_NULL) {
+        rt_kprintf("mipi init err 7!\r\n");
+        return RT_ERROR;
+    }
+    
+
+    hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
+
+    // BUF长度计算：
+    mipi_screen.mipi_data_len = (uint32_t)MIPI_OLED_WIDTH*MIPI_OLED_HEIGHT*(uint32_t)get_color_format_byte(MIPI_OLED_DATA_FMT);
+
 
     return RT_EOK;
 }

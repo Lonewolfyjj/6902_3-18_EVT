@@ -39,23 +39,25 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-
+#define LOWBAT_THRESHOLD 8
 // static hl_icon_status icon_state = {0};
 static hl_top_cmd_t  icon_state[HL_TOP_ICON_CNT] = { 0 };
 static hl_rf_state_e main_tx;
 
-
-static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
-static void hl_mod_icon_deal_init();
-static void hl_mod_icon_deal_deinit();
-static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr);
-static void hl_mod_main_tx_deal_deinit();
-static void hl_mod_page_main_init(void);
-static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void            hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
+static void            hl_mod_icon_deal_init();
+static void            hl_mod_icon_deal_deinit();
+static void            hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr);
+static void            hl_mod_main_tx_deal_deinit();
+static void            hl_mod_page_main_init(void);
+static void            hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void            hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void            hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void            hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
+static void            hl_mod_page_home_tx1lowbat_deal(uint8_t batval);
+static void            hl_mod_page_home_tx2lowbat_deal(uint8_t batval);
+static void            hl_mod_page_home_rxlowbat_deal(uint8_t batval);
 
 // 添加是 1  删除是 0
 static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal)
@@ -106,77 +108,84 @@ static void hl_mod_icon_deal_deinit()
 static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_main_init_t data;
-    main_tx = data_ptr->rf_net_connect;
-    LV_LOG_USER("init%d\n",main_tx);
+
+    LV_LOG_USER("init%d\n", main_tx);
     switch (main_tx) {
         case HL_RF_LR_CONNECT:
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
-            data.tx_device_1.electric = data_ptr->tx1_bat_val;
-            data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-            data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
-            data.tx_device_1.volume   = data_ptr->tx1_vu;
+            data.tx_device_1.electric       = data_ptr->tx1_bat_val;
+            data.tx_device_1.line_out_value = 0;
+            rt_kprintf("tx1_gain_volume = %d\n",data_ptr->tx1_gain_volume);
+            data.tx_device_1.tx_gain        = data_ptr->tx1_gain_volume;
+            data.tx_device_1.signal         = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            data.tx_device_1.record         = data_ptr->sys_status.tx1_record_state;
+            data.tx_device_1.volume         = data_ptr->tx1_vu;
 
-            data.tx_device_2.electric = data_ptr->tx2_bat_val;
-            data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-            data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
-            data.tx_device_2.volume   = data_ptr->tx2_vu;
+            data.tx_device_2.electric       = data_ptr->tx2_bat_val;
+            data.tx_device_2.line_out_value = 0;
+            data.tx_device_2.tx_gain        = data_ptr->tx2_gain_volume;
+            data.tx_device_2.signal         = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
+            data.tx_device_2.volume         = data_ptr->tx2_vu;
             hl_mod_main_init(&data);
             break;
         case HL_RF_R_CONNECT:
-            data.display_tx_device = HL_DISPLAY_DOUBLE;
+            data.display_tx_device = HL_DISPLAY_TX2;
 
-            data.tx_device_1.electric = 0;
-            data.tx_device_1.signal   = 0;
-            data.tx_device_1.record   = 0;
-            data.tx_device_1.volume   = 0;
-
-            data.tx_device_2.electric = data_ptr->tx2_bat_val;
-            data.tx_device_2.signal   = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-            data.tx_device_2.record   = data_ptr->sys_status.tx2_record_state;
-            data.tx_device_2.volume   = data_ptr->tx2_vu;
+            data.tx_device_2.electric       = data_ptr->tx2_bat_val;
+            data.tx_device_2.line_out_value = data_ptr->tx2_line_out_volume;
+            data.tx_device_2.tx_gain        = data_ptr->tx2_gain_volume;
+            data.tx_device_2.signal         = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+            data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
+            data.tx_device_2.volume         = data_ptr->tx2_vu;
             hl_mod_main_init(&data);
             break;
         case HL_RF_L_CONNECT:
-            data.display_tx_device = HL_DISPLAY_DOUBLE;
+            data.display_tx_device = HL_DISPLAY_TX1;
 
-            data.tx_device_1.electric = data_ptr->tx1_bat_val;
-            data.tx_device_1.signal   = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-            data.tx_device_1.record   = data_ptr->sys_status.tx1_record_state;
-            data.tx_device_1.volume   = data_ptr->tx1_vu;
-
-            data.tx_device_2.electric = 0;
-            data.tx_device_2.signal   = 0;
-            data.tx_device_2.record   = 0;
-            data.tx_device_2.volume   = 0;
+            data.tx_device_1.electric       = data_ptr->tx1_bat_val;
+            data.tx_device_1.line_out_value = data_ptr->tx1_line_out_volume;
+            data.tx_device_1.tx_gain        = data_ptr->tx1_gain_volume;
+            data.tx_device_1.signal         = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+            data.tx_device_1.record         = data_ptr->sys_status.tx1_record_state;
+            data.tx_device_1.volume         = data_ptr->tx1_vu;
             hl_mod_main_init(&data);
             break;
         case HL_RF_UNCONNECT:
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
-            data.tx_device_1.electric = 0;
-            data.tx_device_1.signal   = HL_NO_SIGNAL;
-            data.tx_device_1.record   = HL_NO_RECODE;
-            data.tx_device_1.volume   = 0;
+            data.tx_device_1.electric       = 0;
+            data.tx_device_1.line_out_value = 0;
+            data.tx_device_1.tx_gain        = 0;
+            data.tx_device_1.signal         = HL_NO_SIGNAL;
+            data.tx_device_1.record         = HL_NO_RECODE;
+            data.tx_device_1.volume         = 0;
 
-            data.tx_device_2.electric = 0;
-            data.tx_device_2.signal   = HL_NO_SIGNAL;
-            data.tx_device_2.record   = HL_NO_RECODE;
-            data.tx_device_2.volume   = 0;
+            data.tx_device_2.electric       = 0;
+            data.tx_device_2.line_out_value = 0;
+            data.tx_device_2.tx_gain        = 0;
+            data.tx_device_2.signal         = HL_NO_SIGNAL;
+            data.tx_device_2.record         = HL_NO_RECODE;
+            data.tx_device_2.volume         = 0;
             hl_mod_main_init(&data);
             break;
         case HL_RF_PAIRING:
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
-            data.tx_device_1.electric = 0;
-            data.tx_device_1.signal   = HL_NO_SIGNAL;
-            data.tx_device_1.record   = HL_NO_RECODE;
-            data.tx_device_1.volume   = 0;
+            data.tx_device_1.electric       = 0;
+            data.tx_device_1.line_out_value = 0;
+            data.tx_device_1.tx_gain        = 0;
+            data.tx_device_1.signal         = HL_NO_SIGNAL;
+            data.tx_device_1.record         = HL_NO_RECODE;
+            data.tx_device_1.volume         = 0;
 
-            data.tx_device_2.electric = 0;
-            data.tx_device_2.signal   = HL_NO_SIGNAL;
-            data.tx_device_2.record   = HL_NO_RECODE;
-            data.tx_device_2.volume   = 0;
+            data.tx_device_2.electric       = 0;
+            data.tx_device_2.line_out_value = 0;
+            data.tx_device_2.tx_gain        = 0;
+            data.tx_device_2.signal         = HL_NO_SIGNAL;
+            data.tx_device_2.record         = HL_NO_RECODE;
+            data.tx_device_2.volume         = 0;
             hl_mod_main_init(&data);
             break;
         default:
@@ -184,214 +193,211 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
     }
 }
 
-static void hl_mod_main_tx12_deal_update(hl_display_screen_s* data_ptr)
-{
-    hl_lvgl_main_ioctl_t data;
-    main_tx = data_ptr->rf_net_connect;
-    LV_LOG_USER("tx12up%d\n", main_tx);
-    switch (main_tx) {
-        case HL_RF_LR_CONNECT:
+// static void hl_mod_main_tx12_deal_update(hl_display_screen_s* data_ptr)
+// {
+//     hl_lvgl_main_ioctl_t data;
 
-            data.cmd                  = HL_CHANGE_TX1_ELEC;
-            data.tx_device_1.electric = data_ptr->tx1_bat_val;
-            hl_mod_main_ioctl(&data);
+//     LV_LOG_USER("tx12up%d\n", main_tx);
+//     switch (main_tx) {
+//         case HL_RF_LR_CONNECT:
 
-            data.cmd                = HL_CHANGE_TX1_SIGNAL;
-            data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-            hl_mod_main_ioctl(&data);
+//             data.cmd                  = HL_CHANGE_TX1_ELEC;
+//             data.tx_device_1.electric = data_ptr->tx1_bat_val;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_VOL;
-            data.tx_device_1.volume = data_ptr->tx1_vu;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_SIGNAL;
+//             data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_REC;
-            data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
-            hl_mod_main_ioctl(&data);
-            //TX2
-            data.cmd                  = HL_CHANGE_TX2_ELEC;
-            data.tx_device_2.electric = data_ptr->tx2_bat_val;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_VOL;
+//             data.tx_device_1.volume = data_ptr->tx1_vu;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_SIGNAL;
-            data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_REC;
+//             data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
+//             hl_mod_main_ioctl(&data);
+//             //TX2
+//             data.cmd                  = HL_CHANGE_TX2_ELEC;
+//             data.tx_device_2.electric = data_ptr->tx2_bat_val;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_VOL;
-            data.tx_device_2.volume = data_ptr->tx2_vu;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_SIGNAL;
+//             data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_REC;
-            data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
-            hl_mod_main_ioctl(&data);
-            break;
-        case HL_RF_R_CONNECT:
-            data.cmd                  = HL_CHANGE_TX1_ELEC;
-            data.tx_device_1.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_VOL;
+//             data.tx_device_2.volume = data_ptr->tx2_vu;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_SIGNAL;
-            data.tx_device_1.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_REC;
+//             data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
+//             hl_mod_main_ioctl(&data);
+//             break;
+//         case HL_RF_R_CONNECT:
+//             data.cmd                  = HL_CHANGE_TX1_ELEC;
+//             data.tx_device_1.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_VOL;
-            data.tx_device_1.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_SIGNAL;
+//             data.tx_device_1.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_REC;
-            data.tx_device_1.record =0;
-            hl_mod_main_ioctl(&data);
-            //TX2
-            data.cmd                  = HL_CHANGE_TX2_ELEC;
-            data.tx_device_2.electric = data_ptr->tx2_bat_val;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_VOL;
+//             data.tx_device_1.volume = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_SIGNAL;
-            data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_REC;
+//             data.tx_device_1.record =0;
+//             hl_mod_main_ioctl(&data);
+//             //TX2
+//             data.cmd                  = HL_CHANGE_TX2_ELEC;
+//             data.tx_device_2.electric = data_ptr->tx2_bat_val;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_VOL;
-            data.tx_device_2.volume = data_ptr->tx2_vu;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_SIGNAL;
+//             data.tx_device_2.signal = hl_mod_page_signal_deal(data_ptr->tx2_signal);
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_REC;
-            data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
-            hl_mod_main_ioctl(&data);
-            break;
-        case HL_RF_L_CONNECT:
-            data.cmd                  = HL_CHANGE_TX1_ELEC;
-            data.tx_device_1.electric = data_ptr->tx1_bat_val;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_VOL;
+//             data.tx_device_2.volume = data_ptr->tx2_vu;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_SIGNAL;
-            data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_REC;
+//             data.tx_device_2.record = (hl_record_status_t)data_ptr->sys_status.tx2_record_state;
+//             hl_mod_main_ioctl(&data);
+//             break;
+//         case HL_RF_L_CONNECT:
+//             data.cmd                  = HL_CHANGE_TX1_ELEC;
+//             data.tx_device_1.electric = data_ptr->tx1_bat_val;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_VOL;
-            data.tx_device_1.volume = data_ptr->tx1_vu;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_SIGNAL;
+//             data.tx_device_1.signal = hl_mod_page_signal_deal(data_ptr->tx1_signal);
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_REC;
-            data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
-            hl_mod_main_ioctl(&data);
-            //TX2
-            data.cmd                  = HL_CHANGE_TX2_ELEC;
-            data.tx_device_2.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_VOL;
+//             data.tx_device_1.volume = data_ptr->tx1_vu;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_SIGNAL;
-            data.tx_device_2.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_REC;
+//             data.tx_device_1.record = (hl_record_status_t)data_ptr->sys_status.tx1_record_state;
+//             hl_mod_main_ioctl(&data);
+//             //TX2
+//             data.cmd                  = HL_CHANGE_TX2_ELEC;
+//             data.tx_device_2.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_VOL;
-            data.tx_device_2.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_SIGNAL;
+//             data.tx_device_2.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_REC;
-            data.tx_device_2.record = 0;
-            hl_mod_main_ioctl(&data);
-            break;
-        case HL_RF_UNCONNECT:
-            data.cmd                  = HL_CHANGE_TX1_ELEC;
-            data.tx_device_1.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_VOL;
+//             data.tx_device_2.volume = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_SIGNAL;
-            data.tx_device_1.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_REC;
+//             data.tx_device_2.record = 0;
+//             hl_mod_main_ioctl(&data);
+//             break;
+//         case HL_RF_UNCONNECT:
+//             data.cmd                  = HL_CHANGE_TX1_ELEC;
+//             data.tx_device_1.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_VOL;
-            data.tx_device_1.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_SIGNAL;
+//             data.tx_device_1.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_REC;
-            data.tx_device_1.record =0;
-            hl_mod_main_ioctl(&data);
-            //TX2
-            data.cmd                  = HL_CHANGE_TX2_ELEC;
-            data.tx_device_2.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_VOL;
+//             data.tx_device_1.volume = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_SIGNAL;
-            data.tx_device_2.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_REC;
+//             data.tx_device_1.record =0;
+//             hl_mod_main_ioctl(&data);
+//             //TX2
+//             data.cmd                  = HL_CHANGE_TX2_ELEC;
+//             data.tx_device_2.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_VOL;
-            data.tx_device_2.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_SIGNAL;
+//             data.tx_device_2.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_REC;
-            data.tx_device_2.record = 0;
-            hl_mod_main_ioctl(&data);
-            break;
-        case HL_RF_PAIRING:
-            data.cmd                  = HL_CHANGE_TX1_ELEC;
-            data.tx_device_1.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_VOL;
+//             data.tx_device_2.volume = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_SIGNAL;
-            data.tx_device_1.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_REC;
+//             data.tx_device_2.record = 0;
+//             hl_mod_main_ioctl(&data);
+//             break;
+//         case HL_RF_PAIRING:
+//             data.cmd                  = HL_CHANGE_TX1_ELEC;
+//             data.tx_device_1.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_VOL;
-            data.tx_device_1.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_SIGNAL;
+//             data.tx_device_1.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX1_REC;
-            data.tx_device_1.record =0;
-            hl_mod_main_ioctl(&data);
-            //TX2
-            data.cmd                  = HL_CHANGE_TX2_ELEC;
-            data.tx_device_2.electric = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_VOL;
+//             data.tx_device_1.volume = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_SIGNAL;
-            data.tx_device_2.signal = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX1_REC;
+//             data.tx_device_1.record =0;
+//             hl_mod_main_ioctl(&data);
+//             //TX2
+//             data.cmd                  = HL_CHANGE_TX2_ELEC;
+//             data.tx_device_2.electric = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_VOL;
-            data.tx_device_2.volume = 0;
-            hl_mod_main_ioctl(&data);
+//             data.cmd                = HL_CHANGE_TX2_SIGNAL;
+//             data.tx_device_2.signal = 0;
+//             hl_mod_main_ioctl(&data);
 
-            data.cmd                = HL_CHANGE_TX2_REC;
-            data.tx_device_2.record = 0;
-            hl_mod_main_ioctl(&data);
-            break;
-        default:
-            break;
-    }
-}
+//             data.cmd                = HL_CHANGE_TX2_VOL;
+//             data.tx_device_2.volume = 0;
+//             hl_mod_main_ioctl(&data);
+
+//             data.cmd                = HL_CHANGE_TX2_REC;
+//             data.tx_device_2.record = 0;
+//             hl_mod_main_ioctl(&data);
+//             break;
+//         default:
+//             break;
+//     }
+// }
 static void hl_mod_main_tx_deal_deinit()
 {
     hl_lvgl_main_ioctl_t main_ctl;
-    LV_LOG_USER("deinit%d\n",main_tx);
+    LV_LOG_USER("deinit%d\n", main_tx);
 
     switch (main_tx) {
         case HL_RF_LR_CONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            // hl_mod_main_ioctl(&main_ctl);
+            hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_R_CONNECT:
-            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            // hl_mod_main_ioctl(&main_ctl);
+            main_ctl.cmd = HL_CHANGE_DELETE_TX2;
+            hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_L_CONNECT:
-            main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            // hl_mod_main_ioctl(&main_ctl);
+            main_ctl.cmd = HL_CHANGE_DELETE_TX1;
+            hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_UNCONNECT:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            // hl_mod_main_ioctl(&main_ctl);
+            hl_mod_main_ioctl(&main_ctl);
             break;
         case HL_RF_PAIRING:
             main_ctl.cmd = HL_CHANGE_DELETE_DOUBLE;
-            // hl_mod_main_ioctl(&main_ctl);
+            hl_mod_main_ioctl(&main_ctl);
             break;
         default:
             break;
     }
-
-    // main_ctl.cmd = HL_CHANGE_DELETE_STYLE;
-    // hl_mod_main_ioctl(&main_ctl);
 }
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
@@ -427,19 +433,30 @@ static void hl_mod_main_two_init()
 // top层初始化
 static void hl_mod_page_top_init(void)
 {
-
-    hl_lvgl_top_init_t top_init;
+    hl_display_sound_module_e now;
+    hl_lvgl_top_init_t        top_init;
 
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
 
     // 更新当前的RX电量信息
     top_init.electric_top = data_ptr->rx_bat_val;
     hl_mod_top_init(&top_init);
 
-    if (data_ptr->sound_module == STEREO) {
+    now = data_ptr->now_sound_module;
 
-        hl_mod_icon_deal(HL_TOP_ICON_TRACK_MOD, HL_TOP_ADD_ICON_CMD);
+    switch (now) {
+        case STEREO:
+            hl_mod_icon_deal(HL_TOP_ICON_STEREO_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+
+        case MONO:
+            hl_mod_icon_deal(HL_TOP_ICON_SINGLE_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+        case SAFE_TRACK:
+            hl_mod_icon_deal(HL_TOP_ICON_TRACK_MOD, HL_TOP_ADD_ICON_CMD);
+            break;
+        default:
+            break;
     }
 
     if (data_ptr->sys_status.tx1_noise || data_ptr->sys_status.tx2_noise) {
@@ -472,10 +489,14 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
     hl_lvgl_top_ioctl_t ioctl_top;
 
     if (flag->rx_bat_val) {
+        hl_mod_display_mux_take();
+        flag->rx_bat_val       = 0;
         ioctl_top.top_cmd      = HL_TOP_BAT_VAL;
         ioctl_top.electric_top = now->rx_bat_val;
+        hl_mod_display_mux_release();
         hl_mod_top_ioctl(&ioctl_top);
-        flag->rx_bat_val = 0;
+
+        hl_mod_page_home_rxlowbat_deal(ioctl_top.electric_top);
     }
     // 降噪一起的
 
@@ -487,74 +508,137 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
         } else if (!now->sys_status.tx1_noise && !now->sys_status.tx2_noise) {
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_DELETE_ICON_CMD);
         }
+        hl_mod_display_mux_take();
         flag->sys_status.tx1_noise = 0;
         flag->sys_status.tx2_noise = 0;
+        hl_mod_display_mux_release();
     }
 
     // 锁屏
     if (flag->sys_status.screen_lock) {
 
         hl_mod_icon_deal(HL_TOP_ICON_LOCK, (hl_top_cmd_t)now->sys_status.screen_lock);
-
+        hl_mod_display_mux_take();
         flag->sys_status.screen_lock = 0;
+        hl_mod_display_mux_release();
     }
 
     // line out
     if (flag->sys_status.line_out_in) {
 
         hl_mod_icon_deal(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
+        hl_mod_display_mux_take();
         flag->sys_status.line_out_in = 0;
+        hl_mod_display_mux_release();
     }
 
     // usb
     if (flag->sys_status.usb_in) {
 
         hl_mod_icon_deal(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
+        hl_mod_display_mux_take();
         flag->sys_status.usb_in = 0;
+        hl_mod_display_mux_release();
     }
 
     if (flag->sys_status.monitor_in) {
 
         hl_mod_icon_deal(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
+        hl_mod_display_mux_take();
         flag->sys_status.monitor_in = 0;
+        hl_mod_display_mux_release();
     }
 }
+static void hl_mod_page_home_tx1lowbat_deal(uint8_t batval)
+{
+    hl_lvgl_main_ioctl_t data1;
 
+    if (batval <= LOWBAT_THRESHOLD) {
+        data1.cmd = HL_CHANGE_TX1_BAR_RED;
+
+    } else if (batval >= LOWBAT_THRESHOLD) {
+        data1.cmd = HL_CHANGE_TX1_BAR_WHITE;
+    }
+    hl_mod_main_ioctl(&data1);
+
+    data1.tx_device_1.electric = batval;
+    data1.cmd                  = HL_CHANGE_TX1_ELEC;
+    hl_mod_main_ioctl(&data1);
+}
+
+static void hl_mod_page_home_tx2lowbat_deal(uint8_t batval)
+{
+    hl_lvgl_main_ioctl_t data1;
+
+    if (batval <= LOWBAT_THRESHOLD) {
+        data1.cmd = HL_CHANGE_TX2_BAR_RED;
+
+    } else if (batval >= LOWBAT_THRESHOLD) {
+        data1.cmd = HL_CHANGE_TX2_BAR_WHITE;
+    }
+    hl_mod_main_ioctl(&data1);
+    data1.tx_device_2.electric = batval;
+    data1.cmd                  = HL_CHANGE_TX1_ELEC;
+    hl_mod_main_ioctl(&data1);
+}
+
+static void hl_mod_page_home_rxlowbat_deal(uint8_t batval)
+{
+    hl_lvgl_top_ioctl_t ioctrl;
+
+    if (batval <= LOWBAT_THRESHOLD) {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
+
+    } else if (batval >= LOWBAT_THRESHOLD) {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
+    }
+    hl_mod_top_ioctl(&ioctrl);
+
+    ioctrl.top_cmd      = HL_TOP_BAT_VAL;
+    ioctrl.electric_top = batval;
+    hl_mod_top_ioctl(&ioctrl);
+}
 static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
     hl_lvgl_main_ioctl_t data1;
 
     if (flag->tx1_bat_val) {
+        hl_mod_display_mux_take();
+        flag->tx1_bat_val          = 0;
         data1.cmd                  = HL_CHANGE_TX1_ELEC;
         data1.tx_device_1.electric = now->tx1_bat_val;
+        hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data1);
-
-        flag->tx1_bat_val = 0;
+        hl_mod_page_home_tx1lowbat_deal(data1.tx_device_1.electric);
     }
 
     if (flag->tx1_signal) {
+        hl_mod_display_mux_take();
+        flag->tx1_signal         = 0;
         data1.cmd                = HL_CHANGE_TX1_SIGNAL;
         data1.tx_device_1.signal = hl_mod_page_signal_deal(now->tx1_signal);
+        hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data1);
-
-        flag->tx1_signal = 0;
     }
 
     //vu值
     if (flag->tx1_vu) {
+        hl_mod_display_mux_take();
+        flag->tx1_vu             = 0;
         data1.cmd                = HL_CHANGE_TX1_VOL;
         data1.tx_device_1.volume = now->tx1_vu;
-        hl_mod_main_ioctl(&data1);
+        hl_mod_display_mux_release();
 
-        flag->tx1_vu = 0;
+        hl_mod_main_ioctl(&data1);
     }
 
     if (flag->sys_status.tx1_record_state) {
-        data1.cmd                = HL_CHANGE_TX1_REC;
-        data1.tx_device_1.record = (hl_record_status_t)now->sys_status.tx1_record_state;
-        hl_mod_main_ioctl(&data1);
-
+        hl_mod_display_mux_take();
         flag->sys_status.tx1_record_state = 0;
+        data1.cmd                         = HL_CHANGE_TX1_REC;
+        data1.tx_device_1.record          = (hl_record_status_t)now->sys_status.tx1_record_state;
+        hl_mod_display_mux_release();
+        hl_mod_main_ioctl(&data1);
     }
 }
 
@@ -563,97 +647,82 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
     hl_lvgl_main_ioctl_t data2;
 
     if (flag->tx2_bat_val) {
+        hl_mod_display_mux_take();
+        flag->tx2_bat_val          = 0;
         data2.cmd                  = HL_CHANGE_TX2_ELEC;
         data2.tx_device_2.electric = now->tx2_bat_val;
+        hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
-
-        flag->tx2_bat_val = 0;
+        hl_mod_page_home_tx2lowbat_deal(data2.tx_device_2.electric);
     }
 
     if (flag->tx2_signal) {
+        hl_mod_display_mux_take();
+        flag->tx2_bat_val        = 0;
         data2.cmd                = HL_CHANGE_TX2_SIGNAL;
         data2.tx_device_2.signal = hl_mod_page_signal_deal(now->tx2_signal);
+        hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
-
-        flag->tx2_signal = 0;
     }
 
     //vu值
     if (flag->tx2_vu) {
+        hl_mod_display_mux_take();
+        flag->tx2_vu             = 0;
         data2.cmd                = HL_CHANGE_TX2_VOL;
         data2.tx_device_2.volume = now->tx2_vu;
+        hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
-
-        flag->tx2_vu = 0;
     }
 
     if (flag->sys_status.tx2_record_state) {
-        data2.cmd                = HL_CHANGE_TX2_REC;
-        data2.tx_device_2.record = (hl_record_status_t)now->sys_status.tx2_record_state;
-        hl_mod_main_ioctl(&data2);
-
+        hl_mod_display_mux_take();
         flag->sys_status.tx2_record_state = 0;
+        data2.cmd                         = HL_CHANGE_TX2_REC;
+        data2.tx_device_2.record          = (hl_record_status_t)now->sys_status.tx2_record_state;
+        hl_mod_display_mux_release();
+        hl_mod_main_ioctl(&data2);
     }
 }
-
 
 static void hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* data_ptr)
 {
     if (flag->rf_net_connect) {
-        // hl_mod_main_tx_deal_deinit();
-        // hl_mod_main_tx_deal_init(data_ptr);
-        hl_mod_main_tx12_deal_update(data_ptr);
-        LV_LOG_USER("update%d\n",main_tx);
-        switch (main_tx) {
-            case HL_RF_LR_CONNECT:
 
-                hl_mod_page_home_tx1_update(flag, data_ptr);
-                hl_mod_page_home_tx2_update(flag, data_ptr);
+        hl_mod_main_tx_deal_deinit();
 
-                break;
-            case HL_RF_R_CONNECT:
-
-                hl_mod_page_home_tx2_update(flag, data_ptr);
-                break;
-            case HL_RF_L_CONNECT:
-                // 一个tx1
-                hl_mod_page_home_tx1_update(flag, data_ptr);
-                break;
-            case HL_RF_UNCONNECT:
-                break;
-            case HL_RF_PAIRING:
-                break;
-            default:
-                break;
-        }
+        hl_mod_display_mux_take();
         flag->rf_net_connect = 0;
-    } else {
-        
-        switch (main_tx) {
-            case HL_RF_LR_CONNECT:
+        main_tx              = data_ptr->rf_net_connect;
+        hl_mod_display_mux_release();
+        hl_mod_main_tx_deal_init(data_ptr);
 
-                hl_mod_page_home_tx1_update(flag, data_ptr);
-                hl_mod_page_home_tx2_update(flag, data_ptr);
+        LV_LOG_USER("update%d\n", main_tx);
+    }
+    // hl_mod_main_tx12_deal_update(data_ptr);
+    switch (main_tx) {
+        case HL_RF_LR_CONNECT:
 
-                break;
-            case HL_RF_R_CONNECT:
-                // 一个tx2
+            hl_mod_page_home_tx1_update(flag, data_ptr);
+            hl_mod_page_home_tx2_update(flag, data_ptr);
 
-                hl_mod_page_home_tx2_update(flag, data_ptr);
-                break;
-            case HL_RF_L_CONNECT:
-                // 一个tx1
+            break;
+        case HL_RF_R_CONNECT:
+            // 一个tx2
 
-                hl_mod_page_home_tx1_update(flag, data_ptr);
-                break;
-            case HL_RF_UNCONNECT:
-                break;
-            case HL_RF_PAIRING:
-                break;
-            default:
-                break;
-        }
+            hl_mod_page_home_tx2_update(flag, data_ptr);
+            break;
+        case HL_RF_L_CONNECT:
+            // 一个tx1
 
+            hl_mod_page_home_tx1_update(flag, data_ptr);
+            break;
+        case HL_RF_UNCONNECT:
+            break;
+        case HL_RF_PAIRING:
+            break;
+        default:
+            break;
     }
 }
 static void hl_mod_page_home_update(void)
@@ -670,6 +739,7 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
     // hl_mod_main_two_init();
+    main_tx = data_ptr->rf_net_connect;
     hl_mod_icon_deal_init();
     hl_mod_main_tx_deal_init(data_ptr);
     hl_mod_page_top_init();
@@ -678,7 +748,7 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    hl_mod_main_tx_deal_deinit();
+    // hl_mod_main_tx_deal_deinit();
     hl_mod_icon_deal_deinit();
     // // 删除TOP
     hl_lvgl_top_ioctl_t ctl_data = {
@@ -687,14 +757,9 @@ static void hl_mod_page_exit(void)
     hl_mod_top_ioctl(&ctl_data);
 }
 
-// static void hl_mod_page_event(void* btn, int event)
-// {
-
-// }
-
 static void hl_mod_page_run(void)
 {
-    uint8_t key_event;
+    uint8_t                     key_event;
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     //单机确定键进入菜单
     key_event = hl_mod_get_knob_okkey_val();

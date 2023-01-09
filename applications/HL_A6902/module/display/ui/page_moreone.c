@@ -31,6 +31,7 @@ static lv_style_t style_screen;
 static lv_style_t style_white_dot;
 static lv_style_t style_grey_dot;
 
+static lv_obj_t * device_lab;
 static lv_obj_t * btn1_l,*btn1_r;
 static lv_obj_t * btn2_l,*btn2_r;
 static lv_obj_t * btn3_l,*btn3_r;
@@ -494,12 +495,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -622,6 +625,7 @@ void hl_mod_moreone_init(void * init_data)
     lv_page_2_init(con2,ptr->moreone_choose_opt.option_two);
     lv_page_3_init(con3,ptr->moreone_choose_opt.option_three);
     hl_option_mid_set(ptr->moreone_mid_opt,LV_ANIM_OFF);
+    device_lab = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_LEFT,0,0,ptr->device_ptr);
     valid_obj[0] = btn11;
     valid_obj[1] = btn12;
     valid_obj[2] = btn21;

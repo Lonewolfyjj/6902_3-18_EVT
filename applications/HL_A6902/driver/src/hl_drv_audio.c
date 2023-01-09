@@ -124,7 +124,7 @@ static rt_err_t audio_wait_for_avail(struct audio_stream* as)
     rt_mutex_take(&as->lock, RT_WAITING_FOREVER);
     pcm->waiting = RT_TRUE;
     rt_mutex_release(&as->lock);
-    ret = rt_sem_take(pcm->wait, 200 /* RT_WAITING_FOREVER */);
+    rt_sem_take(pcm->wait, RT_WAITING_FOREVER);
 
     if (as->state != AUDIO_STREAM_STATE_RUNNING)
         ret = -RT_ERROR;
@@ -235,11 +235,11 @@ static rt_err_t rk_audio_start(struct audio_stream* as)
 
     audio_stream_set_state(as, AUDIO_STREAM_STATE_RUNNING);
 
-    if (as->stream == AUDIO_STREAM_CAPTURE)
-    {
-        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
-        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
-    }
+    // if (as->stream == AUDIO_STREAM_CAPTURE)
+    // {
+    //     rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+    //     rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
+    // }
 
     ret = pcm->ops->start(pcm);
 
@@ -281,10 +281,8 @@ static rt_err_t _rk_audio_stop(struct audio_stream* as, audio_stream_state_t sta
     pcm->waiting = RT_FALSE;
     rt_mutex_release(&as->lock);
 
-    if (as->stream == AUDIO_STREAM_PLAYBACK) {
-        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
-        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
-    }
+    rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+    rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
 
     return ret;
 }

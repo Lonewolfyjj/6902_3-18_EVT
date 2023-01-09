@@ -51,7 +51,7 @@
 // 0 表示左 1表示 右
 static int16_t now_sound_channal = (int16_t)HL_LINEOUT_CHOOSE_LEFT;
 
-static hl_display_sound_module_e module = STEREO;
+static hl_display_sound_module_e module = MONO;
 
 LV_IMG_DECLARE(Other_voice);
 
@@ -78,7 +78,7 @@ static void page_twolineout_init()
     hl_display_screen_s*        data = hl_mod_page_get_screen_data_ptr();
 
     //  立体声
-    module = flag->sound_module;
+    module = data->now_sound_module;
 
     switch (module) {
         case STEREO:
@@ -87,7 +87,6 @@ static void page_twolineout_init()
             page_s_init(data, flag);
             break;
         case MONO:
-            // page_voc_bar1_init(data, flag)
             break;
         case SAFE_TRACK:
             break;

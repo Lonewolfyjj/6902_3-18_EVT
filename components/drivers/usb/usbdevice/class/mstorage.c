@@ -16,6 +16,10 @@
 #include "drivers/usb_device.h"
 #include "mstorage.h"
 #include "dma.h"
+#include "hl_config.h"
+#include "hl_util_nvram.h"
+#include "hl_board_commom.h"
+
 
 #ifdef RT_USING_DFS_MNTTABLE
 #include "dfs_fs.h"
@@ -1147,6 +1151,24 @@ ufunction_t rt_usbd_function_mstorage_create(udevice_t device)
     ufunction_t func;
     ualtsetting_t setting;
     umass_desc_t mass_desc;
+
+#if HL_IS_TX_DEVICE()
+#else
+    int msc_open_flag;
+    uint8_t ret;
+
+    ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    if (ret == 1) {
+        rt_kprintf("nvram be used before not init\n");
+        hl_board_nvram_init();
+        ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    }
+
+    rt_kprintf("msc_open_flag = %d ,ret = %d \n", msc_open_flag, ret);
+    if (msc_open_flag == 0) {
+        return RT_NULL;
+    } 
+#endif
 
     /* parameter check */
     RT_ASSERT(device != RT_NULL);

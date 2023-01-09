@@ -19,7 +19,7 @@
  * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 #include <rtdevice.h>
@@ -43,22 +43,22 @@
 /* Exported functions --------------------------------------------------------*/
 
 #if HL_IS_TX_DEVICE()
-void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
+void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
-    uint8_t         p_param;
-    uint8_t         *ptr;
-    hl_rf_state_e   rf_state;
+    uint8_t       p_param;
+    uint8_t*      ptr;
+    hl_rf_state_e rf_state;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
-            ptr = (uint8_t *)p_msg->param.ptr;
+            ptr = (uint8_t*)p_msg->param.ptr;
             LOG_D("\n\n--- Telink Version[%d.%d.%d.%d] ---\n\n", ptr[0], ptr[1], ptr[2], ptr[3]);
             break;
         case HL_RF_PAIR_STATE_IND:
-            tx_info.rf_state  = *(hl_rf_state_e*)p_msg->param.ptr;
-            rf_state          = tx_info.rf_state;
+            tx_info.rf_state = *(hl_rf_state_e*)p_msg->param.ptr;
+            rf_state         = tx_info.rf_state;
             LOG_D("telink info(%02X)", tx_info.rf_state);
             // hl_mod_display_io_ctrl(TX_RF_STATE_VAL_CMD, &rf_state, sizeof(rf_state));
             hl_app_disp_state_led_set();
@@ -75,7 +75,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     hl_app_disp_state_led_set();
 }
 #else
-void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
+void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
     uint8_t            tx1_rssi;
@@ -87,13 +87,13 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
-            ptr = (uint8_t *)p_msg->param.ptr;
+            ptr = (uint8_t*)p_msg->param.ptr;
             LOG_D("\n\n--- Telink Version[%d.%d.%d.%d] ---\n\n", ptr[0], ptr[1], ptr[2], ptr[3]);
             break;
 
         case HL_RF_PAIR_STATE_IND:
-            rx_info.rf_state  = *(hl_rf_state_e*)p_msg->param.ptr;
-            rf_state          = rx_info.rf_state;
+            rx_info.rf_state = *(hl_rf_state_e*)p_msg->param.ptr;
+            rf_state         = rx_info.rf_state;
             LOG_D("telink info(%02X)", rx_info.rf_state);
             hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rf_state, sizeof(rf_state));
             break;
@@ -102,8 +102,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
             tx1_rssi  = ((uint8_t*)p_msg->param.ptr)[0];
             tx2_rssi  = ((uint8_t*)p_msg->param.ptr)[1];
             // LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
-            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, tx1_rssi, 1);
-            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, tx2_rssi, 1);
+            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, &tx1_rssi, 1);
+            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1);
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -117,12 +117,12 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t *p_msg)
         case HL_RF_BYPASS_VOLUME_IND:
             LOG_D("app get volume indicate");
             break;
-            
+
         case HL_RF_BYPASS_RECORD_IND:
             hl_mod_euc_ctrl(HL_HID_START_RECORD_CMD, RT_NULL, 0);
             LOG_D("app get record indicate");
             break;
-            
+
         case HL_RF_BYPASS_SETTING_IND:
             LOG_D("app get setting indicate");
             break;
