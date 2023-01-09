@@ -281,7 +281,7 @@ void hl_mod_b_two_in_one_init(void * init_data)
         lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_lift,LAB_COLOR_WHITE);
         lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_right,LAB_COLOR_BLACK);
     }
-    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,15,ptr->ptr_top,LAB_COLOR_WHITE);
+    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,5,ptr->ptr_top,LAB_COLOR_WHITE);
 
     lv_img_hide_set(CHICK_STA_RIGHT);
 

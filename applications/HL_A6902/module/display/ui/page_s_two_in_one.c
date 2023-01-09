@@ -245,7 +245,7 @@ void hl_mod_s_two_in_one_init(void * init_data)
         lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right,LAB_COLOR_BLACK);
     }    
     
-    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,7,ptr->ptr_top,LAB_COLOR_WHITE);
+    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,5,ptr->ptr_top,LAB_COLOR_WHITE);
 
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
