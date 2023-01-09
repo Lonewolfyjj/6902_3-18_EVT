@@ -41,6 +41,7 @@ extern "C" {
 /* variables -----------------------------------------------------------------*/
 static struct rt_mtd_nor_device* snor_device = RT_NULL;
 static rt_mutex_t                nvram_mutex = RT_NULL;
+static sg_nvram_inint_flag = 0;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -263,11 +264,13 @@ MSH_CMD_EXPORT(_hl_board_nvram_set_value, _hl_board_nvram_set_value param value)
  */
 uint8_t hl_board_nvram_init()
 {
-    _hl_board_nvram_init_snor();
-    nvram_mutex = rt_mutex_create("nvram_mutex", RT_IPC_FLAG_FIFO);
-    hl_util_nvram_param_init(rt_kprintf, _hl_board_nvram_write, _hl_board_nvram_read, _hl_board_nvram_mutex_take,
-                             _hl_board_nvram_mutex_release);
-
+    if (!sg_nvram_inint_flag) {
+        _hl_board_nvram_init_snor();
+        nvram_mutex = rt_mutex_create("nvram_mutex", RT_IPC_FLAG_FIFO);
+        hl_util_nvram_param_init(rt_kprintf, _hl_board_nvram_write, _hl_board_nvram_read, _hl_board_nvram_mutex_take,
+                                _hl_board_nvram_mutex_release);
+        sg_nvram_inint_flag = 1;
+    }
     return 0;
 }
 

@@ -43,53 +43,50 @@ typedef enum _charger_powe_on_stm_e_
 } hl_charger_power_on_stm_e;
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
-static uint8_t charger_alive = 1;
+static hl_charger_power_on_stm_e sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
+static uint8_t                   charger_alive                = 1;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
-    static uint16_t                  hold_times = 0;
-    static hl_charger_power_on_stm_e state      = EM_CHARGER_POWER_ON_STM_IDLE;
-    switch (state) {
+    static uint16_t hold_times = 0;
+    switch (sg_stm_charger_pwr_key_state) {
         case EM_CHARGER_POWER_ON_STM_IDLE:
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
                 hold_times = 50;
-                state++;
+                sg_stm_charger_pwr_key_state++;
             }
             break;
         case EM_CHARGER_POWER_ON_STM_CATCH:
             LOG_D("charge catch\r\n");
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
-                state++;
+                sg_stm_charger_pwr_key_state++;
             } else {
-                state = EM_CHARGER_POWER_ON_STM_IDLE;
+                sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
             }
             break;
         case EM_CHARGER_POWER_ON_STM_HOLD:
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
                 hold_times--;
                 if (!hold_times) {
-                    state++;
+                    sg_stm_charger_pwr_key_state++;
                 }
             } else {
-                state = EM_CHARGER_POWER_ON_STM_IDLE;
+                sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
             }
             break;
         case EM_CHARGER_POWER_ON_STM_PROCESS:
             LOG_D("charge process\r\n");
-            if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
 #if HL_IS_TX_DEVICE()
-                tx_info.on_off_flag = 1;
+            tx_info.on_off_flag = 1;
 #else
-                uint8_t param = OUTBOX_OFFCHARGE_LOGO;
-                // 告诉显示模块正常开机
-                hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &param, 1);
-                rx_info.on_off_flag = 1;
+            uint8_t param = OUTBOX_OFFCHARGE_LOGO;
+            // 告诉显示模块正常开机
+            hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &param, 1);
+            rx_info.on_off_flag = 1;
 #endif
-                hl_app_mng_powerOn();
-                charger_alive = 0;
-            } else {
-            }
-            state = EM_CHARGER_POWER_ON_STM_IDLE;
+            hl_app_mng_powerOn();
+            charger_alive                = 0;
+            sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
             break;
     }
 }
@@ -172,6 +169,13 @@ static void _hl_app_mng_charger_pm_process(mode_to_app_msg_t* p_msg)
             break;
     }
 }
+
+static void hl_app_mng_charger_goto_power_on()
+{
+    sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_PROCESS;
+}
+
+MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);
 /* Exported functions --------------------------------------------------------*/
 void hl_app_mng_charger_entry(void* msg_q)
 {

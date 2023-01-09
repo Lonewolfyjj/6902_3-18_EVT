@@ -1,8 +1,7 @@
 #include "hl_util_iap2.h"
 #include <stdlib.h>
 
-static uint8_t try_time = 3;
-static uint8_t try_detect_time = 3;
+static int try_time = 11;
 
 /**
  * _hl_iap2_detect_process
@@ -28,31 +27,23 @@ static int _hl_iap2_detect_process(st_iap2_protocol_p iap2)
         case EM_HL_IAP2_STM_DETECT_SEND:
             result              = hl_iap2_detect_send(iap2);
             iap2->detect_status = EM_HL_IAP2_STM_DETECT_RECV;
-            iap2->iap2_printf("[OK][%s:%d]send detect message!\n", __func__, __LINE__);
             break;
 
         case EM_HL_IAP2_STM_DETECT_RECV:
             result = hl_iap2_detect_recv(iap2);
-
             if (0 == result) {
-                iap2->iap2_printf("[OK][%s:%d]receive detect message!\n", __func__, __LINE__);
+                // iap2->iap2_printf("[OK][%s:%d] receive detect message!\n", __func__, __LINE__);
                 iap2->main_status = EM_HL_IAP2_STM_MAIN_LINK;
-                try_time = 3;
-                try_detect_time = 3;
+                try_time          = 4;
             } else {
-                iap2->iap2_printf("[ERROR][%s:%d]receive detect message!\n", __func__, __LINE__);
-                if(try_time){
+                if (try_time == 0) {
+                    iap2->iap2_printf("[ERROR][%s:%d] receive detect message!\n", __func__, __LINE__);
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                } else if (try_time % 4 == 0) {
                     iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
                     try_time--;
-                }else{
-                    if(try_detect_time){
-                        try_detect_time--;
-                        iap2->detect_status = EM_HL_IAP2_STM_DETECT_SEND;
-                    }else{
-                        iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
-                        try_time = 3;
-                        try_detect_time = 3;
-                    }
+                } else {
+                    try_time--;
                 }
             }
             break;
@@ -86,32 +77,39 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
 
     switch (iap2->link_status) {
         case EM_HL_IAP2_STM_LINK_SEND_SYN:
-            result            = hl_iap2_link_send_sync(iap2);
+            do {
+                result = hl_iap2_link_send_sync(iap2);
+                try_time--;
+                if (!try_time) {
+                    iap2->iap2_printf("[ERROR][%s:%d] receive link message!\n", __func__, __LINE__);
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                }
+            } while (result != 0);
             iap2->link_status = EM_HL_IAP2_STM_LINK_RECV_SYN_ACK;
+            try_time          = 11;
             break;
 
         case EM_HL_IAP2_STM_LINK_RECV_SYN_ACK:
-            result = hl_iap2_link_recv_sync_ack(iap2);
-
-            while (result != 0) {
+            do {
                 result = hl_iap2_link_recv_sync_ack(iap2);
-                iap2->iap2_printf("%s:%d: recv result error\n", __func__, __LINE__);
-                iap2->delay_usec_func(1000);
-            }
-            
-            if (result == 0) {
-                iap2->iap2_printf("[OK] [_hl_iap2_link_process] receive link message!\n");
-                iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_ACK;
-            } else {
-                iap2->iap2_printf("[ERROR] [_hl_iap2_link_process] receive link message!\n");
-                iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
-            }
+                try_time--;
+                if (!try_time) {
+                    iap2->iap2_printf("[ERROR][%s:%d] receive link message!\n", __func__, __LINE__);
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                    break;
+                } else if (try_time % 4 == 0) {
+                    iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_SYN;
+                    break;
+                }
+            } while (result != 0);
+            // iap2->iap2_printf("[OK][%s:%d] receive link message!\n", __func__, __LINE__);
+            iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_ACK;
+            try_time          = 4;
             break;
 
         case EM_HL_IAP2_STM_LINK_SEND_ACK:
             result            = hl_iap2_link_send_ack(iap2);
             iap2->main_status = EM_HL_IAP2_STM_MAIN_IDENTIFY;
-            iap2->link_status = EM_HL_IAP2_STM_LINK_SEND_SYN;
             break;
 
         default:
@@ -143,32 +141,27 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
 
     switch (iap2->identify_status) {
         case EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH:
-            result = hl_iap2_identify_req_auth(iap2);
-
-            while (result != 0) {
+            do {
                 result = hl_iap2_identify_req_auth(iap2);
-            }
-
-            if (result == 0) {
-                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive req auth message!\n");
-                iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH;
-            } else {
-                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive req auth message!\n");
-                iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
-            }
-            iap2->iap2_printf("[TEST] [_hl_iap2_identify_process]!\n");
+                try_time--;
+                if (!try_time) {
+                    iap2->iap2_printf("[ERROR][%s:%d] receive req auth message!\n");
+                    iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+                    break;
+                }
+            } while (result != 0);
+            iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH;
             break;
 
         case EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH:
             result = hl_iap2_identify_ack_auth(iap2);
 
             if (result == 0) {
-                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive ack auth message!\n");
+                iap2->iap2_printf("[OK][%s:%d] receive ack auth message!\n", __func__, __LINE__);
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_CHALLENGE;
             } else {
-                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive ack auth message!\n");
-                iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
-                iap2->main_status     = EM_HL_IAP2_STM_MAIN_FAILED;
+                iap2->iap2_printf("[ERROR][%s:%d] receive ack auth message!\n", __func__, __LINE__);
+                iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
             }
             break;
 
@@ -176,12 +169,11 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
             result = hl_iap2_identify_req_challenge(iap2);
 
             if (result == 0) {
-                iap2->iap2_printf("[OK] [_hl_iap2_identify_process] receive req challenge message!\n");
+                iap2->iap2_printf("[OK][%s:%d] receive req challenge message!\n", __func__, __LINE__);
                 iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_ACK_CHALLENGE;
             } else {
-                iap2->iap2_printf("[ERROR] [_hl_iap2_identify_process] receive req challenge message!\n");
-                iap2->identify_status = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
-                iap2->main_status     = EM_HL_IAP2_STM_MAIN_FAILED;
+                iap2->iap2_printf("[ERROR][%s:%d] receive req challenge message!\n", __func__, __LINE__);
+                iap2->main_status = EM_HL_IAP2_STM_MAIN_FAILED;
             }
             break;
 
@@ -236,9 +228,6 @@ static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
  */
 static int _hl_iap2_power_update_process(st_iap2_protocol_p iap2)
 {
-    // hl_iap2_powerupdate_send_power(iap2);
-
-    // iap2->main_status = EM_HL_IAP2_STM_MAIN_EAP;
     switch (iap2->powerupdate_status) {
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER:
             hl_iap2_powerupdate_send_power(iap2);
@@ -281,7 +270,7 @@ static int _hl_iap2_ea_session_process(st_iap2_protocol_p iap2)
 int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
-        iap2->iap2_printf("[_hl_iap2_process_main] error parameter!\n");
+        iap2->iap2_printf("[%s:%d] error parameter!\n", __func__, __LINE__);
         return -1;
     }
 
@@ -289,6 +278,7 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
+            try_time = 11;
             iap2->delay_usec_func(5000);
             break;
 
@@ -310,19 +300,18 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
             break;
 
         case EM_HL_IAP2_STM_MAIN_EAP:
-            // _hl_iap2_ea_session_process(iap2);
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:
             iap2->iap2_printf("\n\n\n*********iAP2 SUCCEED*********\n\n\n");
             iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-            result = 1;
+            result            = 1;
             break;
 
         case EM_HL_IAP2_STM_MAIN_FAILED:
             iap2->iap2_printf("\n\n\n**********iAP2 FAILD**********\n\n\n");
             iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-            result = 1;
+            result            = 1;
             break;
 
         default:
@@ -336,7 +325,7 @@ int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle)
 {
     if (handle.delay_usec_func == NULL || handle.iap2_usb_read == NULL || handle.iap2_usb_write == NULL
         || handle.iap2_iic_read == NULL || handle.iap2_iic_write == NULL) {
-        iap2->iap2_printf("[hl_iap2_protocol_init] error parameter!\n");
+        iap2->iap2_printf("[%s:%d] error parameter!\n", __func__, __LINE__);
         return -1;
     }
 
@@ -347,7 +336,7 @@ int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle)
     iap2->send_buffer = (uint8_t*)malloc(sizeof(uint8_t) * SEND_BUFFER_SIZE);
     iap2->recv_buffer = (uint8_t*)malloc(sizeof(uint8_t) * RECV_BUFFER_SIZE);
     if (iap2->send_buffer == NULL || iap2->recv_buffer == NULL) {
-        iap2->iap2_printf("[hl_iap2_protocol_init] error malloc buffer!\n");
+        iap2->iap2_printf("[%s:%d] error malloc buffer!\n", __func__, __LINE__);
         return -1;
     }
 
