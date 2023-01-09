@@ -1,5 +1,6 @@
 #include "hl_mod_apple_auth.h"
 #include "hl_drv_usb_vendor_class_com.h"
+#include "hl_util_nvram.h"
 
 /// IAP2线程句柄
 static rt_thread_t hl_mod_apple_auth_iap2_thread;
@@ -206,6 +207,8 @@ static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
 
 int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 {
+    char* dev_sn = NULL;
+
     if (NULL == input_msq) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
         return 1;
@@ -229,6 +232,14 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     // 初始化结构体
     s_apple_auth.iap2_handle = rt_malloc(sizeof(st_iap2_protocol_t));
     rt_memset(s_apple_auth.iap2_handle, 0, sizeof(st_iap2_protocol_t));
+
+    // 获取设备SN码
+    dev_sn = s_apple_auth.iap2_handle->dev_sn;
+    rt_memset(dev_sn, 0, sizeof(s_apple_auth.iap2_handle->dev_sn));
+    strcpy(dev_sn, "xxxxxxxxxxxxxxx");
+    if (!hl_util_nvram_param_get("HL_SN", dev_sn, dev_sn, sizeof(s_apple_auth.iap2_handle->dev_sn))) {
+        rt_kprintf("\nMFI Get SN Number: [%s][%d]\n", dev_sn, rt_strlen(dev_sn));
+    }
 
     // 函数注册
     s_apple_auth.iap2_func_handle.delay_usec_func = _hl_mod_apple_auth_iap2_delay;

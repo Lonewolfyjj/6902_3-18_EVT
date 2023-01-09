@@ -527,7 +527,7 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
     // addr += param_len;
 
     // packet param < 4 >
-    param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_SERIAL_NAME), 0x0003, IAP2_SERIAL_NAME);
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(iap2->dev_sn), 0x0003, (uint8_t*)iap2->dev_sn);
     addr[param_len] = '\0';
     // addr += param_len;
 

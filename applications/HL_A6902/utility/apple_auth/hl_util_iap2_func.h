@@ -39,6 +39,9 @@ typedef struct _iap2_protocol_
     volatile uint8_t* send_buffer;
     volatile uint8_t* recv_buffer;
 
+    /// 设备SN码
+    char dev_sn[128];
+
     st_packet_header_arg packet_arg;
     uint8_t              challenge_req_len;
 
