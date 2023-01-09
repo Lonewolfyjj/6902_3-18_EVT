@@ -15,6 +15,9 @@
 
 #define MAX_OBJ_NUMBER     6
 
+#define  LAB_COLOR_WHITE    0
+#define  LAB_COLOR_BLACK    1
+
 static lv_obj_t *valid_obj[MAX_OBJ_NUMBER] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
 static uint8_t btn_left_cnt = 0,btn_right_cnt = 0;
@@ -23,7 +26,7 @@ static char * ulock = "ubtn";
 
 static lv_style_t style_choose_main,style_not_choose_main;
 static lv_style_t style_choose_lr_main,style_not_choose_lr_main;
-static lv_style_t style_label;
+static lv_style_t style_label_white,style_label_black;
 
 static lv_obj_t * btn_l,*btn_r;
 static lv_obj_t * btn_left,*btn_right;
@@ -50,8 +53,8 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_not_choose_main);
     lv_style_set_bg_opa(&style_not_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_not_choose_main, lv_palette_main(LV_PALETTE_GREY));
-    lv_style_set_bg_color(&style_not_choose_main, lv_palette_lighten(LV_PALETTE_GREY,1));
+    // lv_style_set_bg_color(&style_not_choose_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_main,0);
     lv_style_set_outline_width(&style_not_choose_main,0);
     lv_style_set_radius(&style_not_choose_main, 0);    
@@ -65,16 +68,21 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_not_choose_lr_main);
     lv_style_set_bg_opa(&style_not_choose_lr_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_main(LV_PALETTE_GREY));
-    lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_lighten(LV_PALETTE_GREY,1));
+    // lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_lr_main,0);
     lv_style_set_outline_width(&style_not_choose_lr_main,0);
     lv_style_set_radius(&style_not_choose_lr_main, 10);
 
-    lv_style_init(&style_label);
-    lv_style_set_bg_opa(&style_label, LV_OPA_TRANSP);
-    lv_style_set_text_opa(&style_label, LV_OPA_COVER);
-    lv_style_set_text_color(&style_label, lv_color_white());
+    lv_style_init(&style_label_white);
+    lv_style_set_bg_opa(&style_label_white, LV_OPA_TRANSP);
+    lv_style_set_text_opa(&style_label_white, LV_OPA_COVER);
+    lv_style_set_text_color(&style_label_white, lv_color_white());
+
+    lv_style_init(&style_label_black);
+    lv_style_set_bg_opa(&style_label_black, LV_OPA_TRANSP);
+    lv_style_set_text_opa(&style_label_black, LV_OPA_COVER);
+    lv_style_set_text_color(&style_label_black, lv_color_black());
 }
 
 static lv_obj_t * lv_btn_lr_creat_fun(lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,\
@@ -113,10 +121,14 @@ static lv_obj_t * lv_btn_creat_fun(lv_obj_t *align_obj,lv_align_t align,lv_event
     return btn;
 }
 
-static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr)
+static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr,uint8_t color)
 {
     lv_obj_t * lab = lv_label_create(src_obj);
-    lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
+    if(color == LAB_COLOR_WHITE){
+        lv_obj_add_style(lab, &style_label_white, LV_PART_MAIN);
+    }else{
+        lv_obj_add_style(lab, &style_label_black, LV_PART_MAIN);
+    }
     // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
@@ -136,14 +148,18 @@ static void btn_on_cb(lv_event_t * e)
                 LV_LOG_USER("btn_left Clicked\n");
                 hl_two_in_one_func(HL_TWO_ONE_CHECK_LEFT);
             }  
+            lv_obj_remove_style(lab1,&style_label_black,LV_PART_MAIN);
             lv_obj_remove_style(btn_left,&style_choose_main,LV_PART_MAIN);
             lv_obj_remove_style(btn_l,&style_choose_lr_main,LV_PART_MAIN);
+            lv_obj_add_style(lab1,&style_label_black,LV_PART_MAIN);
             lv_obj_add_style(btn_left,&style_choose_main,LV_PART_MAIN);
             lv_obj_add_style(btn_l,&style_choose_lr_main,LV_PART_MAIN);            
             lv_event_send(btn_right,LV_EVENT_CLICKED,lock);
         }else{
+            lv_obj_remove_style(lab1,&style_label_white,LV_PART_MAIN);
             lv_obj_remove_style(btn_left,&style_not_choose_main,LV_PART_MAIN);
             lv_obj_remove_style(btn_l,&style_not_choose_lr_main,LV_PART_MAIN);
+            lv_obj_add_style(lab1,&style_label_white,LV_PART_MAIN);
             lv_obj_add_style(btn_left,&style_not_choose_main,LV_PART_MAIN);
             lv_obj_add_style(btn_l,&style_not_choose_lr_main,LV_PART_MAIN);            
         }
@@ -163,14 +179,18 @@ static void btn_off_cb(lv_event_t * e)
                 LV_LOG_USER("btn_right Clicked\n");
                 hl_two_in_one_func(HL_TWO_ONE_CHECK_RIGHT);                
             }  
+            lv_obj_remove_style(lab2,&style_label_black,LV_PART_MAIN);
             lv_obj_remove_style(btn_right,&style_choose_main,LV_PART_MAIN);
             lv_obj_remove_style(btn_r,&style_choose_lr_main,LV_PART_MAIN);
+            lv_obj_add_style(lab2,&style_label_black,LV_PART_MAIN);
             lv_obj_add_style(btn_right,&style_choose_main,LV_PART_MAIN);
             lv_obj_add_style(btn_r,&style_choose_lr_main,LV_PART_MAIN);            
             lv_event_send(btn_left,LV_EVENT_CLICKED,lock);
         }else{
+            lv_obj_remove_style(lab2,&style_label_white,LV_PART_MAIN);
             lv_obj_remove_style(btn_right,&style_not_choose_main,LV_PART_MAIN);
             lv_obj_remove_style(btn_r,&style_not_choose_lr_main,LV_PART_MAIN);
+            lv_obj_add_style(lab2,&style_label_white,LV_PART_MAIN);
             lv_obj_add_style(btn_right,&style_not_choose_main,LV_PART_MAIN);
             lv_obj_add_style(btn_r,&style_not_choose_lr_main,LV_PART_MAIN);            
         }
@@ -201,7 +221,8 @@ static void lv_delete_style(void)
     lv_style_reset(&style_not_choose_main);
     lv_style_reset(&style_choose_lr_main);
     lv_style_reset(&style_not_choose_lr_main);
-    lv_style_reset(&style_label);
+    lv_style_reset(&style_label_white);
+    lv_style_reset(&style_label_black);
 }
 
 void hl_mod_two_in_one_ioctl(void * ctl_data)
@@ -241,6 +262,9 @@ void hl_mod_two_in_one_init(void * init_data)
         btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,108,72,1);
         btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,108,72,0);
         btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
+
+        lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift,LAB_COLOR_BLACK);
+        lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right,LAB_COLOR_WHITE);
     }
     if(ptr->two_in_one_choose == HL_TWO_ONE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
@@ -249,11 +273,12 @@ void hl_mod_two_in_one_init(void * init_data)
         btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_on_cb,-10,0,108,72,0);
         btn_right = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_off_cb,0,0,108,72,1);
         btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
-    }   
 
-    lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift);
-    lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right);
-    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,-10,5,ptr->ptr_top);
+        lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift,LAB_COLOR_WHITE);
+        lab2 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,ptr->ptr_right,LAB_COLOR_BLACK);
+    }   
+    
+    lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,-10,5,ptr->ptr_top,LAB_COLOR_WHITE);
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
 }

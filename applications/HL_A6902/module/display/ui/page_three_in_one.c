@@ -53,7 +53,7 @@ static void lv_style_page4_init(void)
     lv_style_init(&style_not_choose_main);
     lv_style_set_bg_opa(&style_not_choose_main, LV_OPA_COVER);
     // lv_style_set_bg_color(&style_not_choose_main, lv_palette_main(LV_PALETTE_GREY));
-    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_main,0);
     lv_style_set_outline_width(&style_not_choose_main,0);
     lv_style_set_radius(&style_not_choose_main, 0);    
@@ -68,7 +68,7 @@ static void lv_style_page4_init(void)
     lv_style_init(&style_not_choose_lr_main);
     lv_style_set_bg_opa(&style_not_choose_lr_main, LV_OPA_COVER);
     // lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_main(LV_PALETTE_GREY));
-    lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_darken(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_not_choose_lr_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_lr_main,0);
     lv_style_set_outline_width(&style_not_choose_lr_main,0);
     lv_style_set_radius(&style_not_choose_lr_main, 10);
@@ -297,9 +297,9 @@ void hl_mod_three_in_one_init(void * init_data)
         btn_right_cnt = 0;
         btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,0,10,15,82,1);
         btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,1);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,0);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,0);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,0);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,1,0,93,82,0);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,1,0,93,82,0);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-8,0,15,82,0);
 
         lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift,LAB_COLOR_BLACK);
         lab2 = lv_lab_creat_fun(btn_mid,btn_mid,LV_ALIGN_CENTER,0,0,ptr->ptr_mid,LAB_COLOR_WHITE);
@@ -311,9 +311,9 @@ void hl_mod_three_in_one_init(void * init_data)
         btn_right_cnt = 0;
         btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,10,15,82,0);
         btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,0);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,1);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,0);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,0);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,1,0,93,82,1);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,1,0,93,82,0);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-8,0,15,82,0);
 
         lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift,LAB_COLOR_WHITE);
         lab2 = lv_lab_creat_fun(btn_mid,btn_mid,LV_ALIGN_CENTER,0,0,ptr->ptr_mid,LAB_COLOR_BLACK);
@@ -325,9 +325,9 @@ void hl_mod_three_in_one_init(void * init_data)
         btn_right_cnt = 1;
         btn_l = lv_btn_lr_creat_fun(lv_scr_act(),LV_ALIGN_LEFT_MID,10,10,15,82,0);
         btn_left = lv_btn_creat_fun(btn_l,LV_ALIGN_OUT_RIGHT_MID,btn_left_cb,-10,0,93,82,0);
-        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,0,0,93,82,0);
-        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,0,0,93,82,1);
-        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,82,1);
+        btn_mid = lv_btn_creat_fun(btn_left,LV_ALIGN_OUT_RIGHT_MID,btn_mid_cb,1,0,93,82,0);
+        btn_right = lv_btn_creat_fun(btn_mid,LV_ALIGN_OUT_RIGHT_MID,btn_right_cb,1,0,93,82,1);
+        btn_r = lv_btn_lr_creat_fun(btn_right,LV_ALIGN_OUT_RIGHT_MID,-8,0,15,82,1);
 
         lab1 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,ptr->ptr_lift,LAB_COLOR_WHITE);
         lab2 = lv_lab_creat_fun(btn_mid,btn_mid,LV_ALIGN_CENTER,0,0,ptr->ptr_mid,LAB_COLOR_WHITE);

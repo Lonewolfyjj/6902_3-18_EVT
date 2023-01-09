@@ -564,8 +564,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
     //音量大小文本
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,6,0);
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,6,0);   
+    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,0,0);
+    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,0,0);   
     //电池电量大小文本
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 

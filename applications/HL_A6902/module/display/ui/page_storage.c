@@ -59,7 +59,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_not_choose_main);
     lv_style_set_bg_opa(&style_not_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_main,0);
     lv_style_set_outline_width(&style_not_choose_main,0);
     lv_style_set_radius(&style_not_choose_main, 5);    
@@ -81,14 +81,14 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,3));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_back,0);
     lv_style_set_outline_width(&style_back,0);
     lv_style_set_radius(&style_back, 0);
 
     lv_style_init(&style_main);
     lv_style_set_bg_opa(&style_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_main, lv_palette_darken(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_radius(&style_main, 1);
 
     lv_style_init(&style_indicator);

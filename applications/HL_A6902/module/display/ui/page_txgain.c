@@ -50,7 +50,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_choose_main, lv_palette_darken(LV_PALETTE_GREY,2));
+    lv_style_set_bg_color(&style_choose_main, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_choose_main,0);
     lv_style_set_outline_width(&style_choose_main,0);
     lv_style_set_radius(&style_choose_main, 0);
@@ -69,7 +69,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_radius(&style_back, 3);
 
     lv_style_init(&style_indicator);
@@ -258,14 +258,14 @@ void hl_mod_txgain_init(void * init_data)
         btn_right = lv_btn_creat_fun(btn_right_cb,LV_ALIGN_BOTTOM_RIGHT,0,0,147,126,1);
     }    
 
-    bar1 = lv_bar_creat_fun(btn_left,btn_left_cb,-14,-18,135,32,ptr->left_volume);
-    bar2 = lv_bar_creat_fun(btn_right,btn_right_cb,-14,-18,135,32,ptr->right_volume);
+    bar1 = lv_bar_creat_fun(btn_left,btn_left_cb,-14,0,135,48,ptr->left_volume);
+    bar2 = lv_bar_creat_fun(btn_right,btn_right_cb,-14,0,135,48,ptr->right_volume);
 
     img1 = lv_img_creat_fun(bar1,LV_ALIGN_LEFT_MID,&Other_mic_black,8,0);
     img2 = lv_img_creat_fun(bar2,LV_ALIGN_LEFT_MID,&Other_mic_black,8,0);
 
-    lab11 = lv_lab_creat_fun(btn_left,bar1,LV_ALIGN_OUT_TOP_LEFT,0,0,"TX1");
-    lab21 = lv_lab_creat_fun(btn_right,bar2,LV_ALIGN_OUT_TOP_LEFT,0,0,"TX2");
+    lab11 = lv_lab_creat_fun(btn_left,bar1,LV_ALIGN_OUT_TOP_LEFT,0,-8,"TX1");
+    lab21 = lv_lab_creat_fun(btn_right,bar2,LV_ALIGN_OUT_TOP_LEFT,0,-8,"TX2");
 
     lab12 = lv_value_lab_creat_fun(btn_left,bar1,bar1,LV_ALIGN_OUT_TOP_RIGHT,-5,0);
     lab22 = lv_value_lab_creat_fun(btn_right,bar2,bar2,LV_ALIGN_OUT_TOP_RIGHT,-5,0);
