@@ -780,7 +780,7 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 #if HL_IS_TX_DEVICE()
             sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
             sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
-            // sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            sg_dsp_io_ctrl.io_ctrl_notify = 1;
 #endif
 
             break;

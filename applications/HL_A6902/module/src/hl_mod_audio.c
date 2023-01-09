@@ -1310,8 +1310,9 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
 static void hl_mod_audio_set_mute(uint8_t mute)
 {
     int8_t ret = 0;
+    uint32_t mute_32 = mute;
 
-    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute_32, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mute");
         return -RT_ERROR;

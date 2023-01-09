@@ -31,6 +31,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_euc.h"
+#include "hl_mod_audio.h"
 
 #define DBG_SECTION_NAME "app_rf"
 #define DBG_LEVEL DBG_LOG
@@ -49,6 +50,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t       p_param;
     uint8_t*      ptr;
     hl_rf_state_e rf_state;
+    hl_switch_e        mute_switch;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -67,6 +69,17 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             p_param  = *(uint8_t*)p_msg->param.ptr;
             // LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
             break;
+        case HL_RF_BYPASS_MUTE_IND:   
+            mute_switch = *(hl_switch_e*)p_msg->param.ptr;                     
+            if (tx_info.mute_flag == mute_switch) {
+                LOG_D("telink mute error (%02X)\r\n", mute_switch);  
+                break;
+            }
+            tx_info.mute_flag = mute_switch;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &mute_switch, 1);   
+            hl_app_disp_state_led_set(); 
+            // LOG_D("telink mute(%02X)\r\n", mute_switch);           
+            break;
 
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -83,6 +96,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t            *ptr;
     hl_rf_state_e      rf_state;
     hl_rf_bypass_value_t *ptr_rf_value;
+    hl_rf_bypass_state_t tx_mute;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -107,7 +121,15 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
-            LOG_D("app get mute indicate");
+            tx_mute = *(hl_rf_bypass_state_t*)p_msg->param.ptr;
+            if(tx_mute.chn == HL_RF_LEFT_CHANNEL) {
+                rx_info.tx1_mute = tx_mute.state;
+            } else if(tx_mute.chn == HL_RF_RIGHT_CHANNEL) {
+                rx_info.tx2_mute = tx_mute.state;
+            } else {
+                LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
+            }
+            
             break;
 
         case HL_RF_BYPASS_DENOISE_IND:

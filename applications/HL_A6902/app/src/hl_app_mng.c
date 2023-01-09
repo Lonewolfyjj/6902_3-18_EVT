@@ -205,6 +205,7 @@ int hl_app_info(int argc, char** argv)
     LOG_I("rec_flag = %d ", tx_info.rec_flag);
     LOG_I("denoise_flag = %d ", tx_info.denoise_flag);
     LOG_I("charge_flag = %d ", tx_info.charge_flag);
+    LOG_I("mute_flag = %d ", tx_info.mute_flag);
     LOG_I("rf_state = %d ", tx_info.rf_state);
     LOG_I("tx_info.soc = %d ", tx_info.soc);
 #else
