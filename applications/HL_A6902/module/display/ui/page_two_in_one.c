@@ -182,12 +182,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
