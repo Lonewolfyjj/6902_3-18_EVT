@@ -852,20 +852,54 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
 static int dsp_io_ctrol(int argc, char** argv)
 {
-    if (argc < 4) {
-        HL_DRV_DSP_LOG("error param too few\r\n");
-        return -1;
-    }
+ // if (argc < 4) {
+	// 	return -1;
+	// }
 
-    uint16_t op    = atoi(argv[1]);
-    uint16_t param = atoi(argv[2]);
-    int32_t  value = atoi(argv[3]);
 
-    sg_dsp_io_ctrl.io_ctrl_notify = 1;
-    sg_dsp_io_ctrl.io_ctrl_op     = op;
-    sg_dsp_io_ctrl.io_ctrl_param  = param;
-    sg_dsp_io_ctrl.io_ctrl_value  = value;
+    uint16_t io_op    = atoi(argv[1]);
+    uint16_t io_param = atoi(argv[2]);
+    int32_t  io_value = atoi(argv[3]);
+	int16_t value_r = 0;
+	int16_t value_l = 0;
+#if HL_IS_TX_DEVICE()
+        // tx = 1
+        // sg_tx_dsp_param->io_ctrl_op = 3;
+#else
+        // rx = 0
+	switch (io_op)
+	{
+		case 4:		//EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET
+			sg_rx_dsp_param->io_ctrl_notify = 1;
+			sg_rx_dsp_param->io_ctrl_op     = io_op;
+			sg_rx_dsp_param->io_ctrl_param  = io_param;
+			io_value = sg_rx_dsp_param->io_ctrl_value;
+			//8 =EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL 4 = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL 14 = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL
+			if((8 == sg_rx_dsp_param->io_ctrl_param)||(4 == sg_rx_dsp_param->io_ctrl_param) || (14 == sg_rx_dsp_param->io_ctrl_param)) 
+			{
+				value_l = sg_rx_dsp_param->io_ctrl_value >> 16;
+				value_r = sg_rx_dsp_param->io_ctrl_value & 0xffff;
+				rt_kprintf("op=%d,param=%d,",sg_rx_dsp_param->io_ctrl_op, sg_rx_dsp_param->io_ctrl_param);
+				rt_kprintf("value_l=%d,value_r=%d\r\n",value_l,value_r);
+			}else{
+				rt_kprintf("op=%d,param=%d,value=%d\r\n",sg_rx_dsp_param->io_ctrl_op, sg_rx_dsp_param->io_ctrl_param,io_value);
+			}
+			break;
 
+
+		case 5:		//EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET
+			sg_rx_dsp_param->io_ctrl_notify = 1;
+			sg_rx_dsp_param->io_ctrl_op     = io_op;
+			sg_rx_dsp_param->io_ctrl_param  = io_param;
+			sg_rx_dsp_param->io_ctrl_value  = io_value;
+			rt_kprintf("op=%d,param=%d,value=%d\r\n",sg_rx_dsp_param->io_ctrl_op, sg_rx_dsp_param->io_ctrl_param,sg_rx_dsp_param->io_ctrl_value );
+			break;
+		default:
+			break;
+	}
+
+
+#endif
     return 0;
 }
 
