@@ -138,7 +138,8 @@ rt_err_t rt_usb_device_init(void)
         if(func == RT_NULL)
         {
             rt_kprintf("can't create usb func\n");
-            return -RT_ERROR;
+            // return -RT_ERROR;
+            continue;
         }
         /* add the function to the configuration */
         rt_usbd_config_add_function(cfg, func);

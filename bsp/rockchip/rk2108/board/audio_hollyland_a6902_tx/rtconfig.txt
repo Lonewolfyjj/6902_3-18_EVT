@@ -201,14 +201,11 @@
 #define RT_USB_DEVICE_MSTORAGE
 #define RT_USB_DEVICE_HID
 #define RT_USB_DEVICE_WINUSB
-#define RT_USB_DEVICE_UAC1
+/* RT_USB_DEVICE_UAC1 is not set */
 /* RT_USB_DEVICE_UVC is not set */
 #define RT_WINUSB_GUID "{6860DC3C-C05F-4807-8807-1CA861CC1D66}"
 #define RT_USB_MSTORAGE_DISK_NAME "sd0"
 #define RT_USB_MSTORAGE_BUFLEN 32768
-#define RT_USB_AUDIO_P_NAME "es8388p"
-#define RT_USB_AUDIO_C_NAME "pdmc"
-/* RT_USB_AUDIO_PLL_COMPENSATION is not set */
 /* RT_USB_DEVICE_HID_KEYBOARD is not set */
 /* RT_USB_DEVICE_HID_MOUSE is not set */
 #define RT_USB_DEVICE_HID_GENERAL
@@ -243,9 +240,6 @@
 /* AT commands */
 
 /* RT_USING_AT is not set */
-
-/* System */
-
 /* RT_USING_LITTLEVGL2RTT is not set */
 
 /* VBUS(Virtual Software BUS) */
@@ -344,7 +338,7 @@
 /* HAL_DBG_ON is not set */
 /* RT_USING_SND_GLB_RST is not set */
 #define RT_USING_RESET
-/* RT_USING_CRU_DUMP is not set */
+#define RT_USING_CRU_DUMP
 /* RT_USING_REGULATOR_DUMP is not set */
 /* MMC_FORCE_INTERNAL_BUF is not set */
 /* RT_USING_PROF_IRQ is not set */

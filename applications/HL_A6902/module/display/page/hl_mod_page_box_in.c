@@ -254,10 +254,80 @@ static void page_bat_update(hl_display_screen_s* data_ptr, hl_display_screen_cha
     }
 }
 
+static void box_bat_create(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_charge_ioctl_t ioctrl;
+
+    if (data_ptr->sys_status.box_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+}
+
+static void rx_bat_create(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_charge_ioctl_t ioctrl;
+
+    if (data_ptr->sys_status.rx_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+}
+
+static void tx1_bat_create(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_charge_ioctl_t ioctrl;
+
+    if (data_ptr->sys_status.tx1_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+}
+
+static void tx2_bat_create(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_charge_ioctl_t ioctrl;
+
+    if (data_ptr->sys_status.tx2_charge_status) {
+        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_GREEN;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_DISHIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    } else {
+        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_WHITE;
+        hl_mod_charge_ioctl(&ioctrl);
+
+        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_HIDE;
+        hl_mod_charge_ioctl(&ioctrl);
+    }
+}
+
 static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_screen_s* data_ptr)
 {
     hl_lvgl_charge_init_t  init;
-    hl_lvgl_charge_ioctl_t ioctrl;
+    
 
     in_box_state = in_box;
 
@@ -274,7 +344,8 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
             init.electric.electric_tx2 = 0;
             init.electric.electric_rx  = data_ptr->rx_bat_val;
             hl_mod_charge_init(&init);
-
+            box_bat_create(data_ptr);
+            rx_bat_create(data_ptr);
             break;
         // TX1 2 RX都入盒子
         case BOX_CHARGE_RX_TX12:
@@ -284,6 +355,10 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
             init.electric.electric_tx2 = data_ptr->tx2_bat_val;
             init.electric.electric_rx  = data_ptr->rx_bat_val;
             hl_mod_charge_init(&init);
+            box_bat_create(data_ptr);
+            rx_bat_create(data_ptr);
+            tx1_bat_create(data_ptr);
+            tx2_bat_create(data_ptr);
             break;
         // TX1 RX入盒子
         case BOX_CHARGE_RX_TX1:
@@ -293,6 +368,9 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
             init.electric.electric_tx2 = 0;
             init.electric.electric_rx  = data_ptr->rx_bat_val;
             hl_mod_charge_init(&init);
+            box_bat_create(data_ptr);
+            rx_bat_create(data_ptr);
+            tx1_bat_create(data_ptr);
             break;
         // TX2 RX入盒子
         case BOX_CHARGE_RX_TX2:
@@ -302,62 +380,13 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
             init.electric.electric_tx2 = data_ptr->tx2_bat_val;
             init.electric.electric_rx  = data_ptr->rx_bat_val;
             hl_mod_charge_init(&init);
+            box_bat_create(data_ptr);
+            rx_bat_create(data_ptr);
+            tx2_bat_create(data_ptr);
             break;
         default:
             break;
-    }
-
-    if (data_ptr->sys_status.box_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_GREEN;
-        hl_mod_charge_ioctl(&ioctrl);
-    } else {
-        ioctrl.charge_cmd = HL_CHARGE_TOP_BAT_COLOR_WHITE;
-        hl_mod_charge_ioctl(&ioctrl);
-    }
-
-    if (data_ptr->sys_status.rx_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_GREEN;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_DISHIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    } else {
-        ioctrl.charge_cmd = HL_CHARGE_RX_BAT_COLOR_WHITE;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_RX_ICON_HIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    }
-
-    if (data_ptr->sys_status.tx1_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_GREEN;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_DISHIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    } else {
-        ioctrl.charge_cmd = HL_CHARGE_TX1_BAT_COLOR_WHITE;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_TX1_ICON_HIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    }
-
-    if (data_ptr->sys_status.tx2_charge_status) {
-        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_GREEN;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_DISHIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    } else {
-        ioctrl.charge_cmd = HL_CHARGE_TX2_BAT_COLOR_WHITE;
-        hl_mod_charge_ioctl(&ioctrl);
-
-        ioctrl.charge_cmd = HL_CHARGE_TX2_ICON_HIDE;
-        hl_mod_charge_ioctl(&ioctrl);
-    }
-
-    
+    }    
 }
 
 static void hl_mod_page_setup(void)

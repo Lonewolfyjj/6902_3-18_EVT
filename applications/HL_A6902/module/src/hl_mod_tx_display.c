@@ -311,7 +311,7 @@ static void _display_thread_entry(void* arg)
 
         _record_led_flash_ctrl();
 
-        rt_thread_mdelay(10);
+        rt_thread_mdelay(100);
     }
 
     _display_mod.thread_exit_flag = -1;

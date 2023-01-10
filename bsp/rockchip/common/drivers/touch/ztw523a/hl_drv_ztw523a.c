@@ -99,12 +99,12 @@ static rt_err_t hl_i2c_write_data(struct rt_i2c_bus_device* bus, rt_uint16_t reg
 
     rt_uint8_t  * buf = (rt_uint8_t  *)rt_malloc(datalen + 4);
 
-    memset(buf,0,datalen + 4);
+    rt_memset(buf,0,datalen + 4);
 
     buf[1] = (reg >> 8);        // reg
     buf[0] = (reg & 0xFF);      //
 
-    memcpy(&buf[2],data,datalen);
+    rt_memcpy(&buf[2],data,datalen);
 
 	// if(data != RT_NULL){
 	// 	buf[3] = (data[0] >> 8);    // data
@@ -803,13 +803,13 @@ static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *b
     /*多点触控第一个点的信息*/
     ret = hl_drv_ztw523a_read_data(ZINITIX_POINT_STATUS_REG, (uint8_t*)(&touch_info), 8);
     if (ret != HL_SUCCESS) {
-        LOG_E("fail to read point reg\n");
+        LOG_E("fail to read point reg 1\n");
         goto exit;
     }
 
     ret = hl_drv_ztw523a_read_data(ZINITIX_POINT_STATUS_REG + 4, ((uint8_t*)&touch_info + 8), 2);
     if (ret != HL_SUCCESS) {
-        LOG_E("fail to read point reg\n");
+        LOG_E("fail to read point reg 2\n");
         goto exit;
     }
     /*后续点的信息*/
@@ -858,7 +858,10 @@ static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *b
 exit:
     /*clear中断，clear后中断会被拉高*/
 
-    hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
+	hl_drv_ztw523a_power_control(1);
+    hl_drv_ztw523a_power_sequence();
+    hl_drv_ztw523a_init();
+    // hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
     return HL_FAILED;
 }
 
