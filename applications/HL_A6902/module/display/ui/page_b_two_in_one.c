@@ -259,13 +259,13 @@ void hl_mod_b_two_in_one_init(void * init_data)
         btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,82,0);
         btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,82,1);
 
-        img11 = lv_img_creat_fun(btn_left,ptr->src11,0,0);
-        img12 = lv_img_creat_fun(btn_left,ptr->src12,0,0);
-        img21 = lv_img_creat_fun(btn_right,ptr->src21,0,0);
-        img22 = lv_img_creat_fun(btn_right,ptr->src22,0,0);
+        img11 = lv_img_creat_fun(btn_left,ptr->src11,-10,0);
+        img12 = lv_img_creat_fun(btn_left,ptr->src12,-10,0);
+        img21 = lv_img_creat_fun(btn_right,ptr->src21,-10,0);
+        img22 = lv_img_creat_fun(btn_right,ptr->src22,-10,0);
 
-        lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_lift,LAB_COLOR_BLACK);
-        lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_right,LAB_COLOR_WHITE);
+        lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,5,0,ptr->ptr_lift,LAB_COLOR_BLACK);
+        lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,5,0,ptr->ptr_right,LAB_COLOR_WHITE);
     }
     if(ptr->b_two_in_one_choose == HL_B_TWO_ONE_CHOOSE_RIGHT){
         btn_left_cnt=0;
@@ -273,13 +273,13 @@ void hl_mod_b_two_in_one_init(void * init_data)
         btn_left = lv_btn_creat_fun(btn_left_cb,6,-6,138,82,0);
         btn_right = lv_btn_creat_fun(btn_right_cb,150,-6,138,82,1);
 
-        img11 = lv_img_creat_fun(btn_left,ptr->src11,0,0);
-        img12 = lv_img_creat_fun(btn_left,ptr->src12,0,0);
-        img21 = lv_img_creat_fun(btn_right,ptr->src21,0,0);
-        img22 = lv_img_creat_fun(btn_right,ptr->src22,0,0);
+        img11 = lv_img_creat_fun(btn_left,ptr->src11,-10,0);
+        img12 = lv_img_creat_fun(btn_left,ptr->src12,-10,0);
+        img21 = lv_img_creat_fun(btn_right,ptr->src21,-10,0);
+        img22 = lv_img_creat_fun(btn_right,ptr->src22,-10,0);
 
-        lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_lift,LAB_COLOR_WHITE);
-        lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,10,0,ptr->ptr_right,LAB_COLOR_BLACK);
+        lab1 = lv_lab_creat_fun(btn_left,img11,LV_ALIGN_OUT_RIGHT_MID,5,0,ptr->ptr_lift,LAB_COLOR_WHITE);
+        lab2 = lv_lab_creat_fun(btn_right,img21,LV_ALIGN_OUT_RIGHT_MID,5,0,ptr->ptr_right,LAB_COLOR_BLACK);
     }
     lab3 = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_MID,0,5,ptr->ptr_top,LAB_COLOR_WHITE);
 
