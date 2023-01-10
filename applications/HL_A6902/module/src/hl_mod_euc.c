@@ -231,18 +231,19 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
                 break;
             }
 
+            _euc_mod.dev_num = hup_frame.data_addr[0];
             rt_timer_start(&(_euc_mod.timer));
 
             if (_euc_mod.in_box_flag == true) {  //已经收到Tx探测包
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 break;
+            } else {  //第一次收到Tx探测包
+                _euc_mod.in_box_flag = true;
+
+                _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
             }
-
-            _euc_mod.in_box_flag = true;
-            _euc_mod.dev_num     = hup_frame.data_addr[0];
-
-            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
-            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
@@ -290,18 +291,19 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
                 break;
             }
 
+            _euc_mod.dev_num = 0;
             rt_timer_start(&(_euc_mod.timer));
 
             if (_euc_mod.in_box_flag == true) {  //已经收到过Rx探测包
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 break;
+            } else {  //第一次收到Rx探测包
+                _euc_mod.in_box_flag = true;
+
+                _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
             }
-
-            _euc_mod.in_box_flag = true;
-            _euc_mod.dev_num     = 0;
-
-            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
-            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
