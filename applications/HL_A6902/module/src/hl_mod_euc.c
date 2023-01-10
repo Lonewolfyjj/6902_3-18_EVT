@@ -77,6 +77,7 @@ typedef struct _hl_mod_euc
 {
     bool                       init_flag;
     bool                       start_flag;
+    bool                       in_box_flag;
     uint8_t                    dev_num;
     uint8_t                    tx1_bat_info;
     uint8_t                    tx2_bat_info;
@@ -225,11 +226,18 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            if (hup_frame.data_addr[0] == 0) {
+            if (hup_frame.data_addr[0] == 0) {      //不是Tx探测包
                 break;
             }
 
-            _euc_mod.dev_num = hup_frame.data_addr[0];
+            rt_timer_start(&(_euc_mod.timer));
+
+            if (_euc_mod.in_box_flag == true) {     //已经收到Tx探测包
+                break;
+            }
+
+            _euc_mod.in_box_flag = true;
+            _euc_mod.dev_num     = hup_frame.data_addr[0];
 
             _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
             rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
@@ -237,7 +245,6 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
-            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_GET_PAIR_INFO: {
             _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
@@ -278,11 +285,18 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            if (hup_frame.data_addr[0] != 0) {
+            if (hup_frame.data_addr[0] != 0) {  //不是Rx探测包
                 break;
             }
 
-            _euc_mod.dev_num = 0;
+            rt_timer_start(&(_euc_mod.timer));
+
+            if (_euc_mod.in_box_flag == true) {  //已经收到过Rx探测包
+                break;
+            }
+
+            _euc_mod.in_box_flag = true;
+            _euc_mod.dev_num     = 0;
 
             _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
             rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
@@ -290,7 +304,6 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
-            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_SET_BAT_INFO: {
             if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
@@ -569,6 +582,7 @@ static void _record_hid_cmd_send_poll(void)
 static void _timer_timeout_handle(void* arg)
 {
     LOG_I("euc timeout");
+    _euc_mod.in_box_flag = false;
     _mod_msg_send(HL_OUT_BOX_IND, NULL, 0);
 }
 
@@ -654,6 +668,8 @@ int hl_mod_euc_start(void)
     if (_euc_mod.start_flag == true) {
         hl_mod_euc_stop();
     }
+
+    _euc_mod.in_box_flag = false;
 
     _euc_mod.thread_exit_flag = 0;
 
