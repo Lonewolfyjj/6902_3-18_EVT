@@ -168,7 +168,7 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_add_style(roller, &style_grey, 0);    
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_size(roller,90,114); 
+    lv_obj_set_size(roller,90,120); 
     // lv_obj_align(roller, LV_ALIGN_CENTER, x_offset, y_offset);
 // #if LV_FONT_MONTSERRAT_22
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
@@ -397,9 +397,9 @@ void hl_mod_date_ioctl(void * ctl_data)
 
 void hl_mod_date_init(void * init_data)
 {
-    lv_date_init();
     if (!page_style_bit.page_date) {
         page_style_bit.page_date = 1;
+        lv_date_init();
         lv_style_page6_init();
     }
     
@@ -410,7 +410,7 @@ void hl_mod_date_init(void * init_data)
     con = lv_obj_create(lv_scr_act());
     lv_obj_add_style(con, &style_black, 0);
     lv_obj_set_scroll_dir(con,LV_DIR_HOR);
-    lv_obj_set_size(con,282,114);
+    lv_obj_set_size(con,282,120);
     lv_obj_align(con, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);

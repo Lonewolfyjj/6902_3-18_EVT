@@ -23,7 +23,7 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 #include "hl_drv_ins5830b.h"
-
+#include "string.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 #define INS5830B_DEBUG
@@ -72,17 +72,19 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, 
     }
 }
 
+uint8_t dddd = 1;
+
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf, rt_uint16_t buf_len)
 {
     rt_size_t         ret;
     struct rt_i2c_msg msgs[2];
 
-    msgs[0].addr  = INS5830B_DEVICE_ADDRESS;
+    msgs[0].addr  = dddd;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = &reg;
     msgs[0].len   = 1;
 
-    msgs[1].addr  = INS5830B_DEVICE_ADDRESS;
+    msgs[1].addr  = dddd;
     msgs[1].flags = RT_I2C_RD;
     msgs[1].buf   = rbuf;
     msgs[1].len   = buf_len;
@@ -90,9 +92,11 @@ static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, r
     // 调用I2C设备接口传输数据
     ret = rt_i2c_transfer(bus, msgs, 2);
     if (ret == 2) {
+        ins_printf("%d is ok!\n", dddd);
         return HL_SUCCESS;
     } else {
-        ins_printf("%s ret = %d !\n", __FUNCTION__, ret);
+        ins_printf("%d is fail!\n", dddd);
+        // ins_printf("%s ret = %d !\n", __FUNCTION__, ret);
         return HL_FAILED;
     }
 }
@@ -166,16 +170,19 @@ int hl_drv_ins5830b_init(void)
 {
     uint8_t inien_init;
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(INS5830B_IIC_NAME);
-    if (hl_i2c_read_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
-        ins_printf("%s init read err !\n", __FUNCTION__);
-        goto INIT_ERR;
+    for(dddd = 1;dddd < 128;dddd++)
+    {
+        if (hl_i2c_read_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
+            // ins_printf("%s init read err !\n", __FUNCTION__);
+            // goto INIT_ERR;
+        }
     }
-    inien_init |= (1 << 4);
-    if (hl_i2c_write_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
-        ins_printf("%s init write err !\n", __FUNCTION__);
-        goto INIT_ERR;
-    }
-    ins_printf("Ins5830b init successed !\n");
+    // inien_init |= (1 << 4);
+    // if (hl_i2c_write_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
+    //     ins_printf("%s init write err !\n", __FUNCTION__);
+    //     goto INIT_ERR;
+    // }
+    // ins_printf("Ins5830b init successed !\n");
     return HL_SUCCESS;
 INIT_ERR:
     ins_printf("Ins5830b init failed !\n");
@@ -196,7 +203,7 @@ int hl_drv_ins5830b_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
             }
             break;
         case INS5830B_RTC_GET_TIME_CMD:
-            if (hl_drv_rtc_gettime(ptr)) {
+            if (hl_drv_rtc_gettime(rtc_ptr)) {
                 goto INIT_ERR;
             }
             break;
@@ -207,6 +214,36 @@ int hl_drv_ins5830b_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 INIT_ERR:
     return HL_FAILED;
 }
+
+
+void rtc_ins5830b_test(int argc, char** argv)
+{
+    // uint8_t cmd     = atoi(argv[1]);
+    // uint8_t cfg_opt = atoi(argv[2]);
+    // uint8_t data    = atoi(argv[3]);
+    HL_INS5830B_RTC_IOCTL_T   rtc_test;
+    if (!strcmp("init", argv[1])) {
+       hl_drv_ins5830b_init();
+    }else if(!strcmp("set", argv[1])){
+        rtc_test.year = atoi(argv[2]);
+        rtc_test.month = atoi(argv[3]);
+        rtc_test.day = atoi(argv[4]);
+        rtc_test.hour = atoi(argv[5]);
+        rtc_test.min = atoi(argv[6]);
+        rtc_test.sec = atoi(argv[7]);
+        hl_drv_ins5830b_io_ctrl(INS5830B_RTC_SET_TIME_CMD,&rtc_test,1);
+    }else if(!strcmp("get", argv[1])){
+        hl_drv_ins5830b_io_ctrl(INS5830B_RTC_GET_TIME_CMD,&rtc_test,1);
+        ins_printf("year  : %d\n",rtc_test.year);
+        ins_printf("month : %d\n",rtc_test.month);
+        ins_printf("day   : %d\n",rtc_test.day);
+        ins_printf("hour  : %d\n",rtc_test.hour);
+        ins_printf("min   : %d\n",rtc_test.min);
+        ins_printf("sec   : %d\n",rtc_test.sec);
+    }
+}
+
+MSH_CMD_EXPORT(rtc_ins5830b_test, run rtc_ins5830b_test);
 /* Exported functions --------------------------------------------------------*/
 /*
  * EOF
