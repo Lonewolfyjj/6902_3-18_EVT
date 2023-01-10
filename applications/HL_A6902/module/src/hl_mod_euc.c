@@ -53,6 +53,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_GET_BAT_INFO      = 0x02,
     HL_HUP_CMD_SET_BAT_INFO      = 0x03,
     HL_HUP_CMD_TX_IN_BOX_STATE   = 0x04,
+    HL_HUP_CMD_GET_PAIR_INFO     = 0x05,
     HL_HUP_CMD_SET_PAIR_INFO     = 0x06,
     HL_HUP_CMD_GET_MAC_ADDR      = 0x07,
     HL_HUP_CMD_PAIR_START        = 0x08,
@@ -226,13 +227,13 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            if (hup_frame.data_addr[0] == 0) {      //不是Tx探测包
+            if (hup_frame.data_addr[0] == 0) {  //不是Tx探测包
                 break;
             }
 
             rt_timer_start(&(_euc_mod.timer));
 
-            if (_euc_mod.in_box_flag == true) {     //已经收到Tx探测包
+            if (_euc_mod.in_box_flag == true) {  //已经收到Tx探测包
                 break;
             }
 
@@ -412,6 +413,9 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             result = 0;
 
             _uart_send_hup_data(HL_HUP_CMD_SET_BOX_LID_STATE, &result, sizeof(result));
+        } break;
+        case HL_HUP_CMD_GET_PAIR_INFO: {
+            _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
         } break;
         default:
             break;
@@ -843,6 +847,14 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_HID_START_RECORD_CMD: {
             _record_hid_cmd_send_flag = true;
+        } break;
+        case HL_SET_PAIR_MAC_CMD: {
+            if (arg_size != sizeof(uint8_t[12])) {
+                LOG_E("size err, ctrl arg need <uint8_t[12]> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_PAIR_INFO, (char*)arg, sizeof(uint8_t[12]));
         } break;
         default:
             break;

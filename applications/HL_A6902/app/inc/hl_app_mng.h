@@ -100,6 +100,8 @@ typedef struct _rx_app_info_t
 
     /// 本地Mac地址
     uint8_t             local_mac[6];
+    /// 配对Mac地址 tx1:[0 - 5] tx2:[6 - 11]
+    uint8_t             remote_mac[12];
 } rx_app_info_t;
 extern rx_app_info_t rx_info;
 #endif
