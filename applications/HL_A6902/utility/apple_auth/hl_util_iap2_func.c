@@ -49,6 +49,7 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
             case EM_HL_CHALLENGE_RESP_STM_READ_CTRL:
                 // Read Authentication Status
                 do {
+                    iap2->delay_usec_func(200000);
                     ret = iap2->iap2_iic_read(CP_AUTHENTICATION_CONTROL_STATUES, &val, sizeof(uint8_t), TIMEOUT_US);
                     try_time--;
                     if (!try_time) {
