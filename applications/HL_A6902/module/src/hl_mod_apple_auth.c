@@ -232,7 +232,7 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     rt_kprintf("\nhl_drv_usb_vendor_class_com_init ret = %d\n", ret);
 
     // 初始化结构体
-    s_apple_auth.iap2_handle = rt_malloc(sizeof(st_iap2_protocol_t));
+    s_apple_auth.iap2_handle = (st_iap2_protocol_t*)rt_malloc(sizeof(st_iap2_protocol_t));
     rt_memset(s_apple_auth.iap2_handle, 0, sizeof(st_iap2_protocol_t));
 
     // 获取设备SN码

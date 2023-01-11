@@ -32,7 +32,7 @@ typedef enum _iap2_challange_response_status_enum_
     EM_HL_CHALLENGE_RESP_STM_READ_CTRL,
     EM_HL_CHALLENGE_RESP_STM_READ_RESP_LEN,
     EM_HL_CHALLENGE_RESP_STM_READ_RESP_DATA,
-} em_iap2_challange_response_status_t;
+} HL_ENUM8(hl_iap2_challange_response_status_e);
 
 typedef struct _iap2_protocol_
 {
@@ -48,11 +48,11 @@ typedef struct _iap2_protocol_
     uint16_t challenge_req_len;
     uint16_t challenge_resp_len;
 
-    em_iap2_protocol_status_t     main_status;
-    em_iap2_detect_status_t       detect_status;
-    em_iap2_link_status_t         link_status;
-    em_iap2_identify_status_t     identify_status;
-    em_iap2_power_update_status_t powerupdate_status;
+    hl_iap2_protocol_status_e     main_status;
+    hl_iap2_detect_status_e       detect_status;
+    hl_iap2_link_status_e         link_status;
+    hl_iap2_identify_status_e     identify_status;
+    hl_iap2_power_update_status_e powerupdate_status;
 
     void (*delay_usec_func)(uint16_t usec);
     int (*iap2_usb_read)(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
