@@ -218,9 +218,6 @@ INIT_ERR:
 
 void rtc_ins5830b_test(int argc, char** argv)
 {
-    // uint8_t cmd     = atoi(argv[1]);
-    // uint8_t cfg_opt = atoi(argv[2]);
-    // uint8_t data    = atoi(argv[3]);
     HL_INS5830B_RTC_IOCTL_T   rtc_test;
     if (!strcmp("init", argv[1])) {
        hl_drv_ins5830b_init();
