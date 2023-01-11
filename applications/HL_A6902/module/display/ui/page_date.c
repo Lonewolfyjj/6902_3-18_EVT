@@ -297,23 +297,18 @@ static void roller_timer(lv_timer_t * timer)
 {
     if(timer_flag){
         if(LV_ABS(ROLLER_YEAR - pos) < CENTER_ERR_RANGE){
-        printf("ROLLER_YEAR\n");
-        lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
+            lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
         }
         if(LV_ABS(ROLLER_MONTH - pos) < CENTER_ERR_RANGE){
-            printf("ROLLER_MONTH\n");
             lv_event_send(roller_month,LV_EVENT_CLICKED,ulock);
         }
         if(LV_ABS(ROLLER_DAY - pos) < CENTER_ERR_RANGE){
-            printf("ROLLER_DAY\n");
             lv_event_send(roller_day,LV_EVENT_CLICKED,ulock);
         }
         if(LV_ABS(ROLLER_HOUR - pos) < CENTER_ERR_RANGE){
-            printf("ROLLER_HOUR\n");
             lv_event_send(roller_hour,LV_EVENT_CLICKED,ulock);
         }
         if(LV_ABS(ROLLER_MIN - pos) < CENTER_ERR_RANGE){
-            printf("ROLLER_MIN\n");
             lv_event_send(roller_min,LV_EVENT_CLICKED,ulock);
         }
         timer_flag = 0;
