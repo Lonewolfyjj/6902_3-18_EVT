@@ -120,7 +120,7 @@ void hl_mod_lock_ioctl(void * ctl_data)
             break;
         case HL_LOCK_PAGE_EXIT:
             lv_timer_del(timer);
-            hl_obj_delete(lv_scr_act(),false);
+            hl_obj_delete(area,true);
             break;
         default:
             break;
