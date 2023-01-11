@@ -271,10 +271,10 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
         iap2->iap2_printf("[%s:%d] error parameter!\n", __func__, __LINE__);
-        return -1;
+        return -2;
     }
 
-    int result = 0;
+    int result = -1;
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
@@ -303,15 +303,13 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:
-            iap2->iap2_printf("\n\n\n*********iAP2 SUCCEED*********\n\n\n");
             iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-            result            = 1;
+            result            = IAP2_SUCCEED;
             break;
 
         case EM_HL_IAP2_STM_MAIN_FAILED:
-            iap2->iap2_printf("\n\n\n**********iAP2 FAILD**********\n\n\n");
             iap2->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-            result            = 1;
+            result            = IAP2_FAILED;
             break;
 
         default:

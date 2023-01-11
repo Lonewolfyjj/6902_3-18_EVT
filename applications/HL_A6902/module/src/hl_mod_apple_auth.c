@@ -1,4 +1,5 @@
 #include "hl_mod_apple_auth.h"
+#include "hl_util_msg_type.h"
 #include "hl_drv_usb_vendor_class_com.h"
 #include "hl_util_nvram.h"
 
@@ -8,6 +9,8 @@ static rt_thread_t hl_mod_apple_auth_iap2_thread;
 static rt_thread_t hl_mod_apple_auth_eap_thread;
 /// appleauth控制句柄
 static hl_mod_apple_auth_t s_apple_auth;
+/// 消息队列结构体
+static mode_to_app_msg_t app_msg_t;
 
 static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
@@ -179,11 +182,21 @@ static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
 static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
 {
     int result = 0;
-    
+
     rt_thread_mdelay(200);
 
-    while (s_apple_auth.eap_thread_flag == RT_TRUE) {
+    while (s_apple_auth.iap2_thread_flag == RT_TRUE) {
         result = hl_iap2_process_main_oneshot(s_apple_auth.iap2_handle);
+        if (result >= 0) {
+            app_msg_t.cmd = result;
+            app_msg_t.len = 0;
+            // 上报透传数据
+            result = rt_mq_send(s_apple_auth.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            // 判断消息队列上传结果
+            if (RT_EOK != result) {
+                rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
+            }
+        }
         rt_thread_mdelay(1);
     }
 }
@@ -253,6 +266,13 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 
     hl_iap2_protocol_init(s_apple_auth.iap2_handle, s_apple_auth.iap2_func_handle);
 
+    // Telink获取并赋值APP层下发的消息队列指针
+    s_apple_auth.app_msq          = input_msq;
+    s_apple_auth.iap2_thread_flag = RT_TRUE;
+    s_apple_auth.eap_thread_flag  = RT_TRUE;
+    // Telink消息队列结构体赋初值
+    app_msg_t.sender = APPLE_AUTH_MODE;
+
     return 0;
 }
 
@@ -313,17 +333,26 @@ int hl_mod_apple_auth_stop()
     return 0;
 }
 
-void hl_mod_apple_auth_begin()
+uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
 {
-    rt_kprintf("\n\n\n*********iAP2 START*********\n\n\n");
-    s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
-    s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
-    s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
-    s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
-    s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-}
+    switch (cmd) {
+        case HL_APPLE_AUTH_START_CMD:
+            rt_kprintf("\n\n\n*********iAP2 START*********\n\n\n");
+            s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
+            s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
+            s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
+            s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
+            s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+            break;
 
-void hl_mod_apple_auth_end()
-{
-    s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+        case HL_APPLE_AUTH_STOP_CMD:
+            rt_kprintf("\n\n\n*********iAP2 STOP*********\n\n\n");
+            s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
 }

@@ -349,11 +349,11 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
         rx_info.uac_link_flag = 0;
         hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
         rx_info.mstorage_plug = 0;
-        hl_mod_apple_auth_end();
+        hl_mod_appleauth_ioctl(HL_APPLE_AUTH_STOP_CMD);
     } else {
         rx_info.usb_plug = 1;
         usb_state        = 1;
-        hl_mod_apple_auth_begin();
+        hl_mod_appleauth_ioctl(HL_APPLE_AUTH_START_CMD);
     }
     hl_app_audio_stream_updata();
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
