@@ -159,6 +159,7 @@ void hl_app_mng_init(void)
 // 开机，初始化模块
 void hl_app_mng_powerOn(void)
 {
+    uint8_t value = 0;
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
     // hl_mod_display_init(&hl_app_mq);
@@ -173,6 +174,15 @@ void hl_app_mng_powerOn(void)
 #if HL_IS_TX_DEVICE()
 #else
     hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &rx_info.cur_volume_r, 2);
+    if (rx_info.charge_flag == 0) {
+        value = 0;
+    } else if (rx_info.charge_flag == 1) {
+        value = 1;
+    } else if (rx_info.charge_flag == 2) {
+        value = 0;
+    }
+    rt_kprintf("rx_info.charge_flag=%d\n", rx_info.charge_flag);
+    hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &value, 1);
 #endif
 }
 

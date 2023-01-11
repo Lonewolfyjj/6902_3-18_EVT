@@ -50,7 +50,7 @@
 #include <rtdbg.h>
 
 #define DISPLAY_THREAD_PRIORITY 20
-#define DISPLAY_THREAD_STACK_SIZE 20480
+#define DISPLAY_THREAD_STACK_SIZE 40960
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -313,10 +313,25 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->in_box_state = data;
             flag->in_box_state   = 1;
         } break;
+        case AUTO_RECORD_SWITCH_CMD: {
+            hl_display_low_cut_e data      = *(uint8_t*)ptr;
+            data_p->sys_status.auto_record = data;
+            flag->sys_status.auto_record   = 1;
+        } break;
         case AUTO_RECORD_PORTECT_SWITCH_CMD: {
             uint8_t data                           = *(uint8_t*)ptr;
             data_p->sys_status.auto_record_portect = data;
             flag->sys_status.auto_record_portect   = 1;
+        } break;
+        case POWEROFF_SET_VAL_CMD: {
+            uint8_t data          = *(uint8_t*)ptr;
+            data_p->auto_poweroff = data;
+            flag->auto_poweroff   = 1;
+        } break;
+        case LED_BRITNESS_VAL_CMD: {
+            uint8_t data                           = *(uint8_t*)ptr;
+            data_p->led_britness = data;
+            flag->led_britness   = 1;
         } break;
         case RX_RF_STATE_VAL_CMD: {
             uint8_t data           = *(uint8_t*)ptr;
@@ -406,6 +421,16 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             len       = len > 36 ? 36 : len;
             rt_memcpy(data_p->sn, buf, len);
             flag->rx_sn = 1;
+        } break;
+        case TX1_REMAINED_RECORD_TIME_VAL_CMD: {
+            uint8_t data                     = (char*)ptr;
+            data_p->tx1_remained_record_time = data;
+            flag->tx1_remained_record_time   = 1;
+        } break;
+        case TX2_REMAINED_RECORD_TIME_VAL_CMD: {
+            uint8_t data                     = (char*)ptr;
+            data_p->tx2_remained_record_time = data;
+            flag->tx2_remained_record_time   = 1;
         } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);

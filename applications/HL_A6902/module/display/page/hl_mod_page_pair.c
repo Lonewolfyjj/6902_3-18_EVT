@@ -49,18 +49,19 @@ static int16_t now_num;
 static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 {
     uint32_t value = 0;
-    switch(event_num){
-        // case HL_S_TWO_ONE_CHECK_LEFT:
-        //     value = 0;
-        //     break;
+    switch (event_num) {
+        case HL_S_TWO_ONE_CHECK_LEFT:
+            PageManager_PagePop();
+            break;
         case HL_S_TWO_ONE_CHECK_RIGHT:
             value = 1;
+            PageManager_PagePush(PAGE_PARING);
             break;
         default:
             return;
             break;
     }
-    hl_mod_display_send_msg(DEVICE_PAIR_IND,&value,0);
+    hl_mod_display_send_msg(DEVICE_PAIR_IND, &value, 0);
 }
 
 static void pair_test(void)

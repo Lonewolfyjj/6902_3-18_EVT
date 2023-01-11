@@ -88,7 +88,7 @@ static hl_display_screen_s hl_screendata = {
     .tx1_gain_volume          = 0,
     .tx2_gain_volume          = 0,
     .monitor_volume           = 0,
-    .led_britness             = 127,
+    .led_britness             = NORMAL_BRIGTNESS,
     .tx1_remained_record_time = 10,
     .tx2_remained_record_time = 10,
     .upgrade_progress         = 0,
@@ -103,8 +103,9 @@ static hl_display_screen_s hl_screendata = {
 
     .sn = "00000000000000000000",
 
-    .sys_status = { 0 },
-    .systime    = { 2022, 12, 16, 0, 0 },
+    .sys_status    = { 0 },
+    .systime       = { 2022, 12, 16, 0, 0 },
+    .auto_poweroff = 0,
 };
 // 參數變更信息
 static hl_display_screen_change_s change_flag = { 0 };
@@ -770,7 +771,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_POWEROFF_CHARGE);
     PAGE_REG(PAGE_PARING);
     PAGE_REG(PAGE_UPGRADE);
-    // PAGE_REG(PAGE_FAST_TX2_CONFIG);
+    PAGE_REG(PAGE_FAST_TX2_CONFIG);
 }
 
 void lvgl2rtt_init(void)

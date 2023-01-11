@@ -78,11 +78,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
-    uint8_t            tx1_rssi;
-    uint8_t            tx2_rssi;
-    uint8_t            *ptr;
-    hl_rf_state_e      rf_state;
-    hl_rf_bypass_value_t *ptr_rf_value;
+    uint8_t               tx1_rssi;
+    uint8_t               tx2_rssi;
+    uint8_t*              ptr;
+    hl_rf_state_e         rf_state;
+    hl_rf_bypass_value_t ptr_rf_value;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -108,6 +108,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_MUTE_IND:
             LOG_D("app get mute indicate");
+            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, &tx1_rssi, 1);
+            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1); 
             break;
 
         case HL_RF_BYPASS_DENOISE_IND:
@@ -128,8 +130,13 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             break;
             
         case HL_RF_BYPASS_BATTERY_IND:
-            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
-            LOG_D("app get TX%d battery(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            ptr_rf_value = *(hl_rf_bypass_value_t*)p_msg->param.ptr;
+            LOG_D("app get TX%d battery(%d)", ptr_rf_value.chn, ptr_rf_value.val);
+            if (ptr_rf_value.chn == 0) {
+                hl_mod_display_io_ctrl(TX1_BAT_VAL_VAL_CMD, &ptr_rf_value.val, sizeof(ptr_rf_value.val));
+            } else if (ptr_rf_value.chn == 1) {
+                hl_mod_display_io_ctrl(TX2_BAT_VAL_VAL_CMD, &ptr_rf_value.val, sizeof(ptr_rf_value.val));
+            }
             break;
 
         default:

@@ -40,6 +40,10 @@ extern "C" {
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
+// led的亮度值
+#define NORMAL_BRIGTNESS                                30
+#define LOWVAL_BRIGTNESS                                15
+
 // bool ：true表示定时器超时的操作，false 表示定时器重新更新计数时间时的操作
 typedef void (*screen_trigfunc)(bool);
 
@@ -69,7 +73,6 @@ typedef struct _hl_display_status{
     uint32_t line_out_in:1;
     uint32_t monitor_in:1;
     uint32_t auto_record:1;
-    
     // 自动录制状态 （1: 开启 0:关闭）
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
@@ -123,6 +126,8 @@ typedef struct _hl_display_screen_s
     uint8_t tx2_remained_record_time;
     // OTA升级进度
     uint8_t upgrade_progress;
+    // 自动关机参数  0表示永不自动关机；有数据表示设定的关机时间(单位为min)
+    uint16_t auto_poweroff;
     hl_upgrade_status upgrade_status;
     
     char tx1_ver[10];
@@ -178,6 +183,7 @@ typedef struct _hl_display_screen_change_s{
     uint32_t rx_ver:1;
     uint32_t case_ver:1;
     uint32_t rx_sn:1;
+    uint32_t auto_poweroff:1;
 }hl_display_screen_change_s;
 
 

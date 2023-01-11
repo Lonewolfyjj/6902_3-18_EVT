@@ -42,8 +42,8 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
-static hl_three_in_one_check_t now_choose;
-static hl_three_in_one_check_t last_choose;
+static int16_t knob_choose;
+static hl_three_in_one_check_t display_choose;
 
 static void hl_three_in_one_trg(hl_three_in_one_check_t choose)
 {
@@ -58,13 +58,13 @@ static void hl_diqie_test_cb(hl_three_in_one_check_t event_num)
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
     uint32_t             value;
 
-    if (last_choose != event_num) {
-        last_choose = event_num;
-        now_choose  = event_num;
+    if (display_choose != event_num) {
+        display_choose = event_num;
+        knob_choose  = (int16_t)display_choose;
         LOG_E("event_num=%d\n", event_num);
         // 上报并更新参数
         hl_mod_display_mux_take();
-        switch (now_choose) {
+        switch (display_choose) {
             case HL_THREE_ONE_CHECK_LEFT:
                 value = LOW_CUT_OFF;
                 break;
@@ -75,6 +75,7 @@ static void hl_diqie_test_cb(hl_three_in_one_check_t event_num)
                 value = LOW_CUT_150HZ;
                 break;
             default:
+                hl_mod_display_mux_release();
                 return;
                 break;
         }
@@ -86,15 +87,17 @@ static void hl_diqie_test_cb(hl_three_in_one_check_t event_num)
 
 static void hl_three_in_one_update(void)
 {
+    uint8_t value;
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     if (flag->low_cut) {
         hl_mod_display_mux_take();
         flag->low_cut = 0;
+        value = data_ptr->low_cut;
         hl_mod_display_mux_release();
 
-        hl_three_in_one_trg(data_ptr->low_cut);
+        hl_three_in_one_trg(value);
     }
 }
 
@@ -104,18 +107,18 @@ static void hl_mod_page_setup(void)
 
     switch (data_ptr->low_cut) {
         case LOW_CUT_OFF:
-            now_choose = HL_THREE_ONE_CHECK_LEFT;
+            display_choose = HL_THREE_ONE_CHECK_LEFT;
             break;
         case LOW_CUT_75HZ:
-            now_choose = HL_THREE_ONE_CHECK_MID;
+            display_choose = HL_THREE_ONE_CHECK_MID;
             break;
         case LOW_CUT_150HZ:
-            now_choose = HL_THREE_ONE_CHECK_RIGHT;
+            display_choose = HL_THREE_ONE_CHECK_RIGHT;
             break;
         default:
             break;
     }
-    last_choose = now_choose;
+    knob_choose = (int16_t)display_choose;
 
     hl_lvgl_three_in_one_init_t three_in_one_test = {
         .func_cb             = hl_diqie_test_cb,
@@ -123,7 +126,7 @@ static void hl_mod_page_setup(void)
         .ptr_mid             = "75HZ",
         .ptr_right           = "150HZ",
         .ptr_top             = "低切",
-        .three_in_one_choose = now_choose,
+        .three_in_one_choose = display_choose,
     };
 
     hl_mod_three_in_one_init(&three_in_one_test);
@@ -142,8 +145,6 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    hl_lvgl_three_in_one_ioctl_t three_in_one_test_ctl;
-
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();
     // 返回按键
@@ -151,19 +152,19 @@ static void hl_mod_page_loop(void)
 
     // 触摸返回
     if (1 == back_btn) {
-        hl_three_in_one_trg(now_choose);
+        hl_three_in_one_trg(knob_choose);
         PageManager_PagePop();
     }
 
     // 旋钮对配置的更改
-    if (hl_mod_knob_select_val_change(&now_choose, 0, 2, true)) {
-        LOG_E("choose_chg=%d\n", now_choose);
-        hl_three_in_one_trg(now_choose);
+    if (hl_mod_knob_select_val_change(&knob_choose, 0, 2, true)) {
+        LOG_E("knob choose chg=%d\n", knob_choose);
+        hl_three_in_one_trg(knob_choose);
     }
 
     // OK按键
     if (ok_btn == HL_KEY_EVENT_SHORT) {
-        hl_three_in_one_trg(now_choose);
+        hl_three_in_one_trg(knob_choose);
     }
 
     // 上层对配置的更改

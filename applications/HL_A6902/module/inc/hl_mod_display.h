@@ -355,7 +355,8 @@ typedef enum _hl_out_msg_e
     /// 系统时间设置 <hl_display_systime_s>
     SYSTIME_SET_VAL_IND,
 
-    /// 自动关机模式 见 uint32_t 单位min  0表示永不关机目前只有15和30min两个选项
+    /// 自动关机模式设置 <uint16_t> 单位min  0：永不关机；非0：自动关机时间(单位为min)
+    /// 目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_IND,
 
     ///配对 uint8_t 0:取消配对 1：进行配对
@@ -515,7 +516,8 @@ typedef enum _hl_cmd_e
     ///  系统时间设置 <hl_display_systime_s> 
     SYSTIME_SET_VAL_CMD,
 
-    /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
+    /// 自动关机模式设置 <uint16_t> 单位min  0：永不关机；非0：自动关机时间(单位为min)
+    /// 目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_CMD,
 
     /// 关机充电 页面 <hl_display_out_box_charge_state> 1 表示进入充电页面  2表示进入LOGO页面 0表示不进入任何页面

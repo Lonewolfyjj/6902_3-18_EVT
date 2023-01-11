@@ -282,7 +282,7 @@ static void hl_mod_page_loop(void)
     if (1 == hl_mod_keypad_touchkey_read()) {
         now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
         hl_mod_moreone_ioctl(&now_opt);
-        PageManager_PagePop();
+        PageManager_PagePush(PAGE_FAST_TX2_CONFIG);
     }
 
     // 旋钮选择
