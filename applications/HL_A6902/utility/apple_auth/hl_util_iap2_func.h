@@ -43,7 +43,10 @@ typedef struct _iap2_protocol_
     char dev_sn[128];
 
     st_packet_header_arg packet_arg;
-    uint8_t              challenge_req_len;
+    // 挑战请求的长度
+    uint8_t* challenge_resp_data;
+    uint16_t challenge_req_len;
+    uint16_t challenge_resp_len;
 
     em_iap2_protocol_status_t     main_status;
     em_iap2_detect_status_t       detect_status;
@@ -57,7 +60,7 @@ typedef struct _iap2_protocol_
     int (*iap2_iic_read)(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
     int (*iap2_iic_write)(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len);
     /// 打印函数
-    void (*iap2_printf)(const char *fmt, ...);
+    void (*iap2_printf)(const char* fmt, ...);
 } st_iap2_protocol_t, *st_iap2_protocol_p;
 
 /* define --------------------------------------------------------------------*/

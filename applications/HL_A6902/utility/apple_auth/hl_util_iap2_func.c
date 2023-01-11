@@ -1,11 +1,6 @@
 #include "hl_util_iap2_func.h"
 #include "hl_util_iap2_packet.h"
 
-// 挑战请求的长度
-static uint8_t* challenge_resp_data;
-static uint16_t challenge_req_len;
-static uint16_t challenge_resp_len;
-
 /**
  * hl_iap2_challange_response_process
  * @brief  处理挑战应答结果(状态机)
@@ -30,7 +25,7 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
         switch (status) {
             case EM_HL_CHALLENGE_RESP_STM_WRITE_DATA:
                 // Write Challenge Data
-                iap2->iap2_iic_write(CP_CHALLENGE_DATA, challenge_resp_data, challenge_req_len);
+                iap2->iap2_iic_write(CP_CHALLENGE_DATA, iap2->challenge_resp_data, iap2->challenge_req_len);
                 status = EM_HL_CHALLENGE_RESP_STM_READ_DATA_LEN;
                 break;
 
@@ -49,7 +44,7 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
             case EM_HL_CHALLENGE_RESP_STM_READ_CTRL:
                 // Read Authentication Status
                 do {
-                    iap2->delay_usec_func(200000);
+                    iap2->delay_usec_func(500000);
                     ret = iap2->iap2_iic_read(CP_AUTHENTICATION_CONTROL_STATUES, &val, sizeof(uint8_t), TIMEOUT_US);
                     try_time--;
                     if (!try_time) {
@@ -69,8 +64,8 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
             case EM_HL_CHALLENGE_RESP_STM_READ_RESP_LEN:
                 // Read Challenge Response Data Length
                 do {
-                    ret = iap2->iap2_iic_read(CP_CHALLENGE_RESPONSE_DATA_LEN, &challenge_resp_len, sizeof(uint16_t),
-                                              TIMEOUT_US);
+                    ret = iap2->iap2_iic_read(CP_CHALLENGE_RESPONSE_DATA_LEN, &iap2->challenge_resp_len,
+                                              sizeof(uint16_t), TIMEOUT_US);
                     try_time--;
                     if (!try_time) {
                         iap2->iap2_printf("[ERROR][%s:%d] read status!\n", __func__, __LINE__);
@@ -80,14 +75,14 @@ static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
 
                 } while (sizeof(uint16_t) != ret);
 
-                challenge_resp_len = EXCHANGE_HIGH_LOW_BYTE(challenge_resp_len);
-                status             = EM_HL_CHALLENGE_RESP_STM_READ_RESP_DATA;
+                iap2->challenge_resp_len = EXCHANGE_HIGH_LOW_BYTE(iap2->challenge_resp_len);
+                status                   = EM_HL_CHALLENGE_RESP_STM_READ_RESP_DATA;
                 break;
 
             case EM_HL_CHALLENGE_RESP_STM_READ_RESP_DATA:
                 // Read Challenge Response Data
-                ret =
-                    iap2->iap2_iic_read(CP_CHALLENGE_RESPONSE_DATA, iap2->recv_buffer, challenge_resp_len, TIMEOUT_US);
+                ret = iap2->iap2_iic_read(CP_CHALLENGE_RESPONSE_DATA, iap2->recv_buffer, iap2->challenge_resp_len,
+                                          TIMEOUT_US);
                 return 0;
 
             default:
@@ -336,8 +331,8 @@ int hl_iap2_identify_req_challenge(st_iap2_protocol_p iap2)
         iap2->iap2_printf("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id,
                           SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
         if (!ret && SESSION_ID_REQUEST_AUTH_CHALLENG_RESP == message_id) {
-            challenge_resp_data = &iap2->recv_buffer[19];
-            challenge_req_len   = hl_iap2_ctrl_packet_get_param_len(iap2->recv_buffer);
+            iap2->challenge_resp_data = &iap2->recv_buffer[19];
+            iap2->challenge_req_len   = hl_iap2_ctrl_packet_get_param_len(iap2->recv_buffer);
             iap2->iap2_printf("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id,
                               SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
             result = 0;
@@ -368,9 +363,9 @@ int hl_iap2_identify_ack_challenge(st_iap2_protocol_p iap2)
     }
 
     ctrl_packet_len =
-        PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + challenge_resp_len + 1;
-    ctrl_message_len = PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + challenge_resp_len;
-    ctrl_param_len   = PACKET_PARAM_HEADER_SIZE + challenge_resp_len;
+        PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + iap2->challenge_resp_len + 1;
+    ctrl_message_len = PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE + iap2->challenge_resp_len;
+    ctrl_param_len   = PACKET_PARAM_HEADER_SIZE + iap2->challenge_resp_len;
 
     iap2->iap2_printf("[OK]Authentication Response 1111 [len = %d]\n", len);
 

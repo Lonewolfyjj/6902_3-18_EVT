@@ -279,7 +279,7 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
             try_time = 11;
-            iap2->delay_usec_func(5000);
+            iap2->delay_usec_func(500000);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:

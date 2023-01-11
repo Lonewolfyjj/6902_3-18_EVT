@@ -7,7 +7,7 @@ static rt_thread_t hl_mod_apple_auth_iap2_thread;
 /// EAP线程句柄
 static rt_thread_t hl_mod_apple_auth_eap_thread;
 /// appleauth控制句柄
-hl_mod_apple_auth_t s_apple_auth;
+static hl_mod_apple_auth_t s_apple_auth;
 
 static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
@@ -21,15 +21,16 @@ static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t re
         ret += hl_drv_usb_vendor_class_com_read(read_data_addr, read_data_len, timeout);
     }
 
-    rt_kprintf("\n-->[iAP2]USB Read Len:%d", ret);
-    for (uint16_t i = 0; i < ret; i++) {
-        if (i % 20 == 0) {
-            rt_kprintf("\n");
-        }
-        rt_kprintf("%02x ", read_data_addr[i]);
-    }
-    rt_kprintf("\n");
-    rt_kprintf("\n");
+    rt_thread_mdelay(10);
+    // rt_kprintf("\n-->[iAP2]USB Read Len:%d", ret);
+    // for (uint16_t i = 0; i < ret; i++) {
+    //     if (i % 20 == 0) {
+    //         rt_kprintf("\n");
+    //     }
+    //     rt_kprintf("%02x ", read_data_addr[i]);
+    // }
+    // rt_kprintf("\n");
+    // rt_kprintf("\n");
     return ret;
 }
 
@@ -52,9 +53,10 @@ static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t 
         ret += hl_drv_usb_vendor_class_com_write(write_data_addr, write_data_len);
     }
 
-    rt_kprintf("\n-->[iAP2]USB Write Len:%d", write_data_len);
-    rt_kprintf("\n");
-    rt_kprintf("\n");
+    rt_thread_mdelay(10);
+    // rt_kprintf("\n-->[iAP2]USB Write Len:%d", write_data_len);
+    // rt_kprintf("\n");
+    // rt_kprintf("\n");
 
     return RT_EOK;
 }
@@ -79,12 +81,12 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
             return 0;
         }
         // rt_kprintf("i2c read msg[0] = %d\n", size);
-        rt_thread_mdelay(1);
+        rt_thread_mdelay(5);
     } while (size != 1);
 
-    for (size_t i = 0; i < msgs[0].len; i++) {
-        rt_kprintf("%02x ", msgs[0].buf[i]);
-    }
+    // for (size_t i = 0; i < msgs[0].len; i++) {
+    //     rt_kprintf("%02x ", msgs[0].buf[i]);
+    // }
     try_time = 5;
 
     msgs[1].addr  = MFI_IC_IIC_ADDR;
@@ -100,18 +102,18 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
             return 0;
         }
         // rt_kprintf("i2c read msg[1] = %d\n", size);
-        rt_thread_mdelay(1);
+        rt_thread_mdelay(5);
     } while (size != 1);
 
-    rt_kprintf("\n-->[iAP2]IIC Read Data:[");
-    for (uint16_t i = 0; i < read_data_len; i++) {
-        if (i % 20 == 0) {
-            rt_kprintf("\n");
-        }
-        rt_kprintf("%02x ", read_data_addr[i]);
-    }
-    rt_kprintf("\n");
-    rt_kprintf("\n");
+    // rt_kprintf("\n-->[iAP2]IIC Read Data:[");
+    // for (uint16_t i = 0; i < read_data_len; i++) {
+    //     if (i % 20 == 0) {
+    //         rt_kprintf("\n");
+    //     }
+    //     rt_kprintf("%02x ", read_data_addr[i]);
+    // }
+    // rt_kprintf("\n");
+    // rt_kprintf("\n");
 
     return read_data_len;
 }
@@ -141,15 +143,15 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
         // rt_kprintf("i2c write msg[0] size = %d\n", size);
     } while (size != 1);
 
-    rt_kprintf("\n-->[iAP2]IIC Write Data:");
-    for (uint16_t i = 0; i < msgs.len; i++) {
-        if (i % 20 == 0) {
-            rt_kprintf("\n");
-        }
-        rt_kprintf("%02x ", msgs.buf[i]);
-    }
-    rt_kprintf("\n");
-    rt_kprintf("\n");
+    // rt_kprintf("\n-->[iAP2]IIC Write Data:");
+    // for (uint16_t i = 0; i < msgs.len; i++) {
+    //     if (i % 20 == 0) {
+    //         rt_kprintf("\n");
+    //     }
+    //     rt_kprintf("%02x ", msgs.buf[i]);
+    // }
+    // rt_kprintf("\n");
+    // rt_kprintf("\n");
 
     return RT_EOK;
 }
