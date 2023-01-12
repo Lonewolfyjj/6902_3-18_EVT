@@ -397,6 +397,9 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
+    if (in_box_state == BOX_CHARGE_RX_NOT) {
+        return;
+    }
     hl_lvgl_charge_ioctl_t ioctrl;
     ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
     hl_mod_charge_ioctl(&ioctrl);
