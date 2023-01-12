@@ -43,33 +43,45 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
-static int16_t now_num;
+static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
+static hl_s_two_in_one_check_t display_choose = HL_S_TWO_ONE_CHECK_LEFT;
 
 //配对界面
 static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 {
     uint32_t value = 0;
-    switch (event_num) {
-        case HL_S_TWO_ONE_CHECK_LEFT:
-            PageManager_PagePop();
-            break;
-        case HL_S_TWO_ONE_CHECK_RIGHT:
-            value = 1;
-            PageManager_PagePush(PAGE_PARING);
-            break;
-        default:
-            return;
-            break;
+
+    LOG_D("event_num = %d\n", event_num);
+
+    if (event_num == display_choose) {
+        // 如果相同就触发发送消息事件
+        switch (event_num) {
+            case HL_S_TWO_ONE_CHECK_RIGHT:
+                // 取消就回上一页面
+                PageManager_PagePop();
+                break;
+            case HL_S_TWO_ONE_CHECK_LEFT:
+                value = 1;
+                PageManager_PagePush(PAGE_PARING);
+                hl_mod_display_send_msg(DEVICE_PAIR_IND, &value, 0);
+                break;
+            default:
+                return;
+                break;
+        }
+
+    } else {
+        display_choose = event_num;
+        now_num        = event_num;
     }
-    hl_mod_display_send_msg(DEVICE_PAIR_IND, &value, 0);
 }
 
-static void pair_test(void)
+static void hl_mod_page_setup(void)
 {
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
         .func_cb             = hl_pair_test_cb,
-        .ptr_lift            = "取消",
-        .ptr_right           = "确定",
+        .ptr_lift            = "确定",
+        .ptr_right           = "取消",
         .ptr_top             = "是否进入配对",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
@@ -81,11 +93,6 @@ static void pair_test(void)
 
     hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
     now_num = s_two_in_one_test_ctl.s_two_in_one_choose;
-}
-
-static void hl_mod_page_setup(void)
-{
-    pair_test();
 }
 
 static void hl_mod_page_exit(void)
@@ -109,13 +116,12 @@ static void hl_mod_page_loop(void)
 
     // 触摸返回
     if (1 == back_btn) {
-        s_two_in_one_test.s_two_in_one_choose = now_num;
-        hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
+
         PageManager_PagePop();
     }
 
     // 旋钮选择
-    if (hl_mod_knob_select_val_change(&now_num,0,1,true) ) {
+    if (hl_mod_knob_select_val_change(&now_num, 0, 1, true)) {
         s_two_in_one_test.s_two_in_one_choose = now_num;
         hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
     }

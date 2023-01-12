@@ -190,6 +190,10 @@ typedef enum _hl_screen_page_e
     PAGE_QUICK_SETTINGS,
     /// 配对中页面
     PAGE_PARING,
+    /// 格式化确定对话框
+    PAGE_FORMAT,
+    /// 外放设置页面
+    PAGE_SOUNDOUT_SETTING,
     ///  页面总数
     PAGE_MAX,  
 
@@ -362,6 +366,9 @@ typedef enum _hl_out_msg_e
     ///配对 uint8_t 0:取消配对 1：进行配对
     DEVICE_PAIR_IND,
 
+    /// 声音外放设置 1：开启外放；0：关闭外放
+    SOUNDOUT_SETTING_SWITCH_IND,
+
     IND_CNT,
 
 } HL_ENUM8(hl_out_msg_e);
@@ -522,6 +529,9 @@ typedef enum _hl_cmd_e
 
     /// 关机充电 页面 <hl_display_out_box_charge_state> 1 表示进入充电页面  2表示进入LOGO页面 0表示不进入任何页面
     OUT_BOX_CHARGER_SWITCH_CMD,
+
+    /// 声音外放设置 1：开启外放；0：关闭外放
+    SOUNDOUT_SETTING_SWITCH_CMD,
 
     MSG_ID_CNT
     

@@ -43,33 +43,40 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
-#define DEFAULT_REMAIND_HOUR "16h可用"
-#define TX_TIME_REMAINING_PERCENT(hour) (uint8_t)(((uint16_t)16 - (uint16_t)hour) * (uint16_t)100 / 16)
+#define TX_TIME_REMAINING_PERCENT(hour) \
+    (uint8_t)((((float)STROGE_MAX_USED_TIME - (float)hour) * (float)100) / (float)STROGE_MAX_USED_TIME)
 
-static int16_t knob_choose;
+static int16_t            knob_choose;
+static hl_storage_check_t display_choose;
 
-//     switch(event_num){
-//         case HL_STORAGE_CHECK_LEFT:
-//             msg_cmd = TX1_FS_FORMAT_VAL_IND;
-//             break;
-//         case HL_STORAGE_CHECK_RIGHT:
-//             msg_cmd = TX2_FS_FORMAT_VAL_IND;
-//             break;
-//         default:
-//             return;
-//             break;
-//     }
-//  hl_mod_display_send_msg(msg_cmd,&value,0);
-//格式化界面
+// 格式化界面
 static void hl_storage_test_cb(hl_storage_check_t event_num)
 {
-    uint32_t     value = 0;
-    hl_out_msg_e msg_cmd;
+    uint32_t                    value = 0;
+    hl_display_screen_change_s* flag  = hl_mod_page_get_screen_change_flag();
 
-    hl_lvgl_storage_ioctl_t storage_ctl = {
-        .storage_choose = HL_STORAGE_CHOOSE_LEFT,
-    };
-    hl_mod_storage_ioctl(&storage_ctl);
+    LOG_D("event_num = %d\n", event_num);
+
+    if (display_choose == event_num) {
+
+        switch (event_num) {
+            case HL_STORAGE_CHECK_LEFT:
+                // TX1格式化
+                flag->channel_format_flag = 0;
+                break;
+            case HL_STORAGE_CHECK_RIGHT:
+                // TX2格式化
+                flag->channel_format_flag = 1;
+                break;
+            default:
+                break;
+        }
+        PageManager_PagePush(PAGE_FORMAT);
+
+    } else {
+        display_choose = event_num;
+        knob_choose    = (int16_t)event_num;
+    }
 }
 // static void tx1_time_remaining_update(char* str, uint8_t percentage)
 // {
@@ -111,35 +118,37 @@ static void hl_mod_page_setup(void)
 {
     uint8_t              data1;
     uint8_t              data2;
-    char                 time_remaining[10];
+    char                 time1_remaining[16];
+    char                 time2_remaining[16];
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     data1 = data_ptr->tx1_remained_record_time;
     data2 = data_ptr->tx2_remained_record_time;
 
-    knob_choose = (int16_t)HL_STORAGE_CHOOSE_LEFT;
+    knob_choose = (int16_t)display_choose;
 
     hl_lvgl_storage_init_t init = {
         .func_cb        = hl_storage_test_cb,
-        .ptr_time_tx1   = DEFAULT_REMAIND_HOUR,
-        .ptr_time_tx2   = DEFAULT_REMAIND_HOUR,
-        .storage_choose = knob_choose,
+        .ptr_time_tx1   = NULL,
+        .ptr_time_tx2   = NULL,
+        .storage_choose = display_choose,
         .used_tx1       = 100,
         .used_tx2       = 100,
     };
 
-    tx_time_remaining_update(time_remaining, data1);
-    init.ptr_time_tx1 = time_remaining;
-    init.used_tx1     = TX_TIME_REMAINING_PERCENT(data1);
+    tx_time_remaining_update(time1_remaining, data1);
+    init.ptr_time_tx1 = time1_remaining;
 
-    tx_time_remaining_update(time_remaining, data2);
-    init.ptr_time_tx2 = time_remaining;
+    init.used_tx1 = TX_TIME_REMAINING_PERCENT(data1);
+    LOG_D("tx1 stroge used=%d\n", init.used_tx1);
+    tx_time_remaining_update(time2_remaining, data2);
+    init.ptr_time_tx2 = time2_remaining;
     init.used_tx2     = TX_TIME_REMAINING_PERCENT(data2);
-
+    LOG_D("tx2 stroge used=%d\n", init.used_tx2);
     hl_mod_storage_init(&init);
 
     hl_lvgl_storage_ioctl_t storage_ctl = {
-        .storage_choose = knob_choose,
+        .storage_choose = display_choose,
     };
     hl_mod_storage_ioctl(&storage_ctl);
 }

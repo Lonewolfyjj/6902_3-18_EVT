@@ -43,7 +43,8 @@ extern "C" {
 // led的亮度值
 #define NORMAL_BRIGTNESS                                30
 #define LOWVAL_BRIGTNESS                                15
-
+/// TX录制最大使用时间
+#define STROGE_MAX_USED_TIME                             16
 // bool ：true表示定时器超时的操作，false 表示定时器重新更新计数时间时的操作
 typedef void (*screen_trigfunc)(bool);
 
@@ -73,7 +74,9 @@ typedef struct _hl_display_status{
     uint32_t line_out_in:1;
     uint32_t monitor_in:1;
     uint32_t auto_record:1;
-    // 自动录制状态 （1: 开启 0:关闭）
+    /// 外放设置 （1: 开启 0:关闭）
+    uint32_t soundout_setting:1;
+    /// 自动录制状态 （1: 开启 0:关闭）
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
     uint32_t tx2_mute_switch:1;
@@ -146,7 +149,6 @@ typedef struct _hl_display_screen_change_s{
     hl_display_status sys_status;
     uint32_t rf_net_connect:1;
     uint32_t monitor_category:1;
-    uint32_t voice_module_:1;
     uint32_t sound_module:1;
     uint32_t low_cut:1;
     uint32_t page_id:1;
@@ -184,6 +186,9 @@ typedef struct _hl_display_screen_change_s{
     uint32_t case_ver:1;
     uint32_t rx_sn:1;
     uint32_t auto_poweroff:1;
+    // 格式化页面TX声道标志,0表示格式化左声道，1表示格式化右声道
+    uint32_t channel_format_flag:1;
+    uint32_t voice_module:1;
 }hl_display_screen_change_s;
 
 

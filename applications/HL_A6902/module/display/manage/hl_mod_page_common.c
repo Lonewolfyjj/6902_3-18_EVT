@@ -89,8 +89,8 @@ static hl_display_screen_s hl_screendata = {
     .tx2_gain_volume          = 0,
     .monitor_volume           = 0,
     .led_britness             = NORMAL_BRIGTNESS,
-    .tx1_remained_record_time = 10,
-    .tx2_remained_record_time = 10,
+    .tx1_remained_record_time = STROGE_MAX_USED_TIME,
+    .tx2_remained_record_time = STROGE_MAX_USED_TIME,
     .upgrade_progress         = 0,
     .upgrade_status           = HL_UPGRADE_STATUS_NORMAL,
     .tx1_ver                  = "V0.0.0.0",
@@ -772,6 +772,8 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_PARING);
     PAGE_REG(PAGE_UPGRADE);
     PAGE_REG(PAGE_FAST_TX2_CONFIG);
+    PAGE_REG(PAGE_FORMAT);
+    PAGE_REG(PAGE_SOUNDOUT_SETTING);
 }
 
 void lvgl2rtt_init(void)
@@ -785,7 +787,7 @@ void lvgl2rtt_init(void)
 void hl_mod_page_all_init(void)
 {
     hl_page_style_bit_init();
-    PageManager_Init(PAGE_MAX, 8);
+    PageManager_Init(PAGE_MAX, 10);
     hl_mod_page_cb_reg();
 }
 #endif
