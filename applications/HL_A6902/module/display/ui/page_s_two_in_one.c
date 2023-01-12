@@ -124,7 +124,7 @@ static void btn_left_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_cnt=0;
             btn_left_cnt++;
-            if(btn_left_cnt > 1){
+            if(btn_left_cnt >= 1){
                 LV_LOG_USER("btn_left Clicked\n");
                 hl_s_two_in_one_func(HL_S_TWO_ONE_CHECK_LEFT);
             } 
@@ -151,7 +151,7 @@ static void btn_right_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_left_cnt=0;
             btn_right_cnt++;
-            if(btn_right_cnt > 1){
+            if(btn_right_cnt >= 1){
                 LV_LOG_USER("btn_right Clicked\n");
                 hl_s_two_in_one_func(HL_S_TWO_ONE_CHECK_RIGHT);                
             }  
