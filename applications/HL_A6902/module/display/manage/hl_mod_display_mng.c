@@ -313,7 +313,7 @@ uint8_t PageManager_GetNowPage()
     if(!IsPageBusy)
     {
         /*新页面ID*/
-        return NewPage;
+        return PageStack.Ptr[PageStack.Top];
     } else {
         return OldPage;
     }

@@ -9,7 +9,9 @@
  * 
  */
 #include "page_moreone.h"
+
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     7
 
@@ -29,6 +31,7 @@ static lv_style_t style_screen;
 static lv_style_t style_white_dot;
 static lv_style_t style_grey_dot;
 
+static lv_obj_t * device_lab;
 static lv_obj_t * btn1_l,*btn1_r;
 static lv_obj_t * btn2_l,*btn2_r;
 static lv_obj_t * btn3_l,*btn3_r;
@@ -211,6 +214,9 @@ static void btn11_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1=0;
             btn_left_1++;
+            if(btn_left_1 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_ONE_LEFT);
+            }
             if(btn_left_1 > 1){
                 LV_LOG_USER("btn_left1 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_ONE_LEFT);
@@ -232,6 +238,9 @@ static void btn12_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1++;
             btn_left_1 = 0;
+            if(btn_right_1 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_ONE_RIGHT);
+            }
             if(btn_right_1 > 1){
                 LV_LOG_USER("btn_right1 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_ONE_RIGHT);
@@ -253,6 +262,9 @@ static void btn21_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2=0;
             btn_left_2++;
+            if(btn_left_2 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_TWO_LEFT);
+            }
             if(btn_left_2 > 1){
                 LV_LOG_USER("btn_left2 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_TWO_LEFT);
@@ -274,6 +286,9 @@ static void btn22_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2++;
             btn_left_2 = 0;
+            if(btn_right_2 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_TWO_RIGHT);
+            }
             if(btn_right_2 > 1){
                 LV_LOG_USER("btn_right2 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_TWO_RIGHT);
@@ -295,6 +310,9 @@ static void btn31_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3=0;
             btn_left_3++;
+            if(btn_left_3 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_THREE_LEFT);
+            }
             if(btn_left_3 > 1){
                 LV_LOG_USER("btn_left3 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_THREE_LEFT);
@@ -316,6 +334,9 @@ static void btn32_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3++;
             btn_left_3 = 0;
+            if(btn_right_3 == 1){
+                hl_moreone_func(HL_MOREONE_CHG_THREE_RIGHT);
+            }
             if(btn_right_3 > 1){
                 LV_LOG_USER("btn_right3 Clicked\n");
                 hl_moreone_func(HL_MOREONE_CHECK_THREE_RIGHT);
@@ -474,12 +495,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -584,7 +607,10 @@ void hl_mod_moreone_init(void * init_data)
 {
     hl_lvgl_moreone_init_t * ptr = (hl_lvgl_moreone_init_t *)init_data;
     hl_moreone_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_moreone) {
+        page_style_bit.page_moreone = 1;
+        lv_style_page4_init();
+    }
 
     con_src = lv_con_scr_creat(270,140);
     lv_obj_set_flex_align(con_src,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);
@@ -599,6 +625,7 @@ void hl_mod_moreone_init(void * init_data)
     lv_page_2_init(con2,ptr->moreone_choose_opt.option_two);
     lv_page_3_init(con3,ptr->moreone_choose_opt.option_three);
     hl_option_mid_set(ptr->moreone_mid_opt,LV_ANIM_OFF);
+    device_lab = lv_lab_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_TOP_LEFT,0,0,ptr->device_ptr);
     valid_obj[0] = btn11;
     valid_obj[1] = btn12;
     valid_obj[2] = btn21;

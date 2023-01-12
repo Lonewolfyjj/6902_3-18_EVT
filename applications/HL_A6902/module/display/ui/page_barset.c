@@ -10,6 +10,7 @@
  */
 #include "page_barset.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 LV_IMG_DECLARE(Main_stereo);//立体声
 LV_IMG_DECLARE(Main_saft_track);   //安全音轨
@@ -113,12 +114,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -136,9 +139,10 @@ void hl_mod_barset_ioctl(void * ctl_data)
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_barset_ioctl_t * ptr = (hl_lvgl_barset_ioctl_t *)ctl_data;
     if(ptr->barset_value == HL_VALUE){
-        lv_snprintf(buf, sizeof(buf), "%d", ptr->barset_value);
-        lv_slider_set_value(slider1, ptr->barset_value, LV_ANIM_ON);
-        lv_label_set_text(lab2, ptr);
+        lv_snprintf(buf, sizeof(buf), "%d", ptr->value);
+        lv_slider_set_value(slider1, ptr->value, LV_ANIM_ON);
+        lv_label_set_text(lab2,buf);
+        hl_barset_func(ptr->value);
     }
     if(ptr->barset_value == HL_EXTI){
         hl_obj_delete(lv_scr_act(),false);        
@@ -153,8 +157,11 @@ void hl_mod_barset_init(void * init_data)
     char buf[8] = {0,0,0,0,0,0,0,0};
     hl_lvgl_barset_init_t * ptr = (hl_lvgl_barset_init_t *)init_data;
     hl_barset_func = ptr->func_cb;
-
-    lv_style_barset_init();
+    if (!page_style_bit.page_barset) {
+        page_style_bit.page_barset = 1;
+        lv_style_barset_init();
+    }
+    
     lv_snprintf(buf, sizeof(buf), "%d", ptr->init_value);
     slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,30,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
     img1 = lv_img_creat_fun(slider1,ptr->src,LV_ALIGN_LEFT_MID,10,0);

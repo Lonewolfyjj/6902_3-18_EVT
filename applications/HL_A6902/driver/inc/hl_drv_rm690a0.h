@@ -44,13 +44,26 @@ typedef struct _hl_drv_color_t
     uint32_t format;
 } hl_drv_fill_pattern_t;
 
+typedef struct _hl_mod_lvgl_video_mem_t
+{
+    uint16_t format_byte;
+    uint16_t hor_max;
+    uint16_t vor_max;
+    uint16_t x1;
+    uint16_t x2;
+    uint16_t y1;
+    uint16_t y2;
+    const uint8_t * src;
+    uint8_t * dst;
+} hl_mod_lvgl_video_mem_t;
+
 /* define --------------------------------------------------------------------*/
 enum
 {
     /// 设置背光
     SET_MIPI_BACKLIGHT_CMD,
-    /// 设置屏幕显示纯色
-    DISPLAY_FULL_COLOR_CMD,
+    // /// 设置屏幕显示纯色
+    // DISPLAY_FULL_COLOR_CMD,
     /// 申请缓冲区
     FRAMEBUF_MALLOC_CMD,
     /// 释放缓冲区
@@ -58,6 +71,7 @@ enum
 };
 
 #define MIPI_OLED_DATA_FMT RTGRAPHIC_PIXEL_FORMAT_RGB565
+
 
 #define MIPI_OLED_WIDTH RT_LV_HOR_RES
 #define MIPI_OLED_HEIGHT RT_LV_VER_RES
@@ -69,8 +83,8 @@ uint8_t hl_drv_rm690a0_init(void);
 
 uint8_t hl_drv_rm690a0_deinit(void);
 
-uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic);
-
+// uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic);
+uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p);
 uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len);
 #endif
 

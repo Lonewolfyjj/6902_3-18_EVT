@@ -10,6 +10,7 @@
  */
 #include "page_b_two_in_one.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -178,12 +179,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -223,7 +226,11 @@ void hl_mod_b_two_in_one_init(void * init_data)
 {  
     hl_lvgl_b_two_in_one_init_t * ptr = (hl_lvgl_b_two_in_one_init_t *)init_data;
     hl_b_two_in_one_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_b_two_in_one) {
+        page_style_bit.page_b_two_in_one = 1;
+        lv_style_page4_init();
+    }
+    
 
     if(ptr->b_two_in_one_choose == HL_B_TWO_ONE_CHOOSE_LEFT){
         btn_left_cnt++;

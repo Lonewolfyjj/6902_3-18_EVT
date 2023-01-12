@@ -1,5 +1,6 @@
 #include "page_date.h"
 #include "language.h"
+#include "page_style_bit.h"
 
 #define ROLLER_YEAR  -96
 #define ROLLER_MONTH  2
@@ -362,12 +363,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -395,7 +398,11 @@ void hl_mod_date_ioctl(void * ctl_data)
 void hl_mod_date_init(void * init_data)
 {
     lv_date_init();
-    lv_style_page6_init();
+    if (!page_style_bit.page_date) {
+        page_style_bit.page_date = 1;
+        lv_style_page6_init();
+    }
+    
 
     hl_lvgl_date_init_t * ptr = (hl_lvgl_date_init_t *)init_data;
     hl_date_func = ptr->func_cb;

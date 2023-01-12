@@ -12,7 +12,14 @@ typedef enum _hl_moreone_check_t
     HL_MOREONE_CHECK_TWO_LEFT,
     HL_MOREONE_CHECK_TWO_RIGHT,
     HL_MOREONE_CHECK_THREE_LEFT,
-    HL_MOREONE_CHECK_THREE_RIGHT
+    HL_MOREONE_CHECK_THREE_RIGHT,
+
+    HL_MOREONE_CHG_ONE_LEFT,
+    HL_MOREONE_CHG_ONE_RIGHT,
+    HL_MOREONE_CHG_TWO_LEFT,
+    HL_MOREONE_CHG_TWO_RIGHT,
+    HL_MOREONE_CHG_THREE_LEFT,
+    HL_MOREONE_CHG_THREE_RIGHT
 }hl_moreone_check_t;
 
 typedef enum _hl_moreone_choose_t
@@ -47,6 +54,7 @@ typedef struct __hl_lvgl_moreone_option_t
 
 typedef struct __hl_lvgl_moreone_init_t
 {
+    char * device_ptr;
     hl_lvgl_moreone_option_t moreone_choose_opt;//
     hl_moreone_mid_opt_t moreone_mid_opt;
     hl_moreone_event_cb func_cb;

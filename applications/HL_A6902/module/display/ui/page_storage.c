@@ -10,6 +10,7 @@
  */
 #include "page_storage.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
@@ -205,12 +206,14 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
@@ -253,7 +256,11 @@ void hl_mod_storage_init(void * init_data)
 {    
     hl_lvgl_storage_init_t * ptr = (hl_lvgl_storage_init_t *)init_data;
     hl_storage_func = ptr->func_cb;
-    lv_style_page4_init();
+    if (!page_style_bit.page_storage) {
+        page_style_bit.page_storage = 1;
+        lv_style_page4_init();
+    }
+    
 
     con1 = lv_con_creat_fun(LV_ALIGN_LEFT_MID,0,0,144,126);
     con2 = lv_con_creat_fun(LV_ALIGN_RIGHT_MID,0,0,144,126);

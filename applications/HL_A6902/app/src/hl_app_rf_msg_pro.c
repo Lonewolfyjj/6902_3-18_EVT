@@ -50,7 +50,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t*      ptr;
     hl_rf_state_e rf_state;
 
-    LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
+    // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
             ptr = (uint8_t*)p_msg->param.ptr;
@@ -64,22 +64,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             hl_app_disp_state_led_set();
             break;
         case HL_RF_RSSI_IND:
-            p_param = *(uint8_t*)p_msg->param.ptr;
-            LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
-            break;
-
-        case HL_RF_GET_LOCAL_MAC_IND:
-            ptr = (uint8_t*)p_msg->param.ptr;
-            rt_memcpy(tx_info.local_mac, ptr, sizeof(tx_info.local_mac));
-            LOG_I("local mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
-                  ptr[5]);
-            break;
-
-        case HL_RF_GET_REMOTE_MAC_IND:
-            ptr = (uint8_t*)p_msg->param.ptr;
-            rt_memcpy(tx_info.remote_mac, ptr, sizeof(tx_info.remote_mac));
-            LOG_I("remote mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
-                  ptr[5]);
+            p_param  = *(uint8_t*)p_msg->param.ptr;
+            // LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
             break;
 
         default:
@@ -92,12 +78,13 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
-    uint8_t       tx1_rssi;
-    uint8_t       tx2_rssi;
-    uint8_t*      ptr;
-    hl_rf_state_e rf_state;
+    uint8_t            tx1_rssi;
+    uint8_t            tx2_rssi;
+    uint8_t            *ptr;
+    hl_rf_state_e      rf_state;
+    hl_rf_bypass_value_t *ptr_rf_value;
 
-    LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
+    // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_RF_VERSION_IND:
             ptr = (uint8_t*)p_msg->param.ptr;
@@ -112,11 +99,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             break;
 
         case HL_RF_RSSI_IND:
-            tx1_rssi = ((uint8_t*)p_msg->param.ptr)[0];
-            tx2_rssi = ((uint8_t*)p_msg->param.ptr)[0];
-            LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
-            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, tx1_rssi, 1);
-            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, tx2_rssi, 1);
+            tx1_rssi  = ((uint8_t*)p_msg->param.ptr)[0];
+            tx2_rssi  = ((uint8_t*)p_msg->param.ptr)[1];
+            // LOG_D("telink RSSI(%02X -- %02X)", tx1_rssi, tx2_rssi);
+            hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, &tx1_rssi, 1);
+            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1);
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -139,12 +126,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_SETTING_IND:
             LOG_D("app get setting indicate");
             break;
-
-        case HL_RF_GET_LOCAL_MAC_IND:
-            ptr = (uint8_t*)p_msg->param.ptr;
-            rt_memcpy(rx_info.local_mac, ptr, sizeof(rx_info.local_mac));
-            LOG_I("local mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
-                  ptr[5]);
+            
+        case HL_RF_BYPASS_BATTERY_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            LOG_D("app get TX%d battery(%d)", ptr_rf_value->chn, ptr_rf_value->val);
             break;
 
         case HL_RF_GET_REMOTE_MAC_IND:

@@ -10,6 +10,7 @@
  */
 #include "page_top.h"
 // #include "language.h"
+#include "page_style_bit.h"
 
 #define POSTION_IS_NULL 0xFF
 
@@ -66,7 +67,7 @@ static HL_DISPLAY_TOP_T top_icon_sta = {
     .voice_mod   = 0,
 };
 
-static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main;
+static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main,style_power_bar_red_indicator;
 static lv_style_t style_power_label;
 
 static lv_obj_t *bat_icon, *bat_bar, *bat_label;
@@ -224,6 +225,11 @@ static void lv_style_page_top_init(void)
     lv_style_set_bg_color(&style_power_bar_green_indicator, lv_palette_main(LV_PALETTE_GREEN));
     lv_style_set_radius(&style_power_bar_green_indicator, 0);
 
+    lv_style_init(&style_power_bar_red_indicator);
+    lv_style_set_bg_opa(&style_power_bar_red_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_red_indicator, lv_palette_main(LV_PALETTE_RED));
+    lv_style_set_radius(&style_power_bar_red_indicator, 0);
+
     lv_style_init(&style_power_bar_main);
     lv_style_set_bg_opa(&style_power_bar_main, LV_OPA_TRANSP);
     lv_style_set_radius(&style_power_bar_main, 0);
@@ -336,19 +342,21 @@ static void hl_add_top_icon(hl_top_icon_t icon)
     }
 }
 
-static void hl_obj_delete(lv_obj_t* obj, bool obj_typ)
+static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 {
-    uint32_t child_cnt = 0, i;
-    child_cnt          = lv_obj_get_child_cnt(obj);
-    if (child_cnt == 0) {
-        lv_obj_del_delayed(obj, 0);
-    } else {
-        for (i = 0; i < child_cnt; i++) {
-            hl_obj_delete(lv_obj_get_child(obj, i), true);
+    uint32_t child_cnt = 0,i;
+    child_cnt = lv_obj_get_child_cnt(obj);
+    if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+        lv_obj_del_delayed(obj,0);
+    }else{
+        for(i=0;i<child_cnt;i++){
+            hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
-        if (obj_typ) {
-            lv_obj_del_delayed(obj, 0);
-        }
+        if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+            lv_obj_del_delayed(obj,0);
+        }        
     }
 }
 
@@ -356,6 +364,7 @@ static void lv_delete_style(void)
 {
     lv_style_reset(&style_power_bar_green_indicator);
     lv_style_reset(&style_power_bar_white_indicator);
+    lv_style_reset(&style_power_bar_red_indicator);
     lv_style_reset(&style_power_bar_main);
     lv_style_reset(&style_power_label);
 }
@@ -451,6 +460,11 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_obj_add_style(bat_bar,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             break;
 
+        case HL_TOP_BAT_COLOR_RED:
+            lv_obj_remove_style(bat_bar,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            lv_obj_add_style(bat_bar,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            break;
+
         case HL_TOP_ALL_DEL:
             *(uint8_t*)&top_icon_sta = 0;
             hl_obj_delete(lv_scr_act(), false);
@@ -466,7 +480,11 @@ void hl_mod_top_ioctl(void* ctl_data)
 void hl_mod_top_init(void* init_data)
 {
     hl_lvgl_top_init_t* ptr = (hl_lvgl_top_init_t*)init_data;
-    lv_style_page_top_init();
+    if (!page_style_bit.page_top) {
+        page_style_bit.page_top = 1;
+        lv_style_page_top_init();
+    }
+    
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);

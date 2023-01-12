@@ -10,6 +10,7 @@
  */
 #include "page_menu.h"
 #include "language.h"
+#include "page_style_bit.h"
 
 #define CHECK_POS_CENTRE(X,Y)    ((X >= 125) && (X < 175) )//&& (Y > 186) && (Y < 286)
 #define CHECK_POS_LR(X,Y)    (X) < (125) ? 0 : 1 //0:lift 1:right
@@ -193,7 +194,7 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 /**
  * Show transformations (zoom and rotation) using a pivot point.
  */
-static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
+static void lv_icon_list_init(int pic_num,menu_data_t *picdata,    int8_t center)
 {
     uint8_t i;
     /*Now create the actual image*/
@@ -214,8 +215,8 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata)
         lv_img_set_zoom(picdata[i].obj,128);
         picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,15,1,picdata[i].ptr);
     }    
-    lv_img_set_zoom(picdata[0].obj,256);   
-    lv_obj_scroll_to_view(lv_obj_get_child(cont_row, 0), LV_ANIM_OFF);
+    // lv_img_set_zoom(picdata[0].obj,256);
+    lv_obj_scroll_to_view(lv_obj_get_child(cont_row, center), LV_ANIM_OFF);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
 }
@@ -225,17 +226,19 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     uint32_t child_cnt = 0,i;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
+        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
         lv_obj_del_delayed(obj,0);
     }else{
         for(i=0;i<child_cnt;i++){
             hl_obj_delete(lv_obj_get_child(obj, i),true);            
         }
         if(obj_typ){
+            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
             lv_obj_del_delayed(obj,0);
         }        
     }
 }
-
+// FALSE 表示切换居中的图标，  true表示选中图标  都会触发中断
 void lv_set_icon_postion(uint8_t pos, bool en)
 {
     if (en == true) {
@@ -250,17 +253,20 @@ void lv_set_icon_postion(uint8_t pos, bool en)
 void lv_menu_exit(void)
 {
     hl_obj_delete(lv_scr_act(),false);
-    lv_style_reset(&screen_style);
-    lv_style_reset(&style_label);
+    // lv_style_reset(&screen_style);
+    // lv_style_reset(&style_label);
 }
 
-void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func)
+void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func,int8_t center)
 {
     uint8_t i;
     ICON_NUMBER = menu_num;
     func_cb = func;
-    lv_style_menu_init();    
-    lv_icon_list_init(ICON_NUMBER,data);
+    if (!page_style_bit.page_menu) {
+        page_style_bit.page_menu = 1;
+        lv_style_menu_init();  
+    }
+    lv_icon_list_init(ICON_NUMBER,data,center);
     for(i=0;i<ICON_NUMBER;i++){
         lab_obj[i] = data[i].lab;
         pic_obj[i] = data[i].obj;

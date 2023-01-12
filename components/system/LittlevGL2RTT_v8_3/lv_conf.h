@@ -192,7 +192,7 @@
 
 /*Maximum buffer size to allocate for rotation.
  *Only used if software rotation is enabled in the display driver.*/
-#define LV_DISP_ROT_MAX_BUF (32*1024)
+#define LV_DISP_ROT_MAX_BUF (80*1024)
 
 /*-------------
  * GPU
@@ -290,8 +290,8 @@
 #define LV_USE_ASSERT_OBJ           0   /*Check the object's type and existence (e.g. not deleted). (Slow)*/
 
 /*Add a custom handler when assert happens e.g. to restart the MCU*/
-#define LV_ASSERT_HANDLER_INCLUDE <stdint.h>
-#define LV_ASSERT_HANDLER while(1);   /*Halt by default*/
+#define LV_ASSERT_HANDLER_INCLUDE <rtthread.h>
+#define LV_ASSERT_HANDLER RT_ASSERT(0);   /*Halt by default*/
 
 /*-------------
  * Others
@@ -798,25 +798,25 @@
 * EXAMPLES
 *==================*/
 /*Show some widget*/
-#define CONFIG_LV_USE_DEMO_WIDGETS        1
-#define CONFIG_LV_DEMO_WIDGETS_SLIDESHOW  1
+#define CONFIG_LV_USE_DEMO_WIDGETS        0
+#define CONFIG_LV_DEMO_WIDGETS_SLIDESHOW  0
 
 /*Demonstrate the usage of encoder and keyboard*/
-#define CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER     1
+#define CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER     0
 
 /*Benchmark*/
-#define CONFIG_LV_USE_DEMO_BENCHMARK   1
+#define CONFIG_LV_USE_DEMO_BENCHMARK   0
 
 /*Music*/
-#define CONFIG_LV_USE_DEMO_MUSIC         1
+#define CONFIG_LV_USE_DEMO_MUSIC         0
 #define CONFIG_LV_DEMO_MUSIC_SQUARE      0
 #define CONFIG_LV_DEMO_MUSIC_LANDSCAPE   0
-#define CONFIG_LV_DEMO_MUSIC_ROUND       1
+#define CONFIG_LV_DEMO_MUSIC_ROUND       0
 #define CONFIG_LV_DEMO_MUSIC_LARGE       0
-#define CONFIG_LV_DEMO_MUSIC_AUTO_PLAY   1
+#define CONFIG_LV_DEMO_MUSIC_AUTO_PLAY   0
 
 /*Enable the examples to be built with the library*/
-#define LV_BUILD_EXAMPLES 1
+#define LV_BUILD_EXAMPLES 0
 
 /*--END OF LV_CONF_H--*/
 

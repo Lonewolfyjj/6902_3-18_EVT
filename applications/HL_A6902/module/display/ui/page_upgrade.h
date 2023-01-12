@@ -21,6 +21,7 @@ typedef enum _hl_upgrade_ioctl_t
 
 typedef struct _hl_lvgl_upgrade_ioctl_t
 {
+    char * ptr;
     uint8_t upgrade_progress;//升级进度 0 - 100
     hl_upgrade_ioctl_t upgrade_ioctl;
 }hl_lvgl_upgrade_ioctl_t;
