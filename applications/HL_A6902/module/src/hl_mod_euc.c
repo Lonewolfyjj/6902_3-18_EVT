@@ -442,9 +442,9 @@ static inline int _hl_mod_euc_hup_init(void)
 
     _euc_mod.uart_hup.hup_handle.frame_data_len = sizeof(uart_hup_buf);
     _euc_mod.uart_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
-    _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, NULL, uart_hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, (uint32_t(*)(void))rt_tick_get, uart_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("uart_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -452,9 +452,9 @@ static inline int _hl_mod_euc_hup_init(void)
 
     _euc_mod.hid_hup.hup_handle.frame_data_len = sizeof(hid_hup_buf);
     _euc_mod.hid_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
-    _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, NULL, hid_hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, (uint32_t(*)(void))rt_tick_get, hid_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("hid_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
