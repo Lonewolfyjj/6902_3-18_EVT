@@ -178,7 +178,7 @@ typedef struct _iap2_ctrl_packet_
 
 #define SEND_BUFFER_SIZE 1024
 #define RECV_BUFFER_SIZE 1024
-#define TIMEOUT_US 5000
+#define TIMEOUT_US 1000
 
 #define LINK_CONTROL_SYN (1UL << (7))
 #define LINK_CONTROL_ACK (1UL << (6))

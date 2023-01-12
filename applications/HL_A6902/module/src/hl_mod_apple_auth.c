@@ -12,6 +12,24 @@ static hl_mod_apple_auth_t s_apple_auth;
 /// 消息队列结构体
 static mode_to_app_msg_t app_msg_t;
 
+/**
+ * _hl_mod_apple_auth_iap2_usb_read
+ * @brief USB读数据操作
+ * @param [in] read_data_addr 读数据缓冲区
+ * @param [in] read_data_len 读数据长度
+ * @param [in] timeout 超时时间
+ * @return int 成功 读取数据长度 | 失败 0
+ * @date 2023-01-12
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+ * </table>
+ */
 static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
     int ret = 0;
@@ -37,6 +55,23 @@ static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t re
     return ret;
 }
 
+/**
+ * _hl_mod_apple_auth_iap2_usb_write
+ * @brief USB写数据操作
+ * @param [in] write_data_addr 写数据内容
+ * @param [in] write_data_len 写数据长度
+ * @return int 成功 0
+ * @date 2023-01-12
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+ * </table>
+ */
 static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t write_data_len)
 {
     uint8_t ret = 0;
@@ -64,6 +99,25 @@ static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t 
     return RT_EOK;
 }
 
+/**
+ * _hl_mod_apple_auth_iap2_cp_read
+ * @brief IIC读数据操作
+ * @param [in] reg_addr 读取寄存器
+ * @param [in] read_data_addr 读数据缓冲区
+ * @param [in] read_data_len 读数据长度
+ * @param [in] timeout 超时时间
+ * @return int 成功 读数据长度 | 失败 0
+ * @date 2023-01-12
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+ * </table>
+ */
 static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len,
                                            uint16_t timeout)
 {
@@ -121,6 +175,24 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
     return read_data_len;
 }
 
+/**
+ * _hl_mod_apple_auth_iap2_cp_write
+ * @brief IIC写数据操作
+ * @param [in] reg_addr 写数据寄存器
+ * @param [in] write_data_addr 写数据内容
+ * @param [in] write_data_len 写数据长度
+ * @return int 成功 0 | 失败 1
+ * @date 2023-01-12
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+ * </table>
+ */
 static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len)
 {
     struct rt_i2c_msg msgs        = { 0 };
@@ -159,6 +231,21 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
     return RT_EOK;
 }
 
+/**
+ * _hl_mod_apple_auth_iap2_delay
+ * @brief 延时函数
+ * @param [in] usec 延时时间（微秒）
+ * @date 2023-01-12
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+ * </table>
+ */
 static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
 {
     rt_thread_mdelay(usec / 1000);
@@ -343,6 +430,7 @@ uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
             s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
             s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
             s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+            s_apple_auth.iap2_handle->retry_time         = 5;
             break;
 
         case HL_APPLE_AUTH_STOP_CMD:

@@ -15,11 +15,12 @@
  */
 static int hl_iap2_challange_response_process(st_iap2_protocol_p iap2)
 {
-    uint8_t  status             = EM_HL_CHALLENGE_RESP_STM_WRITE_DATA;
     uint8_t  ret                = 0;
     uint8_t  try_time           = 5;
     uint8_t  val                = 0x01;
     uint16_t challenga_data_len = 0;
+
+    hl_iap2_challange_response_status_e status = EM_HL_CHALLENGE_RESP_STM_WRITE_DATA;
 
     while (1) {
         switch (status) {
@@ -99,24 +100,38 @@ int hl_check_usb_insert(st_iap2_protocol_p iap2)
 
 int hl_iap2_detect_send(st_iap2_protocol_p iap2)
 {
-    int ret = 0;
-    int len = 0;
+    int ret      = 0;
+    int len      = 0;
+    int try_time = 10;
 
-    len = hl_iap2_detect_packet_encode(iap2->send_buffer);
-    ret = iap2->iap2_usb_write(iap2->send_buffer, len);
+    do {
+        ret = hl_iap2_detect_packet_encode(iap2->send_buffer);
+        try_time--;
+    } while (try_time && ret <= 0);
+
+    if (ret >= 0) {
+        iap2->iap2_usb_write(iap2->send_buffer, ret);
+        ret = 0;
+    } else {
+        ret = -1;
+    }
 
     return ret;
 }
 
 int hl_iap2_detect_recv(st_iap2_protocol_p iap2)
 {
-    int result = 1;
-    int ret    = 0;
+    int result   = 1;
+    int ret      = 0;
+    int try_time = 3;
 
-    ret = iap2->iap2_usb_read(iap2->recv_buffer, DETECT_FRAME_SIZE, TIMEOUT_US);
-    if (DETECT_FRAME_SIZE == ret) {
-        result = hl_iap2_detect_packet_decode(iap2->recv_buffer);
-    }
+    do {
+        ret = iap2->iap2_usb_read(iap2->recv_buffer, DETECT_FRAME_SIZE, TIMEOUT_US);
+        if (DETECT_FRAME_SIZE == ret) {
+            result = hl_iap2_detect_packet_decode(iap2->recv_buffer);
+        }
+        try_time--;
+    } while (try_time && result);
 
     return result;
 }
@@ -125,7 +140,8 @@ int hl_iap2_link_send_sync(st_iap2_protocol_p iap2)
 {
     st_iap2_sync_packet_t iap2_sync_packet = { 0 };
     int                   ret              = 0;
-    int                   len              = 0;
+    int                   result           = 0;
+    int                   try_time         = 10;
 
     uint8_t* ptr_packet  = (uint8_t*)&iap2_sync_packet;
     uint8_t* ptr_header  = (uint8_t*)&iap2_sync_packet.packet_header;
@@ -134,27 +150,30 @@ int hl_iap2_link_send_sync(st_iap2_protocol_p iap2)
     uint8_t  size_payload = sizeof(iap2_sync_packet.sync_payload);
     uint16_t size_packet  = sizeof(iap2_sync_packet);
 
-    // packet header
-    ret = hl_iap2_packet_header_encode(ptr_header, size_packet, LINK_CONTROL_SYN, iap2->packet_arg);
-    iap2->iap2_printf("\r\n%s->%02x:%02x:%02x\r\n", __func__, iap2->packet_arg.seq_num, iap2->packet_arg.ack_num,
-                      iap2->packet_arg.session_id);
-    if (ret > 0) {
-        len += ret;
+    do {
+        result = 0;
+        // packet header
+        ret = hl_iap2_packet_header_encode(ptr_header, size_packet, LINK_CONTROL_SYN, iap2->packet_arg);
+        if (ret < 0) {
+            result++;
+        }
+        // packet payload
+        ret += hl_iap2_packet_sync_payload_encode(ptr_payload, size_payload);
+        if (ret < 0) {
+            result++;
+        }
+        try_time--;
+    } while (try_time && result);
+
+    if (!result) {
+        memcpy(iap2->send_buffer, ptr_packet, ret);
+        iap2->iap2_usb_write(iap2->send_buffer, (uint16_t)ret);
+        ret = 0;
     } else {
-        return -1;
-    }
-    // packet payload
-    ret = hl_iap2_packet_sync_payload_encode(ptr_payload, size_payload);
-    if (ret > 0) {
-        len += ret;
-    } else {
-        return -1;
+        ret = -1;
     }
 
-    memcpy(iap2->send_buffer, ptr_packet, len);
-    iap2->iap2_usb_write(iap2->send_buffer, len);
-
-    return 0;
+    return ret;
 }
 
 int hl_iap2_link_recv_sync_ack(st_iap2_protocol_p iap2)
@@ -162,26 +181,31 @@ int hl_iap2_link_recv_sync_ack(st_iap2_protocol_p iap2)
     st_iap2_sync_packet_t* iap2_sync_packet = NULL;
 
     int      ret         = 0;
-    uint8_t  len         = 0;
+    int      try_time    = 3;
+    uint16_t len         = 0;
     uint16_t size_packet = sizeof(st_iap2_sync_packet_t);
 
-    ret = iap2->iap2_usb_read(iap2->recv_buffer, size_packet, TIMEOUT_US);
+    do {
+        ret = iap2->iap2_usb_read(iap2->recv_buffer, size_packet, TIMEOUT_US);
+        try_time--;
+    } while (try_time && !ret);
+
     if (size_packet != ret) {
-        iap2->iap2_printf("%s:%d:usb read error!\n", __func__, __LINE__);
-        iap2->iap2_printf("%s->%02x:%02x:%02x:%02x\n", __func__, iap2->recv_buffer[4], LINK_CONTROL_ACK,
-                          iap2->recv_buffer[6], iap2->packet_arg.ack_num);
+        iap2->iap2_printf("[ERROR][%s:%d] read syn ack error!\n", __func__, __LINE__);
         return -1;
     }
 
-    ret = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+    try_time = 10;
+    do {
+        ret = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+        try_time--;
+    } while (try_time && ret);
+
     if (ret) {
-        iap2->iap2_printf("%s:%d:hl_iap2_packet_header_decode!\n", __func__, __LINE__);
-        iap2->iap2_printf("%s->%02x:%02x:%02x:%02x", __func__, iap2->recv_buffer[4], LINK_CONTROL_ACK,
-                          iap2->recv_buffer[6], iap2->packet_arg.ack_num);
+        iap2->iap2_printf("[ERROR][%s:%d] encode ack packet error!\n", __func__, __LINE__);
         return -1;
     }
 
-    iap2->iap2_printf("\n%s:%d\n", __func__, __LINE__);
     iap2->packet_arg.ack_num -= 1;
 
     return 0;
@@ -192,23 +216,24 @@ int hl_iap2_link_send_ack(st_iap2_protocol_p iap2)
     st_iap2_packet_header_t iap2_packet_header = { 0 };
 
     int      ret        = 0;
-    int      len        = 0;
+    int      try_time   = 10;
     uint8_t* ptr_header = (uint8_t*)&iap2_packet_header;
 
-    // packet header
-    ret = hl_iap2_packet_header_encode(&iap2_packet_header, PACKET_HEADER_SIZE + 1, LINK_CONTROL_ACK, iap2->packet_arg);
-    iap2->iap2_printf("\r\n%s->%02x:%02x:%02x\r\n", __func__, iap2->packet_arg.seq_num, iap2->packet_arg.ack_num,
-                      iap2->packet_arg.session_id);
-    if (ret > 0) {
-        len += ret;
+    do {
+        ret = hl_iap2_packet_header_encode(&iap2_packet_header, PACKET_HEADER_SIZE + 1, LINK_CONTROL_ACK,
+                                           iap2->packet_arg);
+        try_time--;
+    } while (try_time && ret < 0);
+
+    if (ret >= 0) {
+        memcpy(iap2->send_buffer, ptr_header, ret);
+        iap2->iap2_usb_write(iap2->send_buffer, ret);
+        ret = 0;
     } else {
-        return -1;
+        ret = -1;
     }
 
-    memcpy(iap2->send_buffer, ptr_header, len);
-    iap2->iap2_usb_write(iap2->send_buffer, len);
-
-    return 0;
+    return ret;
 }
 
 int hl_iap2_identify_req_auth(st_iap2_protocol_p iap2)

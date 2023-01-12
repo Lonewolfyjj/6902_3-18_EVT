@@ -48,16 +48,110 @@ typedef struct _iap2_protocol_
     uint16_t challenge_req_len;
     uint16_t challenge_resp_len;
 
+    // 重试次数
+    uint8_t retry_time;
+
     hl_iap2_protocol_status_e     main_status;
     hl_iap2_detect_status_e       detect_status;
     hl_iap2_link_status_e         link_status;
     hl_iap2_identify_status_e     identify_status;
     hl_iap2_power_update_status_e powerupdate_status;
 
+    /**
+     * _hl_mod_apple_auth_iap2_delay
+     * @brief 延时函数
+     * @param [in] usec 延时时间（微秒）
+     * @date 2023-01-12
+     * @author lisonglin (songlin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+     * </table>
+     */
     void (*delay_usec_func)(uint16_t usec);
+
+    /**
+     * _hl_mod_apple_auth_iap2_usb_read
+     * @brief USB读数据操作
+     * @param [in] read_data_addr 读数据缓冲区
+     * @param [in] read_data_len 读数据长度
+     * @param [in] timeout 超时时间
+     * @return int 成功 读取数据长度 | 失败 0
+     * @date 2023-01-12
+     * @author lisonglin (songlin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+     * </table>
+     */
     int (*iap2_usb_read)(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
+
+    /**
+     * _hl_mod_apple_auth_iap2_usb_write
+     * @brief USB写数据操作
+     * @param [in] write_data_addr 写数据内容
+     * @param [in] write_data_len 写数据长度
+     * @return int 成功 0
+     * @date 2023-01-12
+     * @author lisonglin (songlin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+     * </table>
+     */
     int (*iap2_usb_write)(uint8_t* write_data_addr, uint16_t write_data_len);
+
+    /**
+     * _hl_mod_apple_auth_iap2_cp_read
+     * @brief IIC读数据操作
+     * @param [in] reg_addr 读取寄存器
+     * @param [in] read_data_addr 读数据缓冲区
+     * @param [in] read_data_len 读数据长度
+     * @param [in] timeout 超时时间
+     * @return int 成功 读数据长度 | 失败 0
+     * @date 2023-01-12
+     * @author lisonglin (songlin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+     * </table>
+     */
     int (*iap2_iic_read)(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
+
+    /**
+     * _hl_mod_apple_auth_iap2_cp_write
+     * @brief IIC写数据操作
+     * @param [in] reg_addr 写数据寄存器
+     * @param [in] write_data_addr 写数据内容
+     * @param [in] write_data_len 写数据长度
+     * @return int 成功 0 | 失败 1
+     * @date 2023-01-12
+     * @author lisonglin (songlin.li@hollyland-tech.com)
+     * 
+     * @details 
+     * @note 
+     * @par 修改日志:
+     * <table>
+     * <tr><th>Date             <th>Author         <th>Description
+     * <tr><td>2023-01-12      <td>lisonglin     <td>新建
+     * </table>
+     */
     int (*iap2_iic_write)(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len);
     /// 打印函数
     void (*iap2_printf)(const char* fmt, ...);
