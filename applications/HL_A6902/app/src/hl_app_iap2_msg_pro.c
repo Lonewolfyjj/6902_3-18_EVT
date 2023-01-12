@@ -25,6 +25,7 @@
 #include <rtdevice.h>
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_app_mng.h"
 
 #define DBG_SECTION_NAME "app_iap2"
