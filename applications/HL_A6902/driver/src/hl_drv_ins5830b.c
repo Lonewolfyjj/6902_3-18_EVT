@@ -46,7 +46,6 @@ static uint8_t rtc_week_list[] = {
 
 static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* wbuf, rt_uint16_t buf_len)
 {
-    rt_err_t          ret;
     struct rt_i2c_msg msgs[2];
     rt_uint8_t*       buf = (rt_uint8_t*)rt_malloc(buf_len + 4);
 
@@ -61,42 +60,33 @@ static rt_err_t hl_i2c_write_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, 
     msgs[0].len   = buf_len + 1;
 
     // 调用I2C设备接口传输数据
-    ret = rt_i2c_transfer(bus, msgs, 1);
-    if (ret == 1) {
+    if (rt_i2c_transfer(bus, msgs, 1) == 1) {
         rt_free(buf);
         return HL_SUCCESS;
     } else {
         rt_free(buf);
-        ins_printf("%s ret = %d !\n", __FUNCTION__, ret);
         return HL_FAILED;
     }
 }
 
-uint8_t dddd = 1;
-
 static rt_err_t hl_i2c_read_reg(struct rt_i2c_bus_device* bus, rt_uint8_t reg, rt_uint8_t* rbuf, rt_uint16_t buf_len)
 {
-    rt_size_t         ret;
     struct rt_i2c_msg msgs[2];
 
-    msgs[0].addr  = dddd;
+    msgs[0].addr  = INS5830B_DEVICE_ADDRESS;
     msgs[0].flags = RT_I2C_WR;
     msgs[0].buf   = &reg;
     msgs[0].len   = 1;
 
-    msgs[1].addr  = dddd;
+    msgs[1].addr  = INS5830B_DEVICE_ADDRESS;
     msgs[1].flags = RT_I2C_RD;
     msgs[1].buf   = rbuf;
     msgs[1].len   = buf_len;
 
     // 调用I2C设备接口传输数据
-    ret = rt_i2c_transfer(bus, msgs, 2);
-    if (ret == 2) {
-        ins_printf("%d is ok!\n", dddd);
+    if (rt_i2c_transfer(bus, msgs, 2) == 2) {
         return HL_SUCCESS;
     } else {
-        ins_printf("%d is fail!\n", dddd);
-        // ins_printf("%s ret = %d !\n", __FUNCTION__, ret);
         return HL_FAILED;
     }
 }
@@ -170,19 +160,16 @@ int hl_drv_ins5830b_init(void)
 {
     uint8_t inien_init;
     i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(INS5830B_IIC_NAME);
-    for(dddd = 1;dddd < 128;dddd++)
-    {
-        if (hl_i2c_read_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
-            // ins_printf("%s init read err !\n", __FUNCTION__);
-            // goto INIT_ERR;
-        }
+    if (hl_i2c_read_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
+        ins_printf("%s init read err !\n", __FUNCTION__);
+        goto INIT_ERR;
     }
-    // inien_init |= (1 << 4);
-    // if (hl_i2c_write_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
-    //     ins_printf("%s init write err !\n", __FUNCTION__);
-    //     goto INIT_ERR;
-    // }
-    // ins_printf("Ins5830b init successed !\n");
+    inien_init |= (1 << 4);
+    if (hl_i2c_write_reg(i2c_bus, INS5830B_INIEN_SET_REG, &inien_init, 1)) {
+        ins_printf("%s init write err !\n", __FUNCTION__);
+        goto INIT_ERR;
+    }
+    ins_printf("Ins5830b init successed !\n");
     return HL_SUCCESS;
 INIT_ERR:
     ins_printf("Ins5830b init failed !\n");

@@ -889,13 +889,14 @@ rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos)
 {
 #if TOUCH_ONESHOT_UPGRADE == 0
     rt_device_read(touch_dev, 0, touch_pos, 1);
-#endif
+#else
 	if(tp_flag != 2){
 		rt_device_read(touch_dev, 0, touch_pos, 1);
 	}
 	if(tp_flag == 1){
 		rt_kprintf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
 	}    
+#endif
     return 0;
 }
 
@@ -960,11 +961,9 @@ int hl_drv_ztw523a_botton_status(void)
 		{
 			case 1:
 				button = BUTTON_DOWN;
-				// LOG_D("Botton down!\n");
 			break;
 			case 0x100:
 				button = BUTTON_UP;
-				// LOG_D("Botton up!\n");
 			break;
 			default:
 				button = BUTTON_UP;

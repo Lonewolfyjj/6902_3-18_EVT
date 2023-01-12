@@ -415,14 +415,6 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     return res;
 }
 
-// static void lv_arc_test(void)
-// {
-//     hl_lvgl_arc_init_t init = {
-//         .ptr = "配对中..."
-//     };
-//     hl_mod_arc_init(&init);
-// }
-
 // RX
 static void hl_mod_display_task(void* param)
 {
