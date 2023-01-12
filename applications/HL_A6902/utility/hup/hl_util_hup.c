@@ -93,8 +93,7 @@ int hl_util_hup_decode(hl_util_hup_t* hup_ptr, uint8_t data_byte)
 
         if ((hup_ptr->cur_timeout_val - hup_ptr->last_timeout_val) > hup_ptr->max_timeout) {
             hup_ptr->state = EM_HUP_STATE_HDR_H;
-        } else {
-            hup_ptr->last_timeout_val = hup_ptr->cur_timeout_val;
+            HL_UTIL_HUP_DBG("[INFO] hup protocol decode reset\n");
         }
     }
 
