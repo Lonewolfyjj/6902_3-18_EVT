@@ -109,6 +109,7 @@ int hl_drv_aw2016a_test_led_ctrl(int argc, char* argv[])
 
     rt_kprintf("\naw2016a test\n");
 
+    hl_drv_aw2016a_deinit();
     hl_drv_aw2016a_init();
 
     ret = hl_drv_aw2016a_ctrl(atoi(argv[1]), HL_DRV_AW2016A_GET_CHIP_ID, &chip_id, sizeof(chip_id));
