@@ -439,6 +439,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.soundout_setting = data;
             flag->sys_status.soundout_setting   = 1;
         } break;
+        case SCREEN_OFF_STATUS_SWITCH_CMD: {
+            uint8_t data                          = *(char*)ptr;
+            data_p->sys_status.lowbrightness_flag = data;
+            flag->sys_status.lowbrightness_flag   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -468,7 +473,7 @@ static void hl_mod_display_task(void* param)
         hl_mod_display_upgrade_enter();
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
-        
+        hl_mod_page_screen_lowbritness_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
@@ -481,6 +486,7 @@ uint8_t hl_mod_display_deinit(void)
     if (display_tid != RT_NULL) {
         rt_thread_delete(display_tid);
     }
+    hl_mod_page_screen_lowbritness_deinit();
     hl_drv_aw2016a_deinit();
     hl_drv_rm690a0_deinit();
 

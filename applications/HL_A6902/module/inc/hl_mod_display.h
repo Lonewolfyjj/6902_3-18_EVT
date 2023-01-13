@@ -421,7 +421,7 @@ typedef enum _hl_cmd_e
     TX2_MUTE_SWITCH_SWITCH_CMD,
 
 
-    /// 重新开始熄屏计数 设置 （无参数）
+    /// 重新开始熄屏计数 1:表示重新开始熄屏计数
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
     /// 放入盒子状态  < hl_display_box_charge_state>

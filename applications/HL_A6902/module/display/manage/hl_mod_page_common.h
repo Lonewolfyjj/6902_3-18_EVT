@@ -40,11 +40,16 @@ extern "C" {
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
+// 屏定时熄屏的计时时间(ms)
+#define HL_SCREEN_AUTO_LOWBRIGHTNESS_TIME 60000
+// 屏定时熄屏的亮度
+#define SCREEN_LOWBRIGHTNESS 0x30
 // led的亮度值
-#define NORMAL_BRIGTNESS                                30
-#define LOWVAL_BRIGTNESS                                15
+#define NORMAL_BRIGTNESS 30
+#define LOWVAL_BRIGTNESS 15
 /// TX录制最大使用时间
-#define STROGE_MAX_USED_TIME                             16
+#define STROGE_MAX_USED_TIME 16
+
 // bool ：true表示定时器超时的操作，false 表示定时器重新更新计数时间时的操作
 typedef void (*screen_trigfunc)(bool);
 
@@ -85,6 +90,8 @@ typedef struct _hl_display_status{
 
     /// @brief 恢复出厂设置
     uint32_t restore_state:1; 
+    /// @brief 背景变暗标志位
+    uint32_t lowbrightness_flag:1; 
 }hl_display_status;
 
 typedef struct _hl_display_screen_s
@@ -237,7 +244,10 @@ void hl_mod_menu_goto_home_page(void);
 void hl_mod_menu_backbtn_scan();
 void hl_mod_menu_goto_fast_config_scan();
 void hl_mod_menu_goto_quickset_scan();
-
+void hl_mod_page_screen_lowbritness_init(void);
+void hl_mod_page_screen_lowbritness_update(void);
+void hl_mod_page_screen_lowbritness_deinit(void);
+void hl_mod_page_screen_lowbritness_scan(void);
 void hl_mod_page_goto_box_scan(void);
 void hl_mod_display_upgrade_enter(void);
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
