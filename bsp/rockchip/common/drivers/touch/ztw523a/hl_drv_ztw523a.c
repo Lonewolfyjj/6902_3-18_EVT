@@ -986,8 +986,10 @@ void touch_log_ctl(int argc, char** argv)
 		tp_flag = 0;
 		hl_drv_tp_Init();
 	}else if (!strcmp("upgrade", argv[1])){
+#if TOUCH_ONESHOT_UPGRADE == 1
 		tp_flag = 2;
 		hl_drv_upgread_tp();
+#endif
 	}else if(!strcmp("read", argv[1])){
 		reg_addr = atoi(argv[2]);
 		hl_drv_ztw523a_read_data(reg_addr,(uint8_t *)&read_reg,2);

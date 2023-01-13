@@ -13,10 +13,21 @@ typedef enum _hl_lvgl_lock_cmd_t
     HL_UNLOCK_ICON_HIDE,
     HL_LOCK_PAGE_INIT,
     HL_LOCK_PAGE_EXIT,
+    HL_LOCK_ICON_ANIM,
 }hl_lvgl_lock_cmd_t;
+
+typedef enum _hl_lock_icon_t
+{
+    HL_LOCK_ICON_LINEOUT = 0,
+    HL_LOCK_ICON_TYPEC,
+    HL_LOCK_ICON_HEATSET,
+    HL_LOCK_ICON_LOCK,
+}hl_lock_icon_t;
 
 typedef struct __hl_lvgl_lock_ioctl_t
 {
+    hl_lock_icon_t icon_typ;
+    lv_obj_t * icon_obj;
     hl_lvgl_lock_cmd_t cmd;//
 }hl_lvgl_lock_ioctl_t;
 

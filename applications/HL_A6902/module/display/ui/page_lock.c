@@ -4,7 +4,15 @@
 LV_IMG_DECLARE(Other_lock);
 LV_IMG_DECLARE(Other_unlock);
 
-#define LOCK_TIMEOUT    2000
+LV_IMG_DECLARE(Other_line_out);     //
+LV_IMG_DECLARE(Other_heatset);  //
+LV_IMG_DECLARE(Other_usb_c);    //
+
+#define LOCK_HOLD_TIME  2000
+#define LOCK_ANIM_TIME  500
+
+#define IMG_ROOM_MAX    256
+#define IMG_ROOM_MIN    128
 
 static lv_style_t style_area_main;
 static lv_obj_t * img_lock,*img_unlock, * area;
@@ -83,6 +91,133 @@ static void lock_cb(lv_event_t * e)
     }    
 }
 
+typedef void (* anim_start)(void);
+
+typedef struct _icon_anim_obj_t{
+    lv_obj_t *hand_obj;
+    lv_obj_t *target_obj;
+    lv_anim_t *anim_obj;
+}icon_anim_obj_t;
+
+typedef struct _icon_pos_ani_t{
+    lv_point_t start_pos;
+    lv_point_t end_pos;
+}icon_pos_ani_t;
+
+typedef struct _icon_anim_data_t{
+    int32_t anim_size_min;
+    int32_t anim_size_max;
+    lv_anim_exec_xcb_t anim_size_cb;
+    lv_anim_exec_xcb_t anim_x_cb;
+    lv_anim_exec_xcb_t anim_y_cb;
+    icon_anim_obj_t obj;
+    icon_pos_ani_t pos;
+    anim_start anim_start_cb;
+    const void * img_src;
+}icon_anim_data_t;
+
+static lv_anim_t line_out_anim,heatset_anim,usb_c_anim,lock_anim;
+
+static icon_anim_data_t icon_data[4] = 
+{
+    {.img_src = &Other_line_out,.obj.anim_obj = &line_out_anim},
+    {.img_src = &Other_heatset,.obj.anim_obj = &heatset_anim},
+    {.img_src = &Other_usb_c,.obj.anim_obj = &usb_c_anim},
+    {.img_src = &Other_lock,.obj.anim_obj = &lock_anim},
+};
+
+static void anim_x_cb(void * var, int32_t v)
+{
+    lv_obj_set_x(var, v);
+}
+
+static void anim_y_cb(void * var, int32_t v)
+{
+    lv_obj_set_y(var, v);
+}
+
+static void anim_size_cb(void * var, int32_t v)
+{
+    lv_img_set_zoom(var, v);//缩放
+    if(v == IMG_ROOM_MIN){
+        lv_obj_del_async(var);
+    }
+}
+
+static void get_icon_coord(lv_obj_t *obj,lv_point_t *coord)
+{
+    coord->x = obj->coords.x1;
+    coord->y = obj->coords.y1;
+}
+
+/**
+ * Create a playback animation
+ */
+static lv_obj_t * lv_creat_anim(icon_anim_data_t *data)
+{
+    lv_coord_t x_offset,y_offset;
+    lv_point_t target;
+    lv_obj_t * img = lv_img_create(lv_scr_act());
+    lv_img_set_src(img, data->img_src);
+    lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
+    lv_img_set_zoom(img, 256);
+    lv_anim_init(data->obj.anim_obj);
+    lv_anim_set_var(data->obj.anim_obj, img);
+    lv_anim_set_time(data->obj.anim_obj, LOCK_ANIM_TIME);
+    lv_anim_set_delay(data->obj.anim_obj, LOCK_HOLD_TIME);
+
+    lv_obj_update_layout(lv_scr_act());
+    get_icon_coord(img,&data->pos.start_pos);
+    get_icon_coord(data->obj.target_obj,&data->pos.end_pos);
+
+    x_offset = data->pos.end_pos.x + (lv_obj_get_width(data->obj.target_obj) - lv_obj_get_width(img))/2 - data->pos.start_pos.x;
+    y_offset = data->pos.end_pos.y + (lv_obj_get_height(data->obj.target_obj) - lv_obj_get_height(img))/2 - data->pos.start_pos.y;
+    data->pos.start_pos.x = 0;
+    data->pos.start_pos.y = 0;
+
+    lv_anim_set_exec_cb(data->obj.anim_obj, data->anim_size_cb);
+    lv_anim_set_values(data->obj.anim_obj, data->anim_size_max, data->anim_size_min);
+    lv_anim_start(data->obj.anim_obj);
+    lv_anim_set_exec_cb(data->obj.anim_obj, data->anim_x_cb);
+    lv_anim_set_values(data->obj.anim_obj, data->pos.start_pos.x, x_offset);
+    lv_anim_start(data->obj.anim_obj);
+    lv_anim_set_exec_cb(data->obj.anim_obj, data->anim_y_cb);
+    lv_anim_set_values(data->obj.anim_obj, data->pos.start_pos.y, y_offset);
+    lv_anim_start(data->obj.anim_obj);
+    return img;
+}
+
+static void lv_creat_icon_anim(icon_anim_data_t *data,lv_obj_t *tar_obj)
+{
+    data->obj.target_obj = tar_obj;    
+    data->anim_size_max = IMG_ROOM_MAX;
+    data->anim_size_min = IMG_ROOM_MIN;
+    data->anim_size_cb = anim_size_cb;
+    data->anim_x_cb = anim_x_cb;
+    data->anim_y_cb = anim_y_cb;
+    data->obj.hand_obj = lv_creat_anim(data);
+}
+
+static void lv_lock_icon_anmi_init(lv_obj_t *obj,hl_lock_icon_t icon_typ)
+{
+    switch(icon_typ){
+        case HL_LOCK_ICON_LINEOUT:
+            lv_creat_icon_anim(&icon_data[0],obj);
+            break;
+        case HL_LOCK_ICON_TYPEC:
+            lv_creat_icon_anim(&icon_data[2],obj);
+            break;
+        case HL_LOCK_ICON_HEATSET:
+            lv_creat_icon_anim(&icon_data[1],obj);
+            break;
+        case HL_LOCK_ICON_LOCK:
+            lv_creat_icon_anim(&icon_data[3],obj);
+            break;
+        default:
+            break;
+    }
+}
+
 static void hl_mod_lock_init(void)
 {
     if (!page_style_bit.page_lock){
@@ -90,9 +225,9 @@ static void hl_mod_lock_init(void)
         page_style_bit.page_lock = 1;
     }    
     area = lv_area_creat_fun(LV_ALIGN_CENTER,lock_cb,0,0,294,126);
-    img_lock = lv_lock_img_creat_fun(area,&Other_lock,0,0,256);
-    img_unlock = lv_lock_img_creat_fun(area,&Other_unlock,0,0,256);
-    timer = lv_timer_create(lock_timer, LOCK_TIMEOUT,  NULL);
+    img_lock = lv_lock_img_creat_fun(area,&Other_lock,0,0,IMG_ROOM_MAX);
+    img_unlock = lv_lock_img_creat_fun(area,&Other_unlock,0,0,IMG_ROOM_MAX);
+    timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
 } 
 
 void hl_mod_lock_ioctl(void * ctl_data)
@@ -113,6 +248,9 @@ void hl_mod_lock_ioctl(void * ctl_data)
             break;
         case HL_UNLOCK_ICON_HIDE:
             lv_obj_add_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_LOCK_ICON_ANIM:
+            lv_lock_icon_anmi_init(ptr->icon_obj,ptr->icon_typ);
             break;
 
         case HL_LOCK_PAGE_INIT:
