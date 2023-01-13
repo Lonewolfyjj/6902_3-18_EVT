@@ -284,7 +284,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
                 rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
             }
         }
-        rt_thread_mdelay(1);
+        rt_thread_mdelay(10);
     }
 }
 

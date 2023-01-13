@@ -42,7 +42,7 @@ typedef struct _iap2_protocol_
     /// 设备SN码
     char dev_sn[128];
 
-    st_packet_header_arg packet_arg;
+    volatile st_packet_header_arg packet_arg;
     // 挑战请求的长度
     uint8_t* challenge_resp_data;
     uint16_t challenge_req_len;
@@ -51,11 +51,11 @@ typedef struct _iap2_protocol_
     // 重试次数
     uint8_t retry_time;
 
-    hl_iap2_protocol_status_e     main_status;
-    hl_iap2_detect_status_e       detect_status;
-    hl_iap2_link_status_e         link_status;
-    hl_iap2_identify_status_e     identify_status;
-    hl_iap2_power_update_status_e powerupdate_status;
+    volatile hl_iap2_protocol_status_e     main_status;
+    volatile hl_iap2_detect_status_e       detect_status;
+    volatile hl_iap2_link_status_e         link_status;
+    volatile hl_iap2_identify_status_e     identify_status;
+    volatile hl_iap2_power_update_status_e powerupdate_status;
 
     /**
      * _hl_mod_apple_auth_iap2_delay

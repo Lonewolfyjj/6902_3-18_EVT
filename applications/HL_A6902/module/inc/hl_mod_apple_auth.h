@@ -47,10 +47,10 @@ typedef enum _hl_mod_appleauth_ctrl_ind
 /* define --------------------------------------------------------------------*/
 
 #define MFI_IC_IIC_ADDR 0x10
-#define IAP2_THREAD_STACK_SIZE 1024
+#define IAP2_THREAD_STACK_SIZE 4096
 #define IAP2_THREAD_PRIORITY 10
 #define IAP2_THREAD_TIMESLICE 10
-#define EAP_THREAD_STACK_SIZE 1024
+#define EAP_THREAD_STACK_SIZE 4096
 #define EAP_THREAD_PRIORITY 10
 #define EAP_THREAD_TIMESLICE 10
 
