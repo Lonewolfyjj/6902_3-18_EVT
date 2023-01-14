@@ -250,7 +250,8 @@ static void _pm_init_state_update(void)
 
 static void _guage_state_update()
 {
-    uint8_t soc;
+    uint8_t     soc;
+    static bool flag = false;
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -259,8 +260,17 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
 
-    if (soc != _pm_mod.bat_info.soc.soc) {
+    if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
         _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+    }
+
+    if (_pm_mod.bat_info.soc.soc <= 3) {
+        if (flag == false) {
+            flag = true;
+            _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
+        }
+    } else if (_pm_mod.bat_info.soc.soc <= 100) {
+        flag = false;
     }
 }
 

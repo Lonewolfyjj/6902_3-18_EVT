@@ -37,6 +37,9 @@ extern "C" {
 /* Exported functions --------------------------------------------------------*/
 
 uint8_t hl_board_nvram_init();
+
+void hl_board_reboot(void);
+
 #ifdef __cplusplus
 }
 #endif
