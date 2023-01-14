@@ -787,7 +787,7 @@ static void hl_mod_page_inbox_screenoff_trig(bool flag)
 void hl_mod_page_inbox_screenoff_init(void)
 {
     LOG_E("init inbox screenoff timer");
-    screenoff_timer.outtime  = 5000;
+    screenoff_timer.outtime  = 60000;
     screenoff_timer.trigfunc = hl_mod_page_inbox_screenoff_trig;
 
     hl_mod_page_screenofftimer_init(&screenoff_timer);
@@ -818,13 +818,11 @@ void hl_mod_page_inbox_screenoff_scan(void)
     if (screenoff_timer.trigfunc == RT_NULL) {
         return;
     }
-    
+
     // 按键的操作重新开启屏幕
     hl_mod_keypad_touchkey_read();
     hl_mod_get_rx_knob_val();
     hl_mod_get_knob_okkey_val();
-    
-
 
     if (flag->sys_status.screen_off_status) {
         hl_mod_display_mux_take();
