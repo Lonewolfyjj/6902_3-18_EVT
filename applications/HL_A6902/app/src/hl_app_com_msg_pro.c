@@ -112,9 +112,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_SET_PAIR_MAC_REQ_IND: {  // 请求设置rx的mac地址，为有线配对的流程
             rx_mac_addr = (uint8_t*)p_msg->param.ptr;
 
-            if (_dev_num == 1) {    // tx1 左声道
+            if (_dev_num == 1) {  // tx1 左声道
                 telink_pair_info.chn = HL_RF_LEFT_CHANNEL;
-            } else {                // tx2 右声道
+            } else {  // tx2 右声道
                 telink_pair_info.chn = HL_RF_RIGHT_CHANNEL;
             }
             rt_memcpy(telink_pair_info.mac, rx_mac_addr, sizeof(telink_pair_info.mac));
@@ -126,8 +126,8 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_GET_MAC_REQ_IND: {  // 请求获取自己的mac地址
             rt_memcpy(dev_mac_temp, tx_info.local_mac, sizeof(dev_mac_temp));
 
-            LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0], dev_mac_temp[1],
-                  dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
+            LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0],
+                  dev_mac_temp[1], dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
 
             hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
         } break;
@@ -160,6 +160,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_charge_state_e  box_charge_state_temp;
     hl_mod_euc_rtc_st          rtc_time_temp = { 0 };
     hl_mod_euc_box_lid_state_e box_lid_state_temp;
+    uint8_t                    pair_mac_temp[12] = { 0 };
 
     uint8_t           temp;
     hl_rf_work_mode_e telink_work_mode;
@@ -168,7 +169,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
             _rx_in_box_flag = true;
-            _dev_num = *(uint8_t*)p_msg->param.ptr;
+            _dev_num        = *(uint8_t*)p_msg->param.ptr;
 
             LOG_I("in box! dev_num:%d", _dev_num);
 
@@ -176,6 +177,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
             hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
+            hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);
 
             _display_in_box_state_set();
         } break;
@@ -309,6 +311,17 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_BOX_LID_STATE_UPDATE_IND: {  //更新Box开关盖状态
             box_lid_state_temp = *(hl_mod_euc_box_lid_state_e*)p_msg->param.ptr;
             LOG_I("Box lid state:%d", box_lid_state_temp);
+        } break;
+        case HL_GET_PAIR_MAC_REQ_IND: {
+            rt_memcpy(pair_mac_temp, rx_info.remote_mac, sizeof(pair_mac_temp));
+
+            LOG_I("rx pair mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]  [%02x] [%02x] [%02x] [%02x] [%02x] "
+                  "[%02x]",
+                  pair_mac_temp[0], pair_mac_temp[1], pair_mac_temp[2], pair_mac_temp[3], pair_mac_temp[4],
+                  pair_mac_temp[5], pair_mac_temp[6], pair_mac_temp[7], pair_mac_temp[8], pair_mac_temp[9],
+                  pair_mac_temp[10], pair_mac_temp[11]);
+
+            hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

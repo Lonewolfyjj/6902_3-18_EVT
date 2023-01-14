@@ -81,6 +81,20 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             // LOG_D("telink mute(%02X)\r\n", mute_switch);           
             break;
 
+        case HL_RF_GET_LOCAL_MAC_IND:
+            ptr = (uint8_t*)p_msg->param.ptr;
+            rt_memcpy(tx_info.local_mac, ptr, sizeof(tx_info.local_mac));
+            LOG_I("local mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
+                  ptr[5]);
+            break;
+
+        case HL_RF_GET_REMOTE_MAC_IND:
+            ptr = (uint8_t*)p_msg->param.ptr;
+            rt_memcpy(tx_info.remote_mac, ptr, sizeof(tx_info.remote_mac));
+            LOG_I("remote mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
+                  ptr[5]);
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -152,6 +166,21 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_BATTERY_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             LOG_D("app get TX%d battery(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            break;
+
+        case HL_RF_GET_LOCAL_MAC_IND:
+            ptr = (uint8_t*)p_msg->param.ptr;
+            rt_memcpy(rx_info.local_mac, ptr, sizeof(rx_info.local_mac));
+            LOG_I("local mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
+                  ptr[5]);
+            break;
+
+        case HL_RF_GET_REMOTE_MAC_IND:
+            ptr = (uint8_t*)p_msg->param.ptr;
+            rt_memcpy(rx_info.remote_mac, ptr, sizeof(rx_info.remote_mac));
+            LOG_I(
+                "remote mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]  [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]",
+                ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7], ptr[8], ptr[9], ptr[10], ptr[11]);
             break;
 
         default:
