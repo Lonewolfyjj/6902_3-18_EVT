@@ -1,15 +1,36 @@
 /**
  * @file page_top.c
- * @author your name (you@domain.com)
- * @brief 顶部菜单栏
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_top.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define POSTION_IS_NULL 0xFF
@@ -517,18 +538,8 @@ void hl_mod_top_init(void* init_data)
     if (!page_style_bit.page_top) {
         page_style_bit.page_top = 1;
         lv_style_page_top_init();
-    }
-    
+    }    
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
-    // bat_label = lv_power_lab_creat_fun(lv_scr_act(), bat_bar, bat_bar, -6, 0);
-
-    // lv_creat_top_bat_icon();
 }
-
-// //测试接口
-// void page_top_test(void)
-// {
-//     hl_mod_top_icon_init();
-// }
