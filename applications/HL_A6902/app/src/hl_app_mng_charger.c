@@ -114,20 +114,26 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
         LOG_D("no charge!");
         rx_info.charge_flag = 0;
-        state = 0;
+        state = OUTBOX_OFFCHARGE_LOGO;
     } else if (charge_state == HL_CHARGE_STATE_CHARGING) {
         LOG_D("charging!");
         rx_info.charge_flag = 1;
-        state = 1;
+        state = OUTBOX_OFFCHARGE_OFFPAGE;
     } else if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
         LOG_D("charge done!");
         rx_info.charge_flag = 2;
-        state = 2;
+        state = OUTBOX_OFFCHARGE_LOGO;
     }
-    state = OUTBOX_OFFCHARGE_OFFPAGE;
+
     if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
         hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
     }
+    if (rx_info.charge_flag == 1) {
+        state = 1;
+    } else {
+        state = 0;
+    }
+    hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &state, 1);
 #endif
 }
 

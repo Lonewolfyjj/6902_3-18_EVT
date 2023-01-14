@@ -368,6 +368,9 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     }
     hl_app_audio_stream_updata();
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
+    usb_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+    
 }
 
 /// 监听口状态处理
@@ -385,6 +388,8 @@ static void hl_app_rx_hp_plug_pro(uint32_t value)
         hp_state            = 1;
     }
     hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
+    hp_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &hp_state, 1);
 }
 
 /// 相机口状态处理
@@ -400,6 +405,8 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
         cam_plug_state       = 1;
     }
     hl_mod_display_io_ctrl(LINE_OUT_IN_SWITCH_CMD, &cam_plug_state, 1);
+    cam_plug_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
 }
 
 #endif
