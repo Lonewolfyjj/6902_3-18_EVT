@@ -65,6 +65,10 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_USB_MSTORAGE_DISABLE_CMD, 
     /// 获取RTC时间 参数<audio_time>
     HL_AUDIO_RTC_TIME_CMD, 
+    /// 设置监听接口的左通道增益 int(-103~24)
+    HL_AUDIO_SET_MIC_GAIN_CMD,
+    /// 设置监听接口PGA的右通道增益 int(-103~24)
+    HL_AUDIO_SET_MIC_PGA_GAIN_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 
 typedef enum _hl_mod_audio_indicate
@@ -111,6 +115,22 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_USB_MSTORAGE_DISABLE_CMD, 
     /// 获取RTC时间 参数<audio_time>
     HL_AUDIO_RTC_TIME_CMD, 
+    /// 设置相机接口的左通道增益 int(-103~24)
+    HL_AUDIO_SET_CAM_GAIN_L_CMD,
+    /// 设置相机接口的右通道增益 int(-103~24)
+    HL_AUDIO_SET_CAM_GAIN_R_CMD,
+    /// 设置相机接口PGA的左通道增益 int(-103~24)
+    HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD,
+    /// 设置相机接口PGA的右通道增益 int(-103~24)
+    HL_AUDIO_SET_CAM_PGA_GAIN_R_CMD,
+    /// 设置监听接口的左通道增益 int(-103~24)
+    HL_AUDIO_SET_HP_GAIN_L_CMD,
+    /// 设置监听接口的右通道增益 int(-103~24)
+    HL_AUDIO_SET_HP_GAIN_R_CMD,
+    /// 设置监听接口PGA的左通道增益 int(-103~24)
+    HL_AUDIO_SET_HP_PGA_GAIN_L_CMD,
+    /// 设置监听接口PGA的右通道增益 int(-103~24)
+    HL_AUDIO_SET_HP_PGA_GAIN_R_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 

@@ -153,6 +153,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
     hl_switch_e        record_switch;
+    hl_switch_e        mute_switch;
 
     if (tx_info.on_off_flag == 0) {
         return;
@@ -163,7 +164,6 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
-
             if(tx_info.mstorage_plug == 1) {
                 LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
                 break;
@@ -181,6 +181,16 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_LONG:
+            if (tx_info.mute_flag == 0) {
+                mute_switch = HL_SWITCH_ON;
+                tx_info.mute_flag = 1;
+            } else {
+                mute_switch = HL_SWITCH_OFF;
+                tx_info.mute_flag = 0;
+            }
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &mute_switch, 1);   
+            hl_app_disp_state_led_set();   
+            hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &mute_switch, sizeof(mute_switch));      
             break;
 
         case HL_KEY_EVENT_DOUBLE:
