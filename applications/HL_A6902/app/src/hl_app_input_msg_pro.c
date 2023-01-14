@@ -71,19 +71,11 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
-    hl_rf_bypass_state_t rf_bypass_state;
-
     switch (event) {
         case HL_KEY_EVENT_PRESS:
             break;
 
         case HL_KEY_EVENT_SHORT:
-            if (tx_info.on_off_flag == 1) {
-                rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
-                rf_bypass_state.state = 1;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-                LOG_D("send record cmd to rx");
-            }
             break;
 
         case HL_KEY_EVENT_LONG:
@@ -152,8 +144,9 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 /// 录制键处理
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
-    hl_switch_e        record_switch;
+    hl_switch_e          record_switch;
     hl_switch_e        mute_switch;
+    hl_rf_bypass_state_t rf_bypass_state;
 
     if (tx_info.on_off_flag == 0) {
         return;
@@ -172,12 +165,18 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             if (tx_info.rec_flag == 0) {
                 record_switch    = HL_SWITCH_ON;
                 tx_info.rec_flag = 1;
+                LOG_D("send record on cmd to rx");
             } else {
                 record_switch    = HL_SWITCH_OFF;
                 tx_info.rec_flag = 0;
+                LOG_D("send record off cmd to rx");
             }
             hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
             hl_app_disp_state_led_set();
+            
+            rf_bypass_state.chn   = tx_info.rf_state - 1;
+            rf_bypass_state.state = tx_info.rec_flag;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
             break;
 
         case HL_KEY_EVENT_LONG:
@@ -361,11 +360,11 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
         rx_info.uac_link_flag = 0;
         hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0); 
         rx_info.mstorage_plug = 0;
-        hl_mod_apple_auth_end();
+        hl_mod_appleauth_ioctl(HL_APPLE_AUTH_STOP_CMD);
     } else {
         rx_info.usb_plug = 1;
         usb_state        = 1;
-        hl_mod_apple_auth_begin();
+        hl_mod_appleauth_ioctl(HL_APPLE_AUTH_START_CMD);
     }
     hl_app_audio_stream_updata();
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
