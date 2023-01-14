@@ -1,16 +1,36 @@
 /**
  * @file page_moreone.c
- * @author your name (you@domain.com)
- * @brief 录制、降噪开关、静音多合一界面
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_moreone.h"
-
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define MAX_OBJ_NUMBER     7
@@ -660,15 +680,3 @@ void hl_mod_moreone_init(void * init_data)
     valid_obj[4] = btn31;
     valid_obj[5] = btn32;
 }
-
-lv_obj_t * hl_moreone_obj_get(uint8_t num)
-{
-    return valid_obj[num];
-}
-
-//测试接口
-// void page_moreone_test(void)
-// {
-    
-//     lv_page_init();
-// }

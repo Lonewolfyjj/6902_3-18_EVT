@@ -1,15 +1,36 @@
 /**
  * @file page_storage.c
- * @author your name (you@domain.com)
- * @brief 存储格式化
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 格式化界面
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_storage.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
@@ -155,7 +176,6 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
     }else{
         lv_obj_add_style(lab, &style_label_black, LV_PART_MAIN);
     }
-    // lv_obj_set_style_text_font(lab, &language, 0);
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -163,11 +183,8 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 
 static lv_obj_t * lv_value_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,const char * text,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset)
 {
-    // char buf[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label_grey, LV_PART_MAIN);
-    // lv_obj_set_style_text_font(lab, &language, 0);
-    // lv_snprintf(buf, sizeof(buf), "%dh可用", lv_bar_get_value(bar_obj));
     lv_label_set_text(lab,text);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -324,15 +341,3 @@ void hl_mod_storage_init(void * init_data)
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
 }
-
-lv_obj_t * hl_storage_obj_get(uint8_t num)
-{
-    return valid_obj[num];
-}
-
-//测试接口
-// void page_storage_test(void)
-// {
-    
-    // lv_page_4_init();
-// }

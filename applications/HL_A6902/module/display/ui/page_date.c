@@ -1,3 +1,35 @@
+/**
+ * @file page_date.c
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 日期设置界面
+ * @version 1.0
+ * @date 2023-01-14
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 #include "page_date.h"
 #include "language.h"
 #include "page_style_bit.h"
@@ -428,7 +460,6 @@ void hl_mod_date_init(void * init_data)
         lv_date_init();
         lv_style_page6_init();
     }
-    
 
     hl_lvgl_date_init_t * ptr = (hl_lvgl_date_init_t *)init_data;
     hl_date_func = ptr->func_cb;
@@ -452,10 +483,3 @@ void hl_mod_date_init(void * init_data)
 
     hl_mod_date_init_cfg(ptr);
 }
-
-//测试接口
-// void page_date_test(void)
-// {
-    
-//     page_6_test();
-// }

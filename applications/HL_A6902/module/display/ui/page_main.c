@@ -1,5 +1,36 @@
+/**
+ * @file page_main.c
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 主界面
+ * @version 1.0
+ * @date 2023-01-14
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 #include "page_main.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 
@@ -760,38 +791,3 @@ void hl_mod_main_init(void * init_data)
         lv_display_double(&ptr->tx_device_1,&ptr->tx_device_2);
     } 
 }
-
-/*
-static void delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        printf("child_cnt1 = %d\n",0);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            printf("child_cnt1 = %d\n",0);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
-
-//使用方法
-delete(lv_scr_act(),false);
-*/
-
-//测试接口
-// void page_main_test(void)
-// {    
-//     hl_lvgl_main_init_t data;
-//     data.display_tx_device = HL_DISPLAY_TX1;
-//     data.tx_device_1.electric = 20;
-//     data.tx_device_1.signal = HL_ONE_SIGNAL;
-//     data.tx_device_1.record = HL_RECODING;
-//     data.tx_device_1.volume = -13;
-//     hl_mod_lvgl_main_init(&data);
-// }
