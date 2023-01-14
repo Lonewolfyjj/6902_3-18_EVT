@@ -386,7 +386,7 @@ uint8_t hl_mod_display_deinit(void)
         rt_thread_mdelay(10);
     }
 
-    LOG_I("display display deinit success!");
+    LOG_I("display deinit success!");
 
     hl_drv_aw2016a_deinit();
 
