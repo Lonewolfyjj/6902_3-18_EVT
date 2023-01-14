@@ -61,8 +61,8 @@ typedef struct _hl_display_msg_t
 
 static hl_display_msg_t hl_mod_display;
 
-hl_screenofftime_t hl_lowbrightness_time;
-
+static hl_screenofftime_t hl_lowbrightness_time;
+static hl_screenofftime_t screenoff_timer;
 // 系统当前的状态和类别
 static hl_display_screen_s hl_screendata = {
     .display_fault_code       = 0,
@@ -237,6 +237,7 @@ uint8_t hl_mod_keypad_touchkey_read()
                     LOG_E("touchkey_up");
                     press      = 1;
                     hl_mod_page_screen_lowbritness_update();
+                    hl_mod_page_inbox_screenoff_update();
                     last_state = 0;
                     hl_util_timeout_close(&backtouchkey_debance);
                 } else {
@@ -385,6 +386,7 @@ int8_t hl_mod_get_rx_knob_val(void)
     now_knob_data = 0;
     if (data != 0 ) {
         hl_mod_page_screen_lowbritness_update();
+        hl_mod_page_inbox_screenoff_update();
     }
 
     return data;
@@ -460,22 +462,26 @@ uint8_t hl_mod_get_knob_okkey_val(void)
         switch (keypad_knob_ok) {
 
             case HL_KEY_EVENT_SHORT:
+                hl_mod_page_inbox_screenoff_update();
                 hl_mod_page_screen_lowbritness_update();
                 LOG_E("LV_KEY_ENTER\n");
                 data = keypad_knob_ok;
                 break;
             case HL_KEY_EVENT_DOUBLE:
+                hl_mod_page_inbox_screenoff_update();
                 hl_mod_page_screen_lowbritness_update();
                 LOG_E("LV_KEY_ENTER\n");
                 data = HL_KEY_EVENT_IDLE;
                 break;
             case HL_KEY_EVENT_LONG:
+                hl_mod_page_inbox_screenoff_update();
                 hl_mod_page_screen_lowbritness_update();
                 LOG_E("LV_KEY_NEXT\n");
                 data = HL_KEY_EVENT_IDLE;
                 break;
             case HL_KEY_EVENT_RELEASE:
                 LOG_E("LV_KEY_REL\n");
+                hl_mod_page_inbox_screenoff_update();
                 hl_mod_page_screen_lowbritness_update();
                 data = HL_KEY_EVENT_IDLE;
             default:
@@ -731,8 +737,7 @@ static void hl_mod_page_screen_lowbritness_trigfunc(bool flag)
         brightness = SCREEN_LOWBRIGHTNESS;
     } else {
         // 屏幕恢复原亮度
-        //brightness = BRIGHTNESS_DEFAULT_VALUE;
-        brightness = 0x80;
+        brightness = SCREEN_BRIGHTNESS_DEFAULT_VALUE;
     }
     hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &brightness, 1);
 }
@@ -756,8 +761,86 @@ void hl_mod_page_screen_lowbritness_update(void)
 // 降低屏幕定时器完全关闭
 void hl_mod_page_screen_lowbritness_deinit(void)
 {
+    uint8_t brightness;
+
     LOG_E("close low br timer");
     hl_mod_page_screenofftimer_close(&hl_lowbrightness_time);
+    brightness = SCREEN_BRIGHTNESS_DEFAULT_VALUE;
+    hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &brightness, 1);
+}
+
+static void hl_mod_page_inbox_screenoff_trig(bool flag)
+{
+    if (flag == true) {
+        LOG_E("close");
+        rt_thread_mdelay(100);
+        hl_drv_rm690a0_io_ctrl(CLOSE_MIPI_SCREENPOWER_CMD, NULL, 0);
+    } else {
+        LOG_E("open");
+        rt_thread_mdelay(100);
+        hl_drv_rm690a0_io_ctrl(OPEN_MIPI_SCREENPOWER_CMD, NULL, 0);
+        
+    }
+}
+
+// 盒子内定时熄屏定时器初始化
+void hl_mod_page_inbox_screenoff_init(void)
+{
+    LOG_E("init inbox screenoff timer");
+    screenoff_timer.outtime  = 5000;
+    screenoff_timer.trigfunc = hl_mod_page_inbox_screenoff_trig;
+
+    hl_mod_page_screenofftimer_init(&screenoff_timer);
+}
+
+// 关闭屏幕熄屏定时器
+void hl_mod_page_inbox_screenoff_close(void)
+{
+    LOG_E("close inbox screenoff timer");
+    hl_mod_page_screenofftimer_close(&screenoff_timer);
+    hl_mod_page_inbox_screenoff_trig(false);
+}
+
+// 关闭屏幕熄屏定时器
+void hl_mod_page_inbox_screenoff_update(void)
+{
+    LOG_E("update");
+    hl_mod_page_screenofftimer_update(&screenoff_timer);
+}
+
+// 关闭屏幕熄屏定时器
+void hl_mod_page_inbox_screenoff_scan(void)
+{
+    uint8_t                     data   = 0;
+    hl_display_screen_s*        data_p = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_change_s* flag   = hl_mod_page_get_screen_change_flag();
+
+    if (screenoff_timer.trigfunc == RT_NULL) {
+        return;
+    }
+    
+    // 按键的操作重新开启屏幕
+    hl_mod_keypad_touchkey_read();
+    hl_mod_get_rx_knob_val();
+    hl_mod_get_knob_okkey_val();
+    
+
+
+    if (flag->sys_status.screen_off_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.screen_off_status = 0;
+        data                               = data_p->sys_status.screen_off_status;
+        hl_mod_display_mux_release();
+
+        // 盒子的开关盖的处理
+        if (data == 1) {
+            hl_mod_page_inbox_screenoff_trig(true);
+        } else {
+            hl_mod_page_inbox_screenoff_update();
+        }
+    }
+
+    hl_mod_page_screenofftimer_scan(&screenoff_timer);
 }
 
 void hl_mod_page_screen_lowbritness_scan(void)
@@ -778,6 +861,7 @@ void hl_mod_page_screen_lowbritness_scan(void)
 
         if (data == 1) {
             hl_mod_page_screen_lowbritness_update();
+            hl_mod_page_inbox_screenoff_update();
         }
     }
 

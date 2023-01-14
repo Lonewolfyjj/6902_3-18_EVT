@@ -206,6 +206,7 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
             touchpad_get_xy(&last_x, &last_y);
             if (last_x != -1 && last_y != -1) {
                 hl_mod_page_screen_lowbritness_update();
+                hl_mod_page_inbox_screenoff_update();
             }
 
             // rt_kprintf("last_x = %d  last_y = %d \n", last_x, last_y);

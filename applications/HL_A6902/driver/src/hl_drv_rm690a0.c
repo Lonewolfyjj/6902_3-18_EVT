@@ -579,9 +579,13 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
                 hl_drv_rm690a0_free(ptr);
                 result = RT_EOK;
             }
-        }
-
-        break;
+        } break;
+        case CLOSE_MIPI_SCREENPOWER_CMD: {
+            OLED_PWR_OFF();
+        } break;
+        case OPEN_MIPI_SCREENPOWER_CMD: {
+            OLED_PWR_ON();
+        } break;
         default:
             break;
     }

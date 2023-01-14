@@ -448,6 +448,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.lowbrightness_flag = data;
             flag->sys_status.lowbrightness_flag   = 1;
         } break;
+        case IN_BOX_CAP_STATE_SWITCH_CMD:{
+            uint8_t data                          = *(char*)ptr;
+            data_p->sys_status.screen_off_status = data;
+            flag->sys_status.screen_off_status   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -477,6 +482,7 @@ static void hl_mod_display_task(void* param)
         hl_mod_display_upgrade_enter();
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
+
         hl_mod_page_screen_lowbritness_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);

@@ -44,6 +44,7 @@ extern "C" {
 #define HL_SCREEN_AUTO_LOWBRIGHTNESS_TIME 60000
 // 屏定时熄屏的亮度
 #define SCREEN_LOWBRIGHTNESS 0x30
+#define SCREEN_BRIGHTNESS_DEFAULT_VALUE     0x80
 // led的亮度值
 #define NORMAL_BRIGTNESS 30
 #define LOWVAL_BRIGTNESS 15
@@ -85,7 +86,7 @@ typedef struct _hl_display_status{
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
     uint32_t tx2_mute_switch:1;
-    /// 熄屏状态 （1：熄屏 0 正常亮）
+    /// 熄屏状态 （1：熄屏(或者盒子关闭) 0 正常亮）
     uint32_t screen_off_status:1;
 
     /// @brief 恢复出厂设置
@@ -248,6 +249,10 @@ void hl_mod_page_screen_lowbritness_init(void);
 void hl_mod_page_screen_lowbritness_update(void);
 void hl_mod_page_screen_lowbritness_deinit(void);
 void hl_mod_page_screen_lowbritness_scan(void);
+void hl_mod_page_inbox_screenoff_init(void);
+void hl_mod_page_inbox_screenoff_close(void);
+void hl_mod_page_inbox_screenoff_update(void);
+void hl_mod_page_inbox_screenoff_scan(void);
 void hl_mod_page_goto_box_scan(void);
 void hl_mod_display_upgrade_enter(void);
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);
