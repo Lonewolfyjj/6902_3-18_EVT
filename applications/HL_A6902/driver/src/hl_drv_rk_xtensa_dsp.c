@@ -169,6 +169,8 @@ static struct dsp_work* sg_dsp_work = NULL;
 static uint16_t sg_dsp_frame_bytes = 0;
 /// DSP 控制暂存
 static dsp_io_ctrl_t sg_dsp_io_ctrl = { 0 };
+/// DSP 控制暂存,如果由冲突
+static dsp_io_ctrl_t sg_dsp_io_ctrl_next = { 0 };
 /// DSP控制句柄
 static hl_drv_rk_xtensa_dsp_config_t_p sg_audio_mod_dsp_handle = NULL;
 #if HL_IS_TX_DEVICE()
@@ -727,6 +729,14 @@ uint8_t hl_drv_rk_xtensa_dsp_transfer()
         }
         // HL_DRV_DSP_LOG("dsp iocontrol op = %d, param = %d, value = %ld\r\n", sg_rx_dsp_param->io_ctrl_op,
         //                sg_rx_dsp_param->io_ctrl_param, sg_rx_dsp_param->io_ctrl_value);
+
+        if (sg_dsp_io_ctrl_next.io_ctrl_notify) {
+            sg_dsp_io_ctrl.io_ctrl_notify      = sg_dsp_io_ctrl_next.io_ctrl_notify;
+            sg_dsp_io_ctrl.io_ctrl_op          = sg_dsp_io_ctrl_next.io_ctrl_op;
+            sg_dsp_io_ctrl.io_ctrl_param       = sg_dsp_io_ctrl_next.io_ctrl_param;
+            sg_dsp_io_ctrl.io_ctrl_value       = sg_dsp_io_ctrl_next.io_ctrl_value;
+            sg_dsp_io_ctrl_next.io_ctrl_notify = 0;
+        }
     }
 #else
     rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, sg_rx_bypass_dsp_param->in_buf, sg_rx_bypass_dsp_param->process_buff_len);
@@ -760,13 +770,13 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         return 1;
     }
 
-    if (cmd == HL_EM_DRV_RK_DSP_CMD_SET_CONFIG | cmd == HL_EM_DRV_RK_DSP_CMD_START_DSP
-        | cmd == HL_EM_DRV_RK_DSP_CMD_STOP_DSP) {
-    } else if (sg_dsp_io_ctrl.io_ctrl_notify) {
-        // already have a cmd not proceed
-        HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
-        return 2;
-    }
+    // if (cmd == HL_EM_DRV_RK_DSP_CMD_SET_CONFIG | cmd == HL_EM_DRV_RK_DSP_CMD_START_DSP
+    //     | cmd == HL_EM_DRV_RK_DSP_CMD_STOP_DSP) {
+    // } else if (sg_dsp_io_ctrl.io_ctrl_notify) {
+    //     // already have a cmd not proceed
+    //     HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+    //     return 2;
+    // }
 
     switch (cmd) {
         case HL_EM_DRV_RK_DSP_CMD_SET_CONFIG:
@@ -780,23 +790,25 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             break;
         case HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP:
             if (((uint8_t*)ptr)[0] != 0) {
-
-#if HL_IS_TX_DEVICE()
-                sg_dsp_io_ctrl.io_ctrl_op     = 0;
-                sg_dsp_io_ctrl.io_ctrl_notify = 1;
-#else
-                sg_dsp_io_ctrl.io_ctrl_op     = 0;
-                sg_dsp_io_ctrl.io_ctrl_notify = 1;
-#endif
+                if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                    HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                    sg_dsp_io_ctrl_next.io_ctrl_op     = 0;
+                    sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+                } else {
+                    sg_dsp_io_ctrl.io_ctrl_op     = 0;
+                    sg_dsp_io_ctrl.io_ctrl_notify = 1;
+                }
                 HL_DRV_DSP_LOG("[%s][line:%d] open denoise!!!\r\n", __FUNCTION__, __LINE__);
             } else {
-#if HL_IS_TX_DEVICE()
-                sg_dsp_io_ctrl.io_ctrl_op     = 3;
-                sg_dsp_io_ctrl.io_ctrl_notify = 1;
-#else
-                sg_dsp_io_ctrl.io_ctrl_op     = 3;
-                sg_dsp_io_ctrl.io_ctrl_notify = 1;
-#endif
+                if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                    HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                    sg_dsp_io_ctrl_next.io_ctrl_op     = 3;
+                    sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+
+                } else {
+                    sg_dsp_io_ctrl.io_ctrl_op     = 3;
+                    sg_dsp_io_ctrl.io_ctrl_notify = 1;
+                }
 
                 HL_DRV_DSP_LOG("[%s][line:%d] close denoise!!!\r\n", __FUNCTION__, __LINE__);
             }
@@ -806,42 +818,82 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             // MUTE在TX
 
 #if HL_IS_TX_DEVICE()
-            sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
-            sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                sg_dsp_io_ctrl_next.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+                sg_dsp_io_ctrl_next.io_ctrl_value = *(int32_t*)ptr;
+                // sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            } else {
+                sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+                sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+                // sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
 
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L:
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
-            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_L;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_R:
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
-            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_GAIN_ALL:
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
-            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
             break;
 
         case HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD:
 
 #if !HL_IS_TX_DEVICE()
-            // RX才有MI混音
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_MIXER;
-            sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                // RX才有MI混音
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_MIXER;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                // RX才有MI混音
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_MIXER;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
 
             break;
@@ -849,10 +901,18 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case HL_EM_DRV_RK_DSP_CMD_SET_VU:
 
 #if !HL_IS_TX_DEVICE()
-            // RX才有VU
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                // RX才有VU
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                // RX才有VU
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
             return 0;
 
@@ -860,10 +920,18 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case HL_EM_DRV_RK_DSP_CMD_GET_VU:
 
 #if !HL_IS_TX_DEVICE()
-            // RX才有VU
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                // RX才有VU
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                // RX才有VU
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
             return 0;
 
@@ -872,19 +940,35 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN:
 
 #if !HL_IS_TX_DEVICE()
-            // RX才有UAC GAIN
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                // RX才有UAC GAIN
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                // RX才有UAC GAIN
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
             break;
         case HL_EM_DRV_RK_DSP_CMD_GET_UAC_GAIN:
 
 #if !HL_IS_TX_DEVICE()
-            // RX才有UAC GAIN
-            sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
-            sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
-            sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                // RX才有UAC GAIN
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                // RX才有UAC GAIN
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
 #endif
             break;
         default:
@@ -945,6 +1029,18 @@ static int dsp_io_ctrol(int argc, char** argv)
 			break;
 	}
 
+    if (sg_dsp_io_ctrl.io_ctrl_notify) {
+        HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+        sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+        sg_dsp_io_ctrl_next.io_ctrl_op     = op;
+        sg_dsp_io_ctrl_next.io_ctrl_param  = param;
+        sg_dsp_io_ctrl_next.io_ctrl_value  = value;
+    } else {
+        sg_dsp_io_ctrl.io_ctrl_notify = 1;
+        sg_dsp_io_ctrl.io_ctrl_op     = op;
+        sg_dsp_io_ctrl.io_ctrl_param  = param;
+        sg_dsp_io_ctrl.io_ctrl_value  = value;
+    }
 
 #endif
     return 0;
