@@ -73,10 +73,11 @@ static void hl_mod_screen_rot_scan(void);
 static void hl_mod_display_get_sn_version(void)
 {
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
-    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    // hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
     char rx_ver_buf[10] = { 0 };
+
 
     // 从NVRAM获取当前RX版本号
     if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
@@ -86,6 +87,8 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->sn, sn_buf, sizeof(sn_buf));
         hl_mod_display_mux_release();
     }
+    // 先用默认的，后面NVRAM功能开发好了就用NVRAM的
+#if 0
     if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
         rt_kprintf("disp HL_VER : %s\r\n", rx_ver_buf);
 
@@ -93,6 +96,7 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->rx_ver, rx_ver_buf, sizeof(rx_ver_buf));
         hl_mod_display_mux_release();
     }
+#endif 
 }
 
 static device_pose_t hl_mod_device_pose_val(void)
@@ -444,6 +448,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.lowbrightness_flag = data;
             flag->sys_status.lowbrightness_flag   = 1;
         } break;
+        case IN_BOX_CAP_STATE_SWITCH_CMD:{
+            uint8_t data                          = *(char*)ptr;
+            data_p->sys_status.screen_off_status = data;
+            flag->sys_status.screen_off_status   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -465,6 +474,7 @@ static void hl_mod_display_task(void* param)
         hl_mod_display_upgrade_enter();
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
+
         hl_mod_page_screen_lowbritness_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
