@@ -42,6 +42,12 @@
 #include "hl_util_hup.h"
 #include "hl_util_fifo.h"
 #include "hl_util_msg_type.h"
+
+#include "cJSON/cJSON.h"
+
+#define DBG_SECTION_NAME "mod_up"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 /* typedef -------------------------------------------------------------------*/
 
 #define HL_UPGRADE_DATA_SIZE (512)
@@ -58,6 +64,23 @@ typedef struct _upgrade_task
     uint8_t type_task[HL_UPGRADE_MAX];
 } upgrade_task;
 
+typedef struct _upgrade_json
+{
+    uint8_t name[20];
+    uint8_t type;
+    uint8_t version[20];
+    uint8_t hardversion[20];
+} upgrade_json;
+
+typedef struct _upgrade_pack_info_t
+{
+    uint8_t type;
+    uint8_t version[20];
+    uint8_t hardversion[20];
+    uint8_t packcount;
+    upgrade_json pack[HL_UPGRADE_MAX];
+} upgrade_pack_info_t;
+
 typedef struct _hl_mod_upgrade_telink_t
 {
     /// 升级数据包
@@ -67,6 +90,18 @@ typedef struct _hl_mod_upgrade_telink_t
     /// telink升级文件的开始地址
     uint32_t file_start_addr;
 } hl_mod_upgrade_telink_t;
+
+typedef struct _hl_mod_upgrade_pack_t
+{
+    /// 升级包名字
+    char file_name[50];
+    /// 升级包句柄
+    int file_fd;
+    /// 文件数量
+    uint8_t type_num;
+    /// 文件长度（+1 一个JSON配置表文件）
+    long type_len[HL_UPGRADE_MAX+1];
+} hl_mod_upgrade_pack_t;
 
 typedef struct _hl_mod_upgrade_t
 {
@@ -91,6 +126,8 @@ typedef struct _hl_mod_upgrade_t
     hl_mod_upgrade_state telink_state;
     /// RK2108升级状态
     hl_mod_upgrade_state ota_state;
+    /// 升级包
+    hl_mod_upgrade_pack_t pack;
 } hl_mod_upgrade_t;
 
 /* define --------------------------------------------------------------------*/
@@ -110,16 +147,31 @@ typedef struct _hl_mod_upgrade_t
 #if HL_IS_TX_DEVICE()
 #define HL_UPGRADE_FILE_NAME_TELINK "/mnt/sdcard/telink.bin"
 #define HL_UPGRADE_FILE_NAME_RK "/mnt/sdcard/mcu.img"
+#define HL_UPGRADE_FILE_PATH "/mnt/sdcard/"
+#define HL_UPGRADE_PACK_NAME "A6902_Upgrade_Firmware_TX"
 #else
 #define HL_UPGRADE_FILE_NAME_TELINK "telink.bin"
 #define HL_UPGRADE_FILE_NAME_RK "mcu.img"
+#define HL_UPGRADE_FILE_PATH "/"
+#define HL_UPGRADE_PACK_NAME "A6902_Upgrade_Firmware_RX"
 #endif
+
+#define HL_UPGADE_JSON_NAME "name"
+#define HL_UPGADE_JSON_TYPE "type"
+#define HL_UPGADE_JSON_SOFTVER "softver"
+#define HL_UPGADE_JSON_HARDVER "hardver"
+#define HL_UPGADE_JSON_PACKCOUNT "packcount"
+#define HL_UPGADE_JSON_PACKLIST "packlist"
+
 /* variables -----------------------------------------------------------------*/
 // 串口数据包
 static hl_mod_upgrade_telink_t s_upgrade_telink = { 0 };
 
 // upgrade模块句柄
 static hl_mod_upgrade_t s_upgrade = { 0 };
+
+// 升级包的信息
+static upgrade_pack_info_t s_pack_info = {0};
 
 // 串口接收缓冲区
 static uint8_t s_uart_recv_buf[HL_UPGRADE_BUF_SIZE];
@@ -562,6 +614,307 @@ static void _upgrade_seek(void)
     }
 }
 
+static bool _upgrade_seek_(void)
+{
+    DIR* dir = opendir(HL_UPGRADE_FILE_PATH);
+
+    struct dirent* dirent;
+
+    do {
+        dirent = readdir(dir);
+        if (dirent == RT_NULL) {
+            LOG_E("%s read dir error", __func__);
+            break;
+        }
+#if HL_IS_TX_DEVICE()
+        if ((rt_strstr(dirent->d_name, "HLD_A6902_") != RT_NULL) && (rt_strstr(dirent->d_name, "_TX.ota") != RT_NULL)) {
+#else
+        if ((rt_strstr(dirent->d_name, "HLD_A6902_") != RT_NULL) && (rt_strstr(dirent->d_name, "_RX.ota") != RT_NULL)) {
+#endif
+            if(strlen(dirent->d_name) > 50) {
+                LOG_D("seek upgrade file: (%s) name error ", dirent->d_name);
+                break;
+            }
+            memcpy(s_upgrade.pack.file_name, dirent->d_name, strlen(dirent->d_name));
+            LOG_D("seek upgrade file: %s ", s_upgrade.pack.file_name);
+            closedir(dir);
+            return true;
+        }
+    } while (dirent != RT_NULL);
+    closedir(dir);
+
+    return false;
+}
+
+static bool _upgrade_nuzip_head_(void)
+{
+    char buff[255] = {0};
+    int ret = 0;
+    uint8_t i = 0;
+    uint8_t num = 0;
+
+    lseek(s_upgrade.pack.file_fd, 0, SEEK_SET);
+    ret = read(s_upgrade.pack.file_fd, &buff[i], 128);
+    s_upgrade.pack.type_num = buff[i++] / 8;
+    if((s_upgrade.pack.type_num*8) != buff[0]) {
+        LOG_D("(%d == %d)pack head size error ", s_upgrade.pack.type_num*8, buff[i++]); 
+        return false;
+    }
+
+    for(num = 0; num < s_upgrade.pack.type_num; num++) {
+        s_upgrade.pack.type_len[num]  = ((long)buff[i++]<<56)&((long)0xFF<<56);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<48)&((long)0xFF<<48);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<40)&((long)0xFF<<40);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<32)&((long)0xFF<<32);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<24)&((long)0xFF<<24);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<16)&((long)0xFF<<16);
+        s_upgrade.pack.type_len[num] += ((long)buff[i++]<<8)&((long)0xFF<<8); 
+        s_upgrade.pack.type_len[num] += ((long)buff[i++])&((long)0xFF);      
+        LOG_D("pack(%d) file len: %ld ", num, s_upgrade.pack.type_len[num]);      
+    }
+
+    if(num == 0) {
+        return false;
+    }
+    return true;
+}
+
+static rt_bool_t _upgrad_param_get(cJSON* json_paramaters, char* param_key, char* param_value, uint16_t value_len)
+{
+    if (NULL == param_key || NULL == param_value || value_len == 0) {
+        LOG_E("error: _upgrad_param_get\r\n");
+        return false;
+    }
+
+    cJSON*     item;
+    cJSON_bool check_ret = cJSON_False;
+
+    check_ret = cJSON_HasObjectItem(json_paramaters, param_key);
+
+    if (check_ret) {
+        item = cJSON_GetObjectItem(json_paramaters, param_key);
+        if (value_len < strlen(item->valuestring) + 1) {            
+            LOG_E("error: buffer len no enough bufferlen = %d, value_len = %d\r\n", value_len, strlen(item->valuestring) + 1);
+            return false;
+        }
+        strcpy(param_value, item->valuestring);
+    } else {
+        LOG_E("error: upgrade no item %s\r\n", param_key);
+        return false;
+    }
+
+    return true;
+}
+
+uint8_t _upgrad_param_get_integer(cJSON* json_paramaters, char* param_key, int* param_value)
+{
+    if (NULL == param_key || NULL == param_value) {
+        LOG_E("error: _upgrad_param_get_integer");
+        return 1;
+    }
+
+    cJSON*     item;
+    cJSON_bool check_ret = cJSON_False;
+
+    check_ret = cJSON_HasObjectItem(json_paramaters, param_key);
+    if (check_ret) {
+        item = cJSON_GetObjectItem(json_paramaters, param_key);
+        *param_value = atoi(item->valuestring);
+        LOG_I("integer: %d ", *param_value);
+    } else {
+        LOG_E("error: nvram have no item %s", param_key);
+        return false;
+    }
+
+    return true;
+}
+
+static void _upgrade_nuzip_json_show(void)
+{
+    int i = 0;
+
+    rt_kprintf("==============upgrade info================\n");
+    rt_kprintf("upgrade param:\n");
+    rt_kprintf("{ \n%s: %d \n", HL_UPGADE_JSON_TYPE, s_pack_info.type);
+    rt_kprintf("%s: %s \n", HL_UPGADE_JSON_SOFTVER, s_pack_info.version);
+    rt_kprintf("%s: %s \n", HL_UPGADE_JSON_HARDVER, s_pack_info.hardversion);
+    rt_kprintf("%s: %d\n}\n", HL_UPGADE_JSON_PACKCOUNT, s_pack_info.packcount);
+
+    rt_kprintf("[\n");
+    for(i = 0; i<s_pack_info.packcount; i++) {
+        rt_kprintf("    { \n    %s: %d \n", HL_UPGADE_JSON_TYPE, s_pack_info.pack[i].type);
+        rt_kprintf("    %s: %s \n", HL_UPGADE_JSON_NAME, s_pack_info.pack[i].name);        
+        rt_kprintf("    %s: %s \n", HL_UPGADE_JSON_SOFTVER, s_pack_info.pack[i].version);
+        rt_kprintf("    %s: %s \n    }\n", HL_UPGADE_JSON_HARDVER, s_pack_info.pack[i].hardversion);       
+    }
+    rt_kprintf("]\n");
+    rt_kprintf("===========================================\n");    
+}
+
+static rt_bool_t _upgrade_nuzip_json(long len)
+{
+    int       fd;
+    char*     json_buff;
+    char      name_buff[50] = {0};
+    char      pack_name_key[4][20] = {0};
+    int       read_len  = 0;
+    int       write_len = 0;
+    int       i = 0;
+    cJSON*    json_param = NULL;
+
+    LOG_D("read json upgrade config ");
+
+    if(s_upgrade.pack.type_len[0] > (1024*10) != s_upgrade.pack.type_len[0] == 0) {
+        LOG_E("upgrade pack json len error %ld ", s_upgrade.pack.type_len[0]);
+        return false;
+    }
+    json_buff = rt_malloc(s_upgrade.pack.type_len[0]);
+
+    lseek(s_upgrade.pack.file_fd, s_upgrade.pack.type_num*8+1, SEEK_SET);
+    read_len = read(s_upgrade.pack.file_fd, json_buff, s_upgrade.pack.type_len[0]);
+    if(read_len != s_upgrade.pack.type_len[0]) {
+        LOG_E("upgrade pack json read len error %ld == %ld ", s_upgrade.pack.type_len[0], read_len);
+        return false;
+    }
+
+    rt_kprintf("\n");
+    for (i = 0; i<s_upgrade.pack.type_len[0]; i++)
+        rt_kprintf("%c", json_buff[i]);
+    rt_kprintf("\n");
+    json_param = cJSON_Parse(json_buff);
+    
+    _upgrad_param_get(json_param, HL_UPGADE_JSON_NAME, name_buff, 50);
+    if(rt_strstr(name_buff, HL_UPGRADE_PACK_NAME) == RT_NULL) {
+        LOG_E("(%s)upgrade pack name error", name_buff);
+        return false;
+    }
+    _upgrad_param_get_integer(json_param, HL_UPGADE_JSON_TYPE, &s_pack_info.type);
+    _upgrad_param_get(json_param, HL_UPGADE_JSON_SOFTVER, s_pack_info.version, 20);
+    _upgrad_param_get(json_param, HL_UPGADE_JSON_HARDVER, s_pack_info.hardversion, 20);
+    _upgrad_param_get_integer(json_param, HL_UPGADE_JSON_PACKCOUNT, &s_pack_info.packcount);
+    if(s_pack_info.packcount <= 0 || s_pack_info.packcount > HL_UPGRADE_MAX) {
+        LOG_E("(%d)upgrade pack count error", s_pack_info.packcount);
+        return false;
+    }
+
+    for(i = 0; i<s_pack_info.packcount; i++) {
+        memset(pack_name_key[0], 0, 20);
+        memset(pack_name_key[2], 0, 20);
+        memset(pack_name_key[3], 0, 20);
+        memset(pack_name_key[4], 0, 20);
+        rt_sprintf(pack_name_key[0], "%s%d", HL_UPGADE_JSON_TYPE, i);
+        rt_sprintf(pack_name_key[1], "%s%d", HL_UPGADE_JSON_NAME, i);
+        rt_sprintf(pack_name_key[2], "%s%d", HL_UPGADE_JSON_SOFTVER, i);
+        rt_sprintf(pack_name_key[3], "%s%d", HL_UPGADE_JSON_HARDVER, i);
+        
+        _upgrad_param_get_integer(json_param, pack_name_key[0], &s_pack_info.pack[i].type);
+        _upgrad_param_get(json_param, pack_name_key[1], s_pack_info.pack[i].name, 20);        
+        _upgrad_param_get(json_param, pack_name_key[2], s_pack_info.pack[i].version, 20);
+        _upgrad_param_get(json_param, pack_name_key[3], s_pack_info.pack[i].hardversion, 20);       
+    }    
+
+    _upgrade_nuzip_json_show();
+    cJSON_Delete(json_param);
+    free(json_buff);
+    return true;
+}
+
+static rt_bool_t _upgrade_nuzip_file(char* path, long len)
+{
+    int       fd;
+    char      buff[HL_UPGRADE_DATA_SIZE];
+    int       read_len  = 0;
+    int       write_len = 0;
+    rt_bool_t is_exist  = RT_FALSE;
+    long      file_len = 0;
+
+    LOG_D("Create %s ", path);
+
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0);
+    if (fd < 0) {
+        LOG_E("open file for check failed(%s) \r\n", path);
+        return is_exist;
+    }
+
+    lseek(fd, 0, SEEK_SET);
+    do {
+        if((len - file_len) > HL_UPGRADE_DATA_SIZE) {
+            read_len = read(s_upgrade.pack.file_fd, buff, HL_UPGRADE_DATA_SIZE);
+        } else {
+            read_len = read(s_upgrade.pack.file_fd, buff, (len - file_len));
+        }
+        
+        if (read_len <= 0) {
+            close(fd);
+            LOG_E("read file failed.\n");
+            return false;
+        }
+        write_len = write(fd, buff, read_len);
+        if (read_len != write_len) {
+            close(fd);
+            LOG_E("write file failed.\n");
+            return false;
+        }
+        file_len += read_len;
+        if(file_len >= len) {
+            break;
+        }
+    } while (read_len == HL_UPGRADE_DATA_SIZE);
+
+    close(fd);
+    LOG_D("Create %s succeed\r\n", path);
+
+    return true;
+}
+
+static bool _upgrade_nuzip(void)
+{
+    int i = 0;
+    char packname[128];
+    char szcmd[128];
+    char szbuf[128] = {0};
+    long file_len = 0;
+    rt_bool_t ret = true;
+
+    /*modify file name*/
+    rt_sprintf(packname, "%s%s", HL_UPGRADE_FILE_PATH, s_upgrade.pack.file_name);
+    s_upgrade.pack.file_fd = open(packname, O_RDONLY, 0);
+
+    if(s_upgrade.pack.file_fd < 0) {
+        LOG_E("%s", packname);
+        return false;
+    }
+
+    /*pack upgrade file ---> info.json*/
+    ret = _upgrade_nuzip_head_();
+    if (ret != true){
+        LOG_E("_upgrade_nuzip_head_ error");
+        return false;
+    }
+
+    ret = _upgrade_nuzip_json(s_upgrade.pack.type_len[0]);
+    if (ret != true){
+        LOG_E("_upgrade_nuzip_json error");
+        return false;
+    }
+    file_len = s_upgrade.pack.type_num * 8 + 1 + s_upgrade.pack.type_len[0];
+    lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
+    ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_RK, s_upgrade.pack.type_len[1]);
+    if (ret != true){
+        LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_RK);
+        return false;
+    }
+    file_len += s_upgrade.pack.type_len[1];
+    lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
+    ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_TELINK, s_upgrade.pack.type_len[2]);
+    if (ret != true){
+        LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_TELINK);
+        return false;
+    }
+    
+    return true;
+}
+
 static void _upgrade_start(void)
 {
     uint32_t i = 0;
@@ -706,6 +1059,10 @@ int hl_mod_upgrade_test(int argc, char** argv)
         _upgrade_seek();
     } else if (!strcmp("upgrade", argv[1])) {
         _upgrade_start();
+    } else if (!strcmp("test", argv[1])) {
+        _upgrade_seek_();
+        _upgrade_nuzip();
+        LOG_D("test finish");
     } else {
         rt_kprintf("wrong parameter, please type: hl_mod_upgrade_test cmd error\r\n");
         return 0;
