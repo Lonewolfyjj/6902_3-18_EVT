@@ -73,10 +73,11 @@ static void hl_mod_screen_rot_scan(void);
 static void hl_mod_display_get_sn_version(void)
 {
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
-    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    // hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
     char rx_ver_buf[10] = { 0 };
+
 
     // 从NVRAM获取当前RX版本号
     if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
@@ -86,6 +87,8 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->sn, sn_buf, sizeof(sn_buf));
         hl_mod_display_mux_release();
     }
+    // 先用默认的，后面NVRAM功能开发好了就用NVRAM的
+#if 0
     if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
         rt_kprintf("disp HL_VER : %s\r\n", rx_ver_buf);
 
@@ -93,6 +96,7 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->rx_ver, rx_ver_buf, sizeof(rx_ver_buf));
         hl_mod_display_mux_release();
     }
+#endif 
 }
 
 static device_pose_t hl_mod_device_pose_val(void)

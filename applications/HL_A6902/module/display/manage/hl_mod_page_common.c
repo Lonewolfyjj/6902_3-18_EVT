@@ -97,7 +97,7 @@ static hl_display_screen_s hl_screendata = {
     .upgrade_status           = HL_UPGRADE_STATUS_NORMAL,
     .tx1_ver                  = "V0.0.0.0",
     .tx2_ver                  = "V0.0.0.0",
-#if A6902_RX_HL_EN || A6902_RX_HL_CH
+#if A6902_RX_HL_EN || A6902_RX_HL_CH || A6902_RX_JF_CH || A6902_RX_HL_EN
     .rx_ver = A6902_VERSION,
 #else
     .rx_ver = "V0.0.0.0",
