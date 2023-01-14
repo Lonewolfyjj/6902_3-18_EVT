@@ -311,6 +311,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_BOX_LID_STATE_UPDATE_IND: {  //更新Box开关盖状态
             box_lid_state_temp = *(hl_mod_euc_box_lid_state_e*)p_msg->param.ptr;
             LOG_I("Box lid state:%d", box_lid_state_temp);
+            hl_mod_display_io_ctrl(IN_BOX_CAP_STATE_SWITCH_CMD, &box_lid_state_temp, sizeof(box_lid_state_temp));
         } break;
         case HL_GET_PAIR_MAC_REQ_IND: {
             rt_memcpy(pair_mac_temp, rx_info.remote_mac, sizeof(pair_mac_temp));

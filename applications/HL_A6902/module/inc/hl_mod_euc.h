@@ -140,8 +140,8 @@ typedef enum _hl_mod_euc_ind_e
 
 typedef enum _hl_mod_euc_box_lid_state_e
 {
-    HL_MOD_EUC_BOX_LID_CLOSE = 0,
-    HL_MOD_EUC_BOX_LID_OPEN,
+    HL_MOD_EUC_BOX_LID_OPEN = 0,
+    HL_MOD_EUC_BOX_LID_CLOSE,
 } hl_mod_euc_box_lid_state_e;
 
 typedef enum _hl_mod_euc_charge_state_e
