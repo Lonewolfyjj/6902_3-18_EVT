@@ -26,6 +26,7 @@ typedef enum _hl_top_cmd_t
     HL_TOP_BAT_COLOR_GREEN,
     HL_TOP_BAT_COLOR_WHITE,
     HL_TOP_BAT_COLOR_RED,
+    HL_TOP_GET_ICON_OBJ_CMD,
     HL_TOP_DELETE_STYLE,
     HL_TOP_ALL_DEL
 }hl_top_cmd_t;
@@ -35,6 +36,7 @@ typedef struct _hl_lvgl_top_ioctl_t
     hl_top_cmd_t top_cmd;
     hl_top_icon_t top_param;
     int16_t electric_top;//电量 0 - 100 %
+    lv_obj_t * icon_obj;
 }hl_lvgl_top_ioctl_t;
 
 typedef struct _hl_lvgl_top_init_t

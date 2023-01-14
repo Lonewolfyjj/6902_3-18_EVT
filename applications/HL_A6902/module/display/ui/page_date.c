@@ -14,6 +14,8 @@
 #define INIT_TYPE 0
 #define IOCTL_TYPE 1
 
+#define CENTER_ERR_RANGE    40
+#define ROLLER_TIMEOUT    250
 //平年的月份日期表
 static uint8_t mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
 
@@ -23,15 +25,17 @@ static uint8_t date_day[256];
 static uint8_t date_hour[256];
 static uint8_t date_min[350];
 
+static lv_coord_t pos;
 static lv_style_t style_black,style_grey;
 static lv_obj_t *roller_year,*roller_month,*roller_day,*roller_hour,*roller_min;
 static lv_obj_t * con;
+static lv_timer_t * timer;
 static char * lock = "btn";
 static char * ulock = "ubtn";
 static hl_date_event_cb hl_date_func;
 
 static uint8_t leap_flag = COMMON_YEAR;//0 :平年 1：闰年
-static uint8_t month_sta = 0;
+static uint8_t month_sta = 0,timer_flag = 0;
 /**
  * Add a fade mask to roller.
  */
@@ -148,6 +152,7 @@ static void lv_get_cal_day_num(hl_date_choose_t opt,uint8_t data)
 static void lv_style_page6_init(void)
 {    
     lv_style_init(&style_black);
+    lv_style_set_bg_opa(&style_grey, LV_OPA_COVER);
     lv_style_set_bg_color(&style_black, lv_color_black());
     lv_style_set_border_width(&style_black, 0);
     lv_style_set_pad_all(&style_black, 0);
@@ -168,7 +173,7 @@ static lv_obj_t * lv_creat_roller(lv_obj_t *src_obj,lv_event_cb_t event_cb,const
     lv_obj_add_style(roller, &style_grey, 0);    
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(roller, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_size(roller,90,114); 
+    lv_obj_set_size(roller,90,120); 
     // lv_obj_align(roller, LV_ALIGN_CENTER, x_offset, y_offset);
 // #if LV_FONT_MONTSERRAT_22
     lv_obj_set_style_text_font(roller, &language24, LV_PART_SELECTED);   
@@ -195,7 +200,10 @@ static void roller_year_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             lv_obj_scroll_to_view(roller_year, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_year, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
             lv_get_cal_day_num(HL_DATE_YEAR,pos);
             hl_date_func(HL_DATE_YEAR,pos+2000);
         }else{      
@@ -214,7 +222,9 @@ static void roller_month_cb(lv_event_t * e)
             lv_obj_scroll_to_view(roller_month, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_month, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
             lv_get_cal_day_num(HL_DATE_MONTH,pos);
             hl_date_func(HL_DATE_MONTH,pos+1);
         }else{      
@@ -232,7 +242,9 @@ static void roller_day_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             lv_obj_scroll_to_view(roller_day, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_day, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
             hl_date_func(HL_DATE_DAY,pos+1);
         }else{      
@@ -250,6 +262,8 @@ static void roller_hour_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             lv_obj_scroll_to_view(roller_hour, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_hour, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
             hl_date_func(HL_DATE_HOUR,pos);
@@ -268,6 +282,9 @@ static void roller_min_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             lv_obj_scroll_to_view(roller_min, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_min, LV_OPA_COVER, LV_PART_MAIN);
+            lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_month,LV_EVENT_CLICKED,lock);
+            lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
             hl_date_func(HL_DATE_MIN,pos);
         }else{      
@@ -276,27 +293,35 @@ static void roller_min_cb(lv_event_t * e)
     } 
 }
 
+static void roller_timer(lv_timer_t * timer)
+{
+    if(timer_flag){
+        if(LV_ABS(ROLLER_YEAR - pos) < CENTER_ERR_RANGE){
+            lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
+        }
+        if(LV_ABS(ROLLER_MONTH - pos) < CENTER_ERR_RANGE){
+            lv_event_send(roller_month,LV_EVENT_CLICKED,ulock);
+        }
+        if(LV_ABS(ROLLER_DAY - pos) < CENTER_ERR_RANGE){
+            lv_event_send(roller_day,LV_EVENT_CLICKED,ulock);
+        }
+        if(LV_ABS(ROLLER_HOUR - pos) < CENTER_ERR_RANGE){
+            lv_event_send(roller_hour,LV_EVENT_CLICKED,ulock);
+        }
+        if(LV_ABS(ROLLER_MIN - pos) < CENTER_ERR_RANGE){
+            lv_event_send(roller_min,LV_EVENT_CLICKED,ulock);
+        }
+        timer_flag = 0;
+    }
+}
+
 static void roller_con_cb(lv_event_t * e)
 {
-    lv_coord_t pos = lv_obj_get_scroll_x(con);
-    switch(pos){
-        case ROLLER_YEAR:
-            lv_event_send(roller_year,LV_EVENT_CLICKED,ulock);
-            break;
-        case ROLLER_MONTH:
-            lv_event_send(roller_month,LV_EVENT_CLICKED,ulock);
-            break;
-        case ROLLER_DAY:
-            lv_event_send(roller_day,LV_EVENT_CLICKED,ulock);
-            break;
-        case ROLLER_HOUR:
-            lv_event_send(roller_hour,LV_EVENT_CLICKED,ulock);
-            break;
-        case ROLLER_MIN:
-            lv_event_send(roller_min,LV_EVENT_CLICKED,ulock);
-            break;
-        default:
-            break;
+    lv_event_code_t code = lv_event_get_code(e);
+    pos = lv_obj_get_scroll_x(con);
+    lv_timer_reset(timer);
+    if(code == LV_EVENT_SCROLL_END){
+        timer_flag = 1;
     }
 }
 
@@ -387,6 +412,7 @@ void hl_mod_date_ioctl(void * ctl_data)
             hl_opt_value_set(ptr->opt,ptr->param,LV_ANIM_ON,IOCTL_TYPE);
             break;
         case HL_DATE_EXTI_CMD:
+            lv_timer_del(timer);
             hl_obj_delete(lv_scr_act(),false);
             break;
         default:
@@ -397,9 +423,9 @@ void hl_mod_date_ioctl(void * ctl_data)
 
 void hl_mod_date_init(void * init_data)
 {
-    lv_date_init();
     if (!page_style_bit.page_date) {
         page_style_bit.page_date = 1;
+        lv_date_init();
         lv_style_page6_init();
     }
     
@@ -410,13 +436,14 @@ void hl_mod_date_init(void * init_data)
     con = lv_obj_create(lv_scr_act());
     lv_obj_add_style(con, &style_black, 0);
     lv_obj_set_scroll_dir(con,LV_DIR_HOR);
-    lv_obj_set_size(con,282,114);
+    lv_obj_set_size(con,282,120);
     lv_obj_align(con, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_flex_flow(con, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(con, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(con, LV_SCROLLBAR_MODE_OFF);   
-    lv_obj_add_event_cb(con, roller_con_cb, LV_EVENT_SCROLL_END, NULL);       
-    
+    lv_obj_add_event_cb(con, roller_con_cb, LV_EVENT_ALL, NULL);       
+    timer = lv_timer_create(roller_timer, ROLLER_TIMEOUT,  NULL);
+    lv_timer_set_repeat_count(timer, -1);
     roller_year = lv_creat_roller(con,roller_year_cb,date_year,10,0);
     roller_month = lv_creat_roller(con,roller_month_cb,date_month,20,0);
     roller_day = lv_creat_roller(con,roller_day_cb,date_day,20,0);

@@ -433,6 +433,36 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
     }
 }
 
+static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
+{
+    lv_obj_t * obj = NULL;
+    switch(icon_typ){
+        case HL_TOP_ICON_STEREO_MOD:        
+        case HL_TOP_ICON_SINGLE_MOD:
+        case HL_TOP_ICON_TRACK_MOD:
+            obj = icon_list_l[0].icon;
+            break;
+        case HL_TOP_ICON_NOISE:
+            obj = icon_list_l[1].icon;
+            break;
+        case HL_TOP_ICON_LOCK:
+            obj = icon_list_l[2].icon;
+            break;
+        case HL_TOP_ICON_LINEOUT:
+            obj = icon_list_r[0].icon;
+            break;
+        case HL_TOP_ICON_TYPEC:
+            obj = icon_list_r[1].icon;
+            break;
+        case HL_TOP_ICON_HEATSET:
+            obj = icon_list_r[2].icon;
+            break;
+        default:
+            break;
+    }
+    return obj;
+}
+
 void hl_mod_top_ioctl(void* ctl_data)
 {
     char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -463,6 +493,10 @@ void hl_mod_top_ioctl(void* ctl_data)
         case HL_TOP_BAT_COLOR_RED:
             lv_obj_remove_style(bat_bar,&style_power_bar_red_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            break;
+
+        case HL_TOP_GET_ICON_OBJ_CMD:
+            ptr->icon_obj = hl_mod_icon_obj(ptr->top_param);
             break;
 
         case HL_TOP_ALL_DEL:
