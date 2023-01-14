@@ -475,7 +475,7 @@
 /* HAL_DBG_ON is not set */
 /* RT_USING_SND_GLB_RST is not set */
 #define RT_USING_RESET
-/* RT_USING_CRU_DUMP is not set */
+#define RT_USING_CRU_DUMP
 /* RT_USING_REGULATOR_DUMP is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
