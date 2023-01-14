@@ -66,7 +66,9 @@ static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_
 
             // 如果没在盒子，直接退出到主页面
             if (new_state == BOX_CHARGE_RX_NOT) {
-                hl_mod_menu_goto_home_page();
+                // hl_mod_menu_goto_home_page();
+                PageManager_PageStackClear();
+                PageManager_PagePush(PAGE_LOGO);
             } else {
                 hl_lvgl_charge_ioctl_t ioctrl;
                 ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
@@ -407,7 +409,7 @@ static void hl_mod_page_exit(void)
     ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
     hl_mod_charge_ioctl(&ioctrl);
     hl_mod_page_inbox_screenoff_close();
-    hl_mod_page_screen_lowbritness_init();
+    // hl_mod_page_screen_lowbritness_init();
 }
 
 static void hl_mod_page_loop(void)
