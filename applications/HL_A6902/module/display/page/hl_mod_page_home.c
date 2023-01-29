@@ -635,7 +635,7 @@ static void hl_mod_page_home_tx2lowbat_deal(uint8_t batval)
     }
     hl_mod_main_ioctl(&data1);
     data1.tx_device_2.electric = batval;
-    data1.cmd                  = HL_CHANGE_TX1_ELEC;
+    data1.cmd                  = HL_CHANGE_TX2_ELEC;
     hl_mod_main_ioctl(&data1);
 }
 
