@@ -1,15 +1,36 @@
 /**
  * @file page_barset.c
- * @author your name (you@domain.com)
- * @brief 进度条UI实现函数
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 进度条相关实现函数
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_barset.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 LV_IMG_DECLARE(Main_stereo);//立体声
@@ -80,7 +101,7 @@ static void lv_style_barset_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_radius(&style_back, 3);
 
     lv_style_init(&style_indicator);
@@ -93,21 +114,6 @@ static void lv_style_barset_init(void)
     lv_style_set_text_opa(&style_label, LV_OPA_COVER);
     lv_style_set_text_color(&style_label, lv_color_white());
 }
-
-// static void hl_mod_barset_init(const void * src,const char * ptr1,int min,int max,int init_value,uint8_t top_icon)
-// {
-//     char buf[8] = {0,0,0,0,0,0,0,0};
-//     lv_style_barset_init();
-//     lv_snprintf(buf, sizeof(buf), "%d", init_value);
-//     slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,0,min,max,init_value,slider_event_cb1);
-//     img1 = lv_img_creat_fun(slider1,src,LV_ALIGN_LEFT_MID,10,0);
-//     lab1 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_LEFT,0,-4,ptr1);
-//     lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,0,-4,buf);
-
-//     if(top_icon){
-//         img2 = lv_img_creat_fun(lv_scr_act(),&Main_stereo,LV_ALIGN_TOP_LEFT,6,5);
-//     }
-// }
 
 static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 {
@@ -166,7 +172,7 @@ void hl_mod_barset_init(void * init_data)
     slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,30,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
     img1 = lv_img_creat_fun(slider1,ptr->src,LV_ALIGN_LEFT_MID,10,0);
     lab1 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_LEFT,0,-4,ptr->ptr);
-    lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,0,-4,buf);
+    lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,-6,-4,buf);
 
     switch(ptr->icontyp){
         case HL_NO_ICON:

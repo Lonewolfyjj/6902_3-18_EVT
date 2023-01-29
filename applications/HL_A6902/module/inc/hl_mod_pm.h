@@ -54,11 +54,13 @@ typedef enum _hl_mod_pm_ind_e
     HL_MIN_TEMP_ALERT_IND,
     /// 通知 app 当前的充电状态，参数为<hl_mod_pm_charge_state_e *>
     HL_CHARGE_STATE_IND,
+    /// 通知 app 当前处于极低电量状态，无参数
+    HL_ULTRA_LOWPOWER_IND,
 } hl_mod_pm_ind_e;
 
 typedef enum _hl_mod_pm_charge_state_e
 {
-    HL_CHARGE_STATE_UNKNOWN,
+    HL_CHARGE_STATE_UNKNOWN = 0,
     HL_CHARGE_STATE_NO_CHARGE,
     HL_CHARGE_STATE_CHARGING,
     HL_CHARGE_STATE_CHARGE_DONE,

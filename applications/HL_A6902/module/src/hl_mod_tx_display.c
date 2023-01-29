@@ -124,7 +124,7 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_UPDATE;
     } else if (_display_mod.net_mode == LED_NET_MODE_PAIR) {
         state = HL_DISPLAY_PAIR;
-    } else if (_display_mod.bat_soc <= 6) {
+    } else if (_display_mod.bat_soc <= 6 && _display_mod.charge_state != CHARGING) {
         state = HL_DISPLAY_LOWPOWER;
     } else if (_display_mod.mute_state == SWITCH_OPEN) {
         state = HL_DISPLAY_MUTE;
@@ -386,7 +386,7 @@ uint8_t hl_mod_display_deinit(void)
         rt_thread_mdelay(10);
     }
 
-    LOG_I("display display deinit success!");
+    LOG_I("display deinit success!");
 
     hl_drv_aw2016a_deinit();
 

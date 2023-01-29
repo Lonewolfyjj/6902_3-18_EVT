@@ -98,7 +98,7 @@ typedef enum _hl_drv_aw2016a_op
     HL_DRV_AW2016A_SET_LED_LIGHT_EFFECT,
     ///set aw2016a led channel pwm level, type of parameter is <hl_drv_aw2016a_pwm_level_st> pointer
     HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL,
-    ///dump aw2016a register value, type of parameter is <uint8_t> pointer
+    ///dump aw2016a register value, type of parameter is <RT_NULL> pointer
     HL_DRV_AW2016A_DUMP_REGISTER_VALUE,
 
     /*     用户功能     */

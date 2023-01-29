@@ -41,7 +41,7 @@
 
 /*自动升级功能 ,需要使用时置1*/
 /* Upgrade Method*/
-#define TOUCH_ONESHOT_UPGRADE		0
+#define TOUCH_ONESHOT_UPGRADE		1
 
 
 #define CHIP_OFF_DELAY			70	/*ms*/

@@ -1,4 +1,5 @@
 #include "hl_util_iap2_packet.h"
+// #include "rtthread.h"
 
 uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 {
@@ -68,14 +69,19 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
     }
 
     st_iap2_packet_header_t* ptr_header = (st_iap2_packet_header_t*)packet_header;
+    // rt_kprintf("\nctrl_byte[%d][%d]\n", ptr_header->ControlByte, ctrl_byte);
+    // rt_kprintf("seq_num[%d][%d]\n", ptr_header->PacketSeqNum, header_arg->seq_num);
+    // rt_kprintf("ack_num[%d][%d]\n", ptr_header->PacketAckNum, header_arg->ack_num);
 
-    if ((ptr_header->ControlByte & ctrl_byte) && (ptr_header->PacketAckNum == (header_arg->ack_num + 1))) {
+    if (!(ptr_header->ControlByte & ctrl_byte)) {
+        return -2;
+    } else if (ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
+        return -3;
+    } else {
         *packet_len            = ptr_header->PacketLength;
         header_arg->seq_num    = ptr_header->PacketSeqNum;
         header_arg->ack_num    = ptr_header->PacketAckNum;
         header_arg->session_id = ptr_header->SessionIdentif;
-    } else {
-        return -1;
     }
 
     return 0;
@@ -111,7 +117,9 @@ int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
     }
 
     st_iap2_ctrl_packet_t* ptr_packet = (st_iap2_ctrl_packet_t*)data_addr;
+
     uint16_t message_id = EXCHANGE_HIGH_LOW_BYTE(ptr_packet->ctrl_payload.MessageId);
+
     return message_id;
 }
 
@@ -136,6 +144,7 @@ int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
     st_iap2_ctrl_packet_t* ptr_packet = (st_iap2_ctrl_packet_t*)data_addr;
     return EXCHANGE_HIGH_LOW_BYTE(ptr_packet->ctrl_payload.ParamId);
 }
+
 int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t message_len, uint16_t message_id)
 {
     if (packet_payload == NULL) {
