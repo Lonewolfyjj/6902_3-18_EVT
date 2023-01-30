@@ -41,7 +41,7 @@ static hl_drv_usb_vendor_class_com_t* handle = NULL;
 static rt_err_t _hl_drv_usb_vendor_class_com_rx_ind(rt_device_t dev, rt_size_t size)
 {
 
-    rt_kprintf("_hl_drv_usb_vendor_class_com_rx_ind size: %d \n", size);
+    // rt_kprintf("_hl_drv_usb_vendor_class_com_rx_ind size: %d \n", size);
     if (size) {
         /*release the sem */
         rt_sem_release(handle->rx_notice);
@@ -94,21 +94,15 @@ uint8_t hl_drv_usb_vendor_class_com_init()
 
 uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len, uint16_t timeout)
 {
-    int     size   = rt_device_read(handle->device, 0, data, data_len);
-    int     ret    = rt_sem_take(handle->rx_notice, timeout);
-    uint8_t result = 0;
-    if (ret == 0) {
-        result = data_len;
-        // int i = 0;
-        // rt_kprintf("\r\n");
-        // for (i = 0; i < data_len; i++) {
-        //     rt_kprintf("%02x ", data[i]);
-        // }
-        // rt_kprintf("\r\n");
-    } else {
+    int size = rt_device_read(handle->device, 0, data, data_len);
+    int ret  = rt_sem_take(handle->rx_notice, timeout);
+
+    if (ret != 0) {
         rt_kprintf("read data error = %d\r\n", data_len);
+        return 0;
     }
-    return result;
+
+    return (uint8_t)size;
 }
 
 uint8_t hl_drv_usb_vendor_class_com_ioctl(uint8_t cmd, uint8_t* data, uint16_t len)

@@ -129,7 +129,7 @@ typedef struct
 
 /* define --------------------------------------------------------------------*/
 #define HL_UTIL_HUP_DBG rt_kprintf
-#define HUP_MAX_TIMEOUT 10000
+#define HUP_MAX_TIMEOUT 500
 
 #define HUP_FRAME_HOST_HDR_H 0xAA
 #define HUP_FRAME_HOST_HDR_L 0xDD

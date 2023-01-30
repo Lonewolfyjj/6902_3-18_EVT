@@ -1266,16 +1266,30 @@ err:
 }
 #endif
 
-// 设置声卡增益
-static void hl_mod_audio_set_codec_gain(int dB, uint8_t ch)
+
+/***
+ * 设置声卡增益
+ * int gain; ///< The current dB and scaled 1000 times for interger handing. 
+ * uint8_t ch; ///< The specified channel for PGA(1) or Volume(0)  dB. 
+ * uint8_t sound_ch; ///< codec sound channel device 0=L&R 1=L 2=R.
+ * uint8_t device; ///< codec device 0~255.  default is 0
+***/
+static void hl_mod_audio_set_codec_gain(int gain, uint8_t ch, uint8_t sound_ch, uint8_t device)
 {
-    int8_t ret = 0;
-    struct AUDIO_DB_CONFIG db_config = {0};
+    int8_t                   ret       = 0;
+    struct AUDIO_GAIN_CONFIG db_config = { 0 };
 
-    db_config.dB = dB;
-    db_config.ch = ch;
+    db_config.gain     = gain;
+    db_config.ch       = ch;
+    db_config.sound_ch = sound_ch;
+    db_config.device   = device;
 
-    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    LOG_E("set gain (%d)", gain);
+#if HL_IS_TX_DEVICE()
+    ret = rt_device_control(cap_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
+#else
+    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
+#endif
     if (ret != RT_EOK) {
         LOG_E("fail to set gain\n");
         return -RT_ERROR;
@@ -1315,8 +1329,9 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
 static void hl_mod_audio_set_mute(uint8_t mute)
 {
     int8_t ret = 0;
+    uint32_t mute_32 = mute;
 
-    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute_32, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mute");
         return -RT_ERROR;
@@ -2073,6 +2088,12 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
             break;
+        case HL_AUDIO_SET_MIC_GAIN_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            break;
+        case HL_AUDIO_SET_MIC_PGA_GAIN_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            break;
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
@@ -2161,7 +2182,30 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
             break;
-
+        case HL_AUDIO_SET_CAM_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_PGA_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_HP_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            break;
+        case HL_AUDIO_SET_HP_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;    
+        case HL_AUDIO_SET_HP_PGA_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            break;
+        case HL_AUDIO_SET_HP_PGA_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;               
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;

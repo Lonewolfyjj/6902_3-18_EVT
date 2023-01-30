@@ -143,17 +143,29 @@ const struct audio_card_desc rk_board_audio_cards[] =
     },
 #endif
 
+    // {
+    //     .name = "codechp",
+    //     .dai = I2STDM0,
+    //     .codec = (void *) &codec_nau88l25b_hp,
+    //     .capture = false,
+    //     .playback = true,
+    //     .mclkfs = 256,
+    //     .format = AUDIO_FMT_I2S,
+    //     .trcm_mode = TRCM_TXONLY,//,
+    // },
 
     {
         .name = "codec",
         .dai = I2STDM0,
         .codec = (void *) &codec_nau88l25b,
+        .codechp = (void *) &codec_nau88l25b_hp,
         .capture = false,
         .playback = true,
         .mclkfs = 256,
         .format = AUDIO_FMT_I2S,
         .trcm_mode = TRCM_TXONLY,//,
-    },
+    },    
+
     {
         .name = "wifi",
         .dai = I2STDM1,

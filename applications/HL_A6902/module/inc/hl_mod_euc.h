@@ -72,6 +72,8 @@ typedef enum _hl_mod_euc_cmd_e
 {
     /// 设置设备电量，参数为<uint8_t *>
     HL_SET_SOC_CMD,
+    /// 设置设备配对Mac地址，参数为<uint8_t[12]>
+    HL_SET_PAIR_MAC_CMD,
     /// 设置设备Mac地址，参数为<uint8_t[6]>
     HL_SET_MAC_CMD,
     /// 开启Tx1配对，回复收纳盒开始配对，无参数
@@ -110,6 +112,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_SET_PAIR_MAC_TX2_REQ_IND,
     /// 请求 app 获取设备mac地址，无参数。
     HL_GET_MAC_REQ_IND,
+    /// 请求 app 获取设备配对的mac地址，无参数。
+    HL_GET_PAIR_MAC_REQ_IND,
     /// 通知 app 开始Tx1的有线配对，无参数。
     HL_TX1_PAIR_START_IND,
     /// 通知 app 开始Tx2的有线配对，无参数。
@@ -136,8 +140,8 @@ typedef enum _hl_mod_euc_ind_e
 
 typedef enum _hl_mod_euc_box_lid_state_e
 {
-    HL_MOD_EUC_BOX_LID_CLOSE = 0,
-    HL_MOD_EUC_BOX_LID_OPEN,
+    HL_MOD_EUC_BOX_LID_OPEN = 0,
+    HL_MOD_EUC_BOX_LID_CLOSE,
 } hl_mod_euc_box_lid_state_e;
 
 typedef enum _hl_mod_euc_charge_state_e

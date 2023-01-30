@@ -984,7 +984,6 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 static int dsp_io_ctrol(int argc, char** argv)
 {
     if (argc < 4) {
-        HL_DRV_DSP_LOG("error param too few\r\n");
         return -1;
     }
 

@@ -26,6 +26,14 @@
 
 /* typedef -------------------------------------------------------------------*/
 
+typedef enum _iap_result_e
+{
+    /// 返回认证结果：成功
+    IAP2_SUCCEED = 0x00,
+    /// 返回认证结果：失败
+    IAP2_FAILED = 0x01,
+} iap2_result_e;
+
 typedef struct _iap2_func_handle_
 {
     /// 延时函数
