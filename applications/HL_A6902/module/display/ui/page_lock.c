@@ -108,7 +108,9 @@ static void lock_timer(lv_timer_t * timer)
 {
     if(lock_flag){
         lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
-        lock_flag = 0;
+    }else{
+        lv_timer_del(timer);
+        hl_obj_delete(area,true);
     }
 }
 
@@ -119,8 +121,7 @@ static void lock_cb(lv_event_t * e)
     if(code == LV_EVENT_CLICKED) {
         lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
         lv_timer_reset(timer);
-        lock_flag = 1;
-    }    
+    } 
 }
 
 typedef void (* anim_start)(void);
@@ -256,43 +257,63 @@ static void hl_mod_lock_init(void)
         lv_lock_style_init();
         page_style_bit.page_lock = 1;
     }    
-    area = lv_area_creat_fun(LV_ALIGN_CENTER,lock_cb,0,0,294,126);
-    img_lock = lv_lock_img_creat_fun(area,&Other_lock,0,0,IMG_ROOM_MAX);
-    img_unlock = lv_lock_img_creat_fun(area,&Other_unlock,0,0,IMG_ROOM_MAX);
-    timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
+    if(lock_flag == 0){
+        area = lv_area_creat_fun(LV_ALIGN_CENTER,lock_cb,0,0,294,126);
+        img_lock = lv_lock_img_creat_fun(area,&Other_lock,0,0,IMG_ROOM_MAX);
+        img_unlock = lv_lock_img_creat_fun(area,&Other_unlock,0,0,IMG_ROOM_MAX);
+        lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
+        lock_flag = 1;
+    }    
 } 
+
+static void hl_mod_lock_deinit(void)
+{
+    if(lock_flag == 1){
+        lv_obj_clear_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_event_cb(area,lock_cb);
+        lv_timer_reset(timer);
+        lock_flag = 0;
+    }
+}
 
 void hl_mod_lock_ioctl(void * ctl_data)
 {
     hl_lvgl_lock_ioctl_t * ptr = (hl_lvgl_lock_ioctl_t *)ctl_data;
     switch(ptr->cmd){
-        case HL_LOCK_ICON_SHOW:
-            lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
-            lv_timer_reset(timer);
-            lock_flag = 1;
+        case HL_LOCK_STATUS_INTO:
+            hl_mod_lock_init();
             break;
-        case HL_LOCK_ICON_HIDE:
-            lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        case HL_LOCK_STATUS_BACK:
+            hl_mod_lock_deinit();
             break;
-
-        case HL_UNLOCK_ICON_SHOW:
-            lv_obj_clear_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
-            break;
-        case HL_UNLOCK_ICON_HIDE:
-            lv_obj_add_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
+        case HL_LOCK_ICON_FRONT:
+            if(lock_flag == 1){
+                lv_obj_move_foreground(area);
+            }
             break;
         case HL_LOCK_ICON_ANIM:
             lv_lock_icon_anmi_init(ptr->icon_obj,ptr->icon_typ);
-            break;
-
-        case HL_LOCK_PAGE_INIT:
-            hl_mod_lock_init();
-            break;
-        case HL_LOCK_PAGE_EXIT:
-            lv_timer_del(timer);
-            hl_obj_delete(area,true);
             break;
         default:
             break;
     }    
 }
+
+void page_lock_test_ctl(int argc, char** argv)
+{
+	hl_lvgl_lock_ioctl_t tmp;
+	if (!strcmp("lock", argv[1])) {
+        tmp.cmd = HL_LOCK_STATUS_INTO;
+        hl_mod_lock_ioctl(&tmp);
+    }else if (!strcmp("unlock", argv[1])){
+        tmp.cmd = HL_LOCK_STATUS_BACK;
+        hl_mod_lock_ioctl(&tmp);
+	}else if (!strcmp("front", argv[1])){
+        tmp.cmd = HL_LOCK_ICON_FRONT;
+        hl_mod_lock_ioctl(&tmp);
+	}
+}
+
+MSH_CMD_EXPORT(page_lock_test_ctl, run page_lock_test_ctl);
