@@ -860,10 +860,6 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_START_DSP, NULL, 0);
 
-    // 关闭降噪
-    val = 0;
-    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
-
 #if HL_IS_TX_DEVICE()
     memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
     memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
@@ -1045,9 +1041,18 @@ static void _hl_cap2play_thread_entry(void* arg)
         hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
     }
 
+    hl_drv_rk_xtensa_dsp_transfer();
 #endif
     hl_mod_audio_codec_buff_clear(&play_info);
     hl_mod_audio_codec_buff_clear(p_card_param);    
+
+#if HL_IS_TX_DEVICE()
+    // 关闭降噪
+    uint8_t 
+    val = 0;
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
+    hl_drv_rk_xtensa_dsp_transfer();
+#endif
 
     while (cap2play_thread_flag != 0) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
@@ -1235,7 +1240,7 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         }
 
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 100) {                
+        if (s_vu_en++ == 5) {                
             s_vu_en = 0;    
             hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
         }       
@@ -1261,16 +1266,30 @@ err:
 }
 #endif
 
-// 设置声卡增益
-static void hl_mod_audio_set_codec_gain(int dB, uint8_t ch)
+
+/***
+ * 设置声卡增益
+ * int gain; ///< The current dB and scaled 1000 times for interger handing. 
+ * uint8_t ch; ///< The specified channel for PGA(1) or Volume(0)  dB. 
+ * uint8_t sound_ch; ///< codec sound channel device 0=L&R 1=L 2=R.
+ * uint8_t device; ///< codec device 0~255.  default is 0
+***/
+static void hl_mod_audio_set_codec_gain(int gain, uint8_t ch, uint8_t sound_ch, uint8_t device)
 {
-    int8_t ret = 0;
-    struct AUDIO_DB_CONFIG db_config = {0};
+    int8_t                   ret       = 0;
+    struct AUDIO_GAIN_CONFIG db_config = { 0 };
 
-    db_config.dB = dB;
-    db_config.ch = ch;
+    db_config.gain     = gain;
+    db_config.ch       = ch;
+    db_config.sound_ch = sound_ch;
+    db_config.device   = device;
 
-    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_SET_GAIN, &db_config);
+    LOG_E("set gain (%d)", gain);
+#if HL_IS_TX_DEVICE()
+    ret = rt_device_control(cap_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
+#else
+    ret = rt_device_control(play_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
+#endif
     if (ret != RT_EOK) {
         LOG_E("fail to set gain\n");
         return -RT_ERROR;
@@ -1310,8 +1329,9 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
 static void hl_mod_audio_set_mute(uint8_t mute)
 {
     int8_t ret = 0;
+    uint32_t mute_32 = mute;
 
-    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute_32, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mute");
         return -RT_ERROR;
@@ -1753,6 +1773,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
     rt_uint32_t         count_vu = 0;
     int16_t s_vu_l = 0;
     int16_t s_vu_r = 0;
+    static float show_vu_pre_cal = 118 / 187;
 
     LOG_D("audio ctrl thread run");
     while (1) {
@@ -1787,7 +1808,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if((count_vu % 1 == 0) && (count_vu != 26)) { 
+        if((count_vu % 1 == 0) && (count_vu != 11)) { 
             if (dsp_config->vu_l > s_vu_l){
                 s_vu_l = dsp_config->vu_l;
             }
@@ -1795,11 +1816,15 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 25) {    
+        if(count_vu >= 10) {    
             count_vu = 0;                         
-            if (NULL != dsp_config) {   
-                hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL, (s_vu_l<-118)?0:s_vu_l+118);//(s_vu_l<-187)?0:s_vu_l+187);
-                hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL, (s_vu_r<-118)?0:s_vu_r+118);//(s_vu_r<-187)?0:s_vu_r+187);
+            if (NULL != dsp_config) {
+                s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
+                s_vu_r = (s_vu_r < -70) ? 0 : s_vu_r + 70;
+                hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL,
+                                      118 * s_vu_l / 70);  //(s_vu_l<-187)?0:s_vu_l+187);
+                hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL,
+                                      118 * s_vu_r / 70);  //(s_vu_r<-187)?0:s_vu_r+187);
                 s_vu_l = -187;
                 s_vu_r = -187;
                 //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
@@ -1869,7 +1894,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id   = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 512, 10, 5);
+    audio_ctrl_thread_id   = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 1024, 10, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
@@ -2063,6 +2088,12 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
             break;
+        case HL_AUDIO_SET_MIC_GAIN_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            break;
+        case HL_AUDIO_SET_MIC_PGA_GAIN_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            break;
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
@@ -2151,7 +2182,30 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
             break;
-
+        case HL_AUDIO_SET_CAM_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_CAM_PGA_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            break;
+        case HL_AUDIO_SET_HP_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            break;
+        case HL_AUDIO_SET_HP_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;    
+        case HL_AUDIO_SET_HP_PGA_GAIN_L_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            break;
+        case HL_AUDIO_SET_HP_PGA_GAIN_R_CMD:
+            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;               
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;

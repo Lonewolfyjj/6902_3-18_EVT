@@ -41,8 +41,9 @@
 /* Exported functions --------------------------------------------------------*/
 #define LOWBAT_THRESHOLD 8
 // static hl_icon_status icon_state = {0};
-static hl_top_cmd_t  icon_state[HL_TOP_ICON_CNT] = { 0 };
-static hl_rf_state_e main_tx;
+static hl_top_cmd_t              icon_state[HL_TOP_ICON_CNT] = { 0 };
+static hl_rf_state_e             main_tx;
+static hl_display_sound_module_e sound_module = MONO;
 
 static void            hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
 static void            hl_mod_icon_deal_init();
@@ -58,6 +59,32 @@ static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
 static void            hl_mod_page_home_tx1lowbat_deal(uint8_t batval);
 static void            hl_mod_page_home_tx2lowbat_deal(uint8_t batval);
 static void            hl_mod_page_home_rxlowbat_deal(uint8_t batval);
+
+static int16_t hl_mod_lineout_volume_get(hl_display_screen_s* data_ptr, uint8_t channl)
+{
+    int16_t volume_back = 0;
+
+    switch (sound_module) {
+        case STEREO:
+            //左声道
+            if (!channl) {
+                volume_back = data_ptr->tx1_line_out_volume;
+            } else {
+                //右声道
+                volume_back = data_ptr->tx2_line_out_volume;
+            }
+            break;
+        case MONO:
+            volume_back = data_ptr->mono_line_out_volume;
+            break;
+        case SAFE_TRACK:
+            volume_back = data_ptr->track_line_out_volume;
+            break;
+        default:
+            break;
+    }
+    return volume_back;
+}
 
 // 添加是 1  删除是 0
 static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal)
@@ -115,15 +142,14 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
             data.tx_device_1.electric       = data_ptr->tx1_bat_val;
-            data.tx_device_1.line_out_value = 0;
-            rt_kprintf("tx1_gain_volume = %d\n",data_ptr->tx1_gain_volume);
+            data.tx_device_1.line_out_value = hl_mod_lineout_volume_get(data_ptr, 0);
             data.tx_device_1.tx_gain        = data_ptr->tx1_gain_volume;
             data.tx_device_1.signal         = hl_mod_page_signal_deal(data_ptr->tx1_signal);
             data.tx_device_1.record         = data_ptr->sys_status.tx1_record_state;
             data.tx_device_1.volume         = data_ptr->tx1_vu;
 
             data.tx_device_2.electric       = data_ptr->tx2_bat_val;
-            data.tx_device_2.line_out_value = 0;
+            data.tx_device_2.line_out_value = hl_mod_lineout_volume_get(data_ptr, 1);
             data.tx_device_2.tx_gain        = data_ptr->tx2_gain_volume;
             data.tx_device_2.signal         = hl_mod_page_signal_deal(data_ptr->tx2_signal);
             data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
@@ -134,7 +160,7 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.display_tx_device = HL_DISPLAY_TX2;
 
             data.tx_device_2.electric       = data_ptr->tx2_bat_val;
-            data.tx_device_2.line_out_value = data_ptr->tx2_line_out_volume;
+            data.tx_device_2.line_out_value = hl_mod_lineout_volume_get(data_ptr, 1);
             data.tx_device_2.tx_gain        = data_ptr->tx2_gain_volume;
             data.tx_device_2.signal         = hl_mod_page_signal_deal(data_ptr->tx2_signal);
             data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
@@ -145,7 +171,7 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.display_tx_device = HL_DISPLAY_TX1;
 
             data.tx_device_1.electric       = data_ptr->tx1_bat_val;
-            data.tx_device_1.line_out_value = data_ptr->tx1_line_out_volume;
+            data.tx_device_1.line_out_value = hl_mod_lineout_volume_get(data_ptr, 0);
             data.tx_device_1.tx_gain        = data_ptr->tx1_gain_volume;
             data.tx_device_1.signal         = hl_mod_page_signal_deal(data_ptr->tx1_signal);
             data.tx_device_1.record         = data_ptr->sys_status.tx1_record_state;
@@ -402,8 +428,8 @@ static void hl_mod_main_tx_deal_deinit()
 
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
 {
-    uint8_t signal;
-    signal = data / 25;
+    uint8_t signal = 0;
+    signal         = data / 25;
     if (data % 25) {
         signal += 1;
     }
@@ -435,15 +461,27 @@ static void hl_mod_page_top_init(void)
 {
     hl_display_sound_module_e now;
     hl_lvgl_top_init_t        top_init;
-
-    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_lvgl_top_ioctl_t       ioctrl;
+    hl_display_screen_s*      data_ptr = hl_mod_page_get_screen_data_ptr();
 
     // 更新当前的RX电量信息
     top_init.electric_top = data_ptr->rx_bat_val;
     hl_mod_top_init(&top_init);
 
-    now = data_ptr->now_sound_module;
+    if (data_ptr->sys_status.rx_charge_status) {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_GREEN;
+    } else if (data_ptr->sys_status.rx_charge_status == 0 && top_init.electric_top > LOWBAT_THRESHOLD) {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
+    } else if (data_ptr->sys_status.rx_charge_status == 0 && top_init.electric_top <= LOWBAT_THRESHOLD) {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
+    } else {
+        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
+    }
 
+    hl_mod_top_ioctl(&ioctrl);
+
+    now          = data_ptr->now_sound_module;
+    sound_module = now;
     switch (now) {
         case STEREO:
             hl_mod_icon_deal(HL_TOP_ICON_STEREO_MOD, HL_TOP_ADD_ICON_CMD);
@@ -497,9 +535,27 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
         hl_mod_top_ioctl(&ioctl_top);
 
         hl_mod_page_home_rxlowbat_deal(ioctl_top.electric_top);
+        if (now->sys_status.rx_charge_status == 1) {
+            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_GREEN;
+            hl_mod_top_ioctl(&ioctl_top);
+        }
     }
-    // 降噪一起的
 
+    // 充电状态下显示电量柱为绿色
+    if (flag->sys_status.rx_charge_status) {
+        hl_mod_display_mux_take();
+        flag->sys_status.rx_charge_status = 0;
+        if (now->sys_status.rx_charge_status == 1) {
+            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_GREEN;
+        } else {
+            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_WHITE;
+        }
+        hl_mod_display_mux_release();
+        hl_mod_top_ioctl(&ioctl_top);
+
+    }
+
+    // 降噪一起的
     if (flag->sys_status.tx1_noise || flag->sys_status.tx2_noise) {
 
         if (now->sys_status.tx1_noise || now->sys_status.tx2_noise) {
@@ -564,6 +620,7 @@ static void hl_mod_page_home_tx1lowbat_deal(uint8_t batval)
     data1.tx_device_1.electric = batval;
     data1.cmd                  = HL_CHANGE_TX1_ELEC;
     hl_mod_main_ioctl(&data1);
+
 }
 
 static void hl_mod_page_home_tx2lowbat_deal(uint8_t batval)
@@ -592,6 +649,7 @@ static void hl_mod_page_home_rxlowbat_deal(uint8_t batval)
     } else if (batval >= LOWBAT_THRESHOLD) {
         ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
     }
+
     hl_mod_top_ioctl(&ioctrl);
 
     ioctrl.top_cmd      = HL_TOP_BAT_VAL;
@@ -610,6 +668,7 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data1);
         hl_mod_page_home_tx1lowbat_deal(data1.tx_device_1.electric);
+        LOG_I("tx1 batval = %d\n", data1.tx_device_1.electric);
     }
 
     if (flag->tx1_signal) {
@@ -619,6 +678,7 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
         data1.tx_device_1.signal = hl_mod_page_signal_deal(now->tx1_signal);
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data1);
+        // LOG_I("tx1 signal = %d\n",data1.tx_device_1.signal);
     }
 
     //vu值
@@ -741,8 +801,9 @@ static void hl_mod_page_setup(void)
     // hl_mod_main_two_init();
     main_tx = data_ptr->rf_net_connect;
     hl_mod_icon_deal_init();
-    hl_mod_main_tx_deal_init(data_ptr);
     hl_mod_page_top_init();
+    hl_mod_main_tx_deal_init(data_ptr);
+
     // hl_mod_page_home_update();
 }
 

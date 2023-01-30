@@ -50,7 +50,7 @@
 #include <rtdbg.h>
 
 #define DISPLAY_THREAD_PRIORITY 20
-#define DISPLAY_THREAD_STACK_SIZE 20480
+#define DISPLAY_THREAD_STACK_SIZE 40960
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -73,10 +73,11 @@ static void hl_mod_screen_rot_scan(void);
 static void hl_mod_display_get_sn_version(void)
 {
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
-    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    // hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
     char rx_ver_buf[10] = { 0 };
+
 
     // 从NVRAM获取当前RX版本号
     if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
@@ -86,6 +87,8 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->sn, sn_buf, sizeof(sn_buf));
         hl_mod_display_mux_release();
     }
+    // 先用默认的，后面NVRAM功能开发好了就用NVRAM的
+#if 0
     if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
         rt_kprintf("disp HL_VER : %s\r\n", rx_ver_buf);
 
@@ -93,6 +96,7 @@ static void hl_mod_display_get_sn_version(void)
         rt_memcpy(data_ptr->rx_ver, rx_ver_buf, sizeof(rx_ver_buf));
         hl_mod_display_mux_release();
     }
+#endif 
 }
 
 static device_pose_t hl_mod_device_pose_val(void)
@@ -313,10 +317,25 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->in_box_state = data;
             flag->in_box_state   = 1;
         } break;
+        case AUTO_RECORD_SWITCH_CMD: {
+            hl_display_low_cut_e data      = *(uint8_t*)ptr;
+            data_p->sys_status.auto_record = data;
+            flag->sys_status.auto_record   = 1;
+        } break;
         case AUTO_RECORD_PORTECT_SWITCH_CMD: {
             uint8_t data                           = *(uint8_t*)ptr;
             data_p->sys_status.auto_record_portect = data;
             flag->sys_status.auto_record_portect   = 1;
+        } break;
+        case POWEROFF_SET_VAL_CMD: {
+            uint8_t data          = *(uint8_t*)ptr;
+            data_p->auto_poweroff = data;
+            flag->auto_poweroff   = 1;
+        } break;
+        case LED_BRITNESS_VAL_CMD: {
+            uint8_t data         = *(uint8_t*)ptr;
+            data_p->led_britness = data;
+            flag->led_britness   = 1;
         } break;
         case RX_RF_STATE_VAL_CMD: {
             uint8_t data           = *(uint8_t*)ptr;
@@ -407,6 +426,33 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             rt_memcpy(data_p->sn, buf, len);
             flag->rx_sn = 1;
         } break;
+        case TX1_REMAINED_RECORD_TIME_VAL_CMD: {
+            uint8_t data                     = *(char*)ptr;
+            data_p->tx1_remained_record_time = data;
+            flag->tx1_remained_record_time   = 1;
+            LOG_D("TX1_REMAINED_RECORD_TIME_VAL_CMD=%d\n", data_p->tx1_remained_record_time);
+        } break;
+        case TX2_REMAINED_RECORD_TIME_VAL_CMD: {
+            uint8_t data                     = *(char*)ptr;
+            data_p->tx2_remained_record_time = data;
+            flag->tx2_remained_record_time   = 1;
+            LOG_D("TX2_REMAINED_RECORD_TIME_VAL_CMD=%d\n", data_p->tx2_remained_record_time);
+        } break;
+        case SOUNDOUT_SETTING_SWITCH_CMD: {
+            uint8_t data                        = *(char*)ptr;
+            data_p->sys_status.soundout_setting = data;
+            flag->sys_status.soundout_setting   = 1;
+        } break;
+        case SCREEN_OFF_STATUS_SWITCH_CMD: {
+            uint8_t data                          = *(char*)ptr;
+            data_p->sys_status.lowbrightness_flag = data;
+            flag->sys_status.lowbrightness_flag   = 1;
+        } break;
+        case IN_BOX_CAP_STATE_SWITCH_CMD:{
+            uint8_t data                          = *(char*)ptr;
+            data_p->sys_status.screen_off_status = data;
+            flag->sys_status.screen_off_status   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -428,7 +474,8 @@ static void hl_mod_display_task(void* param)
         hl_mod_display_upgrade_enter();
         hl_mod_outbox_offcharge_scan();
         hl_mod_page_goto_box_scan();
-        
+
+        hl_mod_page_screen_lowbritness_scan();
         PageManager_Running();
         // rt_thread_mdelay(RTHEAD_DELAY_TIME);
         lv_task_handler();
@@ -441,6 +488,7 @@ uint8_t hl_mod_display_deinit(void)
     if (display_tid != RT_NULL) {
         rt_thread_delete(display_tid);
     }
+    hl_mod_page_screen_lowbritness_deinit();
     hl_drv_aw2016a_deinit();
     hl_drv_rm690a0_deinit();
 
@@ -459,9 +507,9 @@ uint8_t hl_mod_display_init(void* display_msq)
     lvgl2rtt_init();
 
     hl_mod_page_all_init();
-    
+
     hl_mod_display_mux_init();
-    
+
     hl_drv_qma6100p_init();
 
     hl_mod_display_get_sn_version();

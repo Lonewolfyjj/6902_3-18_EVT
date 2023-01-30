@@ -190,6 +190,10 @@ typedef enum _hl_screen_page_e
     PAGE_QUICK_SETTINGS,
     /// 配对中页面
     PAGE_PARING,
+    /// 格式化确定对话框
+    PAGE_FORMAT,
+    /// 外放设置页面
+    PAGE_SOUNDOUT_SETTING,
     ///  页面总数
     PAGE_MAX,  
 
@@ -355,11 +359,15 @@ typedef enum _hl_out_msg_e
     /// 系统时间设置 <hl_display_systime_s>
     SYSTIME_SET_VAL_IND,
 
-    /// 自动关机模式 见 uint32_t 单位min  0表示永不关机目前只有15和30min两个选项
+    /// 自动关机模式设置 <uint16_t> 单位min  0：永不关机；非0：自动关机时间(单位为min)
+    /// 目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_IND,
 
     ///配对 uint8_t 0:取消配对 1：进行配对
     DEVICE_PAIR_IND,
+
+    /// 声音外放设置 1：开启外放；0：关闭外放
+    SOUNDOUT_SETTING_SWITCH_IND,
 
     IND_CNT,
 
@@ -413,7 +421,7 @@ typedef enum _hl_cmd_e
     TX2_MUTE_SWITCH_SWITCH_CMD,
 
 
-    /// 重新开始熄屏计数 设置 （无参数）
+    /// 重新开始熄屏计数 1:表示重新开始熄屏计数
     SCREEN_OFF_STATUS_SWITCH_CMD,
 
     /// 放入盒子状态  < hl_display_box_charge_state>
@@ -515,11 +523,15 @@ typedef enum _hl_cmd_e
     ///  系统时间设置 <hl_display_systime_s> 
     SYSTIME_SET_VAL_CMD,
 
-    /// 自动关机模式设置 见 uint32_t 单位min  0表示永不关机，目前原型自动关机只有15和30min两个选项
+    /// 自动关机模式设置 <uint16_t> 单位min  0：永不关机；非0：自动关机时间(单位为min)
+    /// 目前原型自动关机只有15和30min两个选项
     POWEROFF_SET_VAL_CMD,
 
     /// 关机充电 页面 <hl_display_out_box_charge_state> 1 表示进入充电页面  2表示进入LOGO页面 0表示不进入任何页面
     OUT_BOX_CHARGER_SWITCH_CMD,
+
+    /// 声音外放设置 1：开启外放；0：关闭外放
+    SOUNDOUT_SETTING_SWITCH_CMD,
 
     MSG_ID_CNT
     
