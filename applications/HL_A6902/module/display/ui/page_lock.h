@@ -62,6 +62,18 @@ typedef enum _hl_lock_icon_t
     HL_LOCK_ICON_LOCK,
 }hl_lock_icon_t;
 
+/// @brief 图标状态枚举
+typedef enum _hl_lvgl_lock_sta_t
+{
+    /// @brief 锁屏图标消失
+    HL_LOCK_STATUS_HIDE = 0,
+    /// @brief 解锁图标消失
+    HL_UNLOCK_STATUS_HIDE,
+}hl_lvgl_lock_sta_t;
+
+/// @brief 回调函数
+typedef void(*hl_lock_event_cb)(hl_lvgl_lock_sta_t);
+
 /// @brief 控制结构体
 typedef struct __hl_lvgl_lock_ioctl_t
 {
@@ -69,6 +81,8 @@ typedef struct __hl_lvgl_lock_ioctl_t
     hl_lock_icon_t icon_typ;
     /// @brief 图标对象
     lv_obj_t * icon_obj;
+    /// @brief 回调函数
+    hl_lock_event_cb lock_event_cb;
     /// @brief 命令
     hl_lvgl_lock_cmd_t cmd;
 }hl_lvgl_lock_ioctl_t;

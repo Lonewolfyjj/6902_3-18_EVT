@@ -52,6 +52,8 @@ static lv_timer_t * timer;
 
 static uint8_t lock_flag = 0;
 
+static hl_lock_event_cb page_lock_cb;
+
 static lv_obj_t * lv_lock_img_creat_fun(lv_obj_t *align_obj,const void * src,lv_coord_t x_offset,lv_coord_t y_offset,uint16_t zoom)
 {
     lv_obj_t * img = lv_img_create(align_obj);
@@ -108,9 +110,11 @@ static void lock_timer(lv_timer_t * timer)
 {
     if(lock_flag){
         lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        page_lock_cb(HL_LOCK_STATUS_HIDE);
     }else{
         lv_timer_del(timer);
         hl_obj_delete(area,true);
+        page_lock_cb(HL_UNLOCK_STATUS_HIDE);
     }
 }
 
@@ -283,6 +287,7 @@ void hl_mod_lock_ioctl(void * ctl_data)
     hl_lvgl_lock_ioctl_t * ptr = (hl_lvgl_lock_ioctl_t *)ctl_data;
     switch(ptr->cmd){
         case HL_LOCK_STATUS_INTO:
+            page_lock_cb = ptr->lock_event_cb;
             hl_mod_lock_init();
             break;
         case HL_LOCK_STATUS_BACK:
@@ -301,9 +306,15 @@ void hl_mod_lock_ioctl(void * ctl_data)
     }    
 }
 
+static void page_lock_test_cb(hl_lvgl_lock_sta_t sta)
+{
+    ///
+}
+
 void page_lock_test_ctl(int argc, char** argv)
 {
 	hl_lvgl_lock_ioctl_t tmp;
+    tmp.lock_event_cb = page_lock_test_cb;
 	if (!strcmp("lock", argv[1])) {
         tmp.cmd = HL_LOCK_STATUS_INTO;
         hl_mod_lock_ioctl(&tmp);
