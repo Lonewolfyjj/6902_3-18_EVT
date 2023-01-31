@@ -100,7 +100,7 @@ void hl_app_disp_state_led_set(void)
     } else {
         mute_ctrl = SWITCH_OPEN;
     }
-    hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));  
+    hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));
 }
 
 #else
@@ -108,7 +108,7 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
 {
     uint8_t        ret     = 0;
     static uint8_t channel = 0;
-      
+
     switch (rx_info.rf_state) {
         case HL_RF_UNCONNECT:
             channel = 0x00;
@@ -134,13 +134,16 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
             LOG_D("already connecting\r\n");
             break;
     }
-    
+
     return ret;
 }
 
-void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
+void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
 {
-    hl_rf_bypass_value_t telink_bypass = { 0 };
+    uint32_t                  ptr;
+    hl_display_sound_module_e sound_module;
+    hl_rf_bypass_value_t      telink_bypass = { 0 };
+
     switch (p_msg->cmd) {
         case RESTORE_SET_SWITCH_IND:
             // TBD: 恢复NVRAM的值并重启？
@@ -155,6 +158,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
             LOG_D("AUTO_RECORD_PORTECT_SWITCH_IND\r\n");
             break;
         case SOUND_MODULE_SET_IND:
+            ptr          = (uint32_t)p_msg->param.u32_param;
+            sound_module = (hl_display_sound_module_e)ptr;
+            sound_module = (sound_module == 1 ? 0 : 1);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIX_SWITCH_CMD, &sound_module, 1);
             // TBD: 音频模块控制声道模式
             LOG_D("SOUND_MODULE_SET_IND\r\n");
             break;
@@ -274,6 +281,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
             break;
         case LED_BRITNESS_VAL_IND:
             // TBD: 透传通道给TX发出LED亮度调节命令
+            hl_mod_telink_ioctl(HL_RF_BYPASS_STATUS_LED_CMD, &rx_info.tx_led_britness, sizeof(uint8_t));
             LOG_D("LED_BRITNESS_VAL_IND\r\n");
             break;
         case SYSTIME_SET_VAL_IND:
