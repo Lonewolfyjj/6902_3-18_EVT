@@ -53,6 +53,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_GET_BAT_INFO      = 0x02,
     HL_HUP_CMD_SET_BAT_INFO      = 0x03,
     HL_HUP_CMD_TX_IN_BOX_STATE   = 0x04,
+    HL_HUP_CMD_GET_PAIR_INFO     = 0x05,
     HL_HUP_CMD_SET_PAIR_INFO     = 0x06,
     HL_HUP_CMD_GET_MAC_ADDR      = 0x07,
     HL_HUP_CMD_PAIR_START        = 0x08,
@@ -77,6 +78,7 @@ typedef struct _hl_mod_euc
 {
     bool                       init_flag;
     bool                       start_flag;
+    bool                       in_box_flag;
     uint8_t                    dev_num;
     uint8_t                    tx1_bat_info;
     uint8_t                    tx2_bat_info;
@@ -225,19 +227,26 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            if (hup_frame.data_addr[0] == 0) {
+            if (hup_frame.data_addr[0] == 0) {  //不是Tx探测包
                 break;
             }
 
             _euc_mod.dev_num = hup_frame.data_addr[0];
+            rt_timer_start(&(_euc_mod.timer));
 
-            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
-            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            if (_euc_mod.in_box_flag == true) {  //已经收到Tx探测包
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                break;
+            } else {  //第一次收到Tx探测包
+                _euc_mod.in_box_flag = true;
+
+                _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            }
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
-            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_GET_PAIR_INFO: {
             _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
@@ -278,19 +287,26 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
-            if (hup_frame.data_addr[0] != 0) {
+            if (hup_frame.data_addr[0] != 0) {  //不是Rx探测包
                 break;
             }
 
             _euc_mod.dev_num = 0;
+            rt_timer_start(&(_euc_mod.timer));
 
-            _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
-            rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
-            _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            if (_euc_mod.in_box_flag == true) {  //已经收到过Rx探测包
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                break;
+            } else {  //第一次收到Rx探测包
+                _euc_mod.in_box_flag = true;
+
+                _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+                rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
+                _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
+            }
         } break;
         case HL_HUP_CMD_GET_BAT_INFO: {
             _mod_msg_send(HL_GET_SOC_REQ_IND, NULL, 0);
-            rt_timer_start(&(_euc_mod.timer));
         } break;
         case HL_HUP_CMD_SET_BAT_INFO: {
             if (hup_frame.data_addr[0] == HL_EUC_MOD_DEV_TX1) {
@@ -400,6 +416,9 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
             _uart_send_hup_data(HL_HUP_CMD_SET_BOX_LID_STATE, &result, sizeof(result));
         } break;
+        case HL_HUP_CMD_GET_PAIR_INFO: {
+            _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
+        } break;
         default:
             break;
     }
@@ -423,9 +442,9 @@ static inline int _hl_mod_euc_hup_init(void)
 
     _euc_mod.uart_hup.hup_handle.frame_data_len = sizeof(uart_hup_buf);
     _euc_mod.uart_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
-    _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, NULL, uart_hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, (uint32_t(*)(void))rt_tick_get, uart_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("uart_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -433,9 +452,9 @@ static inline int _hl_mod_euc_hup_init(void)
 
     _euc_mod.hid_hup.hup_handle.frame_data_len = sizeof(hid_hup_buf);
     _euc_mod.hid_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
-    _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_DISABLE;
+    _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, NULL, hid_hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, (uint32_t(*)(void))rt_tick_get, hid_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("hid_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -569,6 +588,7 @@ static void _record_hid_cmd_send_poll(void)
 static void _timer_timeout_handle(void* arg)
 {
     LOG_I("euc timeout");
+    _euc_mod.in_box_flag = false;
     _mod_msg_send(HL_OUT_BOX_IND, NULL, 0);
 }
 
@@ -654,6 +674,8 @@ int hl_mod_euc_start(void)
     if (_euc_mod.start_flag == true) {
         hl_mod_euc_stop();
     }
+
+    _euc_mod.in_box_flag = false;
 
     _euc_mod.thread_exit_flag = 0;
 
@@ -827,6 +849,14 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_HID_START_RECORD_CMD: {
             _record_hid_cmd_send_flag = true;
+        } break;
+        case HL_SET_PAIR_MAC_CMD: {
+            if (arg_size != sizeof(uint8_t[12])) {
+                LOG_E("size err, ctrl arg need <uint8_t[12]> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_PAIR_INFO, (char*)arg, sizeof(uint8_t[12]));
         } break;
         default:
             break;

@@ -1,15 +1,36 @@
 /**
  * @file page_top.c
- * @author your name (you@domain.com)
- * @brief 顶部菜单栏
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_top.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define POSTION_IS_NULL 0xFF
@@ -433,6 +454,36 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
     }
 }
 
+static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
+{
+    lv_obj_t * obj = NULL;
+    switch(icon_typ){
+        case HL_TOP_ICON_STEREO_MOD:        
+        case HL_TOP_ICON_SINGLE_MOD:
+        case HL_TOP_ICON_TRACK_MOD:
+            obj = icon_list_l[0].icon;
+            break;
+        case HL_TOP_ICON_NOISE:
+            obj = icon_list_l[1].icon;
+            break;
+        case HL_TOP_ICON_LOCK:
+            obj = icon_list_l[2].icon;
+            break;
+        case HL_TOP_ICON_LINEOUT:
+            obj = icon_list_r[0].icon;
+            break;
+        case HL_TOP_ICON_TYPEC:
+            obj = icon_list_r[1].icon;
+            break;
+        case HL_TOP_ICON_HEATSET:
+            obj = icon_list_r[2].icon;
+            break;
+        default:
+            break;
+    }
+    return obj;
+}
+
 void hl_mod_top_ioctl(void* ctl_data)
 {
     char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -465,6 +516,10 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_obj_add_style(bat_bar,&style_power_bar_red_indicator,LV_PART_INDICATOR);
             break;
 
+        case HL_TOP_GET_ICON_OBJ_CMD:
+            ptr->icon_obj = hl_mod_icon_obj(ptr->top_param);
+            break;
+
         case HL_TOP_ALL_DEL:
             *(uint8_t*)&top_icon_sta = 0;
             hl_obj_delete(lv_scr_act(), false);
@@ -483,18 +538,8 @@ void hl_mod_top_init(void* init_data)
     if (!page_style_bit.page_top) {
         page_style_bit.page_top = 1;
         lv_style_page_top_init();
-    }
-    
+    }    
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
-    // bat_label = lv_power_lab_creat_fun(lv_scr_act(), bat_bar, bat_bar, -6, 0);
-
-    // lv_creat_top_bat_icon();
 }
-
-// //测试接口
-// void page_top_test(void)
-// {
-//     hl_mod_top_icon_init();
-// }

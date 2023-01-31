@@ -109,6 +109,7 @@ int hl_drv_aw2016a_test_led_ctrl(int argc, char* argv[])
 
     rt_kprintf("\naw2016a test\n");
 
+    hl_drv_aw2016a_deinit();
     hl_drv_aw2016a_init();
 
     ret = hl_drv_aw2016a_ctrl(atoi(argv[1]), HL_DRV_AW2016A_GET_CHIP_ID, &chip_id, sizeof(chip_id));
@@ -129,8 +130,16 @@ int hl_drv_aw2016a_test_led_ctrl(int argc, char* argv[])
     return 0;
 }
 
+int hl_drv_aw2016a_test_dump_reg(int argc, char* argv[])
+{
+    hl_drv_aw2016a_ctrl(atoi(argv[1]), HL_DRV_AW2016A_DUMP_REGISTER_VALUE, RT_NULL, 0);
+
+    return 0;
+}
+
 MSH_CMD_EXPORT(hl_drv_aw2016a_test_breath, init aw2016a test : r g b l);
 MSH_CMD_EXPORT(hl_drv_aw2016a_test_led_ctrl, test led ctrl cmd : led breath_mode color);
+MSH_CMD_EXPORT(hl_drv_aw2016a_test_dump_reg, dump reg info : led);
 #endif
 /*
  * EOF

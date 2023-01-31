@@ -86,19 +86,27 @@ typedef enum _lib_a6902_algorithm_io_ctrl_param_e_
     /// @brief 设置右增益 io_ctrl_value:实际设置值
     EM_A6902_ALGO_IO_CTL_PARAM_GAIN_R,
     /// @brief 设置左右增益 io_ctrl_value:实际设置值
-    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL, 
+    EM_A6902_ALGO_IO_CTL_PARAM_GAIN_ALL,
     /// @brief 能量值开关 io_ctrl_value:0(disable) =1 (enable)
     EM_A6902_ALGO_IO_CTL_PARAM_VU_EN,
-    /// @brief 左能量值 
+    /// @brief 左能量值
     EM_A6902_ALGO_IO_CTL_PARAM_VU_L,
-	/// @brief 右能量值 
+    /// @brief 右能量值
     EM_A6902_ALGO_IO_CTL_PARAM_VU_R,
-	/// @brief 所有能量值 
+    /// @brief 所有能量值
     EM_A6902_ALGO_IO_CTL_PARAM_VU_ALL,
     /// @brief 混音参数
     EM_A6902_ALGO_IO_CTL_PARAM_MIXER,
     /// @brief 混音参数，设置混音模式
     EM_A6902_ALGO_IO_CTL_PARAM_MIXER_MOD,
+    /// @brief UAC增益开关 io_ctrl_value:0(disable) =1 (enable)
+    EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_EN,
+    /// @brief 设置UAC左增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_L,
+    /// @brief 设置UAC右增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_R,
+    /// @brief 设置UAC左右增益 io_ctrl_value:实际设置值
+    EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL,
 } lib_a6902_algorithm_io_ctrl_param_e;
 
 /// DSP的控制命令枚举， MCU用
@@ -134,6 +142,10 @@ typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
     HL_EM_DRV_RK_DSP_CMD_SET_VU,
     /// VU
     HL_EM_DRV_RK_DSP_CMD_GET_VU,
+    /// UAC GAIN SET
+    HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN,
+    /// UAC GAIN GET
+    HL_EM_DRV_RK_DSP_CMD_GET_UAC_GAIN,
 } hl_drv_rk_xtensa_dsp_cmd_e;
 
 /// DSP的运行角色枚举

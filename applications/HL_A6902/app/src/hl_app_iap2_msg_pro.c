@@ -25,6 +25,7 @@
 #include <rtdevice.h>
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
+#include "hl_mod_apple_auth.h"
 #include "hl_app_mng.h"
 
 #define DBG_SECTION_NAME "app_iap2"
@@ -49,6 +50,14 @@ void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
 void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
 {
     switch (p_msg->cmd) {
+        case HL_APPLE_AUTH_SUCCEED_IND:
+            LOG_E("\n\n*********iAP2 SUCCEED*********\n\n");
+            break;
+            
+        case HL_APPLE_AUTH_FAILED_IND:
+            LOG_E("\n\n**********iAP2 FAILED**********\n\n");
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;

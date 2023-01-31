@@ -2,7 +2,7 @@
 /**
  * @file hl_mod_page_restore.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
+ * @brief恢复出厂设置的对话框界面
  * @version V1.0
  * @date 2022-12-09
  * 
@@ -20,7 +20,7 @@
  * <tr><td>2022-12-09     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/
@@ -43,22 +43,36 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
+static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
+static hl_s_two_in_one_check_t display_choose = HL_S_TWO_ONE_CHECK_LEFT;
+
 //恢复出厂设置界面
 static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
 {
-    uint32_t value = 0;
-    switch(event_num){
-        case HL_S_TWO_ONE_CHECK_LEFT:
-            value = 0;
-            break;
-        case HL_S_TWO_ONE_CHECK_RIGHT:
-            value = 1;
-            break;
-        default:
-            return;
-            break;
+    uint32_t                    value = 0;
+    hl_display_screen_change_s* flag  = hl_mod_page_get_screen_change_flag();
+
+    LOG_D("event_num = %d\n", event_num);
+
+    if (event_num == display_choose) {
+
+        switch (event_num) {
+            case HL_S_TWO_ONE_CHECK_LEFT:
+                // 取消就回上一页面
+                PageManager_PagePop();
+                break;
+            case HL_S_TWO_ONE_CHECK_RIGHT:
+                hl_mod_display_send_msg(RESTORE_SET_SWITCH_IND, &value, 0);
+                break;
+            default:
+
+                break;
+        }
+
+    } else {
+        display_choose = event_num;
+        now_num        = event_num;
     }
-    hl_mod_display_send_msg(RESTORE_SET_SWITCH_IND,&value,0);
 }
 
 static void resetfactory_test(void)
@@ -67,7 +81,7 @@ static void resetfactory_test(void)
         .func_cb             = hl_resetfactory_test_cb,
         .ptr_lift            = "取消",
         .ptr_right           = "确定",
-        .ptr_top             = "是否进入配对",
+        .ptr_top             = "是否恢复出厂设置",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
@@ -97,8 +111,29 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
+    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test;
+    // OK按键
+    uint8_t ok_btn = hl_mod_get_knob_okkey_val();
     // 返回按键
-    hl_mod_menu_backbtn_scan();
+    uint8_t back_btn = hl_mod_keypad_touchkey_read();
+
+    // 触摸返回
+    if (1 == back_btn) {
+
+        PageManager_PagePop();
+    }
+
+    // 旋钮选择
+    if (hl_mod_knob_select_val_change(&now_num, 0, 1, true)) {
+        s_two_in_one_test.s_two_in_one_choose = now_num;
+        hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
+    }
+
+    // OK按键
+    if (ok_btn == HL_KEY_EVENT_SHORT) {
+        s_two_in_one_test.s_two_in_one_choose = now_num;
+        hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
+    }
 }
 
 PAGE_DEC(PAGE_RESTORE)
@@ -116,6 +151,3 @@ PAGE_DEC(PAGE_RESTORE)
 /*
  * EOF
  */
-
-
-

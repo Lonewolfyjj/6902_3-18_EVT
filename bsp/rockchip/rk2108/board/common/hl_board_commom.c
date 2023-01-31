@@ -41,7 +41,7 @@ extern "C" {
 /* variables -----------------------------------------------------------------*/
 static struct rt_mtd_nor_device* snor_device = RT_NULL;
 static rt_mutex_t                nvram_mutex = RT_NULL;
-static sg_nvram_inint_flag = 0;
+static sg_nvram_inint_flag                   = 0;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -202,14 +202,14 @@ static uint8_t _hl_board_nvram_mutex_release()
  * <tr><td>2022-12-19      <td>yangxianyun     <td>新建
  * </table>
  */
-static int _hl_board_nvram_get_value(int argc, char **argv)
+static int _hl_board_nvram_get_value(int argc, char** argv)
 {
     if (argc < 1) {
         rt_kprintf("too few args\r\n");
         return 1;
     }
 
-    char data[128] = {0};
+    char data[128] = { 0 };
     hl_util_nvram_param_get(argv[1], data, data, sizeof(data));
     rt_kprintf("%s:%s\r\n", argv[1], data);
     return 0;
@@ -233,7 +233,7 @@ MSH_CMD_EXPORT(_hl_board_nvram_get_value, _hl_board_nvram_get_value param);
  * <tr><td>2022-12-19      <td>yangxianyun     <td>新建
  * </table>
  */
-static int _hl_board_nvram_set_value(int argc, char **argv)
+static int _hl_board_nvram_set_value(int argc, char** argv)
 {
     if (argc < 3) {
         rt_kprintf("too few args\r\n");
@@ -268,10 +268,16 @@ uint8_t hl_board_nvram_init()
         _hl_board_nvram_init_snor();
         nvram_mutex = rt_mutex_create("nvram_mutex", RT_IPC_FLAG_FIFO);
         hl_util_nvram_param_init(rt_kprintf, _hl_board_nvram_write, _hl_board_nvram_read, _hl_board_nvram_mutex_take,
-                                _hl_board_nvram_mutex_release);
+                                 _hl_board_nvram_mutex_release);
         sg_nvram_inint_flag = 1;
     }
     return 0;
+}
+
+void hl_board_reboot(void)
+{
+    extern void rt_hw_cpu_reset(void);
+    rt_hw_cpu_reset();
 }
 
 #ifdef __cplusplus
