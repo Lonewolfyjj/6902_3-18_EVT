@@ -28,6 +28,7 @@
 #include "hl_app_mng.h"
 #include "hl_mod_upgrade.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_audio.h"
 #define DBG_SECTION_NAME "app_upgrade"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -44,10 +45,12 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
             break;
         case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
-            hl_mod_telink_start();
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
-            hl_mod_telink_start();
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
             break;
         default:
             break;
@@ -76,9 +79,12 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
 #else
 void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
 {
+    LOG_I("cmd(%d) !!! ", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_UPGRADE_FIND_FW_MSG:  /// 找到升级固件包
-            hl_mod_telink_stop();
+            hl_mod_audio_deinit();
+            // hl_mod_telink_stop();   
+            // hl_mod_telink_deinit();        
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
             break;
         case HL_UPGRADE_STATE_MSG:  /// 获取升级状态

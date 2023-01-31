@@ -156,6 +156,9 @@ typedef struct _hl_mod_upgrade_t
 #define HL_UPGRADE_PACK_NAME "A6902_Upgrade_Firmware_RX"
 #endif
 
+#define HL_UPGRADE_NAME_RK "rk2108"
+#define HL_UPGRADE_NAME_TELINK "telink"
+
 #define HL_UPGADE_JSON_NAME "name"
 #define HL_UPGADE_JSON_TYPE "type"
 #define HL_UPGADE_JSON_SOFTVER "softver"
@@ -190,6 +193,8 @@ static rt_err_t hl_mod_upgrade_uart_deinit(void);
 static rt_err_t hl_mod_upgrade_uart_send(uint8_t upgrade_cmd, uint8_t* upgrade_data, uint32_t upgrade_size);
 /// 串口接收数据回调函数
 static rt_err_t _update_uart_receive_cb(rt_device_t dev, rt_size_t size);
+// 开始升级
+static void _upgrade_start(void);
 
 static rt_err_t hl_mod_upgrade_uart_init(void)
 {
@@ -609,9 +614,12 @@ static void _upgrade_seek(void)
     }
 
     if (s_upgrade.task.type_num > 0) {
-        _upgrade_send_msg(HL_UPGRADE_FIND_FW_MSG, s_upgrade.task.type_num);
-        rt_kprintf("upgrade seek file num:(%d)! \r\n", s_upgrade.task.type_num);
+        _upgrade_start(); // _upgrade_send_msg(HL_UPGRADE_FIND_FW_MSG, s_upgrade.task.type_num);
+        LOG_D("upgrade seek file num:(%d)! ", s_upgrade.task.type_num);
+    } else {
+        LOG_E("upgrade seek file seek null(%d)! ", s_upgrade.task.type_num);
     }
+    
 }
 
 static bool _upgrade_seek_(void)
@@ -638,6 +646,9 @@ static bool _upgrade_seek_(void)
             memcpy(s_upgrade.pack.file_name, dirent->d_name, strlen(dirent->d_name));
             LOG_D("seek upgrade file: %s ", s_upgrade.pack.file_name);
             closedir(dir);
+            
+            _upgrade_send_msg(HL_UPGRADE_FIND_FW_MSG, 1);
+
             return true;
         }
     } while (dirent != RT_NULL);
@@ -652,14 +663,25 @@ static bool _upgrade_nuzip_head_(void)
     int ret = 0;
     uint8_t i = 0;
     uint8_t num = 0;
+    long len = 0;
 
-    lseek(s_upgrade.pack.file_fd, 0, SEEK_SET);
-    ret = read(s_upgrade.pack.file_fd, &buff[i], 128);
-    s_upgrade.pack.type_num = buff[i++] / 8;
-    if((s_upgrade.pack.type_num*8) != buff[0]) {
-        LOG_D("(%d == %d)pack head size error ", s_upgrade.pack.type_num*8, buff[i++]); 
+    len = lseek(s_upgrade.pack.file_fd, 0, SEEK_END);
+
+    if(len < 128){
+        LOG_E("pack head size error (%ld)", len); 
         return false;
     }
+
+    lseek(s_upgrade.pack.file_fd, len-1, SEEK_SET);
+    ret = read(s_upgrade.pack.file_fd, &buff[0], 1);
+    s_upgrade.pack.type_num = buff[0] / 8;
+    if((s_upgrade.pack.type_num*8) != buff[0]) {
+        LOG_E("(%d == %d)pack head size error ", s_upgrade.pack.type_num*8, buff[0]); 
+        return false;
+    }
+    LOG_D("pack head size:%d ", buff[0]); 
+    lseek(s_upgrade.pack.file_fd, len-(buff[0]+1), SEEK_SET);
+    ret = read(s_upgrade.pack.file_fd, &buff[0], buff[0]);
 
     for(num = 0; num < s_upgrade.pack.type_num; num++) {
         s_upgrade.pack.type_len[num]  = ((long)buff[i++]<<56)&((long)0xFF<<56);
@@ -764,21 +786,21 @@ static rt_bool_t _upgrade_nuzip_json(long len)
 
     LOG_D("read json upgrade config ");
 
-    if(s_upgrade.pack.type_len[0] > (1024*10) != s_upgrade.pack.type_len[0] == 0) {
-        LOG_E("upgrade pack json len error %ld ", s_upgrade.pack.type_len[0]);
+    if(len > (1024*10) != len == 0) {
+        LOG_E("upgrade pack json len error %ld ", len);
         return false;
     }
-    json_buff = rt_malloc(s_upgrade.pack.type_len[0]);
+    json_buff = rt_malloc(len);
 
-    lseek(s_upgrade.pack.file_fd, s_upgrade.pack.type_num*8+1, SEEK_SET);
-    read_len = read(s_upgrade.pack.file_fd, json_buff, s_upgrade.pack.type_len[0]);
-    if(read_len != s_upgrade.pack.type_len[0]) {
-        LOG_E("upgrade pack json read len error %ld == %ld ", s_upgrade.pack.type_len[0], read_len);
+    lseek(s_upgrade.pack.file_fd, s_upgrade.pack.type_len[0]+s_upgrade.pack.type_len[1], SEEK_SET);
+    read_len = read(s_upgrade.pack.file_fd, json_buff, len);
+    if(read_len != len) {
+        LOG_E("upgrade pack json read len error %ld == %ld ", len, read_len);
         return false;
     }
 
     rt_kprintf("\n");
-    for (i = 0; i<s_upgrade.pack.type_len[0]; i++)
+    for (i = 0; i<len; i++)
         rt_kprintf("%c", json_buff[i]);
     rt_kprintf("\n");
     json_param = cJSON_Parse(json_buff);
@@ -827,6 +849,7 @@ static rt_bool_t _upgrade_nuzip_file(char* path, long len)
     int       write_len = 0;
     rt_bool_t is_exist  = RT_FALSE;
     long      file_len = 0;
+    struct statfs stat = {0};
 
     LOG_D("Create %s ", path);
 
@@ -834,8 +857,10 @@ static rt_bool_t _upgrade_nuzip_file(char* path, long len)
     if (fd < 0) {
         LOG_E("open file for check failed(%s) \r\n", path);
         return is_exist;
-    }
+    }    
 
+    statfs("/", &stat);
+    LOG_D("root size  %ld - %ld - %ld ", stat.f_bfree, stat.f_blocks, stat.f_bsize);
     lseek(fd, 0, SEEK_SET);
     do {
         if((len - file_len) > HL_UPGRADE_DATA_SIZE) {
@@ -859,10 +884,72 @@ static rt_bool_t _upgrade_nuzip_file(char* path, long len)
         if(file_len >= len) {
             break;
         }
+
+        if((file_len % 400384) == 0) {
+            rt_thread_mdelay(100);
+        }
+        rt_kprintf("size :%ld (%ld) \n", file_len, len);
+
     } while (read_len == HL_UPGRADE_DATA_SIZE);
 
     close(fd);
     LOG_D("Create %s succeed\r\n", path);
+
+    return true;
+}
+
+static rt_bool_t _upgrade_nuzip_file_mcu(void)
+{
+    int       fd;
+    char      buff[HL_UPGRADE_DATA_SIZE];
+    int       read_len  = 0;
+    int       write_len = 0;
+    rt_bool_t is_exist  = RT_FALSE;
+    long      file_len = 0;
+    long      len = 0xB00*512;
+
+    LOG_D("Repair %s ", HL_UPGRADE_FILE_NAME_RK);
+
+    fd = open(HL_UPGRADE_FILE_NAME_RK, O_RDWR | O_APPEND, 0);
+    if (fd < 0) {
+        LOG_E("open file for check failed(%s) \r\n", HL_UPGRADE_FILE_NAME_RK);
+        return is_exist;
+    }
+    
+    do {
+        lseek(fd, 0x100*512+file_len, SEEK_SET);
+        if((len - file_len) > HL_UPGRADE_DATA_SIZE) {
+            read_len = read(fd, buff, HL_UPGRADE_DATA_SIZE);
+        } else {
+            read_len = read(fd, buff, (len - file_len));
+        }        
+        
+        if (read_len <= 0) {
+            close(fd);
+            LOG_E("read file failed.\n");
+            return false;
+        }
+
+        lseek(fd, 0, SEEK_END);
+        write_len = write(fd, buff, read_len);
+        if (read_len != write_len) {
+            close(fd);
+            LOG_E("write file failed.\n");
+            return false;
+        }
+        file_len += read_len;
+        if(file_len >= len) {
+            break;
+        }
+        if((file_len % 20480) == 0) {
+            rt_thread_mdelay(100);
+        }
+        rt_kprintf("size :%ld (%ld) \n", file_len, len);
+        
+    } while (read_len == HL_UPGRADE_DATA_SIZE);
+
+    close(fd);
+    LOG_D("Repair %s succeed\r\n", HL_UPGRADE_FILE_NAME_RK);
 
     return true;
 }
@@ -878,6 +965,8 @@ static bool _upgrade_nuzip(void)
 
     /*modify file name*/
     rt_sprintf(packname, "%s%s", HL_UPGRADE_FILE_PATH, s_upgrade.pack.file_name);
+    LOG_I(" %s ", packname);
+
     s_upgrade.pack.file_fd = open(packname, O_RDONLY, 0);
 
     if(s_upgrade.pack.file_fd < 0) {
@@ -891,27 +980,72 @@ static bool _upgrade_nuzip(void)
         LOG_E("_upgrade_nuzip_head_ error");
         return false;
     }
-
-    ret = _upgrade_nuzip_json(s_upgrade.pack.type_len[0]);
+    
+    ret = _upgrade_nuzip_json(s_upgrade.pack.type_len[2]);
     if (ret != true){
         LOG_E("_upgrade_nuzip_json error");
         return false;
     }
-    file_len = s_upgrade.pack.type_num * 8 + 1 + s_upgrade.pack.type_len[0];
-    lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
-    ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_RK, s_upgrade.pack.type_len[1]);
-    if (ret != true){
-        LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_RK);
+    
+    /*pack upgrade file  muc.img*/
+    // file_len = s_upgrade.pack.type_num * 8 + 1 + s_upgrade.pack.type_len[0];
+    // if((rt_strstr(s_pack_info.pack[0].name, HL_UPGRADE_NAME_RK) != RT_NULL) && \
+    //     (rt_strstr(s_pack_info.pack[0].version, A6902_VERSION) == RT_NULL)) {
+    //     lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
+    //     ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_RK, 0xC00*512);// s_upgrade.pack.type_len[1]);
+    //     if (ret != true) {
+    //         LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_RK);
+    //         return false;
+    //     }
+    // } else {
+    //     LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
+    // }
+
+    /*pack upgrade file  telink.bin*/
+    file_len += s_upgrade.pack.type_len[0];
+    if((rt_strstr(s_pack_info.pack[1].name, HL_UPGRADE_NAME_TELINK) != RT_NULL)) {// && \
+        //(rt_strstr(s_pack_info.pack[1]->hardversion, A6902_VERSION)) != RT_NULL)) {
+        lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
+        ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_TELINK, s_upgrade.pack.type_len[1]);
+        if (ret != true) {
+            LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_TELINK);
+            return false;
+        }
+    } else {
+        LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[1].name, s_pack_info.pack[1].hardversion);
+    }
+
+    ret = close(s_upgrade.pack.file_fd);
+    if(ret < 0) {
+        LOG_E("close error%s", packname);
         return false;
     }
-    file_len += s_upgrade.pack.type_len[1];
-    lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
-    ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_TELINK, s_upgrade.pack.type_len[2]);
-    if (ret != true){
-        LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_TELINK);
-        return false;
+    LOG_I("close file (%s) ", packname);
+
+    /*pack upgrade file  muc.img*/
+    if((rt_strstr(s_pack_info.pack[0].name, HL_UPGRADE_NAME_RK) != RT_NULL) && \
+        (rt_strstr(s_pack_info.pack[0].version, A6902_VERSION) == RT_NULL)) {
+        ret = rename(packname, HL_UPGRADE_FILE_NAME_RK);
+        if(ret < 0) {
+            LOG_E("close error%s", packname);
+            return false;
+        }
+        LOG_I("set name file (%s)to(%s) ", packname, HL_UPGRADE_FILE_NAME_RK);
+    } else {
+        LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
     }
     
+    // ret = unlink(packname);
+    // if(ret < 0) {
+    //     LOG_E("unlink error%s", packname);
+    //     return false;
+    // }      
+    // LOG_I("delete file (%s) ", packname);
+
+    // _upgrade_nuzip_file_mcu();
+    
+    _upgrade_seek();
+
     return true;
 }
 
@@ -987,16 +1121,16 @@ uint8_t hl_mod_upgrade_deinit()
 uint8_t hl_mod_upgrade_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     int8_t ret = 0;
-
+    LOG_D("[line:%d] cmd(%d)", __LINE__, cmd);
     switch (cmd) {
         case HL_UPGRADE_OPEN_CMD:  /// 进行升级文件查找
-            _upgrade_seek();
+            _upgrade_seek_();
             break;
         case HL_UPGRADE_CLOSE_CMD:  /// 关闭升级进程
             _upgrade_stop();
             break;
         case HL_UPGRADE_START_CMD:  /// 开始升级
-            _upgrade_start();
+            _upgrade_nuzip();
             break;
         case HL_UPGRADE_STATE_CMD:  /// 获取升级状态
             break;
@@ -1033,6 +1167,8 @@ int hl_mod_upgrade_test(int argc, char** argv)
     uint8_t  upgrade_param = 0;
     uint8_t  buf[10]       = { 0 };
     uint32_t size          = 0;
+    struct statfs stat = {0};
+    rt_bool_t ret = true;
 
     if (argc <= 1) {
         rt_kprintf("wrong parameter, please type: hl_mod_upgrade_test [start | stop | send | ota | telink | seek | "
@@ -1060,9 +1196,27 @@ int hl_mod_upgrade_test(int argc, char** argv)
     } else if (!strcmp("upgrade", argv[1])) {
         _upgrade_start();
     } else if (!strcmp("test", argv[1])) {
-        _upgrade_seek_();
-        _upgrade_nuzip();
+        ret = _upgrade_seek_();
+            if (ret != true){
+            LOG_E("_upgrade_seek_ error");
+            return false;
+        }
+        ret = _upgrade_nuzip();
+            if (ret != true){
+            LOG_E("_upgrade_nuzip error");
+            return false;
+        }
+
         LOG_D("test finish");
+    } else if (!strcmp("stat", argv[1])) {
+        statfs(argv[2], &stat);
+        LOG_D("root size  %ld - %ld - %ld ", stat.f_bfree, stat.f_blocks, stat.f_bsize);
+    } else if (!strcmp("start", argv[1])) {
+        ret = _upgrade_nuzip();
+        if (ret != true){
+            LOG_E("_upgrade_nuzip error");
+            return false;
+        }
     } else {
         rt_kprintf("wrong parameter, please type: hl_mod_upgrade_test cmd error\r\n");
         return 0;
