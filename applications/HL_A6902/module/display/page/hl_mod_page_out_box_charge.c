@@ -71,6 +71,19 @@ static void hl_mod_page_loop(void)
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
+    if (flag->rx_bat_val) {
+        hl_mod_display_mux_take();
+        flag->rx_bat_val = 0;
+        rx_bat_val       = data_ptr->rx_bat_val;
+        hl_mod_display_mux_release();
+
+        hl_lvgl_holding_ioctl_t ioctrl;
+
+        ioctrl.holding_cmd = HL_HOLDING_RX_ELEC;
+        ioctrl.electric = rx_bat_val;
+        hl_mod_holding_ioctl(&ioctrl);
+    }
+
     if (flag->sys_status.rx_charge_status) {
         hl_mod_display_mux_take();
         flag->sys_status.rx_charge_status = 0;
@@ -92,19 +105,6 @@ static void hl_mod_page_loop(void)
             ioctrl.holding_cmd = HL_HOLDING_RX_ICON_HIDE;
             hl_mod_holding_ioctl(&ioctrl);
         }
-    }
-
-    if (flag->rx_bat_val) {
-        hl_mod_display_mux_take();
-        flag->rx_bat_val = 0;
-        rx_bat_val       = data_ptr->rx_bat_val;
-        hl_mod_display_mux_release();
-
-        hl_lvgl_holding_ioctl_t ioctrl;
-
-        ioctrl.holding_cmd = HL_HOLDING_RX_ELEC;
-        ioctrl.electric = rx_bat_val;
-        hl_mod_holding_ioctl(&ioctrl);
     }
 }
 

@@ -1,5 +1,36 @@
+/**
+ * @file page_main.c
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 主界面
+ * @version 1.0
+ * @date 2023-01-14
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 #include "page_main.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 
@@ -38,6 +69,7 @@ static lv_obj_t * video_dot_tx1,*video_dot_tx2;
 static lv_obj_t * tx1_signal_obj[5];
 static lv_obj_t * tx2_signal_obj[5];
 
+static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
 static int16_t tx1_value_max;
 static int16_t tx2_value_max;
 static int16_t tx1_value_start;
@@ -287,7 +319,7 @@ static lv_obj_t * lv_voice_line_out_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *al
     char buf[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_voice_label, LV_PART_MAIN);
-    lv_snprintf(buf, sizeof(buf), "Output: %d", init_value);
+    lv_snprintf(buf, sizeof(buf), "Output : %d", init_value);
     lv_label_set_text(lab,buf);
     lv_obj_align_to(lab,align_obj,LV_ALIGN_OUT_TOP_MID,x_offset,y_offset);
     return lab;
@@ -419,7 +451,6 @@ static void lv_set_vodeo_dot_status_cb(lv_obj_t * dot_obj,uint8_t hide)
 
 static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
 {
-    static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
     switch(signal_group){
         case 1:
         if(sign_1 != hide_num){
@@ -441,6 +472,8 @@ static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
 static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 {
     uint32_t child_cnt = 0,i;
+    sign_1 = 0xFF;
+    sign_2 = 0xFF;
     child_cnt = lv_obj_get_child_cnt(obj);
     if(child_cnt == 0){
         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
@@ -514,7 +547,7 @@ static void lv_display_tx2(device_data_t * init_data)
     voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
     
-    voice_bar_top_tx2 = lv_voice_ltopbar_creat_fun(area_tx2,voice_img_tx2,4,-40,251,14,init_data->volume);
+    voice_bar_top_tx2 = lv_voice_ltopbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
 
     tx2_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx2,voice_bar_tx2,tx2_value_start,ANIMAtION_TIME_DOWN);
@@ -562,8 +595,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
     //音量大小文本
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,6,0);
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,6,0);   
+    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,0,0);
+    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,0,0);   
     //电池电量大小文本
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
@@ -744,6 +777,8 @@ void hl_mod_main_init(void * init_data)
         lv_style_page1_init();
         page_style_bit.page_main = 1;
     }
+    sign_1 = 0xFF;
+    sign_2 = 0xFF;
     tx1_value_max = 0;
     tx2_value_max = 0;
     if(ptr->display_tx_device == HL_DISPLAY_TX1){
@@ -756,38 +791,3 @@ void hl_mod_main_init(void * init_data)
         lv_display_double(&ptr->tx_device_1,&ptr->tx_device_2);
     } 
 }
-
-/*
-static void delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        printf("child_cnt1 = %d\n",0);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            printf("child_cnt1 = %d\n",0);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
-
-//使用方法
-delete(lv_scr_act(),false);
-*/
-
-//测试接口
-// void page_main_test(void)
-// {    
-//     hl_lvgl_main_init_t data;
-//     data.display_tx_device = HL_DISPLAY_TX1;
-//     data.tx_device_1.electric = 20;
-//     data.tx_device_1.signal = HL_ONE_SIGNAL;
-//     data.tx_device_1.record = HL_RECODING;
-//     data.tx_device_1.volume = -13;
-//     hl_mod_lvgl_main_init(&data);
-// }

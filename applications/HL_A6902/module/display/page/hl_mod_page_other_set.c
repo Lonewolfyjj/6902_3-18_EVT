@@ -44,10 +44,11 @@
 #include "hl_util_general_type.h"
 
 
-#define MENU_ICON_NUM 4
+#define MENU_ICON_NUM 5
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
     PAGE_PAIR,
+    PAGE_SOUNDOUT_SETTING,
     PAGE_SYS_TIME_SET,
     PAGE_VERSION,
     PAGE_RESTORE,
@@ -57,6 +58,7 @@ static int8_t menu_center_icon = 0;
 
 //通用设置菜单界面
 LV_IMG_DECLARE(Menu_pair);           //配对
+LV_IMG_DECLARE(Menu_voice_out);      //外放设置
 LV_IMG_DECLARE(Menu_time_config);    //时间设置
 LV_IMG_DECLARE(Menu_verson);         //版本信息
 LV_IMG_DECLARE(Menu_reset_factory);  //恢复出厂设置
@@ -74,8 +76,9 @@ static void page_9_test(void)
 {
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     
-    menu_data_t pic_list[4] = {
+    menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_pair, "配对"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_voice_out,"外放设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_time_config, "时间设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_verson, "版本信息"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, "恢复出厂设置"),
@@ -85,7 +88,7 @@ static void page_9_test(void)
         flag->menu_defaut = 0;
         hl_mod_knob_select_val_set(&menu_center_icon, 0);
     }
-    page_menu_init(pic_list, 4, page_9_test_cb,menu_center_icon);
+    page_menu_init(pic_list, MENU_ICON_NUM, page_9_test_cb,menu_center_icon);
 }
 
 static void hl_mod_page_setup(void)

@@ -40,6 +40,17 @@ extern "C" {
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
+// 屏定时熄屏的计时时间(ms)
+#define HL_SCREEN_AUTO_LOWBRIGHTNESS_TIME 60000
+// 屏定时熄屏的亮度
+#define SCREEN_LOWBRIGHTNESS 0x30
+#define SCREEN_BRIGHTNESS_DEFAULT_VALUE     0x80
+// led的亮度值
+#define NORMAL_BRIGTNESS 30
+#define LOWVAL_BRIGTNESS 15
+/// TX录制最大使用时间
+#define STROGE_MAX_USED_TIME 16
+
 // bool ：true表示定时器超时的操作，false 表示定时器重新更新计数时间时的操作
 typedef void (*screen_trigfunc)(bool);
 
@@ -69,16 +80,19 @@ typedef struct _hl_display_status{
     uint32_t line_out_in:1;
     uint32_t monitor_in:1;
     uint32_t auto_record:1;
-    
-    // 自动录制状态 （1: 开启 0:关闭）
+    /// 外放设置 （1: 开启 0:关闭）
+    uint32_t soundout_setting:1;
+    /// 自动录制状态 （1: 开启 0:关闭）
     uint32_t auto_record_portect:1;
     uint32_t tx1_mute_switch:1;
     uint32_t tx2_mute_switch:1;
-    /// 熄屏状态 （1：熄屏 0 正常亮）
+    /// 熄屏状态 （1：熄屏(或者盒子关闭) 0 正常亮）
     uint32_t screen_off_status:1;
 
     /// @brief 恢复出厂设置
     uint32_t restore_state:1; 
+    /// @brief 背景变暗标志位
+    uint32_t lowbrightness_flag:1; 
 }hl_display_status;
 
 typedef struct _hl_display_screen_s
@@ -123,6 +137,8 @@ typedef struct _hl_display_screen_s
     uint8_t tx2_remained_record_time;
     // OTA升级进度
     uint8_t upgrade_progress;
+    // 自动关机参数  0表示永不自动关机；有数据表示设定的关机时间(单位为min)
+    uint16_t auto_poweroff;
     hl_upgrade_status upgrade_status;
     
     char tx1_ver[10];
@@ -141,7 +157,6 @@ typedef struct _hl_display_screen_change_s{
     hl_display_status sys_status;
     uint32_t rf_net_connect:1;
     uint32_t monitor_category:1;
-    uint32_t voice_module_:1;
     uint32_t sound_module:1;
     uint32_t low_cut:1;
     uint32_t page_id:1;
@@ -178,6 +193,10 @@ typedef struct _hl_display_screen_change_s{
     uint32_t rx_ver:1;
     uint32_t case_ver:1;
     uint32_t rx_sn:1;
+    uint32_t auto_poweroff:1;
+    // 格式化页面TX声道标志,0表示格式化左声道，1表示格式化右声道
+    uint32_t channel_format_flag:1;
+    uint32_t voice_module:1;
 }hl_display_screen_change_s;
 
 
@@ -226,7 +245,14 @@ void hl_mod_menu_goto_home_page(void);
 void hl_mod_menu_backbtn_scan();
 void hl_mod_menu_goto_fast_config_scan();
 void hl_mod_menu_goto_quickset_scan();
-
+void hl_mod_page_screen_lowbritness_init(void);
+void hl_mod_page_screen_lowbritness_update(void);
+void hl_mod_page_screen_lowbritness_deinit(void);
+void hl_mod_page_screen_lowbritness_scan(void);
+void hl_mod_page_inbox_screenoff_init(void);
+void hl_mod_page_inbox_screenoff_close(void);
+void hl_mod_page_inbox_screenoff_update(void);
+void hl_mod_page_inbox_screenoff_scan(void);
 void hl_mod_page_goto_box_scan(void);
 void hl_mod_display_upgrade_enter(void);
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb);

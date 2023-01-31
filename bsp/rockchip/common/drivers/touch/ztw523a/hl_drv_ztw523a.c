@@ -5,6 +5,7 @@
 #include "hal_pinctrl.h"
 #include <rtthread.h>
 #include <rtdevice.h>
+#include "string.h"
 
 #define DBG_SECTION_NAME "drv_ztw523a"
 #define DBG_LEVEL DBG_LOG
@@ -30,7 +31,7 @@
 // #define BUTTON_UP   0
 
 static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *buf, rt_size_t touch_num);
-
+static uint8_t 					 tp_flag 	 = 0; 
 static uint16_t                  ic_int_mask = 0;
 static uint16_t                  chip_code   = 0;
 static struct rt_i2c_bus_device* i2c_bus     = RT_NULL; /* I2C总线设备句柄 */
@@ -573,7 +574,7 @@ fail_upgrade:
 }
 
 
-static void hl_drv_upgread_tp(int argc, char** argv)
+static void hl_drv_upgread_tp(void)
 {
     int i; 
 	uint16_t firmware_version;
@@ -712,7 +713,7 @@ fail_init:
 	return false;
 }
 
-MSH_CMD_EXPORT(hl_drv_upgread_tp, run hl_drv_upgread_tp);
+// MSH_CMD_EXPORT(hl_drv_upgread_tp, run hl_drv_upgread_tp);
 #endif
 
 
@@ -888,8 +889,14 @@ rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos)
 {
 #if TOUCH_ONESHOT_UPGRADE == 0
     rt_device_read(touch_dev, 0, touch_pos, 1);
+#else
+	if(tp_flag != 2){
+		rt_device_read(touch_dev, 0, touch_pos, 1);
+	}
+	if(tp_flag == 1){
+		rt_kprintf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
+	}    
 #endif
-    // rt_kprintf("touch_pos->type = %d\ttouch_pos->x = %d\ttouch_pos->y = %d\n", touch_pos->type, touch_pos->x, touch_pos->y);
     return 0;
 }
 
@@ -948,25 +955,50 @@ INIT_DEVICE_EXPORT(hl_drv_ztw523a_dev_register);
 int hl_drv_ztw523a_botton_status(void)
 {
     uint16_t button = BUTTON_UP;
-#if TOUCH_ONESHOT_UPGRADE == 0
-    hl_drv_ztw523a_read_data(0x00AA,(uint8_t *)&button,2);
-    switch(button)
-    {
-        case 1:
-            button = BUTTON_DOWN;
-            // LOG_D("Botton down!\n");
-        break;
-        case 0x100:
-            button = BUTTON_UP;
-            // LOG_D("Botton up!\n");
-        break;
-        default:
-            button = BUTTON_UP;
-        break;
-    }
-	hl_drv_ztw523a_write_cmd(ZINITIX_CLEAR_INT_STATUS_CMD);
-#endif
+	if(tp_flag != 2){
+		hl_drv_ztw523a_read_data(0x00AA,(uint8_t *)&button,2);
+		switch(button)
+		{
+			case 1:
+				button = BUTTON_DOWN;
+			break;
+			case 0x100:
+				button = BUTTON_UP;
+			break;
+			default:
+				button = BUTTON_UP;
+			break;
+		}
+		if(tp_flag == 1){
+			rt_kprintf("button = %d\n", button);
+		}
+	}    
     return button;
 }
+
+
+void touch_log_ctl(int argc, char** argv)
+{
+	uint16_t read_reg,reg_addr;
+	if (!strcmp("open", argv[1])) {
+       tp_flag = 1;
+    }else if (!strcmp("init", argv[1])){
+		tp_flag = 0;
+		hl_drv_tp_Init();
+	}else if (!strcmp("upgrade", argv[1])){
+#if TOUCH_ONESHOT_UPGRADE == 1
+		tp_flag = 2;
+		hl_drv_upgread_tp();
+#endif
+	}else if(!strcmp("read", argv[1])){
+		reg_addr = atoi(argv[2]);
+		hl_drv_ztw523a_read_data(reg_addr,(uint8_t *)&read_reg,2);
+		rt_kprintf("Addr[0x%X] = %X\n",reg_addr,read_reg);
+	}else {
+       tp_flag = 0;
+    }
+}
+
+MSH_CMD_EXPORT(touch_log_ctl, run touch_log_ctl);
 
 #endif

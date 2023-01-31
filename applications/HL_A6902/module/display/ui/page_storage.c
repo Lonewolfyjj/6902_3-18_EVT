@@ -1,21 +1,46 @@
 /**
  * @file page_storage.c
- * @author your name (you@domain.com)
- * @brief 存储格式化
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 格式化界面
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_storage.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
 
 #define MAX_OBJ_NUMBER     6
+
+#define  LAB_COLOR_WHITE    0
+#define  LAB_COLOR_BLACK    1
+#define  LAB_COLOR_GREY    2
 
 static lv_obj_t *valid_obj[MAX_OBJ_NUMBER] = {NULL, NULL, NULL, NULL, NULL, NULL};
 static uint8_t btn_left_cnt = 0,btn_right_cnt = 0;
@@ -25,7 +50,7 @@ static char * ulock = "ubtn";
 
 static lv_style_t style_choose_main,style_not_choose_main;
 static lv_style_t style_choose_lr_main,style_not_choose_lr_main;
-static lv_style_t style_label,style_back;
+static lv_style_t style_label_white,style_label_black,style_label_grey,style_back;
 static lv_style_t style_indicator,style_main;
 
 static lv_obj_t * con1,*con2;
@@ -55,32 +80,42 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_not_choose_main);
     lv_style_set_bg_opa(&style_not_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_not_choose_main, lv_palette_lighten(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_not_choose_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_not_choose_main,0);
     lv_style_set_outline_width(&style_not_choose_main,0);
     lv_style_set_radius(&style_not_choose_main, 5);    
 
-    lv_style_init(&style_label);
-    lv_style_set_bg_opa(&style_label, LV_OPA_TRANSP);
-    lv_style_set_text_opa(&style_label, LV_OPA_COVER);
-    lv_style_set_text_color(&style_label, lv_color_white());
+    lv_style_init(&style_label_white);
+    lv_style_set_bg_opa(&style_label_white, LV_OPA_TRANSP);
+    lv_style_set_text_opa(&style_label_white, LV_OPA_COVER);
+    lv_style_set_text_color(&style_label_white, lv_color_white());
+
+    lv_style_init(&style_label_black);
+    lv_style_set_bg_opa(&style_label_black, LV_OPA_TRANSP);
+    lv_style_set_text_opa(&style_label_black, LV_OPA_COVER);
+    lv_style_set_text_color(&style_label_black, lv_color_black());
+
+    lv_style_init(&style_label_grey);
+    lv_style_set_bg_opa(&style_label_grey, LV_OPA_TRANSP);
+    lv_style_set_text_opa(&style_label_grey, LV_OPA_COVER);
+    lv_style_set_text_color(&style_label_grey, lv_palette_darken(LV_PALETTE_GREY,1));
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_back,0);
     lv_style_set_outline_width(&style_back,0);
     lv_style_set_radius(&style_back, 0);
 
     lv_style_init(&style_main);
     lv_style_set_bg_opa(&style_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_main, lv_palette_lighten(LV_PALETTE_GREY,1));
-    lv_style_set_radius(&style_main, 0);
+    lv_style_set_bg_color(&style_main, lv_palette_darken(LV_PALETTE_GREY,3));
+    lv_style_set_radius(&style_main, 1);
 
     lv_style_init(&style_indicator);
     lv_style_set_bg_opa(&style_indicator, LV_OPA_COVER);
     lv_style_set_bg_color(&style_indicator, lv_palette_main(LV_PALETTE_BLUE));
-    lv_style_set_radius(&style_indicator, 0);
+    lv_style_set_radius(&style_indicator, 1);
 }
 
 static lv_obj_t * lv_img_creat_fun(lv_obj_t *src_obj,const void * src,lv_coord_t x_offset,lv_coord_t y_offset)
@@ -133,11 +168,14 @@ static lv_obj_t * lv_bar_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset,lv_co
     return bar;
 }
 
-static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr)
+static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr,uint8_t color)
 {
     lv_obj_t * lab = lv_label_create(src_obj);
-    lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    // lv_obj_set_style_text_font(lab, &language, 0);
+    if(color == LAB_COLOR_WHITE){
+        lv_obj_add_style(lab, &style_label_white, LV_PART_MAIN);
+    }else{
+        lv_obj_add_style(lab, &style_label_black, LV_PART_MAIN);
+    }
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -145,11 +183,8 @@ static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_alig
 
 static lv_obj_t * lv_value_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,const char * text,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset)
 {
-    // char buf[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
-    lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    // lv_obj_set_style_text_font(lab, &language, 0);
-    // lv_snprintf(buf, sizeof(buf), "%dh可用", lv_bar_get_value(bar_obj));
+    lv_obj_add_style(lab, &style_label_grey, LV_PART_MAIN);
     lv_label_set_text(lab,text);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -164,15 +199,19 @@ static void btn_left_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_cnt=0;
             btn_left_cnt++;
-            if(btn_left_cnt > 1){
+            if(btn_left_cnt >= 1){
                 LV_LOG_USER("btn_left Clicked\n");
                 hl_storage_func(HL_STORAGE_CHECK_LEFT);
             }   
+            lv_obj_remove_style(lab13,&style_label_black,LV_PART_MAIN);
             lv_obj_remove_style(btn_left,&style_choose_main,LV_PART_MAIN);
+            lv_obj_add_style(lab13,&style_label_black,LV_PART_MAIN);
             lv_obj_add_style(btn_left,&style_choose_main,LV_PART_MAIN);          
             lv_event_send(btn_right,LV_EVENT_CLICKED,lock);
         }else{
+            lv_obj_remove_style(lab13,&style_label_white,LV_PART_MAIN);
             lv_obj_remove_style(btn_left,&style_not_choose_main,LV_PART_MAIN);
+            lv_obj_add_style(lab13,&style_label_white,LV_PART_MAIN);  
             lv_obj_add_style(btn_left,&style_not_choose_main,LV_PART_MAIN);        
         }
     }
@@ -187,15 +226,19 @@ static void btn_right_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_left_cnt=0;
             btn_right_cnt++;
-            if(btn_right_cnt > 1){
+            if(btn_right_cnt >= 1){
                 LV_LOG_USER("btn_right Clicked\n");
                 hl_storage_func(HL_STORAGE_CHECK_RIGHT);                
             }   
+            lv_obj_remove_style(lab23,&style_label_black,LV_PART_MAIN);
             lv_obj_remove_style(btn_right,&style_choose_main,LV_PART_MAIN);
-            lv_obj_add_style(btn_right,&style_choose_main,LV_PART_MAIN);        
+            lv_obj_add_style(lab23,&style_label_black,LV_PART_MAIN);   
+            lv_obj_add_style(btn_right,&style_choose_main,LV_PART_MAIN);      
             lv_event_send(btn_left,LV_EVENT_CLICKED,lock);
         }else{
+            lv_obj_remove_style(lab23,&style_label_white,LV_PART_MAIN);
             lv_obj_remove_style(btn_right,&style_not_choose_main,LV_PART_MAIN);
+            lv_obj_add_style(lab23,&style_label_white,LV_PART_MAIN);   
             lv_obj_add_style(btn_right,&style_not_choose_main,LV_PART_MAIN);         
         }
     }
@@ -225,7 +268,9 @@ static void lv_delete_style(void)
     lv_style_reset(&style_not_choose_main);
     lv_style_reset(&style_choose_lr_main);
     lv_style_reset(&style_not_choose_lr_main);
-    lv_style_reset(&style_label);
+    lv_style_reset(&style_label_white);
+    lv_style_reset(&style_label_black);
+    lv_style_reset(&style_label_grey);
     lv_style_reset(&style_back);
     lv_style_reset(&style_indicator);
     lv_style_reset(&style_main);
@@ -270,38 +315,29 @@ void hl_mod_storage_init(void * init_data)
         btn_right_cnt = 0;
         btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,1);
         btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,0);
+
+        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_BLACK);
+        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_WHITE);
     }
     if(ptr->storage_choose == HL_STORAGE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
         btn_right_cnt = 1;
         btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,0);
         btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,1);
+
+        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_WHITE);
+        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_BLACK);
     }    
 
     bar1 = lv_bar_creat_fun(con1,0,13,132,25,ptr->used_tx1);
     bar2 = lv_bar_creat_fun(con2,0,13,132,25,ptr->used_tx2);
 
-    lab11 = lv_lab_creat_fun(con1,bar1,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX1");
-    lab21 = lv_lab_creat_fun(con2,bar2,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX2");
+    lab11 = lv_lab_creat_fun(con1,bar1,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX1",LAB_COLOR_WHITE);
+    lab21 = lv_lab_creat_fun(con2,bar2,LV_ALIGN_OUT_TOP_LEFT,0,-6,"TX2",LAB_COLOR_WHITE);
 
     lab12 = lv_value_lab_creat_fun(con1,lab11,ptr->ptr_time_tx1,LV_ALIGN_OUT_RIGHT_MID,10,0);
-    lab22 = lv_value_lab_creat_fun(con2,lab21,ptr->ptr_time_tx2,LV_ALIGN_OUT_RIGHT_MID,10,0);    
-
-    lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,"格式化");
-    lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,"格式化");
+    lab22 = lv_value_lab_creat_fun(con2,lab21,ptr->ptr_time_tx2,LV_ALIGN_OUT_RIGHT_MID,10,0);  
 
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
 }
-
-lv_obj_t * hl_storage_obj_get(uint8_t num)
-{
-    return valid_obj[num];
-}
-
-//测试接口
-// void page_storage_test(void)
-// {
-    
-    // lv_page_4_init();
-// }

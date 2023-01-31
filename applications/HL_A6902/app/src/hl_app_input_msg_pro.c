@@ -145,6 +145,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
     hl_switch_e          record_switch;
+    hl_switch_e        mute_switch;
     hl_rf_bypass_state_t rf_bypass_state;
 
     if (tx_info.on_off_flag == 0) {
@@ -179,6 +180,16 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_LONG:
+            if (tx_info.mute_flag == 0) {
+                mute_switch = HL_SWITCH_ON;
+                tx_info.mute_flag = 1;
+            } else {
+                mute_switch = HL_SWITCH_OFF;
+                tx_info.mute_flag = 0;
+            }
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &mute_switch, 1);   
+            hl_app_disp_state_led_set();   
+            hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &mute_switch, sizeof(mute_switch));      
             break;
 
         case HL_KEY_EVENT_DOUBLE:
@@ -357,6 +368,9 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     }
     hl_app_audio_stream_updata();
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
+    usb_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+    
 }
 
 /// 监听口状态处理
@@ -374,6 +388,8 @@ static void hl_app_rx_hp_plug_pro(uint32_t value)
         hp_state            = 1;
     }
     hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
+    hp_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &hp_state, 1);
 }
 
 /// 相机口状态处理
@@ -389,6 +405,8 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
         cam_plug_state       = 1;
     }
     hl_mod_display_io_ctrl(LINE_OUT_IN_SWITCH_CMD, &cam_plug_state, 1);
+    cam_plug_state = 1;
+    hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
 }
 
 #endif

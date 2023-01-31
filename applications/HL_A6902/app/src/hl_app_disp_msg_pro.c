@@ -55,6 +55,7 @@ void hl_app_disp_state_led_set(void)
     hl_led_net_mode led_ctrl;
     hl_led_switch   denoise_ctrl;
     hl_led_switch   record_ctrl;
+    hl_led_switch   mute_ctrl;
 
     // RF
     switch (tx_info.rf_state) {
@@ -92,6 +93,14 @@ void hl_app_disp_state_led_set(void)
         record_ctrl = SWITCH_OPEN;
     }
     hl_mod_display_io_ctrl(LED_RECORD_STATE_CMD, &record_ctrl, sizeof(record_ctrl));
+
+    // mute
+    if (tx_info.mute_flag == 0) {
+        mute_ctrl = SWITCH_CLOSE;
+    } else {
+        mute_ctrl = SWITCH_OPEN;
+    }
+    hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));  
 }
 
 #else
@@ -99,7 +108,7 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
 {
     uint8_t        ret     = 0;
     static uint8_t channel = 0;
-
+      
     switch (rx_info.rf_state) {
         case HL_RF_UNCONNECT:
             channel = 0x00;
@@ -125,11 +134,11 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
             LOG_D("already connecting\r\n");
             break;
     }
-
+    
     return ret;
 }
 
-void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
+void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
 {
     hl_rf_bypass_value_t telink_bypass = { 0 };
     switch (p_msg->cmd) {
