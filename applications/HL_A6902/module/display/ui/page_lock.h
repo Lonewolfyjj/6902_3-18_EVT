@@ -39,12 +39,12 @@
 /// @brief 命令枚举
 typedef enum _hl_lvgl_lock_cmd_t
 {
-    /// @brief 进入锁屏状态
-    HL_LOCK_STATUS_INTO = 0,
-    /// @brief 退出锁屏状态
-    HL_LOCK_STATUS_BACK,
-    /// @brief 将锁屏图层移到最前面
-    HL_LOCK_ICON_FRONT,
+    /// @brief 显示锁屏图标
+    HL_LOCK_ICON_DISPLAY = 0,
+    /// @brief 显示解锁图标
+    HL_UNLOCK_ICON_DISPLAY,
+    /// @brief 删除当前显示的图标
+    HL_DELETE_ICON_CURRENT,
     /// @brief 图标动画
     HL_LOCK_ICON_ANIM,
 }hl_lvgl_lock_cmd_t;
