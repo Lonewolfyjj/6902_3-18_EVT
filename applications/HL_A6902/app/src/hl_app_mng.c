@@ -43,6 +43,7 @@
 #include "hl_app_rf_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
 #include "hl_util_general_type.h"
+#include "hl_mod_wdog.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -70,6 +71,7 @@ int hl_app_info(int argc, char** argv);
 /* Exported functions --------------------------------------------------------*/
 void hl_app_msg_thread(void* parameter)
 {
+    hl_mod_feed_dog();
     mode_to_app_msg_t msg = { 0 };
 
     hl_app_mng_charger_entry(&hl_app_mq);
@@ -122,6 +124,7 @@ void hl_app_msg_thread(void* parameter)
             }
         }
         rt_thread_mdelay(5);
+        hl_mod_feed_dog();
     }
 }
 
