@@ -35,6 +35,7 @@
 #define RK_AUDIO_CTL_SET_GAIN      RK_AUDIO_CTL(13)
 #define RK_AUDIO_CTL_GET_GAIN      RK_AUDIO_CTL(14)
 #define RK_AUDIO_CTL_GET_GAIN_INFO RK_AUDIO_CTL(15)
+#define RK_AUDIO_CTL_HL_SET_GAIN   RK_AUDIO_CTL(16)
 /** cmd for vad*/
 #define RK_AUDIO_CTL_VAD_SET_BUFFER   RK_AUDIO_CTL(20)
 #define RK_AUDIO_CTL_VAD_SET_PERIOD   RK_AUDIO_CTL(21)
@@ -196,6 +197,7 @@ struct audio_codec_ops
     rt_err_t (*stop)(struct audio_codec *codec, eAUDIO_streamType stream);
     rt_err_t (*set_gain)(struct audio_codec *codec, eAUDIO_streamType stream, struct AUDIO_DB_CONFIG *dBConfig);
     rt_err_t (*get_gain)(struct audio_codec *codec, eAUDIO_streamType stream, struct AUDIO_DB_CONFIG *dBConfig);
+    rt_err_t (*hl_set_gain)(struct audio_codec *codec, struct AUDIO_GAIN_CONFIG *dBConfig);    
     rt_err_t (*get_gaininfo)(struct audio_codec *codec, struct AUDIO_GAIN_INFO *info);
 };
 
@@ -229,6 +231,7 @@ struct audio_card_desc
     void *dai; /**< dai instance: I2Sx, I2STDMx, PDMx... */
     void *vad; /**< vad instance */
     void *codec; /**< codec instance */
+    void *codechp; /**< codec instance */
     bool codec_master; /**< indicate codec is master */
     bool clk_invert; /**< indicate clk is invert */
     bool playback; /**< indicate support playback */
@@ -277,6 +280,7 @@ struct audio_card
     struct audio_dai *dai; /**< audio dai device */
     struct audio_dai *vad_dai; /**< vad dai device, optional */
     struct audio_codec *codec; /**< audio codec device */
+    struct audio_codec *codechp; /**< audio codec hp device */
     struct audio_stream *stream[AUDIO_STREAM_NUM];
     struct audio_card_desc desc; /**< audio card desc */
 };

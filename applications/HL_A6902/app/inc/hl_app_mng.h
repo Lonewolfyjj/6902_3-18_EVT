@@ -50,6 +50,9 @@ typedef struct _tx_app_info_t
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
 
+    /// mute(1:mute on 0:mute off)
+    uint8_t             mute_flag;
+
     /// 无线状态
     hl_rf_state_e       rf_state;
     /// 当前电量
@@ -79,8 +82,13 @@ typedef struct _rx_app_info_t
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
 
+    /// 充电标志(1:充电中 0:不充电 2：充满)
+    uint8_t             tx1_mute;
+    /// 充电标志(1:充电中 0:不充电 2：充满)
+    uint8_t             tx2_mute;
+
     /// 无线状态
-    hl_rf_state_e       rf_state;
+    hl_rf_state_e       rf_state;    
     /// 当前电量
     uint8_t             soc;
 

@@ -47,11 +47,14 @@ hl_screenofftime_t logo_page_timer;
 LV_IMG_DECLARE(logo);   // LOGO页面
 static lv_obj_t * img_obj;
 
+
+
 static void logo_page_timer_trige(bool updateflag)
 {
     if (updateflag == true) {
         // 3slogo时间到进入home页面
         PageManager_PageStackClear();
+        hl_mod_page_screen_lowbritness_init();
         PageManager_PagePush(PAGE_HOME);
     } else {
     }
@@ -62,8 +65,7 @@ static void hl_mod_page_setup(void)
     logo_page_timer.outtime  = LOGO_PAGE_RUNTIME;
     logo_page_timer.trigfunc = logo_page_timer_trige;
     hl_mod_page_screenofftimer_init(&logo_page_timer);
-    rt_kprintf("PAGE_LOGO\n");
-
+    LOG_E("PAGE_LOGO\n");
     img_obj = lv_img_create(lv_scr_act());
     lv_img_set_src(img_obj, &logo);
     lv_obj_center(img_obj);
@@ -71,7 +73,7 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    rt_kprintf("exitPAGE_LOGO\n");
+    LOG_E("exitPAGE_LOGO\n");
     hl_mod_page_screenofftimer_close(&logo_page_timer);
     lv_obj_add_flag(img_obj,LV_OBJ_FLAG_HIDDEN);
     lv_obj_del_delayed(img_obj,0);   

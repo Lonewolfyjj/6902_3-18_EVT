@@ -31,6 +31,7 @@ typedef struct _hl_page_style_bit
     uint32_t page_verson : 1;
     uint32_t page_arc : 1;
     uint32_t page_holding : 1;
+    uint32_t page_lock : 1;
 } hl_page_style_bit;
 
 // 风格创建标记，为1表示已经创建，为0表示未创建

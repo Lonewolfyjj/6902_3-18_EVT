@@ -1,15 +1,36 @@
 /**
  * @file page_charge.c
- * @author your name (you@domain.com)
- * @brief 充电时UI界面
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 充电界面
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_charge.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 LV_IMG_DECLARE(Main_charging);//充电图标
@@ -382,10 +403,3 @@ void hl_mod_charge_init(void * init_data)
         lv_tx2_device_creat(ptr->electric.electric_tx2);
     }
 }
-
-//测试接口
-// void page_charge_test(void)
-// {
-    
-    // lv_page_init();
-// }

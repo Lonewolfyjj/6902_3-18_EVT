@@ -66,7 +66,9 @@ static void page_update(hl_display_screen_s* data_ptr, hl_display_screen_change_
 
             // 如果没在盒子，直接退出到主页面
             if (new_state == BOX_CHARGE_RX_NOT) {
-                hl_mod_menu_goto_home_page();
+                // hl_mod_menu_goto_home_page();
+                PageManager_PageStackClear();
+                PageManager_PagePush(PAGE_LOGO);
             } else {
                 hl_lvgl_charge_ioctl_t ioctrl;
                 ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
@@ -389,20 +391,25 @@ static void in_box_page_init(hl_display_box_charge_state in_box,hl_display_scree
     }    
 }
 
+
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
     in_box_page_init(data_ptr->in_box_state,data_ptr);
+    hl_mod_page_screen_lowbritness_deinit();
+    hl_mod_page_inbox_screenoff_init();
 }
 
 static void hl_mod_page_exit(void)
 {
-    if (in_box_state == BOX_CHARGE_RX_NOT) {
-        return;
-    }
+    // if (in_box_state == BOX_CHARGE_RX_NOT) {
+    //     return;
+    // }
     hl_lvgl_charge_ioctl_t ioctrl;
     ioctrl.charge_cmd = HL_CHARGE_CHANGE_DELETE_PAGE;
     hl_mod_charge_ioctl(&ioctrl);
+    hl_mod_page_inbox_screenoff_close();
+    // hl_mod_page_screen_lowbritness_init();
 }
 
 static void hl_mod_page_loop(void)
@@ -412,6 +419,7 @@ static void hl_mod_page_loop(void)
 
     page_update(data_ptr, flag);
     page_bat_update(data_ptr, flag);
+    hl_mod_page_inbox_screenoff_scan();
 }
 
 PAGE_DEC(PAGE_BOX_IN)

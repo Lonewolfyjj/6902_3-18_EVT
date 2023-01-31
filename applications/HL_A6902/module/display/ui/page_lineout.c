@@ -1,15 +1,36 @@
 /**
  * @file page_lineout.c
- * @author your name (you@domain.com)
- * @brief lineoutUI界面
- * @version 0.1
- * @date 2022-12-06
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 
+ * @version 1.0
+ * @date 2023-01-14
  * 
- * @copyright Copyright (c) 2022
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
  * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-01-14     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
  */
 #include "page_lineout.h"
-// #include "language.h"
 #include "page_style_bit.h"
 
 #define  CHICK_STA_LIFT 0
@@ -51,7 +72,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_choose_main, lv_palette_main(LV_PALETTE_GREY));
+    lv_style_set_bg_color(&style_choose_main, lv_palette_darken(LV_PALETTE_GREY,4));
     lv_style_set_border_width(&style_choose_main,0);
     lv_style_set_outline_width(&style_choose_main,0);
     lv_style_set_radius(&style_choose_main, 0);
@@ -70,7 +91,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_lighten(LV_PALETTE_GREY,1));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_radius(&style_back, 3);
 
     lv_style_init(&style_indicator);
@@ -271,16 +292,4 @@ void hl_mod_lineout_init(void * init_data)
 
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
-}
-
-lv_obj_t * hl_lineout_obj_get(uint8_t num)
-{
-    return valid_obj[num];
-}
-
-//测试接口
-void page_lineout_test(void)
-{
-    // lv_style_page4_init();
-    // lv_page_4_init();
 }
