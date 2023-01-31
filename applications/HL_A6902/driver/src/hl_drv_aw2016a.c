@@ -144,6 +144,33 @@ static int get_chip_id(struct rt_i2c_bus_device* p_i2c_bus, uint8_t* p_chip_id)
     return AW2016A_FUNC_RET_OK;
 }
 
+static int check_chip_status(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_chip_status_e* p_param)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_ISR, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    *p_param = 0;
+
+    if (reg_val & HL_DRV_AW2016A_OTPIS) {
+        *p_param |= HL_DRV_AW2016A_OTPIS;
+    }
+
+    if (reg_val & HL_DRV_AW2016A_UVLOIS) {
+        *p_param |= HL_DRV_AW2016A_UVLOIS;
+    }
+
+    if (reg_val & HL_DRV_AW2016A_PUIS) {
+        *p_param |= HL_DRV_AW2016A_PUIS;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
 /**
  * 
  * @brief reset internal logic and register 
@@ -1896,6 +1923,17 @@ int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op
             }
 
             ret = get_chip_id(p_i2c_bus, (uint8_t*)arg);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_CHECK_CHIP_STATUS: {
+            if (arg_size != sizeof(hl_drv_aw2016a_chip_status_e)) {
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_chip_status_e> type pointer!");
+                return AW2016A_FUNC_RET_ERR;
+            }
+
+            ret = check_chip_status(p_i2c_bus, (hl_drv_aw2016a_chip_status_e*)arg);
             if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
