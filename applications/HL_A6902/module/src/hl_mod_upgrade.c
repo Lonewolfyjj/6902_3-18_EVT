@@ -128,6 +128,8 @@ typedef struct _hl_mod_upgrade_t
     hl_mod_upgrade_state ota_state;
     /// 升级包
     hl_mod_upgrade_pack_t pack;
+    /// TELINK版本号
+    uint8_t telink_version[20];
 } hl_mod_upgrade_t;
 
 /* define --------------------------------------------------------------------*/
@@ -138,6 +140,7 @@ typedef struct _hl_mod_upgrade_t
 #define HL_UPGRADE_TELINK_FIFO_BUF_SIZE (HL_UPGRADE_BUF_SIZE * 3)
 #define HL_UPGRADE_TELINK_HUP_BUF_SIZE 256
 
+#define HL_UPGRADE_TELINK_VERSION_CMD 0x00
 #define HL_UPGRADE_TELINK_RESET_CMD 0xA5
 #define HL_UPGRADE_TELINK_START_CMD 0xA1
 #define HL_UPGRADE_TELINK_SIZE_CMD 0xA2
@@ -303,7 +306,7 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_UPGRADE_TELINK_START_CMD:
-            if (s_upgrade.telink_state == HL_UPGRADE_IDLE_STATE) {
+            if (s_upgrade.telink_state == HL_UPGRADE_START_STATE) {
                 s_upgrade.telink_state = HL_UPGRADE_UPGRADE_STATE;
                 hl_mod_upgrade_telink_pack();
                 rt_kprintf("telink upgrade start! \r\n");
@@ -331,6 +334,21 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
                 s_upgrade.telink_state = HL_UPGRADE_FAIL_STATE;
                 rt_kprintf("telink upgrade error! \r\n");                
             }            
+            break;
+        
+        case HL_UPGRADE_TELINK_VERSION_CMD:
+            memset(&s_upgrade.telink_version[0], 0, 20);
+            rt_sprintf(&s_upgrade.telink_version[0], "V%d.%d.%d.%d", hup_frame.data_addr[0], hup_frame.data_addr[1], hup_frame.data_addr[2], hup_frame.data_addr[3]);
+            LOG_D("telink version %s ", s_upgrade.telink_version); 
+            if((rt_strstr(s_pack_info.pack[1].version, s_upgrade.telink_version) == RT_NULL)&&(s_upgrade.telink_state == HL_UPGRADE_IDLE_STATE)) {
+                s_upgrade.telink_state = HL_UPGRADE_START_STATE;
+                hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, hup_frame.data_addr, 0);
+            } else {
+                _upgrade_telink_stop();
+                unlink(HL_UPGRADE_FILE_NAME_TELINK);
+                s_upgrade.telink_state = HL_UPGRADE_SUCCEED_STATE;
+                LOG_D("telink upgrade finish (%s = %s)! \r\n", s_pack_info.pack[1].version, s_upgrade.telink_version);                
+            }
             break;
 
         default:
@@ -392,12 +410,12 @@ void hl_mod_upgrade_telink_start(void)
     uint8_t upgrade_param = 0;
     uint8_t i = 0;
 
-    rt_kprintf("%s telink start !\n", __func__);
+    LOG_I("%s telink start !\n", __func__);
 
     s_upgrade.telink_task_thread = rt_thread_create("TelinkUp", _upgrade_telink_do, RT_NULL, 3072, 15, 20);
 
     if (!s_upgrade.telink_task_thread) {
-        rt_kprintf("telink task create failed");
+        LOG_E("telink task create failed");
         return;
     } else {
         rt_thread_startup(s_upgrade.telink_task_thread);
@@ -405,13 +423,14 @@ void hl_mod_upgrade_telink_start(void)
     
     upgrade_param = _upgrade_telink_start();
     if (upgrade_param < 0) {
-        rt_kprintf("upgrade file error");
+        LOG_E("upgrade file error");
     } else {
         for(i = 0; i<5; i++) {
             if (s_upgrade.telink_state != HL_UPGRADE_IDLE_STATE) {
                 break;
-            }            
-            hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, &upgrade_param, 0);
+            }                       
+            hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_VERSION_CMD, &upgrade_param, 0);
+            LOG_I("get telink version(%d) ", i);
             rt_thread_mdelay(500);
         }
     }
@@ -614,8 +633,8 @@ static void _upgrade_seek(void)
     }
 
     if (s_upgrade.task.type_num > 0) {
-        _upgrade_start(); // _upgrade_send_msg(HL_UPGRADE_FIND_FW_MSG, s_upgrade.task.type_num);
         LOG_D("upgrade seek file num:(%d)! ", s_upgrade.task.type_num);
+        _upgrade_start(); // _upgrade_send_msg(HL_UPGRADE_FIND_FW_MSG, s_upgrade.task.type_num);        
     } else {
         LOG_E("upgrade seek file seek null(%d)! ", s_upgrade.task.type_num);
     }
@@ -963,6 +982,8 @@ static bool _upgrade_nuzip(void)
     long file_len = 0;
     rt_bool_t ret = true;
 
+    
+
     /*modify file name*/
     rt_sprintf(packname, "%s%s", HL_UPGRADE_FILE_PATH, s_upgrade.pack.file_name);
     LOG_I(" %s ", packname);
@@ -986,25 +1007,10 @@ static bool _upgrade_nuzip(void)
         LOG_E("_upgrade_nuzip_json error");
         return false;
     }
-    
-    /*pack upgrade file  muc.img*/
-    // file_len = s_upgrade.pack.type_num * 8 + 1 + s_upgrade.pack.type_len[0];
-    // if((rt_strstr(s_pack_info.pack[0].name, HL_UPGRADE_NAME_RK) != RT_NULL) && \
-    //     (rt_strstr(s_pack_info.pack[0].version, A6902_VERSION) == RT_NULL)) {
-    //     lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
-    //     ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_RK, 0xC00*512);// s_upgrade.pack.type_len[1]);
-    //     if (ret != true) {
-    //         LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_RK);
-    //         return false;
-    //     }
-    // } else {
-    //     LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
-    // }
 
     /*pack upgrade file  telink.bin*/
     file_len += s_upgrade.pack.type_len[0];
-    if((rt_strstr(s_pack_info.pack[1].name, HL_UPGRADE_NAME_TELINK) != RT_NULL)) {// && \
-        //(rt_strstr(s_pack_info.pack[1]->hardversion, A6902_VERSION)) != RT_NULL)) {
+    if(rt_strstr(s_pack_info.pack[1].name, HL_UPGRADE_NAME_TELINK) != RT_NULL) { 
         lseek(s_upgrade.pack.file_fd, file_len, SEEK_SET);
         ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_TELINK, s_upgrade.pack.type_len[1]);
         if (ret != true) {
@@ -1032,17 +1038,14 @@ static bool _upgrade_nuzip(void)
         }
         LOG_I("set name file (%s)to(%s) ", packname, HL_UPGRADE_FILE_NAME_RK);
     } else {
+        ret = unlink(packname);
+        if(ret < 0) {
+            LOG_E("unlink error%s", packname);
+            return false;
+        }      
+        LOG_I("delete file (%s) ", packname);
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
     }
-    
-    // ret = unlink(packname);
-    // if(ret < 0) {
-    //     LOG_E("unlink error%s", packname);
-    //     return false;
-    // }      
-    // LOG_I("delete file (%s) ", packname);
-
-    // _upgrade_nuzip_file_mcu();
     
     _upgrade_seek();
 
