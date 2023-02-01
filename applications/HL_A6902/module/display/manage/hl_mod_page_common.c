@@ -808,7 +808,7 @@ void hl_mod_page_screen_lowbritness_init(void)
 // 降低屏幕亮度定时器重新计数
 void hl_mod_page_screen_lowbritness_update(void)
 {
-    LOG_E("update low br timer");
+    // LOG_E("update low br timer");
     hl_mod_page_screenofftimer_update(&hl_lowbrightness_time);
 }
 
@@ -858,7 +858,7 @@ void hl_mod_page_inbox_screenoff_close(void)
 // 关闭屏幕熄屏定时器
 void hl_mod_page_inbox_screenoff_update(void)
 {
-    LOG_E("update");
+    // LOG_E("update");
     hl_mod_page_screenofftimer_update(&screenoff_timer);
 }
 
