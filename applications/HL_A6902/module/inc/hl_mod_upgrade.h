@@ -64,6 +64,8 @@ typedef enum _hl_mod_upgrade_state
 {
     /// 空闲升级状态
     HL_UPGRADE_IDLE_STATE = 0x00,
+    /// 升级开始状态
+    HL_UPGRADE_START_STATE,
     /// 升级中状态
     HL_UPGRADE_UPGRADE_STATE,  
     /// 升级成功状态
