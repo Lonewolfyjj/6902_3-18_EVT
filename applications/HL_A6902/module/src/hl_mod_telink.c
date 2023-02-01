@@ -53,34 +53,32 @@ typedef struct _hl_s_rf_info_t
 
 /* define --------------------------------------------------------------------*/
 
-#define TELINK_THREAD_STACK_SIZE 1024
+#define TELINK_THREAD_STACK_SIZE 2048
 #define TELINK_THREAD_PRIORITY 20
 #define TELINK_THREAD_TIMESLICE 10
 #define TELINK_UART_DEV_NAME "uart2"
-#define TELINK_UART_BUF_SIZE 1024
-#define TELINK_FIFO_BUF_SIZE 1024
-#define TELINK_HUP_BUF_SIZE 1024
+#define TELINK_UART_BUF_SIZE 2048
+#define TELINK_FIFO_BUF_SIZE 2048
+#define TELINK_HUP_BUF_SIZE 2048
 
 /* variables -----------------------------------------------------------------*/
 
 /// 线程句柄
-static struct rt_thread telink_thread;
-/// 线程栈数组
-static char telink_thread_stack[TELINK_THREAD_STACK_SIZE];
+static rt_thread_t telink_thread = NULL;
 /// Telink模块句柄
-static hl_mod_telink_t s_telink;
+static hl_mod_telink_t s_telink = { 0 };
 /// 串口接收临时缓冲区
-static uint8_t s_uart_recv_buf[TELINK_UART_BUF_SIZE];
+static uint8_t s_uart_recv_buf[TELINK_UART_BUF_SIZE] = { 0 };
 /// hup接收缓冲区
-static uint8_t* s_telink_hup_buf;
+static uint8_t* s_telink_hup_buf = NULL;
 /// fifo接收缓冲区
-static uint8_t* s_telink_fifo_buf;
+static uint8_t* s_telink_fifo_buf = NULL;
 /// 消息队列结构体
-static mode_to_app_msg_t app_msg_t;
+static mode_to_app_msg_t app_msg_t = { 0 };
 /// rf缓冲数据结构体
-static hl_rf_info_t s_rf_info;
+static hl_rf_info_t s_rf_info = { 0 };
 
-static hl_rf_telink_info_t* telink_info;
+static hl_rf_telink_info_t* telink_info = NULL;
 
 /// 记录上次配对状态
 static uint8_t old_pair_info = 0x1f;
@@ -455,11 +453,34 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     // 初始化fifo
     hl_util_fifo_init(&s_telink.fifo, s_telink_fifo_buf, TELINK_FIFO_BUF_SIZE);
 
+    // 初始化Telink模块串口设备
+    result = _hl_mod_telink_serial_init();
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
+        return 1;
+    }
+
+    // 置模块开关标志位
+    s_telink.module_flag = 1;
+
     return 0;
 }
 
 uint8_t hl_mod_telink_deinit(void)
 {
+    if (!s_telink.module_flag) {
+        return 1;
+    }
+
+    rt_err_t result;
+
+    result = rt_device_close(s_telink.serial);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d] close faild!!! \r\n", __FUNCTION__, __LINE__);
+        return RT_ERROR;
+    }
+    s_telink.serial = NULL;
+
     // 去初始化hup、fifo工具
     hl_util_hup_deinit(&s_telink.hup);
     hl_util_fifo_deinit(&s_telink.fifo);
@@ -468,6 +489,9 @@ uint8_t hl_mod_telink_deinit(void)
     rt_free(s_telink_hup_buf);
     rt_free(s_telink_fifo_buf);
 
+    // 置模块开关标志位
+    s_telink.module_flag = 0;
+
     return 0;
 }
 
@@ -475,26 +499,19 @@ uint8_t hl_mod_telink_start(void)
 {
     rt_err_t result;
 
-    // 初始化Telink模块串口设备
-    result = _hl_mod_telink_serial_init();
-    if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
-    }
-
     // 清空fifo等资源
     hl_util_fifo_clear(&s_telink.fifo);
 
     // 初始化Telink线程资源
-    result = rt_thread_init(&telink_thread, "telink", hl_mod_telink_thread_entry, RT_NULL, &telink_thread_stack[0],
-                            sizeof(telink_thread_stack), TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
+    telink_thread = rt_thread_create("telink", hl_mod_telink_thread_entry, RT_NULL,
+                            TELINK_THREAD_STACK_SIZE, TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
     if (RT_EOK != result) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
         return 1;
     }
 
     // 启动Telink线程
-    result = rt_thread_startup(&telink_thread);
+    result = rt_thread_startup(telink_thread);
     if (RT_EOK != result) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
         return 1;
@@ -508,17 +525,10 @@ uint8_t hl_mod_telink_stop(void)
 {
     rt_err_t result;
 
-    result = rt_device_close(s_telink.serial);
-    if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] close faild!!! \r\n", __FUNCTION__, __LINE__);
-        return RT_ERROR;
-    }
-    s_telink.serial = NULL;
-
     // 脱离Telink线程
-    result = rt_thread_detach(&telink_thread);
+    result = rt_thread_delete(telink_thread);
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d] detach faild!!! \r\n", __FUNCTION__, __LINE__);
+        rt_kprintf("[%s][line:%d] delete faild!!! \r\n", __FUNCTION__, __LINE__);
         return 1;
     }
 

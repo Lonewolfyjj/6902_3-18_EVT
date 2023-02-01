@@ -263,6 +263,8 @@ typedef struct
 
 typedef struct
 {
+    /// 模块运行状态标志
+    uint8_t module_flag;
     /// 线程运行状态标志
     rt_bool_t thread_flag;
     /// APP层消息队列
