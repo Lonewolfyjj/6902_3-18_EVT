@@ -339,7 +339,7 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
         case HL_UPGRADE_TELINK_VERSION_CMD:
             memset(&s_upgrade.telink_version[0], 0, 20);
             rt_sprintf(&s_upgrade.telink_version[0], "V%d.%d.%d.%d", hup_frame.data_addr[0], hup_frame.data_addr[1], hup_frame.data_addr[2], hup_frame.data_addr[3]);
-            LOG_D("telink version %s \r\n", s_upgrade.telink_version); 
+            LOG_D("telink version %s ", s_upgrade.telink_version); 
             if((rt_strstr(s_pack_info.pack[1].version, s_upgrade.telink_version) == RT_NULL)&&(s_upgrade.telink_state == HL_UPGRADE_IDLE_STATE)) {
                 s_upgrade.telink_state = HL_UPGRADE_START_STATE;
                 hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, hup_frame.data_addr, 0);
