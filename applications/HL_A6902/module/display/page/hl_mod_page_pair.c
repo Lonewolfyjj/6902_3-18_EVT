@@ -87,12 +87,12 @@ static void hl_mod_page_setup(void)
     };
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
 
-    hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl = {
-        .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
-    };
+    // hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl = {
+    //     .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
+    // };
 
-    hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
-    now_num = s_two_in_one_test_ctl.s_two_in_one_choose;
+    // hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
+    now_num = s_two_in_one_test.s_two_in_one_choose;
 }
 
 static void hl_mod_page_exit(void)
