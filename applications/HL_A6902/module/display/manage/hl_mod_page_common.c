@@ -562,6 +562,7 @@ bool hl_mod_next_menu_enter(uint8_t* tab, uint8_t num, uint8_t max_num)
     }
 }
 
+// len参数为0表示是u32_param，0xFFFFFFFF表示是s32_param 如果大于0小于0xFF表示是使用的指针
 void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void* param, uint32_t len)
 {
     rt_err_t res;
@@ -569,18 +570,27 @@ void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void* param, uint32_t len)
     if (hl_mod_display.msg_hander == RT_NULL) {
         LOG_E("msg no init\n");
     }
-    rt_memset(&hl_mod_display.msg,0,sizeof(hl_mod_display.msg));
+
+    rt_memset(&hl_mod_display.msg, 0, sizeof(hl_mod_display.msg));
     hl_mod_display.msg.sender = DISPLAY_MODE;
     hl_mod_display.msg.cmd    = msg_cmd;
+
     if (len == 0) {
+
         hl_mod_display.msg.param.u32_param = *(uint32_t*)param;
-        LOG_E("msg[%d][%x]\n",hl_mod_display.msg.cmd,*(uint32_t*)param);
+        LOG_E("+msg[%d][%x]\n", hl_mod_display.msg.cmd, *(uint32_t*)param);
+
+    } else if (len == 0xFFFFFFFF) {
+
+        hl_mod_display.msg.param.s32_param = *(int32_t*)param;
+        LOG_E("-msg[%d][%x]\n", hl_mod_display.msg.cmd, *(uint32_t*)param);
+
     } else {
         hl_mod_display.msg.param.ptr = param;
-        LOG_E("msg[%d]\n",msg_cmd);
+        LOG_E("pmsg[%d]\n", msg_cmd);
     }
     hl_mod_display.msg.len = len;
-    
+
     res = rt_mq_send(hl_mod_display.msg_hander, (void*)(&hl_mod_display.msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
         LOG_E("DISP_MODE msgq full\n");

@@ -159,20 +159,32 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_MUTE_IND:
             tx_mute = *(hl_rf_bypass_state_t*)p_msg->param.ptr;
-            if(tx_mute.chn == HL_RF_LEFT_CHANNEL) {
+            if (tx_mute.chn == HL_RF_LEFT_CHANNEL) {
                 rx_info.tx1_mute = tx_mute.state;
-            } else if(tx_mute.chn == HL_RF_RIGHT_CHANNEL) {
+                hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &tx_mute.state, 1);
+            } else if (tx_mute.chn == HL_RF_RIGHT_CHANNEL) {
                 rx_info.tx2_mute = tx_mute.state;
+                hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &tx_mute.state, 1);
             } else {
                 LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
             }
-            
+
             hl_mod_display_io_ctrl(TX1_SIGNAL_VAL_CMD, &tx1_rssi, 1);
-            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1); 
+            hl_mod_display_io_ctrl(TX2_SIGNAL_VAL_CMD, &tx2_rssi, 1);
             break;
 
         case HL_RF_BYPASS_DENOISE_IND:
-            LOG_D("app get denoise indicate");
+            tx_mute = *(hl_rf_bypass_state_t*)p_msg->param.ptr;
+            if (tx_mute.chn == HL_RF_LEFT_CHANNEL) {
+
+                hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &tx_mute.state, 1);
+            } else if (tx_mute.chn == HL_RF_RIGHT_CHANNEL) {
+
+                hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &tx_mute.state, 1);
+            } else {
+                LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
+            }
+            LOG_D("app get denoise indicate,ch(%d),v(%d)", tx_mute.chn, tx_mute.state);
             break;
 
         case HL_RF_BYPASS_VOLUME_IND:
@@ -181,7 +193,17 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_RECORD_IND:
             hl_mod_euc_ctrl(HL_HID_START_RECORD_CMD, RT_NULL, 0);
-            LOG_D("app get record indicate");
+            tx_mute = *(hl_rf_bypass_state_t*)p_msg->param.ptr;
+            if (tx_mute.chn == HL_RF_LEFT_CHANNEL) {
+
+                hl_mod_display_io_ctrl(TX1_RECORD_STATE_SWITCH_CMD, &tx_mute.state, 1);
+            } else if (tx_mute.chn == HL_RF_RIGHT_CHANNEL) {
+
+                hl_mod_display_io_ctrl(TX2_RECORD_STATE_SWITCH_CMD, &tx_mute.state, 1);
+            } else {
+                LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
+            }
+            LOG_D("app get record indicate,ch(%d),v(%d)", tx_mute.chn, tx_mute.state);
             break;
 
         case HL_RF_BYPASS_SETTING_IND:
@@ -212,7 +234,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 "remote mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]  [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]",
                 ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7], ptr[8], ptr[9], ptr[10], ptr[11]);
             break;
+        case HL_RF_BYPASS_STATUS_LED_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
 
+            hl_mod_display_io_ctrl(LED_BRITNESS_VAL_CMD, &ptr_rf_value->val, 1);
+            break;
 
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

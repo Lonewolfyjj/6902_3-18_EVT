@@ -140,7 +140,11 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
 
 void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
 {
-    hl_rf_bypass_value_t telink_bypass = { 0 };
+    hl_rf_bypass_value_t      telink_bypass   = { 0 };
+    hl_rf_bypass_state_t      telink_bypass_s = { 0 };
+    uint32_t                  ptr;
+    hl_display_sound_module_e sound_module;
+    
     switch (p_msg->cmd) {
         case RESTORE_SET_SWITCH_IND:
             // TBD: 恢复NVRAM的值并重启？
@@ -174,10 +178,16 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
             break;
         case TX1_RECORD_STATE_SWITCH_IND:
             // TBD: 透传通道给TX1发出录制开始/关闭
+            telink_bypass_s.chn   = HL_RF_LEFT_CHANNEL;
+            telink_bypass_s.state = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &telink_bypass_s, sizeof(telink_bypass_s));
             LOG_D("TX1_RECORD_STATE_SWITCH_IND\r\n");
             break;
         case TX2_RECORD_STATE_SWITCH_IND:
             // TBD: 透传通道给TX2发出录制开始/关闭
+            telink_bypass_s.chn   = HL_RF_RIGHT_CHANNEL;
+            telink_bypass_s.state = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &telink_bypass_s, sizeof(telink_bypass_s));
             LOG_D("TX2_RECORD_STATE_SWITCH_IND\r\n");
             break;
         case TX1_MUTE_SWITCH_SWITCH_IND:
@@ -211,14 +221,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
         case TX1_FS_FORMAT_VAL_IND:
             // TBD: 透传通道给TX1发出格式化U盘命令
             telink_bypass.chn = 0;
-            telink_bypass.val = p_msg->param.s32_param;
+            telink_bypass.val = p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_FORMAT_DISK_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX1_FS_FORMAT_VAL_IND\r\n");
             break;
         case TX2_FS_FORMAT_VAL_IND:
             // TBD: 透传通道给TX2发出格式化U盘命令
             telink_bypass.chn = 1;
-            telink_bypass.val = p_msg->param.s32_param;
+            telink_bypass.val = p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_FORMAT_DISK_CMD, &telink_bypass, sizeof(telink_bypass));
             LOG_D("TX2_FS_FORMAT_VAL_IND\r\n");
             break;
@@ -274,6 +284,9 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t *p_msg)
             break;
         case LED_BRITNESS_VAL_IND:
             // TBD: 透传通道给TX发出LED亮度调节命令
+            rx_info.tx_led_britness = p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_STATUS_LED_CMD, &rx_info.tx_led_britness, sizeof(uint8_t));
+
             LOG_D("LED_BRITNESS_VAL_IND\r\n");
             break;
         case SYSTIME_SET_VAL_IND:

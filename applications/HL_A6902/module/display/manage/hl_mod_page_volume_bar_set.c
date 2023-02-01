@@ -135,7 +135,7 @@ uint8_t hl_mod_page_volume_send(hl_out_msg_e msg_cmd,int16_t *get_data)
         LOG_D("c=[%d]volume=[%d]\n",msg_cmd, last_volume);
         *get_data = last_volume;
         volume = last_volume;
-        hl_mod_display_send_msg(msg_cmd, &volume, 0);
+        hl_mod_display_send_msg(msg_cmd, &volume, 0xFFFFFFFF);
         return 1;
     }
     return 0;
