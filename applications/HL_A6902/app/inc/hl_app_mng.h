@@ -91,6 +91,8 @@ typedef struct _rx_app_info_t
     hl_rf_state_e       rf_state;    
     /// 当前电量
     uint8_t             soc;
+    /// 当前TX亮度
+    uint8_t             tx_led_britness;
 
     int32_t             cur_volume_r;
     int32_t             cur_volume_l;
