@@ -50,7 +50,9 @@ static lv_style_t style_area_main;
 static lv_obj_t * img_lock,*img_unlock, * area;
 static lv_timer_t * timer;
 
-static uint8_t lock_flag = 0;
+static uint8_t lock_flag = 0,unlock_flag = 0;
+
+static hl_lock_event_cb page_lock_cb;
 
 static lv_obj_t * lv_lock_img_creat_fun(lv_obj_t *align_obj,const void * src,lv_coord_t x_offset,lv_coord_t y_offset,uint16_t zoom)
 {
@@ -58,7 +60,7 @@ static lv_obj_t * lv_lock_img_creat_fun(lv_obj_t *align_obj,const void * src,lv_
     lv_img_set_src(img,src);
     lv_img_set_zoom(img, zoom);
     lv_obj_align_to(img,align_obj,LV_ALIGN_CENTER,x_offset,y_offset);
-    lv_obj_add_flag(img,LV_OBJ_FLAG_HIDDEN);
+    // lv_obj_add_flag(img,LV_OBJ_FLAG_HIDDEN);
     return img;
 }
 
@@ -107,21 +109,28 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
 static void lock_timer(lv_timer_t * timer)
 {
     if(lock_flag){
-        lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        lv_timer_del(timer);
+        hl_obj_delete(img_lock,true);
+        page_lock_cb(HL_LOCK_STATUS_HIDE);
         lock_flag = 0;
+    }
+    if(unlock_flag){
+        lv_timer_del(timer);
+        hl_obj_delete(img_unlock,true);
+        page_lock_cb(HL_UNLOCK_STATUS_HIDE);
+        unlock_flag = 0;
     }
 }
 
-static void lock_cb(lv_event_t * e)
-{    
-    lv_event_code_t code = lv_event_get_code(e);
+// static void lock_cb(lv_event_t * e)
+// {    
+//     lv_event_code_t code = lv_event_get_code(e);
 
-    if(code == LV_EVENT_CLICKED) {
-        lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
-        lv_timer_reset(timer);
-        lock_flag = 1;
-    }    
-}
+//     if(code == LV_EVENT_CLICKED) {
+//         lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+//         lv_timer_reset(timer);
+//     } 
+// }
 
 typedef void (* anim_start)(void);
 
@@ -256,43 +265,101 @@ static void hl_mod_lock_init(void)
         lv_lock_style_init();
         page_style_bit.page_lock = 1;
     }    
-    area = lv_area_creat_fun(LV_ALIGN_CENTER,lock_cb,0,0,294,126);
-    img_lock = lv_lock_img_creat_fun(area,&Other_lock,0,0,IMG_ROOM_MAX);
-    img_unlock = lv_lock_img_creat_fun(area,&Other_unlock,0,0,IMG_ROOM_MAX);
-    timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
+    if(unlock_flag == 1){
+        lv_timer_del(timer);
+        hl_obj_delete(img_unlock,true);
+        page_lock_cb(HL_UNLOCK_STATUS_HIDE);
+        unlock_flag = 0;
+    }
+    if(lock_flag == 0){
+        img_lock = lv_lock_img_creat_fun(lv_scr_act(),&Other_lock,0,0,IMG_ROOM_MAX);
+        timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
+        lock_flag = 1;
+    }else if(lock_flag == 1){
+        lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        lv_timer_reset(timer);
+    }
 } 
+
+static void hl_mod_lock_deinit(void)
+{
+    if (!page_style_bit.page_lock){
+        lv_lock_style_init();
+        page_style_bit.page_lock = 1;
+    } 
+    if(lock_flag == 1){
+        lv_timer_del(timer);
+        hl_obj_delete(img_lock,true);
+        page_lock_cb(HL_LOCK_STATUS_HIDE);
+        lock_flag = 0;
+    }
+    if(unlock_flag == 0){
+        img_unlock = lv_lock_img_creat_fun(lv_scr_act(),&Other_unlock,0,0,IMG_ROOM_MAX);
+        timer = lv_timer_create(lock_timer, LOCK_HOLD_TIME,  NULL);
+        unlock_flag = 1;
+    }else if(unlock_flag == 1){
+        lv_obj_clear_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
+        lv_timer_reset(timer);
+    }
+}
+
+static void hl_mod_lock_delete_icon(void)
+{
+    if(lock_flag == 1){
+        lv_timer_del(timer);
+        hl_obj_delete(img_lock,true);
+        page_lock_cb(HL_LOCK_STATUS_HIDE);
+        lock_flag = 0;
+    }
+
+    if(unlock_flag == 1){
+        lv_timer_del(timer);
+        hl_obj_delete(img_unlock,true);
+        page_lock_cb(HL_UNLOCK_STATUS_HIDE);
+        unlock_flag = 0;
+    }
+}
 
 void hl_mod_lock_ioctl(void * ctl_data)
 {
     hl_lvgl_lock_ioctl_t * ptr = (hl_lvgl_lock_ioctl_t *)ctl_data;
     switch(ptr->cmd){
-        case HL_LOCK_ICON_SHOW:
-            lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
-            lv_timer_reset(timer);
-            lock_flag = 1;
+        case HL_LOCK_ICON_DISPLAY:
+            page_lock_cb = ptr->lock_event_cb;
+            hl_mod_lock_init();
             break;
-        case HL_LOCK_ICON_HIDE:
-            lv_obj_add_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+        case HL_UNLOCK_ICON_DISPLAY:
+            page_lock_cb = ptr->lock_event_cb;
+            hl_mod_lock_deinit();
             break;
-
-        case HL_UNLOCK_ICON_SHOW:
-            lv_obj_clear_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
-            break;
-        case HL_UNLOCK_ICON_HIDE:
-            lv_obj_add_flag(img_unlock,LV_OBJ_FLAG_HIDDEN);
+        case HL_DELETE_ICON_CURRENT:
+            page_lock_cb = ptr->lock_event_cb;
+            hl_mod_lock_delete_icon();
             break;
         case HL_LOCK_ICON_ANIM:
             lv_lock_icon_anmi_init(ptr->icon_obj,ptr->icon_typ);
             break;
-
-        case HL_LOCK_PAGE_INIT:
-            hl_mod_lock_init();
-            break;
-        case HL_LOCK_PAGE_EXIT:
-            lv_timer_del(timer);
-            hl_obj_delete(area,true);
-            break;
         default:
             break;
-    }    
+    }
 }
+
+static void page_lock_test_cb(hl_lvgl_lock_sta_t sta)
+{
+    ///
+}
+
+void page_lock_test_ctl(int argc, char** argv)
+{
+	hl_lvgl_lock_ioctl_t tmp;
+    tmp.lock_event_cb = page_lock_test_cb;
+	if (!strcmp("lock", argv[1])) {
+        tmp.cmd = HL_LOCK_ICON_DISPLAY;
+        hl_mod_lock_ioctl(&tmp);
+    }else if (!strcmp("unlock", argv[1])){
+        tmp.cmd = HL_UNLOCK_ICON_DISPLAY;
+        hl_mod_lock_ioctl(&tmp);
+	}
+}
+
+MSH_CMD_EXPORT(page_lock_test_ctl, run page_lock_test_ctl);
