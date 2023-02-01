@@ -53,7 +53,15 @@ typedef enum _hl_lvgl_lock_cmd_t
     HL_LOCK_PAGE_EXIT,
     /// @brief 图标动画
     HL_LOCK_ICON_ANIM,
-}hl_lvgl_lock_cmd_t;
+    /// @brief 锁屏情况下TP单机触发
+    HL_LOCK_TP_CLICK_CB,
+    /// @brief 锁屏情况下TP单击触发的禁用
+    HL_LOCK_TP_CLICK_CB_DEL,
+    /// 初始化关于LOCK相关的代码（主要是主页面的,需要加回调）
+    HL_LOCK_RSOURCE_INIT,
+    /// 反初始化关于LOCK相关的代码（每个页面结束，必须回收锁屏相关资源）
+    HL_LOCK_RSOURCE_DEINIT
+} hl_lvgl_lock_cmd_t;
 
 /// @brief 图标枚举
 typedef enum _hl_lock_icon_t

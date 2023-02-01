@@ -39,7 +39,7 @@
 #include "math.h"
 #include "page_style_bit.h"
 #include "hl_drv_rm690a0.h"
-
+#include "page_top.h"
 /* define --------------------------------------------------------------------*/
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -601,12 +601,11 @@ void hl_mod_display_send_msg(hl_out_msg_e msg_cmd, void* param, uint32_t len)
 
 void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
 {
-
     switch (p_msg->cmd) {
-            // case MSG_RX_PWR_KEY:
-            //     hl_app_rx_pwr_key_pro(p_msg->param.u32_param);
-            //     LOG_D("MSG_RX_PWR_KEY:(%d) \r\n", p_msg->param.u32_param);
-            //     break;
+        case MSG_RX_PWR_KEY:
+            in_data.in_inputdev.power_key = p_msg->param.u32_param;
+            LOG_D("MSG_RX_PWR_KEY:(%d) \r\n", p_msg->param.u32_param);
+            break;
 
         case MSG_RX_OK_VOL:
             in_data.in_inputdev.keypad_knob_ok = p_msg->param.u32_param;
@@ -645,6 +644,51 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg)
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
+}
+
+// 开关机按键功能函数，返回值：    0：表示未出现变更，1表示出现状态变更
+uint8_t hl_mod_get_power_key_val(void)
+{
+    static uint8_t power_key = HL_KEY_EVENT_IDLE;
+    uint8_t        data      = 0;
+
+    if (power_key != in_data.in_inputdev.power_key) {
+
+        // LV_LOG_USER("power_key=%d\r\n", power_key);
+        power_key = in_data.in_inputdev.power_key;
+
+        switch (power_key) {
+
+            case HL_KEY_EVENT_SHORT:
+                hl_mod_page_inbox_screenoff_update();
+                hl_mod_page_screen_lowbritness_update();
+                data = HL_KEY_EVENT_SHORT;
+                break;
+            case HL_KEY_EVENT_DOUBLE:
+                hl_mod_page_inbox_screenoff_update();
+                hl_mod_page_screen_lowbritness_update();
+                data = HL_KEY_EVENT_IDLE;
+                break;
+            case HL_KEY_EVENT_LONG:
+                hl_mod_page_inbox_screenoff_update();
+                hl_mod_page_screen_lowbritness_update();
+
+                data = HL_KEY_EVENT_IDLE;
+                break;
+            case HL_KEY_EVENT_RELEASE:
+                hl_mod_page_inbox_screenoff_update();
+                hl_mod_page_screen_lowbritness_update();
+                data = HL_KEY_EVENT_IDLE;
+            default:
+                data = HL_KEY_EVENT_IDLE;
+                LV_LOG_USER("def\n");
+                break;
+        }
+    } else {
+        data = HL_KEY_EVENT_IDLE;
+    }
+
+    return data;
 }
 // 在
 void hl_mod_outbox_offcharge_scan(void)
@@ -849,6 +893,36 @@ void hl_mod_page_inbox_screenoff_scan(void)
     }
 
     hl_mod_page_screenofftimer_scan(&screenoff_timer);
+}
+
+// 屏幕锁屏功能扫描程序 只会在快捷音量设置页面和快捷TX设置、主页面,1表示锁屏的新状态，0表示解锁的新状态
+uint8_t hl_mod_page_screen_lock_scan()
+{
+#if 0
+    static uint8_t screen;
+
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+
+    hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
+
+    // 发生锁屏变更
+    if (HL_KEY_EVENT_SHORT == hl_mod_get_power_key_val()) {
+
+        // 开始运行锁屏
+        if (data_ptr->sys_status.screen_lock == 0) {
+            data_ptr->sys_status.screen_lock = 1;
+
+            // 锁屏状态
+            return 1;
+        } else {
+            data_ptr->sys_status.screen_lock = 0;
+
+            // 解锁状态
+            return 0;
+        }
+    }
+#endif
+    return 0;
 }
 
 void hl_mod_page_screen_lowbritness_scan(void)
