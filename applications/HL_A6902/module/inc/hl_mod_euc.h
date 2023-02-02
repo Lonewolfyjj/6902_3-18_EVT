@@ -46,6 +46,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_MAC_CMD,
     /// 设置设备充电状态，参数为<hl_mod_euc_charge_state_e *>
     HL_SET_CHARGE_STATE_CMD,
+    /// 设置设备开机状态，参数为<uint8_t *>
+    HL_SET_TURN_ON_STATE_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -64,6 +66,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_MAC_REQ_IND,
     /// 请求 app 获取设备充电状态，无参数。
     HL_GET_CHARGE_STATE_REQ_IND,
+    /// 请求 app 获取设备开机状态，无参数。
+    HL_GET_TURN_ON_STATE_REQ_IND,
 } hl_mod_euc_ind_e;
 
 #else  // rx

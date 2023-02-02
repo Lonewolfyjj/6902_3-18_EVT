@@ -76,6 +76,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t                   dev_mac_temp[6]  = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x35 };
     uint8_t*                  rx_mac_addr;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    uint8_t                   turn_on_state;
 
     hl_rf_work_mode_e telink_work_mode;
     hl_rf_pair_info_t telink_pair_info;
@@ -134,6 +135,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
             charge_state_temp = tx_info.charge_flag + 1;
             hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 1;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
