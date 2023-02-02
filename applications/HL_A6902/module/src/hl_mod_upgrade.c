@@ -43,6 +43,8 @@
 #include "hl_util_fifo.h"
 #include "hl_util_msg_type.h"
 
+#include "hl_mod_wdog.h"
+
 #include "cJSON/cJSON.h"
 
 #define DBG_SECTION_NAME "mod_up"
@@ -512,7 +514,6 @@ END:
 
 void hl_mod_upgrade_ota_start(void)
 {
-#if 1
     rt_kprintf("%s ota start !\n", __func__);
     s_upgrade.ota_task_thread = rt_thread_create("OtaUp", hl_mod_upgrade_ota, RT_NULL, 8192 * 2, 15, 20);
 
@@ -522,37 +523,6 @@ void hl_mod_upgrade_ota_start(void)
     } else {
         rt_thread_startup(s_upgrade.ota_task_thread);
     }
-        
-#else
-    uint32_t size = 0;
-    uint32_t i    = 0;
-    int      df   = 0;
-
-    df = open("tx.img", O_RDONLY);  //fopen("tx.img", "rb");
-    if (df < 0) {
-        rt_kprintf("upgrade file failed \r\n");
-        return -1;
-    } else {
-        rt_kprintf("upgrade file succeed \r\n");
-    }
-    size = read(
-        df, s_upgrade_telink.upgrade_pack.upgrade_data,
-        512);  //fread(&s_upgrade_telink.upgrade_pack.upgrade_data[0], sizeof(uint8_t), 128, s_upgrade_telink.upgrade_file);
-
-    if (size == 0) {
-        rt_kprintf("upgrade RK2108 stop (end) \r\n");
-        return 0;
-    } else if (size < 0) {
-        rt_kprintf("upgrade RK2108 stop (error) \r\n");
-        return -1;
-    }
-
-    rt_kprintf("OTA msg(%d):\n", size);
-    for (i = 0; i < size; i++) {
-        rt_kprintf(" %02x", s_upgrade_telink.upgrade_pack.upgrade_data[i]);
-    }
-    rt_kprintf("\n");
-#endif
 }
 
 static rt_err_t hl_mod_upgrade_config(void)
@@ -604,6 +574,7 @@ static rt_bool_t _upgrade_seek_fw_file(char* path)
 
     return is_exist;
 }
+
 
 static void _upgrade_switch(hl_mod_upgrade_device type)
 {
@@ -1060,12 +1031,34 @@ static bool _upgrade_nuzip(void)
     return true;
 }
 
+static void hl_mod_upgrade_guard(void)
+{
+    while(1){
+        hl_mod_feed_dog();
+        rt_thread_mdelay(1000);
+    }
+}
+
+void hl_mod_upgrade_guard_start(void)
+{
+    rt_kprintf("%s guard start!\n", __func__);
+    s_upgrade.ota_task_thread = rt_thread_create("WDog", hl_mod_upgrade_guard, RT_NULL, 255, 5, 1);
+
+    if (!s_upgrade.ota_task_thread) {
+        rt_kprintf("guard start task create failed");
+        return;
+    } else {
+        rt_thread_startup(s_upgrade.ota_task_thread);
+    }
+}
+
 static void _upgrade_start(void)
 {
     uint32_t i = 0;
 
     // 初始化Telink模块串口设备
     hl_mod_upgrade_uart_init();
+    hl_mod_upgrade_guard_start();
 
     /// 升级任务处理
     for (i = 0; i < s_upgrade.task.type_num; i++) {

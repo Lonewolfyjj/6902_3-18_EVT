@@ -53,13 +53,13 @@ typedef struct _hl_s_rf_info_t
 
 /* define --------------------------------------------------------------------*/
 
-#define TELINK_THREAD_STACK_SIZE 2048
+#define TELINK_THREAD_STACK_SIZE 1024
 #define TELINK_THREAD_PRIORITY 20
 #define TELINK_THREAD_TIMESLICE 10
 #define TELINK_UART_DEV_NAME "uart2"
-#define TELINK_UART_BUF_SIZE 2048
-#define TELINK_FIFO_BUF_SIZE 2048
-#define TELINK_HUP_BUF_SIZE 2048
+#define TELINK_UART_BUF_SIZE 1024
+#define TELINK_FIFO_BUF_SIZE 1024
+#define TELINK_HUP_BUF_SIZE 1024
 
 /* variables -----------------------------------------------------------------*/
 
