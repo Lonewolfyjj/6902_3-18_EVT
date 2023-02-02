@@ -82,10 +82,20 @@ typedef struct _rx_app_info_t
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
 
-    /// 充电标志(1:充电中 0:不充电 2：充满)
-    uint8_t             tx1_mute;
-    /// 充电标志(1:充电中 0:不充电 2：充满)
-    uint8_t             tx2_mute;
+    /// MUTE标志(1:MUTE 0:正常)
+    uint8_t             tx1_mute:1;
+    /// MUTE标志(1:MUTE 0:正常)
+    uint8_t             tx2_mute:1;
+
+    // /// 降噪标志(1:降噪中 0:不降噪)
+    // uint8_t             tx1_denoise:1;
+    // /// 降噪标志(1:降噪中 0:不降噪)
+    // uint8_t             tx2_denoise:1;
+
+    // /// 录制标志(1:录制中 0:不录制)
+    // uint8_t             tx1_record:1;
+    // /// 录制标志(1:录制中 0:不录制)
+    // uint8_t             tx2_record:1;
 
     /// 无线状态
     hl_rf_state_e       rf_state;    

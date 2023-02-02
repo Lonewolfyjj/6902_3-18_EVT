@@ -43,6 +43,7 @@
 #include "hl_app_rf_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
 #include "hl_util_general_type.h"
+#include "hl_mod_wdog.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -70,6 +71,7 @@ int hl_app_info(int argc, char** argv);
 /* Exported functions --------------------------------------------------------*/
 void hl_app_msg_thread(void* parameter)
 {
+    hl_mod_feed_dog();
     mode_to_app_msg_t msg = { 0 };
 
     hl_app_mng_charger_entry(&hl_app_mq);
@@ -86,7 +88,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), RT_WAITING_FOREVER) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 500) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -122,6 +124,7 @@ void hl_app_msg_thread(void* parameter)
             }
         }
         rt_thread_mdelay(5);
+        hl_mod_feed_dog();
     }
 }
 
@@ -145,7 +148,7 @@ void hl_app_mng_init(void)
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {

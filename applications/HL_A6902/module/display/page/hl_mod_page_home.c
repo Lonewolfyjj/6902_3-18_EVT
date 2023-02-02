@@ -32,6 +32,7 @@
 #include "hl_mod_page.h"
 #include "page_test.h"
 #include "page_top.h"
+#include "page_lock.h"
 #include "hl_util_general_type.h"
 #include "lv_port_indev.h"
 /* typedef -------------------------------------------------------------------*/
@@ -59,6 +60,7 @@ static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
 static void            hl_mod_page_home_tx1lowbat_deal(uint8_t batval);
 static void            hl_mod_page_home_tx2lowbat_deal(uint8_t batval);
 static void            hl_mod_page_home_rxlowbat_deal(uint8_t batval);
+static void            hl_mod_page_lock_event(hl_lvgl_lock_sta_t state);
 
 static int16_t hl_mod_lineout_volume_get(hl_display_screen_s* data_ptr, uint8_t channl)
 {
@@ -100,6 +102,65 @@ static void hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal)
             LV_LOG_USER("deal=%d,icon=%d\n", deal, icon);
         }
 
+    } else if (deal == HL_TOP_DELETE_ICON_CMD) {
+        if (icon_state[icon] == HL_TOP_ADD_ICON_CMD) {
+            ioctl_top.top_cmd   = HL_TOP_DELETE_ICON_CMD;
+            ioctl_top.top_param = icon;
+            hl_mod_top_ioctl(&ioctl_top);
+            icon_state[icon] = HL_TOP_DELETE_ICON_CMD;
+            LV_LOG_USER("deal=%d,icon=%d\n", deal, icon);
+        }
+    }
+}
+
+// 添加是 1  删除是 0  带动画的 只有插入相关的图标和锁屏有动画
+static void hl_mod_icon_deal_anim(hl_top_icon_t icon, hl_top_cmd_t deal)
+{
+    hl_lvgl_top_ioctl_t  ioctl_top;
+    hl_lvgl_lock_ioctl_t ioctl_lock;
+    hl_lock_icon_t       lock_icon;
+
+    if (icon > HL_TOP_ICON_HEATSET || icon <= HL_TOP_ICON_LOCK) {
+        return;
+    }
+
+    switch (icon) {
+        case HL_TOP_ICON_LOCK:
+            lock_icon = HL_LOCK_ICON_LOCK;
+            break;
+        case HL_TOP_ICON_LINEOUT:
+            lock_icon = HL_LOCK_ICON_LINEOUT;
+            break;
+        case HL_TOP_ICON_TYPEC:
+            lock_icon = HL_LOCK_ICON_TYPEC;
+            break;
+        case HL_TOP_ICON_HEATSET:
+            lock_icon = HL_LOCK_ICON_HEATSET;
+            break;
+        default:
+            break;
+    }
+
+    if (deal == HL_TOP_ADD_ICON_CMD) {
+
+        if (icon_state[icon] == HL_TOP_DELETE_ICON_CMD) {
+
+            ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+            ioctl_top.top_param = icon;
+            hl_mod_top_ioctl(&ioctl_top);
+
+            ioctl_top.top_cmd   = HL_TOP_GET_ICON_OBJ_CMD;
+            ioctl_top.top_param = icon;
+            hl_mod_top_ioctl(&ioctl_top);
+
+            ioctl_lock.cmd      = HL_LOCK_ICON_ANIM;
+            ioctl_lock.icon_typ = lock_icon;
+            ioctl_lock.icon_obj = ioctl_top.icon_obj;
+            hl_mod_lock_ioctl(&ioctl_lock);
+
+            icon_state[icon] = HL_TOP_ADD_ICON_CMD;
+            LV_LOG_USER("deal=%d,icon=%d\n", deal, icon);
+        }
     } else if (deal == HL_TOP_DELETE_ICON_CMD) {
         if (icon_state[icon] == HL_TOP_ADD_ICON_CMD) {
             ioctl_top.top_cmd   = HL_TOP_DELETE_ICON_CMD;
@@ -502,9 +563,17 @@ static void hl_mod_page_top_init(void)
         hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
     }
 
-    if (data_ptr->sys_status.screen_lock) {
+    if (data_ptr->sys_status.screen_lock == HL_SCREEN_LOCKED) {
 
         hl_mod_icon_deal(HL_TOP_ICON_LOCK, HL_TOP_ADD_ICON_CMD);
+        hl_lvgl_lock_ioctl_t ioctrl;
+        ioctrl.cmd           = HL_LOCK_RSOURCE_INIT;
+        ioctrl.lock_event_cb = hl_mod_page_lock_event;
+        hl_mod_lock_ioctl(&ioctrl);
+
+        ioctrl.cmd           = HL_LOCK_TP_CLICK_CB;
+        ioctrl.lock_event_cb = hl_mod_page_lock_event;
+        hl_mod_lock_ioctl(&ioctrl);
     }
 
     if (data_ptr->sys_status.line_out_in) {
@@ -552,57 +621,56 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
         }
         hl_mod_display_mux_release();
         hl_mod_top_ioctl(&ioctl_top);
-
     }
 
     // 降噪一起的
     if (flag->sys_status.tx1_noise || flag->sys_status.tx2_noise) {
-
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_noise = 0;
+        flag->sys_status.tx2_noise = 0;
+        hl_mod_display_mux_release();
         if (now->sys_status.tx1_noise || now->sys_status.tx2_noise) {
 
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
         } else if (!now->sys_status.tx1_noise && !now->sys_status.tx2_noise) {
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_DELETE_ICON_CMD);
         }
-        hl_mod_display_mux_take();
-        flag->sys_status.tx1_noise = 0;
-        flag->sys_status.tx2_noise = 0;
-        hl_mod_display_mux_release();
     }
 
-    // 锁屏
-    if (flag->sys_status.screen_lock) {
+    // // 锁屏
+    // if (flag->sys_status.screen_lock) {
 
-        hl_mod_icon_deal(HL_TOP_ICON_LOCK, (hl_top_cmd_t)now->sys_status.screen_lock);
-        hl_mod_display_mux_take();
-        flag->sys_status.screen_lock = 0;
-        hl_mod_display_mux_release();
-    }
+    //     hl_mod_display_mux_take();
+    //     flag->sys_status.screen_lock = 0;
+    //     hl_mod_display_mux_release();
+
+    //     hl_mod_icon_deal_anim(HL_TOP_ICON_LOCK, (hl_top_cmd_t)now->sys_status.screen_lock);
+    // }
 
     // line out
     if (flag->sys_status.line_out_in) {
 
-        hl_mod_icon_deal(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
         hl_mod_display_mux_take();
         flag->sys_status.line_out_in = 0;
         hl_mod_display_mux_release();
+        hl_mod_icon_deal_anim(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
     }
 
     // usb
     if (flag->sys_status.usb_in) {
 
-        hl_mod_icon_deal(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
         hl_mod_display_mux_take();
         flag->sys_status.usb_in = 0;
         hl_mod_display_mux_release();
+        hl_mod_icon_deal_anim(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
     }
 
     if (flag->sys_status.monitor_in) {
 
-        hl_mod_icon_deal(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
         hl_mod_display_mux_take();
         flag->sys_status.monitor_in = 0;
         hl_mod_display_mux_release();
+        hl_mod_icon_deal_anim(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
     }
 }
 static void hl_mod_page_home_tx1lowbat_deal(uint8_t batval)
@@ -635,7 +703,7 @@ static void hl_mod_page_home_tx2lowbat_deal(uint8_t batval)
     }
     hl_mod_main_ioctl(&data1);
     data1.tx_device_2.electric = batval;
-    data1.cmd                  = HL_CHANGE_TX1_ELEC;
+    data1.cmd                  = HL_CHANGE_TX2_ELEC;
     hl_mod_main_ioctl(&data1);
 }
 
@@ -809,8 +877,14 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
+    hl_lvgl_lock_ioctl_t ioctrl;
+
     // hl_mod_main_tx_deal_deinit();
     hl_mod_icon_deal_deinit();
+
+    ioctrl.cmd = HL_LOCK_RSOURCE_DEINIT;
+
+    hl_mod_lock_ioctl(&ioctrl);
     // // 删除TOP
     hl_lvgl_top_ioctl_t ctl_data = {
         .top_cmd = HL_TOP_ALL_DEL,
@@ -818,7 +892,59 @@ static void hl_mod_page_exit(void)
     hl_mod_top_ioctl(&ctl_data);
 }
 
-static void hl_mod_page_run(void)
+// 锁屏显示时间到的回调
+static void hl_mod_page_lock_event(hl_lvgl_lock_sta_t state)
+{
+    hl_lvgl_top_ioctl_t  ioctl_top;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+
+    if (state == HL_LOCK_STATUS_HIDE) {
+        // 锁屏图标消失后
+        // ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+        // ioctl_top.top_param = HL_TOP_ICON_LOCK;
+        // hl_mod_top_ioctl(&ioctl_top);
+
+        if (data_ptr->sys_status.screen_lock == HL_SCREEN_LOCKING) {
+            data_ptr->sys_status.screen_lock = HL_SCREEN_LOCKED;
+            hl_mod_icon_deal(HL_TOP_ICON_LOCK, HL_TOP_ADD_ICON_CMD);
+        }
+
+    } else if (state == HL_UNLOCK_STATUS_HIDE) {
+        // ioctl_top.top_cmd   = HL_TOP_ADD_ICON_CMD;
+        // ioctl_top.top_param = HL_TOP_ICON_LOCK;
+        // hl_mod_top_ioctl(&ioctl_top);
+
+        if (data_ptr->sys_status.screen_lock == HL_SCREEN_UNLOCKING) {
+            data_ptr->sys_status.screen_lock = HL_SCREEN_UNLOCKED;
+            hl_mod_icon_deal(HL_TOP_ICON_LOCK, HL_TOP_DELETE_ICON_CMD);
+        }
+    }
+}
+
+// 锁屏状态的情况，只要有按钮被按下，就居中显示锁屏图标
+static void hl_mod_page_lock_state_run()
+{
+    uint8_t key_event;
+    uint8_t touchkey;
+    int8_t  knob;
+
+    hl_lvgl_lock_ioctl_t lock_ioctrl;
+
+    //单机确定键进入菜单
+    key_event = hl_mod_get_knob_okkey_val();
+    touchkey  = hl_mod_keypad_touchkey_read();
+    knob      = hl_mod_get_rx_knob_val();
+
+    if (key_event != HL_KEY_EVENT_IDLE || touchkey != 0 || knob != 0) {
+
+        lock_ioctrl.lock_event_cb = hl_mod_page_lock_event;
+        lock_ioctrl.cmd           = HL_LOCK_ICON_DISPLAY;
+        hl_mod_lock_ioctl(&lock_ioctrl);
+    }
+}
+
+// 解锁状态的情况
+static void hl_mod_page_unlock_state_run()
 {
     uint8_t                     key_event;
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
@@ -836,8 +962,58 @@ static void hl_mod_page_run(void)
     // 快捷设置
     hl_mod_menu_goto_quickset_scan();
 
+    // // 菜单的页面更新
+    // hl_mod_page_home_update();
+}
+
+static void hl_mod_page_run(void)
+{
+    uint8_t              power_key;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_lvgl_lock_ioctl_t lock_ioctrl;
     // 菜单的页面更新
     hl_mod_page_home_update();
+
+    power_key = hl_mod_get_power_key_val();
+
+    switch ((hl_mod_screen_lock_status)data_ptr->sys_status.screen_lock) {
+        case HL_SCREEN_UNLOCKED:
+            if (power_key == HL_KEY_EVENT_SHORT) {
+                data_ptr->sys_status.screen_lock = HL_SCREEN_LOCKING;
+
+                lock_ioctrl.lock_event_cb = hl_mod_page_lock_event;
+                lock_ioctrl.cmd           = HL_LOCK_ICON_DISPLAY;
+                hl_mod_lock_ioctl(&lock_ioctrl);
+
+                // 禁用TP触摸的功能
+                lock_ioctrl.cmd           = HL_LOCK_TP_CLICK_CB;
+                lock_ioctrl.lock_event_cb = hl_mod_page_lock_event;
+                hl_mod_lock_ioctl(&lock_ioctrl);
+                rt_kprintf("unclock\n");
+            } else {
+                hl_mod_page_unlock_state_run();
+            }
+            break;
+        case HL_SCREEN_LOCKED:
+            if (power_key == HL_KEY_EVENT_SHORT) {
+                data_ptr->sys_status.screen_lock = HL_SCREEN_UNLOCKING;
+
+                lock_ioctrl.lock_event_cb = hl_mod_page_lock_event;
+                lock_ioctrl.cmd           = HL_UNLOCK_ICON_DISPLAY;
+                hl_mod_lock_ioctl(&lock_ioctrl);
+            } else {
+                hl_mod_page_lock_state_run();
+            }
+            break;
+        case HL_SCREEN_LOCKING:
+            // 只更新当前的页面，不处理锁屏和解锁功能
+            break;
+        case HL_SCREEN_UNLOCKING:
+            // 只更新当前的页面，不处理锁屏和解锁功能
+            break;
+        default:
+            break;
+    }
 }
 
 // void hl_mod_page_home_init(void)
