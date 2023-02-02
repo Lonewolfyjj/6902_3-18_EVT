@@ -295,8 +295,10 @@ typedef enum _hl_drv_aw2016a_color_e
     HL_DRV_AW2016A_COLOR_WHITE = 4,
     /// 橙色
     HL_DRV_AW2016A_COLOR_ORANGE = 5,
+    /// 粉色
+    HL_DRV_AW2016A_COLOR_PINK = 6,
     /// 关闭led灯
-    HL_DRV_AW2016A_COLOR_BLACK = 6,
+    HL_DRV_AW2016A_COLOR_BLACK = 7,
 } hl_drv_aw2016a_color_e;
 
 /**

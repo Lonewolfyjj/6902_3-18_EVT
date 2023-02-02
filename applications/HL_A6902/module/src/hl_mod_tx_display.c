@@ -166,8 +166,8 @@ static void _display_update_1(void)
             led.color       = HL_DRV_AW2016A_COLOR_WHITE;
         } break;
         case HL_DISPLAY_UPDATE: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_RB_SLOW;
-            led.color       = HL_DRV_AW2016A_COLOR_WHITE;
+            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
+            led.color       = HL_DRV_AW2016A_COLOR_PINK;
         } break;
         case HL_DISPLAY_PAIR: {
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_FAST;

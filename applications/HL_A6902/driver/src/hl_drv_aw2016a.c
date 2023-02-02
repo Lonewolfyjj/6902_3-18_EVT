@@ -1609,6 +1609,38 @@ static int _set_color_orange(struct rt_i2c_bus_device* p_i2c_bus)
     return AW2016A_FUNC_RET_OK;
 }
 
+static int _set_color_pink(struct rt_i2c_bus_device* p_i2c_bus)
+{
+    int                              ret;
+    hl_drv_aw2016a_output_current_st current_st;
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
+    current_st.current  = 15;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
+    current_st.current  = 0;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL1;
+    current_st.current  = 6;
+
+    ret = set_output_current(p_i2c_bus, &current_st);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
 static int _set_color_black(struct rt_i2c_bus_device* p_i2c_bus)
 {
     int                              ret;
@@ -1733,6 +1765,12 @@ static int _user_func_led_ctrl(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw201
         } break;
         case HL_DRV_AW2016A_COLOR_ORANGE: {
             ret = _set_color_orange(p_i2c_bus);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_AW2016A_COLOR_PINK: {
+            ret = _set_color_pink(p_i2c_bus);
             if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }
