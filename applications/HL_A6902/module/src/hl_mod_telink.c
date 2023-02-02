@@ -46,8 +46,12 @@ typedef struct _hl_s_rf_info_t
     hl_rf_bypass_state_t   denoise;
     hl_rf_bypass_state_t   low_cut;
     hl_rf_bypass_state_t   record;
+    hl_rf_bypass_state_t   sound_mix;
     hl_rf_bypass_state_t   auto_record;
     hl_rf_bypass_state_t   record_protect;
+    hl_rf_bypass_value_t   status_led;
+    hl_rf_bypass_value_t   uac_gain;
+    hl_rf_bypass_value_t   tx_gain;
     hl_rf_bypass_value_t   volume;
     hl_rf_bypass_value_t   battery;
     hl_rf_bypass_value_t   auto_poweroff;
@@ -270,6 +274,34 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr              = (uint8_t*)&s_rf_info.remote_version;
             break;
 
+        case HL_RF_BYPASS_STATUS_LED_IND:
+            s_rf_info.status_led.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.status_led.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len            = sizeof(s_rf_info.status_led);
+            app_msg_t.param.ptr      = (uint8_t*)&s_rf_info.status_led;
+            break;
+
+        case HL_RF_BYPASS_SOUND_MIX_IND:
+            s_rf_info.sound_mix.chn   = ((hl_rf_bypass_state_t*)hup_frame.data_addr)->chn;
+            s_rf_info.sound_mix.state = ((hl_rf_bypass_state_t*)hup_frame.data_addr)->state;
+            app_msg_t.len             = sizeof(s_rf_info.sound_mix);
+            app_msg_t.param.ptr       = (uint8_t*)&s_rf_info.sound_mix;
+            break;
+
+        case HL_RF_BYPASS_UAC_GAIN_IND:
+            s_rf_info.uac_gain.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.uac_gain.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len          = sizeof(s_rf_info.uac_gain);
+            app_msg_t.param.ptr    = (uint8_t*)&s_rf_info.uac_gain;
+            break;
+
+        case HL_RF_BYPASS_TX_GAIN_IND:
+            s_rf_info.tx_gain.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.tx_gain.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len         = sizeof(s_rf_info.tx_gain);
+            app_msg_t.param.ptr   = (uint8_t*)&s_rf_info.tx_gain;
+            break;
+
         default:
             break;
     }
@@ -430,6 +462,10 @@ static rt_err_t _hl_mod_telink_serial_deinit(void)
 {
     rt_err_t result = RT_EOK;
 
+    if (RT_NULL == s_telink.serial) {
+        return RT_ERROR;
+    }
+
     result = rt_device_close(s_telink.serial);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] close faild!!! \r\n", __FUNCTION__, __LINE__);
@@ -530,7 +566,7 @@ uint8_t hl_mod_telink_start(void)
 
     // 初始化Telink线程资源
     s_telink.thread_id = rt_thread_create("telink", hl_mod_telink_thread_entry, RT_NULL, TELINK_THREAD_STACK_SIZE,
-                                     TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
+                                          TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
         return 1;
