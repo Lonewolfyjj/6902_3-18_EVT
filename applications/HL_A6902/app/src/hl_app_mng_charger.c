@@ -287,7 +287,38 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
     }
 }
 #else
+static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
+{
+    static uint8_t            _dev_num;
+    uint8_t                   bat_soc_temp      = 50;
+    hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    uint8_t                   turn_on_state;
 
+    switch (p_msg->cmd) {
+        case HL_IN_BOX_IND: {
+            _dev_num = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", _dev_num);
+        } break;
+        case HL_OUT_BOX_IND: {
+            LOG_I("out box!");
+            hl_app_mng_charger_goto_power_on();
+        } break;
+        case HL_GET_SOC_REQ_IND: {  //请求获取电量
+            bat_soc_temp = rx_info.soc;
+            hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
+        } break;
+        case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
+            charge_state_temp = rx_info.charge_flag + 1;
+            hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 0;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        default:
+            break;
+    }
+}
 #endif
 
 MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);

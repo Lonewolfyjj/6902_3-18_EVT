@@ -64,6 +64,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_SET_RTC_TIME      = 0x0C,
     HL_HUP_CMD_SET_RTC_TIME_BACK = 0x0D,
     HL_HUP_CMD_SET_BOX_LID_STATE = 0x0E,
+    HL_HUP_CMD_GET_TURN_ON_STATE = 0x0F,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -422,6 +423,9 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case HL_HUP_CMD_GET_PAIR_INFO: {
             _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_GET_TURN_ON_STATE: {
+            _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
         default:
             break;
@@ -871,6 +875,14 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             _uart_send_hup_data(HL_HUP_CMD_GET_PAIR_INFO, (char*)arg, sizeof(uint8_t[12]));
+        } break;
+        case HL_SET_TURN_ON_STATE_CMD: {
+            if (arg_size != sizeof(uint8_t)) {
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_TURN_ON_STATE, (uint8_t*)arg, arg_size);
         } break;
         default:
             break;

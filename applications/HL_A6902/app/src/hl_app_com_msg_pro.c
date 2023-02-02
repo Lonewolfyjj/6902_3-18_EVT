@@ -166,6 +166,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_rtc_st          rtc_time_temp = { 0 };
     hl_mod_euc_box_lid_state_e box_lid_state_temp;
     uint8_t                    pair_mac_temp[12] = { 0 };
+    uint8_t                    turn_on_state;
 
     uint8_t           temp;
     hl_rf_work_mode_e telink_work_mode;
@@ -328,6 +329,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   pair_mac_temp[10], pair_mac_temp[11]);
 
             hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 1;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

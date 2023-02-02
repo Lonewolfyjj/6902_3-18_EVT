@@ -90,6 +90,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_RTC_TIME_CMD,
     /// HID发送开始录制命令，无参数
     HL_HID_START_RECORD_CMD,
+    /// 设置设备开机状态，参数为<uint8_t *>
+    HL_SET_TURN_ON_STATE_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -138,6 +140,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_RTC_TIME_REQ_IND,
     /// 通知 app 收到BOX的开关盖信息更新，参数为<hl_mod_euc_box_lid_state_e>。
     HL_BOX_LID_STATE_UPDATE_IND,
+    /// 请求 app 获取设备开机状态，无参数。
+    HL_GET_TURN_ON_STATE_REQ_IND,
 } hl_mod_euc_ind_e;
 
 #endif
