@@ -35,6 +35,7 @@
 
 
 LV_IMG_DECLARE(Main_horn);//喇叭
+LV_IMG_DECLARE(Main_horn_mute);//喇叭-MUTE
 LV_IMG_DECLARE(Main_bat);//电池图标
 LV_IMG_DECLARE(Main_volumebar_short);//音量柱——短
 LV_IMG_DECLARE(Main_volumebar_long);//音量柱——长
