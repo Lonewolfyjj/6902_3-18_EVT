@@ -319,7 +319,11 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_UPGRADE_TELINK_PACK_CMD:
-            hl_mod_upgrade_telink_pack();
+            if (s_upgrade.telink_state == HL_UPGRADE_UPGRADE_STATE) {
+                hl_mod_upgrade_telink_pack();
+            } else {
+                LOG_E("telink upgrade state (%d = %d)! ", s_upgrade.telink_state, HL_UPGRADE_IDLE_STATE);
+            }
             break;
 
         case HL_UPGRADE_TELINK_STOP_CMD:
@@ -340,14 +344,18 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
             memset(&s_upgrade.telink_version[0], 0, 20);
             rt_sprintf(&s_upgrade.telink_version[0], "V%d.%d.%d.%d", hup_frame.data_addr[0], hup_frame.data_addr[1], hup_frame.data_addr[2], hup_frame.data_addr[3]);
             LOG_D("telink version %s ", s_upgrade.telink_version); 
-            if((rt_strstr(s_pack_info.pack[1].version, s_upgrade.telink_version) == RT_NULL)&&(s_upgrade.telink_state == HL_UPGRADE_IDLE_STATE)) {
-                s_upgrade.telink_state = HL_UPGRADE_START_STATE;
-                hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, hup_frame.data_addr, 0);
+            if(rt_strstr(s_pack_info.pack[1].version, s_upgrade.telink_version) == RT_NULL) {
+                if(s_upgrade.telink_state == HL_UPGRADE_IDLE_STATE) {
+                    s_upgrade.telink_state = HL_UPGRADE_START_STATE;
+                    hl_mod_upgrade_uart_send(HL_UPGRADE_TELINK_START_CMD, hup_frame.data_addr, 0);
+                } else {
+                    LOG_E("telink upgrade state (%d = %d)! ", s_upgrade.telink_state, HL_UPGRADE_IDLE_STATE);
+                }
             } else {
                 _upgrade_telink_stop();
                 unlink(HL_UPGRADE_FILE_NAME_TELINK);
                 s_upgrade.telink_state = HL_UPGRADE_SUCCEED_STATE;
-                LOG_D("telink upgrade finish (%s = %s)! \r\n", s_pack_info.pack[1].version, s_upgrade.telink_version);                
+                LOG_D("telink upgrade finish (%s = %s)! ", s_pack_info.pack[1].version, s_upgrade.telink_version);                
             }
             break;
 
