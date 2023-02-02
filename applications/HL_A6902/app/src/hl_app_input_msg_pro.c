@@ -345,7 +345,7 @@ static void hl_app_rx_knob_pro(hl_knob_dir_e dir, uint32_t value)
         }
     }
     
-    hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &rx_info.cur_volume_r, 2);
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &rx_info.cur_volume_r, 2);
     LOG_D("volume:(%d)\r\n", rx_info.cur_volume_r);
 }
 

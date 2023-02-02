@@ -163,6 +163,16 @@ static void lock_cb(lv_event_t* e)
     }
 }
 
+// static void lock_cb(lv_event_t * e)
+// {    
+//     lv_event_code_t code = lv_event_get_code(e);
+
+//     if(code == LV_EVENT_CLICKED) {
+//         lv_obj_clear_flag(img_lock,LV_OBJ_FLAG_HIDDEN);
+//         lv_timer_reset(timer);
+//     } 
+// }
+
 typedef void (* anim_start)(void);
 
 typedef struct _icon_anim_obj_t{

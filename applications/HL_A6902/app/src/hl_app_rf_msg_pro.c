@@ -52,7 +52,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_state_e        rf_state;
     hl_rf_bypass_state_t bypass_state;
     hl_rf_bypass_value_t bypass_value;
-    hl_switch_e        mute_switch;
+    hl_switch_e          mute_switch;
+    hl_switch_e          denoise_switch;
+    hl_rf_bypass_value_t* ptr_rf_value;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -60,6 +62,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             ptr = (uint8_t*)p_msg->param.ptr;
             LOG_D("\n\n--- Telink Version[%d.%d.%d.%d] ---\n\n", ptr[0], ptr[1], ptr[2], ptr[3]);
             break;
+
         case HL_RF_PAIR_STATE_IND:
             tx_info.rf_state = *(hl_rf_state_e*)p_msg->param.ptr;
             rf_state         = tx_info.rf_state;
@@ -83,15 +86,16 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 bypass_value.val = tx_info.soc;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, (uint8_t*)&bypass_value, sizeof(bypass_value));
             }
-
             LOG_D("telink info(%02X)", tx_info.rf_state);
             // hl_mod_display_io_ctrl(TX_RF_STATE_VAL_CMD, &rf_state, sizeof(rf_state));
             hl_app_disp_state_led_set();
             break;
+
         case HL_RF_RSSI_IND:
             p_param = *(uint8_t*)p_msg->param.ptr;
             // LOG_D("\ntelink RSSI(%02X)\r\n", p_param);
             break;
+
         case HL_RF_BYPASS_MUTE_IND:   
             mute_switch = *(hl_switch_e*)p_msg->param.ptr;                     
             if (tx_info.mute_flag == mute_switch) {
@@ -116,6 +120,28 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             rt_memcpy(tx_info.remote_mac, ptr, sizeof(tx_info.remote_mac));
             LOG_I("remote mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
                   ptr[5]);
+            break;
+
+        case HL_RF_BYPASS_STATUS_LED_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            hl_mod_display_io_ctrl(LED_BRIGHT_SET_CMD, &ptr_rf_value->val, sizeof(ptr_rf_value->val));
+            LOG_D("app get TX%d LED Status(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            break;
+
+        case HL_RF_BYPASS_FORMAT_DISK_IND:
+            LOG_D("app get TX%d Format disk");
+            break;
+            
+        case HL_RF_BYPASS_UAC_GAIN_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            LOG_D("app get TX%d UAC Gain(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            break;
+
+        case HL_RF_BYPASS_DENOISE_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            denoise_switch = (hl_switch_e)ptr_rf_value->val;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, 1);
+            LOG_D("app get TX%d Denoise(%d)", ptr_rf_value->chn, denoise_switch);
             break;
 
         default:
