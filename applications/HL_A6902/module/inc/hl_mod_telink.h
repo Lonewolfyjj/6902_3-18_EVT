@@ -255,14 +255,8 @@ typedef struct
 
 typedef struct
 {
-    /// 配对状态
-    hl_rf_state_e pair_state;
-    /// RSSI值
-    hl_rf_rssi_t remote_rssi;
-} hl_rf_telink_info_t;
-
-typedef struct
-{
+    /// 线程句柄
+    rt_thread_t thread_id;
     /// 模块运行状态标志
     uint8_t module_flag;
     /// 线程运行状态标志
