@@ -221,6 +221,15 @@ static void hl_mod_creat_top_icon(icon_pos_t* icon_data, icon_pos_t* icon_list, 
         icon_data->icon = lv_img_create(lv_scr_act());
         lv_img_set_src(icon_data->icon, icon_data->icon_data);
         lv_img_set_zoom(icon_data->icon, 256);
+        
+        // if(&icon_list_l[0] == icon_data){
+        //     lv_img_set_zoom(icon_data->icon, 220);
+        // }else{
+        //     lv_img_set_zoom(icon_data->icon, 256);
+        // }
+
+
+        
         add_icon_pos_set(icon_data, icon_list, icon_typ);
     } else {
         add_icon_pos_set(icon_data, icon_list, icon_typ);
