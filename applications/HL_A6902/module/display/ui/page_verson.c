@@ -282,10 +282,10 @@ void hl_mod_verson_init(void * init_data)
         lv_style_page4_init();
     }
     
-    con_src = lv_con_scr_creat(180,100);
-    con1 = lv_con_child_creat(con_src,172,90);
-    con2 = lv_con_child_creat(con_src,172,90);
-    con3 = lv_con_child_creat(con_src,172,90);
+    con_src = lv_con_scr_creat(294,126);
+    con1 = lv_con_child_creat(con_src,290,120);
+    con2 = lv_con_child_creat(con_src,290,120);
+    con3 = lv_con_child_creat(con_src,290,120);
     dot1 = lv_verson_dot_creat_fun(lv_scr_act(),-20,0,0);
     dot2 = lv_verson_dot_creat_fun(lv_scr_act(),0,0,0);
     dot3 = lv_verson_dot_creat_fun(lv_scr_act(),20,0,0);
