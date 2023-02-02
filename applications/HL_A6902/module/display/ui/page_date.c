@@ -184,7 +184,7 @@ static void lv_get_cal_day_num(hl_date_choose_t opt,uint8_t data)
 static void lv_style_page6_init(void)
 {    
     lv_style_init(&style_black);
-    lv_style_set_bg_opa(&style_grey, LV_OPA_COVER);
+    lv_style_set_bg_opa(&style_black, LV_OPA_COVER);
     lv_style_set_bg_color(&style_black, lv_color_black());
     lv_style_set_border_width(&style_black, 0);
     lv_style_set_pad_all(&style_black, 0);

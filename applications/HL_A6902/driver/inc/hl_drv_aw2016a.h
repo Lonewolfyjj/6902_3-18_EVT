@@ -31,21 +31,23 @@
 typedef enum _hl_drv_aw2016a_op
 {
     /*     基础功能     */
-    ///get aw2016a chip id, type of parameter is <uint8_t> pointer
+    /// get aw2016a chip id, type of parameter is <uint8_t> pointer
     HL_DRV_AW2016A_GET_CHIP_ID,
-    ///set aw2016a work mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_work_mode_e>
+    /// check chip status, type of parameter is <hl_drv_aw2016a_chip_status_e> pointer
+    HL_DRV_AW2016A_CHECK_CHIP_STATUS,
+    /// set aw2016a work mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_work_mode_e>
     HL_DRV_AW2016A_SET_WORK_MODE,
-    ///set aw2016a Global Max Output Current, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_max_output_current_e>
+    /// set aw2016a Global Max Output Current, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_max_output_current_e>
     HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT,
-    ///open aw2016a led channel, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
+    /// open aw2016a led channel, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_OPEN_LED_CHANNEL,
-    ///close aw2016a led channel, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
+    /// close aw2016a led channel, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_CLOSE_LED_CHANNEL,
-    ///set aw2016a pattern mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
+    /// set aw2016a pattern mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_PATTERN_MODE,
-    ///set aw2016a breath param, type of parameter is <hl_drv_aw2016a_breath_param_st> pointer
+    /// set aw2016a breath param, type of parameter is <hl_drv_aw2016a_breath_param_st> pointer
     HL_DRV_AW2016A_SET_BREATH_PARAM,
-    ///set aw2016a manual mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
+    /// set aw2016a manual mode, type of parameter is <uint8_t> pointer, see <hl_drv_aw2016a_led_channel_e>
     HL_DRV_AW2016A_SET_MANUAL_MODE,
     /**
      * 
@@ -92,13 +94,13 @@ typedef enum _hl_drv_aw2016a_op
      * </table>
      */
     HL_DRV_AW2016A_SET_SYNC_CONTROL_MODE,
-    ///set aw2016a led channel output current, type of parameter is <hl_drv_aw2016a_output_current_st> pointer
+    /// set aw2016a led channel output current, type of parameter is <hl_drv_aw2016a_output_current_st> pointer
     HL_DRV_AW2016A_SET_LED_CHANNEL_OUTPUT_CURRENT,
-    ///set aw2016a led light effect, type of parameter is <hl_drv_aw2016a_light_st> pointer
+    /// set aw2016a led light effect, type of parameter is <hl_drv_aw2016a_light_st> pointer
     HL_DRV_AW2016A_SET_LED_LIGHT_EFFECT,
-    ///set aw2016a led channel pwm level, type of parameter is <hl_drv_aw2016a_pwm_level_st> pointer
+    /// set aw2016a led channel pwm level, type of parameter is <hl_drv_aw2016a_pwm_level_st> pointer
     HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL,
-    ///dump aw2016a register value, type of parameter is <RT_NULL> pointer
+    /// dump aw2016a register value, type of parameter is <RT_NULL> pointer
     HL_DRV_AW2016A_DUMP_REGISTER_VALUE,
 
     /*     用户功能     */
@@ -125,6 +127,16 @@ typedef enum _hl_drv_aw2016a_led_num
     HL_DRV_AW2016A_LED0,
     HL_DRV_AW2016A_LED1,
 } hl_drv_aw2016a_led_num_e;
+
+typedef enum _hl_drv_aw2016a_chip_status
+{
+    /// Over-Temperature detected
+    HL_DRV_AW2016A_OTPIS = 0x04,
+    /// UVLO detected
+    HL_DRV_AW2016A_UVLOIS = 0x08,
+    /// Power-up reset has taken place
+    HL_DRV_AW2016A_PUIS = 0x10,
+} hl_drv_aw2016a_chip_status_e;
 
 typedef enum _hl_drv_aw2016a_work_mode
 {
