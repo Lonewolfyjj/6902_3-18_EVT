@@ -63,6 +63,10 @@ typedef struct _hl_mod_pm_st
     bool                     interrupt_update_flag;
     hl_mod_pm_charger_e      charger;
     hl_mod_pm_charge_state_e charge_state;
+    uint8_t                  vbus_c_state;
+    uint8_t                  vbus_p_state;
+    bool                     charge_full_timeout_flag;
+    struct rt_timer          charge_full_timer;
     rt_mq_t                  msg_hd;
     rt_thread_t              pm_thread;
     int                      thread_exit_flag;
@@ -123,6 +127,12 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
     }
 
     return HL_MOD_PM_FUNC_RET_OK;
+}
+
+static void _timer_timeout_handle(void* arg)
+{
+    LOG_I("pm timeout");
+    _pm_mod.charge_full_timeout_flag = true;
 }
 
 static void _guage_gpio_irq_handle(void* args)
@@ -270,6 +280,10 @@ static void _guage_state_update()
         LOG_I("soh:%d", _pm_mod.bat_info.soh);
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
         LOG_I("结束");
+
+        if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
+            rt_timer_start(&(_pm_mod.charge_full_timer));
+        }
     }
 
     if (_pm_mod.bat_info.soc.soc <= 3) {
@@ -364,6 +378,29 @@ static void _charger_fault_state_poll(void)
     }
 }
 
+static void _charge_state_judge(void)
+{
+    static bool              flag         = false;
+    hl_mod_pm_charge_state_e charge_state = HL_CHARGE_STATE_UNKNOWN;
+
+    if (_pm_mod.vbus_c_state == 1 || _pm_mod.vbus_p_state == 1) {
+        if (_pm_mod.charge_full_timeout_flag == true) {
+            charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+        } else {
+            charge_state = HL_CHARGE_STATE_CHARGING;
+        }
+    } else {
+        charge_state                     = HL_CHARGE_STATE_NO_CHARGE;
+        _pm_mod.charge_full_timeout_flag = false;
+        rt_timer_stop(&(_pm_mod.charge_full_timer));
+    }
+
+    if (charge_state != _pm_mod.charge_state) {
+        _pm_mod.charge_state = charge_state;
+        _mod_msg_send(HL_CHARGE_STATE_IND, &(_pm_mod.charge_state), sizeof(_pm_mod.charge_state));
+    }
+}
+
 static void _hl_mod_pmwdg(void)
 {
     HL_SY_INPUT_PARAM_T wdg = {
@@ -455,8 +492,11 @@ static void _pm_thread_entry(void* arg)
 #else
         _guage_state_poll();
 #endif
+#if 0
         _charge_state_poll();
         _charger_fault_state_poll();
+#endif
+        _charge_state_judge();
 
         rt_thread_mdelay(10);
         if (delay_time++ > 500) {
@@ -499,7 +539,11 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
+    rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _timer_timeout_handle, RT_NULL, 1000 * 60 * 5,
+                  RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
+#if 0
     _guage_gpio_irq_init();
+#endif
     _power_gpio_init();
 
     _pm_mod.msg_hd = msg_hd;
@@ -522,8 +566,10 @@ int hl_mod_pm_deinit(void)
 
     hl_mod_pm_stop();
 
+    rt_timer_detach(&(_pm_mod.charge_full_timer));
+#if 0
     _guage_gpio_irq_deinit();
-
+#endif
     ret = hl_drv_cw2215_deinit();
     if (ret == CW2215_FUNC_RET_ERR) {
         return HL_MOD_PM_FUNC_RET_ERR;
@@ -555,12 +601,15 @@ int hl_mod_pm_start(void)
         }
     }
 
-    _pm_mod.interrupt_update_flag = false;
-    _pm_mod.update_flag           = false;
-    _pm_mod.charge_state          = HL_CHARGE_STATE_UNKNOWN;
-
+    _pm_mod.interrupt_update_flag    = false;
+    _pm_mod.update_flag              = false;
+    _pm_mod.charge_state             = HL_CHARGE_STATE_UNKNOWN;
+    _pm_mod.vbus_c_state             = 0;
+    _pm_mod.vbus_p_state             = 0;
+    _pm_mod.charge_full_timeout_flag = false;
+#if 0
     _guage_gpio_irq_enable(true);
-
+#endif
     _pm_mod.thread_exit_flag = 0;
 
     _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
@@ -590,8 +639,9 @@ int hl_mod_pm_stop(void)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
+#if 0
     _guage_gpio_irq_enable(false);
-
+#endif
     _pm_mod.thread_exit_flag = 1;
 
     LOG_I("wait pm thread exit");
@@ -623,6 +673,12 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_PM_BAT_INFO_UPDATE_CMD: {
             _pm_init_state_update();
+        } break;
+        case HL_PM_SET_VBUS_C_STATE_CMD: {
+            _pm_mod.vbus_c_state = *((uint8_t*)arg);
+        } break;
+        case HL_PM_SET_VBUS_P_STATE_CMD: {
+            _pm_mod.vbus_p_state = *((uint8_t*)arg);
         } break;
         default:
             break;

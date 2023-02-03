@@ -190,7 +190,14 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
 #if HL_IS_TX_DEVICE()
-
+        case MSG_TX_VBUS_DET: {
+            if (p_msg->param.u32_param == 0) {
+                tx_info.usb_plug = 0;            
+            } else {
+                tx_info.usb_plug = 1;        
+            }
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
+        } break;
 #else
         case MSG_RX_VBUS_DET:
             if (p_msg->param.u32_param == 0) {
@@ -209,6 +216,7 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
             usb_state = 1;
             hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
             LOG_D("MSG_RX_VBUS_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
