@@ -42,6 +42,8 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
 {
+    hl_rf_bypass_state_t bypass_state;
+
     uint8_t state = 0;
 #if HL_IS_TX_DEVICE()
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
@@ -57,6 +59,9 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         tx_info.charge_flag = 2;
         state               = 2;
     }
+    bypass_state.chn   = tx_info.rf_chn;
+    bypass_state.state = tx_info.charge_flag;
+    hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, 1);
 #else
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {

@@ -260,6 +260,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_DENOISE_IND:
             ptr_rf_state = (hl_rf_bypass_state_t*)p_msg->param.ptr;
             if (ptr_rf_state->chn == HL_RF_LEFT_CHANNEL) {
+                
                 hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_state->state, 1);
             } else if (ptr_rf_state->chn == HL_RF_RIGHT_CHANNEL) {
 
@@ -270,8 +271,16 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("app get TX%d Denoise(%d)", ptr_rf_state->chn, ptr_rf_state->state);
             break;
 
-        case HL_RF_BYPASS_VOLUME_IND:
-            LOG_D("app get volume indicate");
+        case HL_RF_BYPASS_CHARGE_IND:
+            ptr_rf_state = (hl_rf_bypass_state_t*)p_msg->param.ptr;
+            if (ptr_rf_state->chn == HL_RF_LEFT_CHANNEL) {
+                hl_mod_display_io_ctrl(TX1_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_state->state, 1);
+            } else if (ptr_rf_state->chn == HL_RF_RIGHT_CHANNEL) {
+                hl_mod_display_io_ctrl(TX2_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_state->state, 1);
+            } else {
+                LOG_E("telink Charge receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
+            }
+            LOG_D("app get TX%d Charge(%d)", ptr_rf_state->chn, ptr_rf_state->state);
             break;
 
         case HL_RF_BYPASS_RECORD_IND:

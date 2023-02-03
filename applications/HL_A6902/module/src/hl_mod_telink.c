@@ -49,13 +49,13 @@ typedef struct _hl_s_rf_info_t
     hl_rf_bypass_state_t   denoise;
     hl_rf_bypass_state_t   low_cut;
     hl_rf_bypass_state_t   record;
+    hl_rf_bypass_state_t   charge;
     hl_rf_bypass_state_t   sound_mix;
     hl_rf_bypass_state_t   auto_record;
     hl_rf_bypass_state_t   record_protect;
     hl_rf_bypass_value_t   status_led;
     hl_rf_bypass_value_t   uac_gain;
     hl_rf_bypass_value_t   tx_gain;
-    hl_rf_bypass_value_t   volume;
     hl_rf_bypass_value_t   battery;
     hl_rf_bypass_value_t   auto_poweroff;
 } hl_rf_info_t;
@@ -243,11 +243,11 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr     = (uint8_t*)&s_rf_info.low_cut;
             break;
 
-        case HL_RF_BYPASS_VOLUME_IND:
-            s_rf_info.volume.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
-            s_rf_info.volume.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
-            app_msg_t.len        = sizeof(s_rf_info.volume);
-            app_msg_t.param.ptr  = (uint8_t*)&s_rf_info.volume;
+        case HL_RF_BYPASS_CHARGE_IND:
+            s_rf_info.charge.chn   = ((hl_rf_bypass_state_t*)hup_frame.data_addr)->chn;
+            s_rf_info.charge.state = ((hl_rf_bypass_state_t*)hup_frame.data_addr)->state;
+            app_msg_t.len          = sizeof(s_rf_info.charge);
+            app_msg_t.param.ptr    = (uint8_t*)&s_rf_info.charge;
             break;
 
         case HL_RF_BYPASS_BATTERY_IND:

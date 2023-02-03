@@ -57,8 +57,8 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_MUTE_CMD = 0x20,
     /// 透传降噪等级：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_DENOISE_CMD = 0x21,
-    /// 透传音量开关状态：类型hl_rf_bypass_value_t
-    HL_RF_BYPASS_VOLUME_CMD = 0x22,
+    /// 透传是否充电状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_CHARGE_CMD = 0x22,
     /// 透传录制开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_CMD = 0x23,
     /// 透传设置状态：类型hl_rf_bypass_string_t
@@ -111,8 +111,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_MUTE_IND = 0x20,
     /// 返回降噪等级：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_DENOISE_IND = 0x21,
-    /// 返回音量开关状态：类型hl_rf_bypass_value_t
-    HL_RF_BYPASS_VOLUME_IND = 0x22,
+    /// 返回是否充电状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_CHARGE_IND = 0x22,
     /// 返回录音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_IND = 0x23,
     /// 返回设置状态：类型hl_rf_bypass_string_t
