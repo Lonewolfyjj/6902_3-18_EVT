@@ -55,6 +55,8 @@ typedef struct _tx_app_info_t
 
     /// 无线状态
     hl_rf_state_e       rf_state;
+    /// TX当前声道(0:左声道  1：右声道)
+    hl_rf_channel_e     rf_chn;
     /// 当前电量
     uint8_t             soc;
 
@@ -99,6 +101,8 @@ typedef struct _rx_app_info_t
 
     /// 无线状态
     hl_rf_state_e       rf_state;    
+    /// TX当前声道(0:左声道  1：右声道)
+    hl_rf_channel_e     rf_chn;
     /// 当前电量
     uint8_t             soc;
     /// 当前TX亮度

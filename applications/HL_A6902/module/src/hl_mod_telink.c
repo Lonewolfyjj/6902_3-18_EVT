@@ -29,6 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#define DBG_SECTION_NAME "mod_telink"
+#define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
 /* typedef -------------------------------------------------------------------*/
@@ -369,16 +372,18 @@ static rt_err_t _telink_uart_receive_cb(rt_device_t dev, rt_size_t size)
  */
 static void hl_mod_telink_thread_entry(void* parameter)
 {
-    rt_err_t result   = RT_EOK;
-    uint8_t  buf[256] = { 0 };
-    uint32_t data     = 0;
+    rt_err_t result    = RT_EOK;
+    uint16_t count     = 1;
+    uint32_t data_size = 0;
+    uint8_t  buf[256]  = { 0 };
 
-    while (s_telink.thread_flag == RT_TRUE) {
+    while (RT_TRUE == s_telink.thread_flag) {
         // 读取数据并解析
-        data = hl_util_fifo_data_size(&s_telink.fifo);
-        if (data > 0) {
-            data = hl_util_fifo_read(&s_telink.fifo, buf, data);
-            for (uint32_t i = 0; i < data; i++) {
+        data_size = hl_util_fifo_data_size(&s_telink.fifo);
+        data_size = ((data_size > 256) ? 256 : data_size);
+        if (data_size > 0) {
+            data_size = hl_util_fifo_read(&s_telink.fifo, buf, data_size);
+            for (uint32_t i = 0; i < data_size; i++) {
                 hl_util_hup_decode(&s_telink.hup, buf[i]);
             }
         }
@@ -386,18 +391,27 @@ static void hl_mod_telink_thread_entry(void* parameter)
         // 延时5ms
         rt_thread_mdelay(5);
 
+        // LED配对状态灯更新间隔1秒
+        count++;
+        count %= 200;
+
         // 更新配对状态
-        if (old_pair_info != new_pair_info) {
-            // 更新配对状态
-            old_pair_info = new_pair_info;
+        if ((old_pair_info != new_pair_info) || (!count)) {
+            if (old_pair_info != new_pair_info) {
+                app_msg_t.cmd = HL_RF_PAIR_STATE_IND;
+            } else {
+                app_msg_t.cmd = HL_RF_REFRESH_STATE_IND;
+            }
             // 编辑消息结构体
-            app_msg_t.cmd       = HL_RF_PAIR_STATE_IND;
             app_msg_t.len       = 1;
-            app_msg_t.param.ptr = &old_pair_info;
+            app_msg_t.param.ptr = &new_pair_info;
             // 将消息结构体上传至APP层消息队列
             result = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
-            if (RT_EOK != result) {
-                LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
+            if (RT_ERROR != result) {
+                // 更新配对状态
+                old_pair_info = new_pair_info;
+            } else {
+                LOG_E("[%s][line:%d] Send MSG(pair info) To APP Error!!! \r\n", __FUNCTION__, __LINE__, result);
             }
         } else {
             continue;
@@ -534,7 +548,7 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 uint8_t hl_mod_telink_deinit(void)
 {
     if (!s_telink.module_flag) {
-        LOG_E("[%s]Don't init telink module,deinit error!", __FUNCTION__);
+        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
         return 1;
     }
 
