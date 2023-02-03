@@ -174,7 +174,9 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
 
-#if !HL_IS_TX_DEVICE()
+#if HL_IS_TX_DEVICE()
+    hl_mod_audio_init(&hl_app_mq);
+#else
     ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
     if (ret == 1) {
         rt_kprintf("nvram be used before not init\n");
