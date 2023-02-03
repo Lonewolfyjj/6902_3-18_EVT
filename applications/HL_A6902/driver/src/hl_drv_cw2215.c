@@ -484,6 +484,8 @@ static int init(void)
         return ret;
     }
 
+    ret = 1;  //强制每次都写入profile
+
     if (ret != 0) {
         LOG_I("config Guage!");
         ret = config_start_ic();
