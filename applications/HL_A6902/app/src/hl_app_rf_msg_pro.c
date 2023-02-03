@@ -146,7 +146,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_TX_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
-            LOG_D("app get TX%d Gain Value(%d)", ptr_rf_value->chn, (int)ptr_rf_value->val);
+            LOG_D("app get TX%d Gain Value(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
         case HL_RF_BYPASS_FORMAT_DISK_IND:
@@ -156,7 +156,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
-            LOG_D("app get TX%d UAC Gain(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
         case HL_RF_BYPASS_LOWCUT_IND:
