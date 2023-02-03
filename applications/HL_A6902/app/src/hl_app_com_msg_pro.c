@@ -26,6 +26,7 @@
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
+#include "hl_board_commom.h"
 
 #include "hl_mod_euc.h"
 #include "hl_mod_display.h"
@@ -139,6 +140,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 1;
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            hl_board_reboot();
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -333,6 +337,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 1;
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            hl_board_reboot();
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

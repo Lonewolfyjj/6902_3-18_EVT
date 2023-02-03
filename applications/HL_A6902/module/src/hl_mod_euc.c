@@ -44,6 +44,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_GET_MAC_ADDR      = 0x07,
     HL_HUP_CMD_GET_CHARGE_STATE  = 0x0A,
     HL_HUP_CMD_GET_TURN_ON_STATE = 0x0F,
+    HL_HUP_CMD_SHUT_DOWN         = 0x10,
 } hl_mod_extcom_hup_cmd_e;
 
 #else
@@ -65,6 +66,7 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_SET_RTC_TIME_BACK = 0x0D,
     HL_HUP_CMD_SET_BOX_LID_STATE = 0x0E,
     HL_HUP_CMD_GET_TURN_ON_STATE = 0x0F,
+    HL_HUP_CMD_SHUT_DOWN         = 0x10,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -267,6 +269,9 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         case HL_HUP_CMD_GET_TURN_ON_STATE: {
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
+        case HL_HUP_CMD_SHUT_DOWN: {
+            _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
+        } break;
         default:
             break;
     }
@@ -426,6 +431,9 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         } break;
         case HL_HUP_CMD_GET_TURN_ON_STATE: {
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_SHUT_DOWN: {
+            _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
         } break;
         default:
             break;

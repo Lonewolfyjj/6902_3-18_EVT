@@ -68,6 +68,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_CHARGE_STATE_REQ_IND,
     /// 请求 app 获取设备开机状态，无参数。
     HL_GET_TURN_ON_STATE_REQ_IND,
+    /// 请求 app 关机，无参数。
+    HL_SHUT_DOWN_REQ_IND,
 } hl_mod_euc_ind_e;
 
 #else  // rx
@@ -142,6 +144,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_BOX_LID_STATE_UPDATE_IND,
     /// 请求 app 获取设备开机状态，无参数。
     HL_GET_TURN_ON_STATE_REQ_IND,
+    /// 请求 app 关机，无参数。
+    HL_SHUT_DOWN_REQ_IND,
 } hl_mod_euc_ind_e;
 
 #endif
