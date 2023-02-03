@@ -33,6 +33,7 @@
 #include "hl_mod_audio.h"
 #include "hl_mod_apple_auth.h"
 #include "hl_app_audio_msg_pro.h"
+#include "hl_mod_wdog.h"
 
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
@@ -259,6 +260,7 @@ void hl_app_mng_charger_entry(void* msg_q)
     mode_to_app_msg_t       msg    = { 0 };
 
     while (charger_alive) {
+        hl_mod_feed_dog();
         if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
             hl_app_mng_powerOn();
             hl_app_mng_powerOff();

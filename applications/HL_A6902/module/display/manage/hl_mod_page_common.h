@@ -61,9 +61,22 @@ typedef struct _hl_screenofftime_t
     uint32_t        outtime;
 } hl_screenofftime_t;
 
+typedef enum hl_mod_screen_lock_status_e
+{
+    /// 未锁屏状态
+    HL_SCREEN_UNLOCKED,
+    /// @brief 已锁屏状态
+    HL_SCREEN_LOCKED,
+    /// @brief 锁屏动画显示期间
+    HL_SCREEN_LOCKING,
+    /// @brief 未锁屏动画期间
+    HL_SCREEN_UNLOCKING
+} HL_ENUM8(hl_mod_screen_lock_status);
+
 //下发的命令
 typedef struct _hl_display_status{
-    uint32_t screen_lock:1;
+    /// 屏幕锁屏状态，默认是未锁屏 聚体见<hl_mod_screen_lock_status>
+    uint32_t screen_lock:2;
     uint32_t tx1_noise:1;
     uint32_t tx2_noise:1;
     uint32_t tx1_record_state:1;
@@ -205,6 +218,8 @@ typedef struct _hl_scr_indev_msg_t
     uint8_t keypad_touchkey;
     uint8_t keypad_knob_ok;
     int8_t  encoder_knob_diff;
+    /// @brief 开关机按键
+    uint8_t power_key;
 } hl_scr_indev_msg_t;
 
 typedef struct _hl_scr_in_data_t
@@ -262,6 +277,7 @@ void hl_mod_page_screenofftimer_scan(hl_screenofftime_t *timer);
 void hl_mod_page_screenofftimer_update(hl_screenofftime_t* timer);
 void hl_mod_page_screenofftimer_init(hl_screenofftime_t* timer);
 uint8_t hl_mod_display_msq_set(rt_mq_t msq);
+uint8_t hl_mod_get_power_key_val(void);
 void hl_mod_page_all_init(void);
 void lvgl2rtt_init(void);
 

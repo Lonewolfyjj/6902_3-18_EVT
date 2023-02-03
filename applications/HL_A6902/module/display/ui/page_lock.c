@@ -46,13 +46,19 @@ LV_IMG_DECLARE(Other_usb_c);    //
 #define IMG_ROOM_MAX    256
 #define IMG_ROOM_MIN    128
 
-static lv_style_t style_area_main;
-static lv_obj_t * img_lock,*img_unlock, * area;
-static lv_timer_t * timer;
+static lv_style_t  style_area_main;
+static lv_obj_t *  img_lock = RT_NULL, *img_unlock = RT_NULL;
+static lv_obj_t*   area  = RT_NULL;
+static lv_timer_t* timer = RT_NULL;
 
 static uint8_t lock_flag = 0,unlock_flag = 0;
 
 static hl_lock_event_cb page_lock_cb;
+
+static void hl_mod_lock_init(void);
+static void lock_cb(lv_event_t* e);
+static void hl_timer_del();
+static void hl_icon_delete(lv_obj_t** obj);
 
 static lv_obj_t * lv_lock_img_creat_fun(lv_obj_t *align_obj,const void * src,lv_coord_t x_offset,lv_coord_t y_offset,uint16_t zoom)
 {
@@ -75,6 +81,15 @@ static lv_obj_t * lv_area_creat_fun(lv_align_t align,lv_event_cb_t event_cb,lv_c
     lv_obj_align(null_area,align,x_offset,y_offset);
     lv_obj_add_event_cb(null_area, event_cb, LV_EVENT_CLICKED, NULL);
     return null_area;
+}
+
+static void lv_area_del()
+{
+    if (area != RT_NULL) {
+        lv_obj_remove_event_cb(area, lock_cb);
+        lv_obj_del(area);
+        area = RT_NULL;
+    }
 }
 
 static void lv_lock_style_init(void)
@@ -106,19 +121,45 @@ static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
     }
 }
 
+static void hl_icon_delete(lv_obj_t** obj)
+{
+    if (*obj != RT_NULL) {
+        hl_obj_delete(*obj, true);
+        *obj = RT_NULL;
+    }
+}
+
+static void hl_timer_del()
+{
+    if (timer != RT_NULL) {
+        lv_timer_del(timer);
+        timer = RT_NULL;
+    }
+}
+
 static void lock_timer(lv_timer_t * timer)
 {
     if(lock_flag){
-        lv_timer_del(timer);
-        hl_obj_delete(img_lock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_lock);
         page_lock_cb(HL_LOCK_STATUS_HIDE);
         lock_flag = 0;
     }
     if(unlock_flag){
-        lv_timer_del(timer);
-        hl_obj_delete(img_unlock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_unlock);
         page_lock_cb(HL_UNLOCK_STATUS_HIDE);
         unlock_flag = 0;
+    }
+}
+
+static void lock_cb(lv_event_t* e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED) {
+        rt_kprintf("reset lock\n");
+        hl_mod_lock_init();
     }
 }
 
@@ -266,8 +307,8 @@ static void hl_mod_lock_init(void)
         page_style_bit.page_lock = 1;
     }    
     if(unlock_flag == 1){
-        lv_timer_del(timer);
-        hl_obj_delete(img_unlock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_unlock);
         page_lock_cb(HL_UNLOCK_STATUS_HIDE);
         unlock_flag = 0;
     }
@@ -288,8 +329,8 @@ static void hl_mod_lock_deinit(void)
         page_style_bit.page_lock = 1;
     } 
     if(lock_flag == 1){
-        lv_timer_del(timer);
-        hl_obj_delete(img_lock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_lock);
         page_lock_cb(HL_LOCK_STATUS_HIDE);
         lock_flag = 0;
     }
@@ -306,24 +347,24 @@ static void hl_mod_lock_deinit(void)
 static void hl_mod_lock_delete_icon(void)
 {
     if(lock_flag == 1){
-        lv_timer_del(timer);
-        hl_obj_delete(img_lock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_lock);
         page_lock_cb(HL_LOCK_STATUS_HIDE);
         lock_flag = 0;
     }
 
     if(unlock_flag == 1){
-        lv_timer_del(timer);
-        hl_obj_delete(img_unlock,true);
+        hl_timer_del();
+        hl_icon_delete(&img_unlock);
         page_lock_cb(HL_UNLOCK_STATUS_HIDE);
         unlock_flag = 0;
     }
 }
 
-void hl_mod_lock_ioctl(void * ctl_data)
+void hl_mod_lock_ioctl(void* ctl_data)
 {
-    hl_lvgl_lock_ioctl_t * ptr = (hl_lvgl_lock_ioctl_t *)ctl_data;
-    switch(ptr->cmd){
+    hl_lvgl_lock_ioctl_t* ptr = (hl_lvgl_lock_ioctl_t*)ctl_data;
+    switch (ptr->cmd) {
         case HL_LOCK_ICON_DISPLAY:
             page_lock_cb = ptr->lock_event_cb;
             hl_mod_lock_init();
@@ -337,7 +378,32 @@ void hl_mod_lock_ioctl(void * ctl_data)
             hl_mod_lock_delete_icon();
             break;
         case HL_LOCK_ICON_ANIM:
-            lv_lock_icon_anmi_init(ptr->icon_obj,ptr->icon_typ);
+            lv_lock_icon_anmi_init(ptr->icon_obj, ptr->icon_typ);
+            break;
+        case HL_LOCK_TP_CLICK_CB:
+            if (area == RT_NULL) {
+                area = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, LV_VER_RES_MAX, LV_HOR_RES_MAX);
+            } else {
+                rt_kprintf("area is exist\n");
+            }
+            break;
+        case HL_LOCK_TP_CLICK_CB_DEL:
+            lv_area_del();
+            break;
+        case HL_LOCK_RSOURCE_INIT:
+            rt_kprintf("lock_res_init\n");
+            lock_flag    = 0;
+            unlock_flag  = 0;
+            page_lock_cb = ptr->lock_event_cb;
+            // hl_mod_lock_init();
+            break;
+        case HL_LOCK_RSOURCE_DEINIT:
+            hl_timer_del();
+            lv_area_del();
+            hl_icon_delete(&img_unlock);
+            hl_icon_delete(&img_lock);
+            lock_flag   = 0;
+            unlock_flag = 0;
             break;
         default:
             break;
