@@ -164,6 +164,12 @@ static void hl_mod_screen_rot_scan(void)
 {
     device_pose_t now_dir = DEVICE_FORWARD_POSE;
     lv_disp_t*    screen_ptr;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+
+    // 未锁屏情况下才旋转
+    if (data_ptr->sys_status.screen_lock != HL_SCREEN_UNLOCKED) {
+        return;
+    }
 
     if (hl_util_timeout_judge(&rot_scan_in)) {
 

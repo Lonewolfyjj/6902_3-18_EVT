@@ -169,14 +169,16 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
 {
     uint8_t  i, j, is_used = 0, new_f = 1;
     uint8_t  icon_ar[ICON_NUM];
-    int16_t icon_offset,ori;
+    int16_t icon_offset,ori,icon_sign;
     if (icon_typ == ICON_POS_LIFT) {
-        icon_offset = 0;
-        ori = 1;
+        icon_offset = 10; // 最左图标距离对齐边的距离
+        ori = 5; // 间隔
+        icon_sign = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
         icon_offset = -50;
-        ori = -1;
+        ori = 0;
+        icon_sign = -1;
     }
 
     for (i = 0; i < ICON_NUM; i++) {
@@ -200,18 +202,18 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         } else {
             new_f           = 0;
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
-            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
             for (j = i; j < is_used; j++) {
                 icon_list[icon_ar[j]].cur_pos += 1;
                 lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
-                             icon_list[icon_ar[j]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+                             icon_list[icon_ar[j]].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
             }
             return;
         }
     }
     if (new_f) {
         icon[0].cur_pos = is_used;
-        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
     }
 }
 
@@ -495,7 +497,7 @@ static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
 
 void hl_mod_top_ioctl(void* ctl_data)
 {
-    char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
         case HL_TOP_ADD_ICON_CMD:
