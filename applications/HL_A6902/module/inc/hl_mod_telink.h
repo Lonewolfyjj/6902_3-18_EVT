@@ -57,8 +57,8 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_MUTE_CMD = 0x20,
     /// 透传降噪等级：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_DENOISE_CMD = 0x21,
-    /// 透传音量开关状态：类型hl_rf_bypass_value_t
-    HL_RF_BYPASS_VOLUME_CMD = 0x22,
+    /// 透传是否充电状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_CHARGE_CMD = 0x22,
     /// 透传录制开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_CMD = 0x23,
     /// 透传设置状态：类型hl_rf_bypass_string_t
@@ -95,6 +95,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_APP_INFO_IND = 0x01,
     /// 返回无线模块当前状态：类型hl_rf_pair_state_e
     HL_RF_PAIR_STATE_IND = 0x02,
+    /// 返回无线模块刷新状态操作：类型hl_rf_pair_state_e
+    HL_RF_REFRESH_STATE_IND = 0x03,
     /// 返回RSSI值：类型uint8_t (0~100)
     HL_RF_RSSI_IND = 0x04,
     /// 返回设置结果：类型rt_err_t
@@ -109,8 +111,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_MUTE_IND = 0x20,
     /// 返回降噪等级：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_DENOISE_IND = 0x21,
-    /// 返回音量开关状态：类型hl_rf_bypass_value_t
-    HL_RF_BYPASS_VOLUME_IND = 0x22,
+    /// 返回是否充电状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_CHARGE_IND = 0x22,
     /// 返回录音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_IND = 0x23,
     /// 返回设置状态：类型hl_rf_bypass_string_t
@@ -138,16 +140,6 @@ typedef enum _hl_mod_telink_ctrl_ind
     /// 返回TX增益信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_TX_GAIN_IND = 0x2f,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
-
-typedef enum _hl_rf_channel_e
-{
-    /// 左声道
-    HL_RF_LEFT_CHANNEL = 0x00,
-    /// 右声道
-    HL_RF_RIGHT_CHANNEL,
-    /// 左右双声道
-    HL_RF_DOUBLE_CHANNEL,
-} HL_ENUM8(hl_rf_channel_e);
 
 typedef enum _hl_rf_onoff_e
 {
@@ -255,14 +247,8 @@ typedef struct
 
 typedef struct
 {
-    /// 配对状态
-    hl_rf_state_e pair_state;
-    /// RSSI值
-    hl_rf_rssi_t remote_rssi;
-} hl_rf_telink_info_t;
-
-typedef struct
-{
+    /// 线程句柄
+    rt_thread_t thread_id;
     /// 模块运行状态标志
     uint8_t module_flag;
     /// 线程运行状态标志
