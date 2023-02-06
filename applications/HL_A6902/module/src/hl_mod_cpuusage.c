@@ -2,7 +2,6 @@
 #include <rtdevice.h>
 #include <rthw.h>
 #include "finsh_api.h"
-#include "hl_mod_wdog.h"
 
 #define CPU_USAGE_CALC_TICK    10
 #define CPU_USAGE_LOOP        100
@@ -55,7 +54,6 @@ static void cpu_usage_idle_hook()
         cpu_usage_major = 0;
         cpu_usage_minor = 0;
     }
-    hl_mod_feed_dog();
 }
 
 void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor)

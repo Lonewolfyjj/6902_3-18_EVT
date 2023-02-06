@@ -55,6 +55,8 @@ typedef struct _tx_app_info_t
 
     /// 无线状态
     hl_rf_state_e       rf_state;
+    /// TX当前声道(0:左声道  1：右声道)
+    hl_rf_channel_e     rf_chn;
     /// 当前电量
     uint8_t             soc;
 
@@ -82,15 +84,29 @@ typedef struct _rx_app_info_t
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
 
-    /// 充电标志(1:充电中 0:不充电 2：充满)
-    uint8_t             tx1_mute;
-    /// 充电标志(1:充电中 0:不充电 2：充满)
-    uint8_t             tx2_mute;
+    /// MUTE标志(1:MUTE 0:正常)
+    uint8_t             tx1_mute:1;
+    /// MUTE标志(1:MUTE 0:正常)
+    uint8_t             tx2_mute:1;
+
+    // /// 降噪标志(1:降噪中 0:不降噪)
+    // uint8_t             tx1_denoise:1;
+    // /// 降噪标志(1:降噪中 0:不降噪)
+    // uint8_t             tx2_denoise:1;
+
+    // /// 录制标志(1:录制中 0:不录制)
+    // uint8_t             tx1_record:1;
+    // /// 录制标志(1:录制中 0:不录制)
+    // uint8_t             tx2_record:1;
 
     /// 无线状态
     hl_rf_state_e       rf_state;    
+    /// TX当前声道(0:左声道  1：右声道)
+    hl_rf_channel_e     rf_chn;
     /// 当前电量
     uint8_t             soc;
+    /// 当前TX亮度
+    uint8_t             tx_led_britness;
 
     int32_t             cur_volume_r;
     int32_t             cur_volume_l;

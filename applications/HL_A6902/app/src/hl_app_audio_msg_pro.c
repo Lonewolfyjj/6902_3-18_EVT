@@ -53,6 +53,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
         record_switch    = HL_SWITCH_OFF;
         tx_info.mstorage_plug = 1;
         record_led_ctrl  = SWITCH_CLOSE;
+        tx_info.rec_flag = 0;
         hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
         hl_mod_display_io_ctrl(LED_RECORD_STATE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
     }

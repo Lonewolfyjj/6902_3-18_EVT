@@ -44,6 +44,8 @@
 #include "hl_app_upgrade_msg_pro.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_wdog.h"
+#include "hl_util_nvram.h"
+#include "hl_board_commom.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -88,7 +90,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), RT_WAITING_FOREVER) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 500) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -148,7 +150,7 @@ void hl_app_mng_init(void)
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 2048, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -163,12 +165,31 @@ void hl_app_mng_init(void)
 void hl_app_mng_powerOn(void)
 {
     uint8_t value = 0;
+    int msc_open_flag;
+    uint8_t ret;
+
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
     // hl_mod_display_init(&hl_app_mq);
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
+
+#if HL_IS_TX_DEVICE()
     hl_mod_audio_init(&hl_app_mq);
+#else
+    ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    if (ret == 1) {
+        rt_kprintf("nvram be used before not init\n");
+        hl_board_nvram_init();
+        ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    }
+
+    LOG_D("msc_open_flag = %d ,ret = %d ", msc_open_flag, ret);
+    if (msc_open_flag == 0) {
+        hl_mod_audio_init(&hl_app_mq);
+    } 
+#endif
+    
     hl_mod_apple_auth_init(&hl_app_mq);
     hl_mod_apple_auth_start();
     hl_mod_euc_init(&hl_app_mq);
@@ -184,7 +205,7 @@ void hl_app_mng_powerOn(void)
     } else if (rx_info.charge_flag == 2) {
         value = 0;
     }
-    rt_kprintf("rx_info.charge_flag=%d\n", rx_info.charge_flag);
+    LOG_D("rx_info.charge_flag=%d ", rx_info.charge_flag);
     hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &value, 1);
 #endif
 }
@@ -192,10 +213,27 @@ void hl_app_mng_powerOn(void)
 // 关机，去初始化模块
 void hl_app_mng_powerOff(void)
 {
+    int msc_open_flag;
+    uint8_t ret;
+
     LOG_I("power off");    
     hl_mod_euc_stop();
     hl_mod_euc_deinit();
-    hl_mod_audio_deinit();
+
+#if !HL_IS_TX_DEVICE()
+    ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    if (ret == 1) {
+        LOG_E("nvram be used before not init");
+        hl_board_nvram_init();
+        ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    }
+
+    LOG_D("msc_open_flag = %d ,ret = %d ", msc_open_flag, ret);
+    if (msc_open_flag == 0) {
+        hl_mod_audio_deinit();
+    } 
+#endif
+    
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
     hl_mod_input_deinit();
