@@ -728,6 +728,21 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
 {
     hl_lvgl_main_ioctl_t data1;
 
+    if (flag->sys_status.tx1_mute_switch) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_mute_switch = 0;
+
+        if (now->sys_status.tx1_mute_switch) {
+            data1.cmd = HL_CHANGE_TX1_MUTE;
+        } else {
+            data1.cmd = HL_CHANGE_TX1_MUTE_DEL;
+        }
+        hl_mod_display_mux_release();
+        
+        hl_mod_main_ioctl(&data1);
+        LOG_D("mute1=%d",now->sys_status.tx1_mute_switch);
+    }
+
     if (flag->tx1_bat_val) {
         hl_mod_display_mux_take();
         flag->tx1_bat_val          = 0;
@@ -773,6 +788,21 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
 static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
     hl_lvgl_main_ioctl_t data2;
+
+    if (flag->sys_status.tx2_mute_switch) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx2_mute_switch = 0;
+
+        if (now->sys_status.tx2_mute_switch) {
+            data2.cmd = HL_CHANGE_TX2_MUTE;
+        } else {
+            data2.cmd = HL_CHANGE_TX2_MUTE_DEL;
+        }
+        hl_mod_display_mux_release();
+
+        hl_mod_main_ioctl(&data2);
+        LOG_D("mute2=%d",now->sys_status.tx2_mute_switch);
+    }
 
     if (flag->tx2_bat_val) {
         hl_mod_display_mux_take();

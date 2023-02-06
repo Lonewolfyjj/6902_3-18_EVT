@@ -92,6 +92,10 @@ typedef enum _hl_lvgl_main_cmd_type_t
     HL_CHANGE_TX1_BAR_RED,
     /// @brief 更改TX1电池颜色为白色
     HL_CHANGE_TX1_BAR_WHITE,
+    /// @brief TX1静音
+    HL_CHANGE_TX1_MUTE,
+    /// @brief TX1取消静音
+    HL_CHANGE_TX1_MUTE_DEL,
     /// @brief 更改TX2信号
     HL_CHANGE_TX2_SIGNAL,
     /// @brief 更改TX2电量
@@ -105,6 +109,9 @@ typedef enum _hl_lvgl_main_cmd_type_t
     /// @brief 更改TX2电池颜色为白色
     HL_CHANGE_TX2_BAR_WHITE,
     /// @brief 删除TX1、TX2设备
+    /// @brief TX2静音
+    HL_CHANGE_TX2_MUTE,
+    HL_CHANGE_TX2_MUTE_DEL,
     HL_CHANGE_DELETE_DOUBLE,
     /// @brief 只删除TX1设备
     HL_CHANGE_DELETE_TX1,
