@@ -70,7 +70,6 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value);
 /// 电源键处理
 static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 {
-    hl_switch_e          record_switch;
     hl_rf_bypass_state_t rf_bypass_state;
 
     switch (event) {
@@ -78,25 +77,8 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
-            if (tx_info.mstorage_plug == 1) {
-                LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
-                break;
-            }
-
-            if (tx_info.rec_flag == 0) {
-                record_switch    = HL_SWITCH_ON;
-                tx_info.rec_flag = 1;
-                LOG_D("send record on cmd to rx");
-            } else {
-                record_switch    = HL_SWITCH_OFF;
-                tx_info.rec_flag = 0;
-                LOG_D("send record off cmd to rx");
-            }
-            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
-            hl_app_disp_state_led_set();
-
-            rf_bypass_state.chn   = tx_info.rf_state - 1;
-            rf_bypass_state.state = tx_info.rec_flag;
+            rf_bypass_state.chn   = tx_info.rf_chn;
+            rf_bypass_state.state = 2;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
             break;
 
@@ -170,6 +152,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
 /// 录制键处理
 static void hl_app_tx_rec_key_pro(hl_key_event_e event)
 {
+    hl_switch_e          record_switch;
     hl_switch_e          mute_switch;
     hl_rf_bypass_state_t rf_bypass_state;
 
@@ -182,6 +165,26 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
+            if (tx_info.mstorage_plug == 1) {
+                LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
+                break;
+            }
+
+            if (tx_info.rec_flag == 0) {
+                record_switch    = HL_SWITCH_ON;
+                tx_info.rec_flag = 1;
+                LOG_D("send record on cmd to rx");
+            } else {
+                record_switch    = HL_SWITCH_OFF;
+                tx_info.rec_flag = 0;
+                LOG_D("send record off cmd to rx");
+            }
+            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
+            hl_app_disp_state_led_set();
+
+            rf_bypass_state.chn   = tx_info.rf_state - 1;
+            rf_bypass_state.state = tx_info.rec_flag;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
             break;
 
         case HL_KEY_EVENT_LONG:
