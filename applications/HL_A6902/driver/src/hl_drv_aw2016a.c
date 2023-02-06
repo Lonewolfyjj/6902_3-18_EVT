@@ -1861,7 +1861,7 @@ int hl_drv_aw2016a_init(void)
         return AW2016A_FUNC_RET_ERR;
     }
 
-    current = HL_DRV_AW2016A_IMAX_5MA;
+    current = HL_DRV_AW2016A_IMAX_15MA;
 
     ret = set_global_max_output_current(_p_i2c_bus_0, &current);
     if (ret == AW2016A_FUNC_RET_ERR) {

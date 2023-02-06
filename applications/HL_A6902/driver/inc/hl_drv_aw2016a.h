@@ -162,8 +162,8 @@ typedef enum _hl_drv_aw2016a_max_output_current
 {
     HL_DRV_AW2016A_IMAX_15MA = 0x00,
     HL_DRV_AW2016A_IMAX_30MA = 0x01,
-    HL_DRV_AW2016A_IMAX_5MA  = 0x10,
-    HL_DRV_AW2016A_IMAX_10MA = 0x11,
+    HL_DRV_AW2016A_IMAX_5MA  = 0x02,
+    HL_DRV_AW2016A_IMAX_10MA = 0x03,
 } hl_drv_aw2016a_max_output_current_e;
 
 /**

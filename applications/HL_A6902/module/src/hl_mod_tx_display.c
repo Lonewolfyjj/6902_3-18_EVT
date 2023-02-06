@@ -266,13 +266,17 @@ static void _display_update_2(void)
 
 static int _set_brightness(void)
 {
-    int                         ret;
-    hl_drv_aw2016a_pwm_level_st br;
+    int                                 ret;
+    hl_drv_aw2016a_max_output_current_e imax;
 
-    br.led_chan  = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
-    br.pwm_level = _display_mod.led_brightness;
+    if (_display_mod.led_brightness == 30) {
+        imax = HL_DRV_AW2016A_IMAX_15MA;
+    } else {
+        imax = HL_DRV_AW2016A_IMAX_5MA;
+    }
 
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL, &br, sizeof(br));
+    ret =
+        hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT, &imax, sizeof(uint8_t));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return HL_DISPLAY_FAILED;
     }
