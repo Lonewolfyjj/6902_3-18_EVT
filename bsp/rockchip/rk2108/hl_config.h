@@ -9,32 +9,32 @@
 
 #if A6902_TX_HL
 
-#define A6902_VERSION "V1.0.1.3"
+#define A6902_VERSION "V1.0.1.4"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_TX_JF
 
-#define A6902_VERSION "V1.0.1.2"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_HL_CH
 
-#define A6902_VERSION "1.0.1.3"
+#define A6902_VERSION "V1.0.1.4"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_JF_CH
 
-#define A6902_VERSION "V1.0.1.2"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_HL_EN
 
-#define A6902_VERSION "V1.0.1.2"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "EN"
 
 #elif A6902_RX_JF_EN
 
-#define A6902_VERSION "V1.0.1.2"
+#define A6902_VERSION "V1.0.0.0"
 #define A6902_LANGUAGE "EN"
 
 #endif
