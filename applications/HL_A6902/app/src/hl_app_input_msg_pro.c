@@ -246,6 +246,22 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
     hl_app_audio_stream_updata();
 }
 
+/// POGO VBUS的状态处理
+static void hl_app_tx_pogo_vbus_plug_pro(uint32_t value)
+{
+
+    if (value == 0) {
+        tx_info.usb_pogo_flag = 0;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+
+    } else {
+        tx_info.usb_pogo_flag = 1;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+    }
+}
+
 #else
 /// 电源键处理
 static void hl_app_rx_pwr_key_pro(hl_key_event_e event);
@@ -415,6 +431,22 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
 }
 
+/// POGO VBUS的状态处理
+static void hl_app_rx_pogo_vbus_plug_pro(uint32_t value)
+{
+
+    if (value == 0) {
+        rx_info.usb_pogo_flag = 0;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+
+    } else {
+        rx_info.usb_pogo_flag = 1;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+    }
+}
+
 #endif
 
 ///
@@ -443,6 +475,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
         case MSG_TX_MIC_DET:
             hl_app_tx_ex_mic_plug_pro(p_msg->param.u32_param);
             LOG_D("MSG_TX_MIC_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case MSG_TX_PVBUS_DET:
+            hl_app_tx_pogo_vbus_plug_pro(p_msg->param.u32_param);
+            LOG_D("MSG_POGO_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -489,6 +525,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
+        case MSG_RX_PVBUS_DET:
+            hl_app_rx_pogo_vbus_plug_pro(p_msg->param.u32_param);
+            LOG_D("MSG_POGO_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
