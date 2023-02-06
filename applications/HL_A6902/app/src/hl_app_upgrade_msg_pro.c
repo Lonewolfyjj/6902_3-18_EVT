@@ -84,7 +84,7 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
     LOG_I("cmd(%d) !!! ", p_msg->cmd);
     switch (p_msg->cmd) {
         case HL_UPGRADE_FIND_FW_MSG:  /// 找到升级固件包
-            hl_mod_audio_deinit();
+            // hl_mod_audio_deinit();
             hl_mod_telink_stop();   
             // hl_mod_telink_deinit();        
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
