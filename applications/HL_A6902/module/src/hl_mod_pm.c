@@ -280,10 +280,6 @@ static void _guage_state_update()
         LOG_I("soh:%d", _pm_mod.bat_info.soh);
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
         LOG_I("结束");
-
-        if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
-            rt_timer_start(&(_pm_mod.charge_full_timer));
-        }
     }
 
     if (_pm_mod.bat_info.soc.soc <= 3) {
@@ -390,14 +386,34 @@ static void _charge_state_judge(void)
             charge_state = HL_CHARGE_STATE_CHARGING;
         }
     } else {
-        charge_state                     = HL_CHARGE_STATE_NO_CHARGE;
-        _pm_mod.charge_full_timeout_flag = false;
-        rt_timer_stop(&(_pm_mod.charge_full_timer));
+        charge_state = HL_CHARGE_STATE_NO_CHARGE;
     }
 
     if (charge_state != _pm_mod.charge_state) {
         _pm_mod.charge_state = charge_state;
         _mod_msg_send(HL_CHARGE_STATE_IND, &(_pm_mod.charge_state), sizeof(_pm_mod.charge_state));
+    }
+}
+
+static void _charge_full_timer_set(void)
+{
+    static bool    flag  = false;
+    static uint8_t soc   = 255;
+
+    if (soc != _pm_mod.bat_info.soc.soc) {
+        soc  = _pm_mod.bat_info.soc.soc;
+        flag = false;
+    }
+
+    if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
+        if (flag == false) {
+            rt_timer_start(&(_pm_mod.charge_full_timer));
+            flag = true;
+        }
+    } else if (_pm_mod.bat_info.soc.soc < 98 || _pm_mod.charge_state == HL_CHARGE_STATE_NO_CHARGE) {
+        flag                             = false;
+        _pm_mod.charge_full_timeout_flag = false;
+        rt_timer_stop(&(_pm_mod.charge_full_timer));
     }
 }
 
@@ -497,6 +513,7 @@ static void _pm_thread_entry(void* arg)
         _charger_fault_state_poll();
 #endif
         _charge_state_judge();
+        _charge_full_timer_set();
 
         rt_thread_mdelay(10);
         if (delay_time++ > 500) {
