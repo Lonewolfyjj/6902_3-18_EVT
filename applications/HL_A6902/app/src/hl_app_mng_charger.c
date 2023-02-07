@@ -256,7 +256,7 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
-        
+
         case MSG_RX_PVBUS_DET:
             if (p_msg->param.u32_param == 0) {
                 // to be done
@@ -278,20 +278,24 @@ static void hl_app_mng_charger_goto_power_on()
     sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_PROCESS;
 }
 
+static bool _in_box_flag = false;
+
 #if HL_IS_TX_DEVICE()
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 {
-    static uint8_t            _dev_num;
+    uint8_t                   dev_num;
     uint8_t                   bat_soc_temp      = 50;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t                   turn_on_state;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            _dev_num = *(uint8_t*)p_msg->param.ptr;
-            LOG_I("in box! dev_num:%d", _dev_num);
+            _in_box_flag = true;
+            dev_num      = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", dev_num);
         } break;
         case HL_OUT_BOX_IND: {
+            _in_box_flag = false;
             LOG_I("out box!");
             hl_app_mng_charger_goto_power_on();
         } break;
@@ -314,17 +318,19 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 #else
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 {
-    static uint8_t _dev_num;
+    uint8_t dev_num;
     uint8_t bat_soc_temp = 50;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t turn_on_state;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
-            _dev_num = *(uint8_t*)p_msg->param.ptr;
-            LOG_I("in box! dev_num:%d", _dev_num);
+            _in_box_flag = true;
+            dev_num = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", dev_num);
         } break;
         case HL_OUT_BOX_IND: {
+            _in_box_flag = false;
             LOG_I("out box!");
             hl_app_mng_charger_goto_power_on();
         } break;
@@ -350,7 +356,8 @@ MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);
 
 static bool _hl_app_mng_check_power_on_state(void)
 {
-    if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+    if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH
+        && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
         return true;
     } else {
         return false;
@@ -365,8 +372,10 @@ void hl_app_mng_charger_entry(void* msg_q)
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
-            hl_app_mng_powerOn();
-            hl_app_mng_powerOff();
+            if (_in_box_flag == false) {
+                hl_app_mng_powerOn();
+                hl_app_mng_powerOff();
+            }
         }
 
         if (rt_mq_recv(app_mq, &msg, sizeof(msg), 10) == RT_EOK) {
