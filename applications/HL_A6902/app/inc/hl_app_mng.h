@@ -52,7 +52,17 @@ typedef struct _tx_app_info_t
 
     /// mute(1:mute on 0:mute off)
     uint8_t             mute_flag;
-
+    /// 录制保护标志(1:录制保护开  0：录制保护关)
+    uint8_t             rec_protect_flag;
+    /// 自动录制标志(1:自动录制开  0：自动录制关)
+    uint8_t             rec_auto_flag;
+    /// 降噪保护标志(1:降噪保护开  0：降噪保护关)
+    uint8_t             denoise_protect_flag;
+    /// 自动降噪标志(1:自动降噪开  0：自动降噪关)
+    uint8_t             denoise_auto_flag;
+    /// 降噪等级()
+    uint8_t             denoise_class;
+    
     /// 无线状态
     hl_rf_state_e       rf_state;
     /// TX当前声道(0:左声道  1：右声道)

@@ -20,6 +20,7 @@
 #include "hl_util_nvram.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 
@@ -235,6 +236,7 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
         // strcpy(param_value, item->valueint);
         *param_value = atoi(item->valuestring);
     } else {
+        *param_value = default_value;
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
         ret = 2;
     }
@@ -283,6 +285,14 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
         sg_nvram_handle->nvram_mutex_release();
     }
     return ret;
+}
+
+uint8_t hl_util_nvram_param_set_integer(char* param_key, uint8_t integer_value)
+{
+    char param_value[10] = {0};
+
+    sprintf(param_value, "%d", integer_value);
+    return hl_util_nvram_param_set(param_key, param_value);
 }
 
 uint8_t hl_util_nvram_param_save()

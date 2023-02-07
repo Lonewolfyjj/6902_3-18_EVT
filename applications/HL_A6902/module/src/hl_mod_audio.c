@@ -1929,10 +1929,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     uint8_t temp = 0;
 
     s_audio_to_app_mq = p_msg_handle;
-    // elm_init();
-    hl_mod_audio_dfs_root();
 #if HL_IS_TX_DEVICE()
-    hl_mod_audio_dfs_sd();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);    
