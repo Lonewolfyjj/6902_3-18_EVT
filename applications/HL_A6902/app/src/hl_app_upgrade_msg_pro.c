@@ -38,6 +38,7 @@
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
+#if HL_IS_TX_DEVICE()
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
     hl_led_switch led_switch;
@@ -65,6 +66,27 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
             break;
     }
 }
+#else
+static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
+{
+    switch (upgrade_state) {
+        case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+            break;
+        case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
+            break;
+        case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            break;
+        case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            break;
+        default:
+            break;
+    }
+}
+#endif
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
