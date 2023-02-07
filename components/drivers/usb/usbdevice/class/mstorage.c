@@ -1092,10 +1092,6 @@ static rt_err_t _function_disable(ufunction_t func)
 
     RT_DEBUG_LOG(RT_DEBUG_USB, ("Mass storage function disabled\n"));
 
-    if(s_p_metorage_switch_cb != NULL) {
-        s_p_metorage_switch_cb(0);
-    }
-
     data = (struct mstorage*)func->user_data;   
     if(data->ep_in->buffer != RT_NULL)
     {
@@ -1118,6 +1114,10 @@ static rt_err_t _function_disable(ufunction_t func)
     }
     
     data->status = STAT_CBW;
+
+    if(s_p_metorage_switch_cb != NULL) {
+        s_p_metorage_switch_cb(0);
+    }
     
     return RT_EOK;
 }

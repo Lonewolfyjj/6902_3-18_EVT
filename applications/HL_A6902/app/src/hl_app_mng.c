@@ -132,6 +132,7 @@ void hl_app_msg_thread(void* parameter)
     if (rx_info.mstorage_plug == 0) {
 #endif
         hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);        
+        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     }
 
     rt_memset(&msg, 0, sizeof(msg));
