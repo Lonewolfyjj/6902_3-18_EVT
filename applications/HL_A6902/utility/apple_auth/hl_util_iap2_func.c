@@ -576,17 +576,20 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
 {
     st_iap2_ctrl_packet_t iap2_ctrl_packet;
 
-    uint8_t data_1[6] = { 0xae, 0x00, 0xae, 0x02, 0xae, 0x03 };
-    uint8_t data_2[2] = { 0xae, 0x01 };
+    uint8_t data_1[4] = { 0xae, 0x00, 0xae, 0x02 };
+    uint8_t data_2[6] = { 0xae, 0x01, 0xea, 0x00, 0xea, 0x01 };
     uint8_t data_3    = 0x00;
-    uint8_t data_4[2] = { 0x00, 0x00 };
-    uint8_t data_5[2] = { 0x00, 0x00 };
+    uint8_t data_4[2] = { 0x00, 0x64 };
+    uint8_t data_5[2] = { 0x00, 0x01 };
+    uint8_t data_6    = 0x01;
+    uint8_t data_7    = 0x02;
 
     int      ret               = 0;
     uint8_t  payload_check_sum = 0;
     uint16_t ctrl_packet_len   = 0;
     uint16_t ctrl_message_len  = 0;
     uint16_t param_len         = 0;
+    uint16_t temp_len          = 0;
 
     uint8_t* addr = iap2->send_buffer + PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE;
 
@@ -616,12 +619,8 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
         hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_HARDWAREVERSION), 0x0005, IAP2_HARDWAREVERSION);
     addr[param_len] = '\0';
 
-    // packet param < 7 >
-    param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_PUID), 0x0022, IAP2_PUID);
-    addr[param_len] = '\0';
-
     // packet param < 8 >
-    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_1) - 2, 0x0006, data_1);
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_1), 0x0006, data_1);
 
     // packet param < 9 >
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_2), 0x0007, data_2);
@@ -631,6 +630,21 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
 
     // packet param < 11 >
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_4), 0x0009, data_4);
+
+    // packet param < 11 >
+    temp_len = param_len;
+    param_len += 4;
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_6), 0x0000, &data_6);
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME), 0x0001,
+                                        IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME);
+    addr[param_len] = '\0';
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_7), 0x0002, &data_7);
+    hl_iap2_ctrl_add_param(addr + temp_len, param_len - temp_len, 0x000a, NULL);
+
+    // packet param < 12 >
+    param_len +=
+        hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_APP_MATCH_TEAM_ID), 0x000b, IAP2_APP_MATCH_TEAM_ID);
+    addr[param_len] = '\0';
 
     // packet param < 12 >
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen("en"), 0x000c, "en");
@@ -644,16 +658,20 @@ int hl_iap2_identify_identification_info(st_iap2_protocol_p iap2)
     hl_iap2_ctrl_add_param(addr + param_len, 0x002c, 0x0010, NULL);
     param_len += 4;
 
+    // packet param < 16 >
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_5), 0x0000, data_5);
+
     // packet param < 15 >
     param_len +=
         hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_UHOST_COMPONENT), 0x0001, IAP2_UHOST_COMPONENT);
     addr[param_len] = '\0';
 
-    // packet param < 16 >
-    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_5), 0x0000, data_5);
-
     // packet param < 17 >
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 0x0004, 0x0002, NULL);
+
+    // packet param < 7 >
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_PUID), 0x0022, IAP2_PUID);
+    addr[param_len] = '\0';
 
     ctrl_packet_len  = PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE + param_len + 1;
     ctrl_message_len = PACKET_CTRL_HEADER_SIZE + param_len;
@@ -737,6 +755,9 @@ int hl_iap2_powerupdate_send_power(st_iap2_protocol_p iap2)
     // // packet param < 2 >
     // param_len += hl_iap2_ctrl_add_param(addr+param_len, 0x0004, 0x0001, NULL);
 
+    // // packet param < 2 >
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 0x0004, 0x0002, NULL);
+
     // // packet param < 3 >
     // param_len += hl_iap2_ctrl_add_param(addr+param_len, 0x0004, 0x0004, NULL);
 
@@ -782,6 +803,28 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
     uint16_t param_id   = 0;
     uint16_t message_id = 0;
 
+    // recv power update id=0x0002
+    do {
+        ret = iap2->iap2_usb_read(iap2->recv_buffer, POWERUPDATE_FRAME_SIZE, TIMEOUT_US);
+        iap2->iap2_printf("\r\n%s:%d:111 ret = %d\r\n", __func__, __LINE__, ret);
+        if (ret == POWERUPDATE_FRAME_SIZE) {
+            message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
+            param_id   = hl_iap2_ctrl_packet_get_param_id(iap2->recv_buffer);
+            iap2->iap2_printf("\r\n%s:%d:222 message_id = %02X\r\n", __func__, __LINE__, message_id);
+            iap2->iap2_printf("\r\n%s:%d:222 param_id = %02X\r\n", __func__, __LINE__, param_id);
+            ret = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+            if (ret != 0 || message_id != MESSAGE_ID_POWER_UPDATE || param_id != 0x0002) {
+                iap2->iap2_printf("[%d] recv power update id:0x0002\n", __LINE__);
+                result = -1;
+            } else {
+                break;
+            }
+        }
+    } while (1);
+    iap2->iap2_printf("\r\n%s:%d:222\r\n", __func__, __LINE__);
+
+    iap2->packet_arg.ack_num -= 1;
+
     // // recv power update id=0x0004
     // ret = iap2->iap2_usb_read(iap2->recv_buffer, POWERUPDATE_FRAME_SIZE, TIMEOUT_US);
     // if (ret == POWERUPDATE_FRAME_SIZE) {
@@ -797,22 +840,22 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
     // recv power update id=0x0005
     do {
         ret = iap2->iap2_usb_read(iap2->recv_buffer, POWERUPDATE_FRAME_SIZE, TIMEOUT_US);
-        iap2->iap2_printf("\r\n%s:%d:111 ret = %d\r\n", __func__, __LINE__, ret);
+        iap2->iap2_printf("\r\n%s:%d:333 ret = %d\r\n", __func__, __LINE__, ret);
         if (ret == POWERUPDATE_FRAME_SIZE) {
             message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
             param_id   = hl_iap2_ctrl_packet_get_param_id(iap2->recv_buffer);
-            iap2->iap2_printf("\r\n%s:%d:222 message_id = %02X\r\n", __func__, __LINE__, message_id);
-            iap2->iap2_printf("\r\n%s:%d:222 param_id = %02X\r\n", __func__, __LINE__, param_id);
+            iap2->iap2_printf("\r\n%s:%d:333 message_id = %02X\r\n", __func__, __LINE__, message_id);
+            iap2->iap2_printf("\r\n%s:%d:444 param_id = %02X\r\n", __func__, __LINE__, param_id);
             ret = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
             if (ret != 0 || message_id != MESSAGE_ID_POWER_UPDATE || param_id != 0x0005) {
-                iap2->iap2_printf("[ERROR][hl_iap2_powerupdate_recv_update] recv power update id:0x0005\n");
+                iap2->iap2_printf("[%d] recv power update id:0x0005\n", __LINE__);
                 result = -1;
             } else {
                 break;
             }
         }
     } while (1);
-    iap2->iap2_printf("\r\n%s:%d:333\r\n", __func__, __LINE__);
+    iap2->iap2_printf("\r\n%s:%d:444\r\n", __func__, __LINE__);
 
     // // recv power update id=0x0006
     // ret = iap2->iap2_usb_read(iap2->recv_buffer, POWERUPDATE_FRAME_SIZE, TIMEOUT_US);
@@ -826,6 +869,8 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2)
     //     }
     // }
 
+    hl_iap2_link_send_ack(iap2);
+    
     return result;
 }
 
@@ -840,8 +885,8 @@ int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2)
     uint16_t ctrl_packet_len   = 0;
     uint16_t ctrl_message_len  = 0;
 
-    uint8_t  DeviceBatteryShouldChargeIfPowerIsPresent = 0x01;
-    uint16_t AvailableCurrentForDeviceVal              = EXCHANGE_HIGH_LOW_BYTE(0x0BB8);
+    uint8_t  DeviceBatteryShouldChargeIfPowerIsPresent = 0x00;
+    uint16_t AvailableCurrentForDeviceVal              = EXCHANGE_HIGH_LOW_BYTE(0x0000);
 
     uint8_t* addr = iap2->send_buffer + PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE;
 
@@ -869,62 +914,15 @@ int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2)
     }
 
     memcpy(iap2->send_buffer, &iap2_ctrl_packet, PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE);
-
     // payload checksum
+
     payload_check_sum = hl_checksum_calculation(iap2->send_buffer, PACKET_HEADER_SIZE + 1, ctrl_message_len);
     iap2->send_buffer[ctrl_packet_len - 1] = payload_check_sum;
 
     // iap2->iap2_usb_write(iap2->send_buffer, ctrl_packet_len);
+    ret = iap2->iap2_usb_read(iap2->recv_buffer, 64, TIMEOUT_US);
 
     return result;
-}
-
-int hl_iap2_eap_handle_msg(st_iap2_protocol_p iap2)
-{
-    if (iap2 == NULL) {
-        iap2->iap2_printf("[hl_iap2_eap_handle_msg] error parameter!\n");
-        return -1;
-    }
-
-    int     result     = -1;
-    uint8_t ret        = 0;
-    uint8_t len        = 0;
-    uint8_t message_id = 0;
-
-    iap2->iap2_usb_read(iap2->recv_buffer, 64, TIMEOUT_US);
-    result = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
-
-    switch (iap2->packet_arg.session_id) {
-        case SESSION_ID_CTRL: {
-            message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
-            switch (message_id) {
-                case MESSAGE_ID_START_EAP:
-                    /* code */
-                    break;
-
-                case MESSAGE_ID_STOP_EAP:
-                    /* code */
-                    break;
-
-                case MESSAGE_ID_POWER_UPDATE:
-                    /* code */
-                    break;
-
-                default:
-                    break;
-            }
-            hl_iap2_link_send_ack(iap2);
-        } break;
-
-        case SESSION_ID_EA:
-            // send msg to eap_event_handle_thread by msg_queue
-            break;
-
-        default:
-            break;
-    }
-
-    return 0;
 }
 
 int hl_iap2_eap_check_power_insert(st_iap2_protocol_p iap2)

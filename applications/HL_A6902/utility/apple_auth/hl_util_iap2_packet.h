@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include "hl_util_apple_config.h"
 #include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
@@ -32,7 +33,7 @@ typedef enum _iap2_protocol_status_enum_
     EM_HL_IAP2_STM_MAIN_DETECT,
     EM_HL_IAP2_STM_MAIN_IDENTIFY,
     EM_HL_IAP2_STM_MAIN_POWER_UPDATE,
-    EM_HL_IAP2_STM_MAIN_EAP,
+    EM_HL_IAP2_STM_MAIN_ACK_CTRL,
     EM_HL_IAP2_STM_MAIN_SUCCEED,
     EM_HL_IAP2_STM_MAIN_FAILED,
 } HL_ENUM8(hl_iap2_protocol_status_e);
@@ -125,6 +126,12 @@ typedef struct _iap2_sync_payload_
     ///
     uint8_t SessionVer1;
     ///
+    uint8_t SessionId2;
+    ///
+    uint8_t SessionType2;
+    ///
+    uint8_t SessionVer2;
+    ///
     uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_sync_payload_t;
 
@@ -195,6 +202,8 @@ typedef struct _iap2_ctrl_packet_
 #define IAP2_PUID "0babaf959f694c97"
 #define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
 #define IAP2_HID_COMPONENT "HIDComponent"
+#define IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME "com.hollyland.protocol"
+#define IAP2_APP_MATCH_TEAM_ID "XDB3HGKJ3W"
 
 #define MESSAGE_ID_START_EAP 0xEA00
 #define MESSAGE_ID_STOP_EAP 0xEA01
@@ -241,9 +250,12 @@ typedef struct _iap2_ctrl_packet_
 #define SESSION_ID_CTRL 0x01
 #define SESSION_ID_EA 0x02
 
-#define LINK_SESSION1_ID 0x0A
+#define LINK_SESSION1_ID 0x01
 #define LINK_SESSION1_TYPE 0x00
 #define LINK_SESSION1_VER 0x01
+#define LINK_SESSION2_ID 0x02
+#define LINK_SESSION2_TYPE 0x02
+#define LINK_SESSION2_VER 0x01
 
 #define DETECT_FRAME_SIZE 6
 #define PACKET_HEADER_SIZE 8

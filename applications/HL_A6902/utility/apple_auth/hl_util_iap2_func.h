@@ -399,8 +399,6 @@ int hl_iap2_powerupdate_recv_update(st_iap2_protocol_p iap2);
  */
 int hl_iap2_powerupdate_send_power_source(st_iap2_protocol_p iap2);
 
-int hl_iap2_eap_handle_msg(st_iap2_protocol_p iap2);
-
 int hl_iap2_eap_check_power_insert(st_iap2_protocol_p iap2);
 
 #endif

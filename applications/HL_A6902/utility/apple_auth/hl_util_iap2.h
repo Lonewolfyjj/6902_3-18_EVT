@@ -56,7 +56,7 @@ typedef struct _iap2_func_handle_
 /* Exported functions --------------------------------------------------------*/
 
 /**
- * hl_iap2_process_main_oneshot
+ * hl_iap2_process_oneshot
  * @brief 循环执行嵌套状态机每个状态，完成苹果认证
  * @param [in] iap2 iap2句柄
  * @return int 成功 0 | 失败 非0
@@ -71,7 +71,25 @@ typedef struct _iap2_func_handle_
  * <tr><td>2022-09-01      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2);
+int hl_iap2_process_oneshot(st_iap2_protocol_p iap2);
+
+/**
+ * hl_eap_process_oneshot
+ * @brief 接收并处理EA Session消息
+ * @param [in] iap2 iap2句柄
+ * @return int 成功 0 | 失败 非0
+ * @date 2023-02-07
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-07      <td>lisonglin     <td>新建
+ * </table>
+ */
+int hl_eap_process_oneshot(st_iap2_protocol_p iap2);
 
 /**
  * hl_iap2_protocol_init

@@ -129,7 +129,7 @@ static int _hl_iap2_link_process(st_iap2_protocol_p iap2)
  */
 static int _hl_iap2_identify_process(st_iap2_protocol_p iap2)
 {
-    if(NULL == iap2){
+    if (NULL == iap2) {
         rt_kprintf("[ERROR][%s:%d] ipa2 is null!\n", __func__, __LINE__);
         return -1;
     }
@@ -254,8 +254,12 @@ static int _hl_iap2_power_update_process(st_iap2_protocol_p iap2)
             break;
 
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE:
+#if POWERSOURCEUPDATE_OPEN
             hl_iap2_powerupdate_send_power_source(iap2);
             iap2->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK;
+#else
+            iap2->main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
+#endif
             break;
 
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK:
@@ -271,17 +275,83 @@ static int _hl_iap2_power_update_process(st_iap2_protocol_p iap2)
     return 0;
 }
 
-static int _hl_iap2_ea_session_process(st_iap2_protocol_p iap2)
+/**
+ * 
+ * @brief 
+ * @param [in] iap2 iap2句柄
+ * @return int 成功 0 | 失败 非0
+ * @date 2023-02-07
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-07      <td>lisonglin     <td>新建
+ * </table>
+ */
+static int _hl_iap2_ack_ctrl_process(st_iap2_protocol_p iap2)
 {
-    hl_iap2_eap_handle_msg(iap2);
-    hl_iap2_eap_check_power_insert(iap2);
+    if (iap2 == NULL) {
+        iap2->iap2_printf("[hl_iap2_eap_handle_msg] error parameter!\n");
+        return -1;
+    }
 
-    // iap2->main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
+    int     result     = -1;
+    uint8_t ret        = 0;
+    uint8_t len        = 0;
+    uint8_t message_id = 0;
+
+    iap2->iap2_usb_read(iap2->recv_buffer, 64, TIMEOUT_US);
+    result = hl_iap2_packet_header_decode(iap2->recv_buffer, &len, LINK_CONTROL_ACK, &iap2->packet_arg);
+
+    switch (iap2->packet_arg.session_id) {
+        case SESSION_ID_CTRL: {
+            message_id = hl_iap2_ctrl_packet_get_message_id(iap2->recv_buffer);
+            switch (message_id) {
+                case MESSAGE_ID_START_EAP:
+                    /* code */
+                    break;
+
+                case MESSAGE_ID_STOP_EAP:
+                    /* code */
+                    break;
+
+                case MESSAGE_ID_POWER_UPDATE:
+                    /* code */
+                    break;
+
+                default:
+                    break;
+            }
+            hl_iap2_link_send_ack(iap2);
+        } break;
+
+        case SESSION_ID_EA:
+            // send msg to eap_event_handle_thread by msg_queue
+            break;
+
+        default:
+            break;
+    }
 
     return 0;
 }
 
-int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
+int hl_eap_process_oneshot(st_iap2_protocol_p iap2)
+{
+    if (iap2 == NULL) {
+        iap2->iap2_printf("[%s:%d] error parameter!\n", __func__, __LINE__);
+        return -2;
+    }
+
+    int result = -1;
+
+    return -1;
+}
+
+int hl_iap2_process_oneshot(st_iap2_protocol_p iap2)
 {
     if (iap2 == NULL) {
         iap2->iap2_printf("[%s:%d] error parameter!\n", __func__, __LINE__);
@@ -292,7 +362,7 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
 
     switch (iap2->main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
-            iap2->delay_usec_func(500000);
+            iap2->delay_usec_func(100000);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:
@@ -311,7 +381,8 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2)
             _hl_iap2_power_update_process(iap2);
             break;
 
-        case EM_HL_IAP2_STM_MAIN_EAP:
+        case EM_HL_IAP2_STM_MAIN_ACK_CTRL:
+            _hl_iap2_ack_ctrl_process(iap2);
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:

@@ -104,6 +104,9 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
     packet_payload->SessionId1                = LINK_SESSION1_ID;
     packet_payload->SessionType1              = LINK_SESSION1_TYPE;
     packet_payload->SessionVer1               = LINK_SESSION1_VER;
+    packet_payload->SessionId2                = LINK_SESSION2_ID;
+    packet_payload->SessionType2              = LINK_SESSION2_TYPE;
+    packet_payload->SessionVer2               = LINK_SESSION2_VER;
     packet_payload->PayloadCksum              = hl_checksum_calculation(packet_payload, 0, payload_len - 1);
 
     return payload_len;

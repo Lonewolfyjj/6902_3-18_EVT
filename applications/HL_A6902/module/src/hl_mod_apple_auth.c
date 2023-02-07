@@ -273,7 +273,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
     rt_thread_mdelay(200);
 
     while (s_apple_auth.iap2_thread_flag == RT_TRUE) {
-        result = hl_iap2_process_main_oneshot(s_apple_auth.iap2_handle);
+        result = hl_iap2_process_oneshot(s_apple_auth.iap2_handle);
         if (result >= 0) {
             app_msg_t.cmd = result;
             app_msg_t.len = 0;
@@ -305,6 +305,10 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
  */
 static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
 {
+    int result = 0;
+
+    while (s_apple_auth.eap_thread_flag == RT_TRUE) {
+    }
 }
 
 int hl_mod_apple_auth_init(rt_mq_t* input_msq)
@@ -321,7 +325,7 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     // 获取并赋值APP层下发的消息队列指针
     s_apple_auth.app_msq          = input_msq;
     s_apple_auth.iap2_thread_flag = RT_TRUE;
-    s_apple_auth.eap_thread_flag  = RT_TRUE;
+    s_apple_auth.eap_thread_flag  = RT_FALSE;
 
     // 获取苹果认证芯片I2C设备句柄
     s_apple_auth.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
@@ -356,7 +360,7 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     // Telink获取并赋值APP层下发的消息队列指针
     s_apple_auth.app_msq          = input_msq;
     s_apple_auth.iap2_thread_flag = RT_TRUE;
-    s_apple_auth.eap_thread_flag  = RT_TRUE;
+    s_apple_auth.eap_thread_flag  = RT_FALSE;
     // Telink消息队列结构体赋初值
     app_msg_t.sender = APPLE_AUTH_MODE;
 
@@ -430,7 +434,7 @@ uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
             s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
             s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
             s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-            s_apple_auth.iap2_handle->retry_time         = 5;
+            s_apple_auth.iap2_handle->retry_time         = 3;
             break;
 
         case HL_APPLE_AUTH_STOP_CMD:
