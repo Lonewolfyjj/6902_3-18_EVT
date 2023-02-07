@@ -108,7 +108,9 @@ typedef struct _hl_display_status{
     uint32_t lowbrightness_flag:1; 
     /// @brief 开启升级设置标志位 1表示已下发 0 表示未下发
     /// @brief 数据部分 1成功 0 表示失败
-    uint32_t upgrade_setting_flag:1; 
+    uint32_t upgrade_setting_flag:1;
+    /// @brief 苹果认证标志，1：苹果认证成功 0 ：苹果认证失败
+    uint32_t apple_auth_flag:1; 
 }hl_display_status;
 
 typedef struct _hl_display_screen_s

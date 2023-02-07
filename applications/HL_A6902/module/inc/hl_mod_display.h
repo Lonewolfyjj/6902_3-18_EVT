@@ -541,6 +541,9 @@ typedef enum _hl_cmd_e
     /// @brief 开启升级命令结果返回，1设置成功，0设置失败
     UPGRADE_SETTING_SWITCH_CMD,
 
+    /// @brief 苹果认证命令下发，1苹果认证成功，0苹果认证失败或USB拔出
+    APPLE_AUTH_SWITCH_CMD,
+
     MSG_ID_CNT
     
 } HL_ENUM8(hl_cmd_e);

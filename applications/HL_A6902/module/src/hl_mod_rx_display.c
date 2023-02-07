@@ -464,6 +464,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.upgrade_setting_flag = data;
             flag->sys_status.upgrade_setting_flag   = 1;
         } break;
+        case APPLE_AUTH_SWITCH_CMD: {
+            uint8_t data                            = *(char*)ptr;
+            data_p->sys_status.apple_auth_flag = data;
+            flag->sys_status.apple_auth_flag   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
