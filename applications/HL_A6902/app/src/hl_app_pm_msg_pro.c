@@ -26,6 +26,7 @@
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
+#include "hl_board_commom.h"
 
 #include "hl_mod_pm.h"
 #include "hl_mod_display.h"
@@ -41,6 +42,8 @@
 /* Private function(only *.c)  -----------------------------------------------*/
 void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
 {
+    hl_rf_bypass_state_t bypass_state;
+
     uint8_t state = 0;
 #if HL_IS_TX_DEVICE()
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
@@ -56,6 +59,9 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         tx_info.charge_flag = 2;
         state               = 2;
     }
+    bypass_state.chn   = tx_info.rf_chn;
+    bypass_state.state = tx_info.charge_flag;
+    hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, 1);
 #else
     if (charge_state == HL_CHARGE_STATE_NO_CHARGE) {
@@ -79,9 +85,9 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
 #if HL_IS_TX_DEVICE()
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
-    uint8_t                  soc_temp;
-    int8_t                   temperature_temp;
-    hl_rf_bypass_value_t     tx_bat;
+    uint8_t              soc_temp;
+    int8_t               temperature_temp;
+    hl_rf_bypass_value_t tx_bat;
 
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND:
@@ -104,8 +110,13 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("min temp alert:%d", temperature_temp);
             break;
 
-        case HL_CHARGE_STATE_IND: 
+        case HL_CHARGE_STATE_IND:
             hl_app_pm_charge_pro(*(hl_mod_pm_charge_state_e*)p_msg->param.ptr);
+            break;
+
+        case HL_ULTRA_LOWPOWER_IND:
+            LOG_I("extreme lowpower! need power off");
+            hl_board_reboot();
             break;
 
         default:
@@ -116,12 +127,12 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 #else
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 {
-    uint8_t                  soc_temp;
-    int8_t                   temperature_temp;
+    uint8_t soc_temp;
+    int8_t temperature_temp;
 
     switch (p_msg->cmd) {
         case HL_SOC_UPDATE_IND:
-            soc_temp    = *(uint8_t*)p_msg->param.ptr;
+            soc_temp = *(uint8_t*)p_msg->param.ptr;
             rx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(RX_BAT_VAL_VAL_CMD, &soc_temp, 1);
             LOG_I("current soc:%d", rx_info.soc);
@@ -140,6 +151,12 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_CHARGE_STATE_IND:
             hl_app_pm_charge_pro(*(hl_mod_pm_charge_state_e*)p_msg->param.ptr);
             break;
+
+        case HL_ULTRA_LOWPOWER_IND:
+            LOG_I("extreme lowpower! need power off");
+            hl_board_reboot();
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;

@@ -220,22 +220,39 @@ void hl_drv_rm690a0_poweron_seq(void)
     hl_hal_gpio_init(GPIO_OLED_DCX);
     hl_hal_gpio_low(GPIO_OLED_DCX);
 
+    // SPI SCL时钟频率线
     rt_pin_mode(GPIO1_C5, PIN_MODE_OUTPUT);
     rt_pin_write(GPIO1_C5, PIN_LOW);
 
-    rt_pin_mode(GPIO1_C6, PIN_MODE_OUTPUT);
-    rt_pin_write(GPIO1_C6, PIN_LOW);
+    // RDX_SDA 浮空输入
+    rt_pin_mode(GPIO1_C6, PIN_MODE_INPUT);
+    // SPI CS 拉高
     rt_pin_mode(GPIO1_C4, PIN_MODE_OUTPUT);
     rt_pin_write(GPIO1_C4, PIN_LOW);
 }
 
 INIT_PREV_EXPORT(hl_drv_rm690a0_poweron_seq);
 
+void hl_drv_rm690a0_otherpin_init(void)
+{
+    // 初始化放在RTTHREEAD的INIT_PREV_EXPORT部分
+    // 屏幕上电时序 屏幕相关代码初始化
+    // DCX拉低
+    hl_hal_gpio_low(GPIO_OLED_DCX);
+    // SCL时钟频率线 拉低
+    rt_pin_write(GPIO1_C5,  PIN_LOW);
+    // RDX_SDA时钟数据线 浮空输入
+
+    //  SPI CS 拉高
+    rt_pin_write(GPIO1_C4, PIN_HIGH);
+}
+
 static void hl_drv_rm690a0_gpio_init(void)
-{    
+{
     rt_thread_mdelay(100);
     hl_drv_rm690a0_hardware_rst();
-    rt_thread_mdelay(100);  
+    rt_thread_mdelay(100);
+    hl_drv_rm690a0_otherpin_init();
 }
 
 static void hl_drv_rm690a0_hardware_rst(void)
@@ -275,11 +292,13 @@ static uint8_t get_color_format_byte(uint8_t format)
 }
 static void hl_drv_rm690a0_gpio_deinit(void)
 {
-    hl_hal_gpio_init(GPIO_OLED_SWIRE);
-    hl_hal_gpio_init(GPIO_OLED_RST);
+    OLED_PWR_OFF();
+    // hl_hal_gpio_init(GPIO_OLED_SWIRE);
+    // hl_hal_gpio_init(GPIO_OLED_RST);
 
     hl_hal_gpio_low(GPIO_OLED_SWIRE);
     hl_hal_gpio_low(GPIO_OLED_RST);
+    hl_drv_rm690a0_poweron_seq();
 }
 
 static uint32_t framebuffer_alloc(rt_size_t size)
@@ -560,9 +579,13 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
                 hl_drv_rm690a0_free(ptr);
                 result = RT_EOK;
             }
-        }
-
-        break;
+        } break;
+        case CLOSE_MIPI_SCREENPOWER_CMD: {
+            OLED_PWR_OFF();
+        } break;
+        case OPEN_MIPI_SCREENPOWER_CMD: {
+            OLED_PWR_ON();
+        } break;
         default:
             break;
     }

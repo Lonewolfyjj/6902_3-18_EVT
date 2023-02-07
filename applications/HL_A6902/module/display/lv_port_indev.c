@@ -196,19 +196,20 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
 
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
-    uint32_t tmp;
+    uint32_t          tmp;
 
     if (touchpad_switch == true) {
         // touchpad_get_xy(&last_x, &last_y);
         /*Save the pressed coordinates and the state*/
         if (touchpad_is_pressed()) {
-            
-            touchpad_get_xy(&last_x, &last_y);
-            // tmp = last_x;
-            // last_x = 294 - last_y;
-            // last_y = tmp;
 
-            // rt_kprintf("last_x = %d  last_y = %d \n",last_x,last_y);
+            touchpad_get_xy(&last_x, &last_y);
+            if (last_x != -1 && last_y != -1) {
+                hl_mod_page_screen_lowbritness_update();
+                hl_mod_page_inbox_screenoff_update();
+            }
+
+            // rt_kprintf("last_x = %d  last_y = %d \n", last_x, last_y);
             data->state = LV_INDEV_STATE_PR;
         } else {
             data->state = LV_INDEV_STATE_REL;

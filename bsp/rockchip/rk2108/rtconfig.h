@@ -285,7 +285,7 @@
 #define RT_LV_USE_IMG_TRANSFORM
 #define RT_LV_USE_GROUP
 /* RT_LV_USE_GPU is not set */
-#define RT_LV_USE_FILESYSTEM
+/* RT_LV_USE_FILESYSTEM is not set */
 /* RT_LV_USE_USER_DATA is not set */
 /* RT_LV_USE_PERF_MONITOR is not set */
 
@@ -297,30 +297,30 @@
 /* RT_LV_USE_BTNMATRIX is not set */
 /* RT_LV_USE_CALENDAR is not set */
 /* RT_LV_USE_CANVAS is not set */
-#define RT_LV_USE_CHECKBOX
-#define RT_LV_USE_CHART
-#define RT_LV_USE_CONT
+/* RT_LV_USE_CHECKBOX is not set */
+/* RT_LV_USE_CHART is not set */
+/* RT_LV_USE_CONT is not set */
 /* RT_LV_USE_CPICKER is not set */
-#define RT_LV_USE_DROPDOWN
+/* RT_LV_USE_DROPDOWN is not set */
 /* RT_LV_USE_GAUGE is not set */
-#define RT_LV_USE_CLOCK
+/* RT_LV_USE_CLOCK is not set */
 #define RT_LV_USE_IMG
-#define RT_LV_USE_IMGBTN
+/* RT_LV_USE_IMGBTN is not set */
 /* RT_LV_USE_KEYBOARD is not set */
 #define RT_LV_USE_LABEL
 /* RT_LV_USE_LED is not set */
-#define RT_LV_USE_LINE
-#define RT_LV_USE_LIST
-#define RT_LV_USE_LINEMETER
+/* RT_LV_USE_LINE is not set */
+/* RT_LV_USE_LIST is not set */
+/* RT_LV_USE_LINEMETER is not set */
 #define RT_LV_USE_OBJMASK
-#define RT_LV_USE_MSGBOX
+/* RT_LV_USE_MSGBOX is not set */
 #define RT_LV_USE_PAGE
-#define RT_LV_USE_SPINNER
+/* RT_LV_USE_SPINNER is not set */
 #define RT_LV_USE_ROLLER
 #define RT_LV_USE_SLIDER
-#define RT_LV_USE_SPINBOX
-#define RT_LV_USE_SWITCH
-#define RT_LV_USE_TEXTAREA
+/* RT_LV_USE_SPINBOX is not set */
+/* RT_LV_USE_SWITCH is not set */
+/* RT_LV_USE_TEXTAREA is not set */
 /* RT_LV_USE_TABLE is not set */
 /* RT_LV_USE_TABVIEW is not set */
 /* RT_LV_USE_TILEVIEW is not set */
@@ -334,15 +334,15 @@
 /* RT_LV_FONT_MONTSERRAT_14 is not set */
 /* RT_LV_FONT_MONTSERRAT_16 is not set */
 /* RT_LV_FONT_MONTSERRAT_18 is not set */
-#define RT_LV_FONT_MONTSERRAT_20
+/* RT_LV_FONT_MONTSERRAT_20 is not set */
 /* RT_LV_FONT_MONTSERRAT_22 is not set */
-#define RT_LV_FONT_MONTSERRAT_24
+/* RT_LV_FONT_MONTSERRAT_24 is not set */
 /* RT_LV_FONT_MONTSERRAT_26 is not set */
 /* RT_LV_FONT_MONTSERRAT_28 is not set */
 /* RT_LV_FONT_MONTSERRAT_30 is not set */
 /* RT_LV_FONT_MONTSERRAT_32 is not set */
 /* RT_LV_FONT_MONTSERRAT_34 is not set */
-#define RT_LV_FONT_MONTSERRAT_36
+/* RT_LV_FONT_MONTSERRAT_36 is not set */
 /* RT_LV_FONT_MONTSERRAT_38 is not set */
 /* RT_LV_FONT_MONTSERRAT_40 is not set */
 /* RT_LV_FONT_MONTSERRAT_42 is not set */
@@ -355,21 +355,9 @@
 #define RT_LV_THEME_DEFAULT_COLOR_PRIMARY 0x01a2b1
 #define RT_LV_THEME_DEFAULT_COLOR_SECONDARY 0x44d1b6
 #define RT_LV_THEME_DEFAULT_FONT_SMALL_NULL
-/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_20 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_24 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_SMALL_MONTSERRAT_36 is not set */
 #define RT_LV_THEME_DEFAULT_FONT_NORMAL_NULL
-/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_20 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_24 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_NORMAL_MONTSERRAT_36 is not set */
 #define RT_LV_THEME_DEFAULT_FONT_SUBTITLE_NULL
-/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_20 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_24 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_SUBTITLE_MONTSERRAT_36 is not set */
 #define RT_LV_THEME_DEFAULT_FONT_TITLE_NULL
-/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_20 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_24 is not set */
-/* RT_LV_THEME_DEFAULT_FONT_TITLE_MONTSERRAT_36 is not set */
 
 /* LittlevGL2RTT display buffer Options */
 
@@ -540,7 +528,6 @@
 /* PKG_USING_AGILE_FTP is not set */
 /* PKG_USING_EMBEDDEDPROTO is not set */
 /* PKG_USING_RT_LINK_HW is not set */
-/* PKG_USING_RYANMQTT is not set */
 /* PKG_USING_LORA_PKT_FWD is not set */
 /* PKG_USING_LORA_GW_DRIVER_LIB is not set */
 /* PKG_USING_LORA_PKT_SNIFFER is not set */
@@ -548,7 +535,6 @@
 /* PKG_USING_SMALL_MODBUS is not set */
 /* PKG_USING_NET_SERVER is not set */
 /* PKG_USING_ZFTP is not set */
-/* PKG_USING_WOL is not set */
 
 /* security packages */
 
@@ -968,17 +954,13 @@
 
 /* Sensors */
 
-/* PKG_USING_ARDUINO_SENSOR_DEVICE_DRIVERS is not set */
 /* PKG_USING_ARDUINO_CAPACITIVESENSOR is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_ADXL375 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_VL53L0X is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_VL53L1X is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_SENSOR is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_VL6180X is not set */
 /* PKG_USING_ADAFRUIT_MAX31855 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MAX31865 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MAX31856 is not set */
-/* PKG_USING_ARDUINO_ADAFRUIT_MAX6675 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_MLX90614 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_LSM9DS1 is not set */
 /* PKG_USING_ARDUINO_ADAFRUIT_AHTX0 is not set */
@@ -1102,7 +1084,6 @@
 /* PKG_USING_ARDUINO_SEEED_HM3301 is not set */
 /* PKG_USING_ARDUINO_SEEED_MCP9600 is not set */
 /* PKG_USING_ARDUINO_SEEED_LTC2941 is not set */
-/* PKG_USING_ARDUINO_SEEED_LDC1612 is not set */
 
 /* Display */
 
@@ -1158,7 +1139,7 @@
 /* HAL_DBG_ON is not set */
 /* RT_USING_SND_GLB_RST is not set */
 #define RT_USING_RESET
-/* RT_USING_CRU_DUMP is not set */
+#define RT_USING_CRU_DUMP
 /* RT_USING_REGULATOR_DUMP is not set */
 /* RT_USING_PROF_IRQ is not set */
 /* RT_USING_PMIC is not set */
@@ -1310,7 +1291,7 @@
 /* RT_USING_VOP_MCU is not set */
 #define RT_USING_DSI
 /* RT_USING_KEYCTRL is not set */
-#define RT_USING_PWM0
+/* RT_USING_PWM0 is not set */
 
 /* Enable DSP */
 
@@ -1338,16 +1319,15 @@
 /* Enable SPI */
 
 #define RT_USING_SPI2APB
-#define RT_USING_SPI1
-#define RT_USING_SPI2
+/* RT_USING_SPI1 is not set */
+/* RT_USING_SPI2 is not set */
 /* RT_USING_SYSTICK is not set */
 
 /* RT-Thread application */
 
 /* RT_USING_LVGL_APP_DEMO is not set */
 /* RT_USING_ROCKCHIP_DEMO is not set */
-#define RT_USING_USBAPP
-#define RT_USING_HIDTEST
+/* RT_USING_USBAPP is not set */
 /* RT_USING_RK_BATTERY_IPC is not set */
 /* RT_USING_RK_IOT_APP is not set */
 /* ENABLE_DUAL_TRACKING is not set */
@@ -1363,12 +1343,12 @@
 #define RT_USING_COMMON_TEST
 /* RT_USING_AUTO_TEST is not set */
 /* RT_USING_COMMON_TEST_SUSPEND is not set */
-#define RT_USING_COMMON_TEST_AUDIO
+/* RT_USING_COMMON_TEST_AUDIO is not set */
 /* RT_USING_COMMON_TEST_CODEC_ES8388 is not set */
 /* RT_USING_COMMON_TEST_CPU_USAGE is not set */
 /* RT_USING_COMMON_TEST_DCACHE is not set */
 /* RT_USING_COMMON_TEST_ICACHE is not set */
-#define RT_USING_COMMON_TEST_DISPLAY
+/* RT_USING_COMMON_TEST_DISPLAY is not set */
 /* RT_USING_COMMON_TEST_DSP is not set */
 /* RT_USING_DSP_OPUS_CODEC_TEST is not set */
 /* RT_USING_COMMON_TEST_GPIO is not set */

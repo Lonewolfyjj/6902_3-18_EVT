@@ -49,6 +49,8 @@ static hl_display_systime_s systime_recode;
 //时间设置界面
 static void hl_date_test_cb(hl_date_choose_t opt,int16_t data)
 {
+    rt_kprintf("opt=%d,data=%d\n",opt,data);
+    
     switch(opt){
         case HL_DATE_YEAR:
             systime_recode.year = data;

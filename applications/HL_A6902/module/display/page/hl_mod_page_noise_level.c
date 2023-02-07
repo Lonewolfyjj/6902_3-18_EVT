@@ -49,8 +49,8 @@
 #define MIN_LEVEL       1
 
 
-LV_IMG_DECLARE(Other_mic_black);
-LV_IMG_DECLARE(Other_voice);
+LV_IMG_DECLARE(Other_noise);
+
 
 
 static void hl_mod_page_setup(void)
@@ -67,7 +67,7 @@ static void hl_mod_page_setup(void)
         .ptr        = "降噪调节",
         .range_max  = MAX_LEVEL,
         .range_min  = MIN_LEVEL,
-        .src        = &Other_mic_black,
+        .src        = &Other_noise,
     };
     hl_mod_barset_init(&bar_test);
 }

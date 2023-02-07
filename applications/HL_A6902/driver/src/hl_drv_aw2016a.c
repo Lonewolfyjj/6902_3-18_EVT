@@ -144,6 +144,33 @@ static int get_chip_id(struct rt_i2c_bus_device* p_i2c_bus, uint8_t* p_chip_id)
     return AW2016A_FUNC_RET_OK;
 }
 
+static int check_chip_status(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_chip_status_e* p_param)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_ISR, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    *p_param = 0;
+
+    if (reg_val & HL_DRV_AW2016A_OTPIS) {
+        *p_param |= HL_DRV_AW2016A_OTPIS;
+    }
+
+    if (reg_val & HL_DRV_AW2016A_UVLOIS) {
+        *p_param |= HL_DRV_AW2016A_UVLOIS;
+    }
+
+    if (reg_val & HL_DRV_AW2016A_PUIS) {
+        *p_param |= HL_DRV_AW2016A_PUIS;
+    }
+
+    return AW2016A_FUNC_RET_OK;
+}
+
 /**
  * 
  * @brief reset internal logic and register 
@@ -520,18 +547,159 @@ static int set_pwm_level(struct rt_i2c_bus_device* p_i2c_bus, hl_drv_aw2016a_pwm
     return AW2016A_FUNC_RET_OK;
 }
 
-static int dump_register_value(struct rt_i2c_bus_device* p_i2c_bus, uint8_t* reg_addr)
+static int dump_register_value(struct rt_i2c_bus_device* p_i2c_bus)
 {
+#if 1
     int     ret;
     uint8_t reg_val;
 
-    ret = aw_read(p_i2c_bus, *reg_addr, &reg_val);
+    ret = aw_read(p_i2c_bus, AW2016A_REG_RSTR, &reg_val);
     if (ret == AW2016A_FUNC_RET_ERR) {
         return AW2016A_FUNC_RET_ERR;
     }
 
-    LOG_D("reg:%02x,value:%02x", *reg_addr, reg_val);
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_RSTR, reg_val);
 
+    ret = aw_read(p_i2c_bus, AW2016A_REG_GCR1, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_GCR1, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_ISR, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_ISR, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_PATST, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_PATST, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_GCR2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_GCR2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LCTR, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LCTR, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LCFG1, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LCFG1, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LCFG2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LCFG2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LCFG3, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LCFG3, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_PWM1, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_PWM1, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_PWM2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_PWM2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_PWM3, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_PWM3, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED1_T1_T2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED1_T1_T2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED1_T3_T4, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED1_T3_T4, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED1_T0_REPEAT, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED1_T0_REPEAT, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED2_T1_T2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED2_T1_T2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED2_T3_T4, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED2_T3_T4, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED2_T0_REPEAT, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED2_T0_REPEAT, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED3_T1_T2, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED3_T1_T2, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED3_T3_T4, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED3_T3_T4, reg_val);
+
+    ret = aw_read(p_i2c_bus, AW2016A_REG_LED3_T0_REPEAT, &reg_val);
+    if (ret == AW2016A_FUNC_RET_ERR) {
+        return AW2016A_FUNC_RET_ERR;
+    }
+
+    LOG_I("reg:%02x,value:%02x", AW2016A_REG_LED3_T0_REPEAT, reg_val);
+#endif
     return AW2016A_FUNC_RET_OK;
 }
 
@@ -1759,6 +1927,17 @@ int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op
                 return AW2016A_FUNC_RET_ERR;
             }
         } break;
+        case HL_DRV_AW2016A_CHECK_CHIP_STATUS: {
+            if (arg_size != sizeof(hl_drv_aw2016a_chip_status_e)) {
+                LOG_E("size err, ctrl arg need <hl_drv_aw2016a_chip_status_e> type pointer!");
+                return AW2016A_FUNC_RET_ERR;
+            }
+
+            ret = check_chip_status(p_i2c_bus, (hl_drv_aw2016a_chip_status_e*)arg);
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                return AW2016A_FUNC_RET_ERR;
+            }
+        } break;
         case HL_DRV_AW2016A_SET_WORK_MODE: {
             if (arg_size != sizeof(uint8_t)) {
                 LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
@@ -1859,12 +2038,7 @@ int hl_drv_aw2016a_ctrl(hl_drv_aw2016a_led_num_e led_num, hl_drv_aw2016a_op_t op
             }
         } break;
         case HL_DRV_AW2016A_DUMP_REGISTER_VALUE: {
-            if (arg_size != sizeof(uint8_t)) {
-                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
-                return AW2016A_FUNC_RET_ERR;
-            }
-
-            ret = dump_register_value(p_i2c_bus, (uint8_t*)arg);
+            ret = dump_register_value(p_i2c_bus);
             if (ret == AW2016A_FUNC_RET_ERR) {
                 return AW2016A_FUNC_RET_ERR;
             }

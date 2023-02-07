@@ -27,13 +27,30 @@
 #include "stdbool.h"
 
 /* typedef -------------------------------------------------------------------*/
+
+typedef enum _hl_mod_appleauth_ctrl_cmd
+{
+    /// 开始苹果认证流程：类型无
+    HL_APPLE_AUTH_START_CMD = 0x00,
+    /// 结束苹果认证流程：类型无
+    HL_APPLE_AUTH_STOP_CMD = 0x01,
+} HL_ENUM8(hl_mod_appleauth_ctrl_cmd);
+
+typedef enum _hl_mod_appleauth_ctrl_ind
+{
+    /// 返回认证结果：成功
+    HL_APPLE_AUTH_SUCCEED_IND = 0x00,
+    /// 返回认证结果：失败
+    HL_APPLE_AUTH_FAILED_IND = 0x01,
+} HL_ENUM8(hl_mod_appleauth_ctrl_ind);
+
 /* define --------------------------------------------------------------------*/
 
 #define MFI_IC_IIC_ADDR 0x10
-#define IAP2_THREAD_STACK_SIZE 1024
+#define IAP2_THREAD_STACK_SIZE 4096
 #define IAP2_THREAD_PRIORITY 10
 #define IAP2_THREAD_TIMESLICE 10
-#define EAP_THREAD_STACK_SIZE 1024
+#define EAP_THREAD_STACK_SIZE 4096
 #define EAP_THREAD_PRIORITY 10
 #define EAP_THREAD_TIMESLICE 10
 
@@ -125,8 +142,23 @@ int hl_mod_apple_auth_start();
  */
 int hl_mod_apple_auth_stop();
 
-void hl_mod_apple_auth_begin();
-void hl_mod_apple_auth_end();
+/**
+ * hl_mod_appleauth_ioctl
+ * @brief 通过命令控制AppleAuth模块
+ * @param [in] cmd 命令
+ * @return uint8_t 成功 0 | 失败 1
+ * @date 2023-01-11
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-01-11      <td>lisonglin     <td>新建
+ * </table>
+ */
+uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd);
 
 #endif
 

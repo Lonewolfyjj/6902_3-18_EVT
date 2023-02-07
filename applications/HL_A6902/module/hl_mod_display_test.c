@@ -283,18 +283,28 @@ int hl_mod_display_test_cmd(int argc, char** argv)
     if (argc == 1) {
         rt_kprintf("display_test \r\n");
 
-    } else if (!strcmp(argv[1], "init")) {
-        rt_kprintf("display_test thread init\r\n");
+    } else if (!strcmp(argv[1], "drvinit")) {
+        rt_kprintf("rm69310 drv init\r\n");
+        hl_drv_rm690a0_init();
+    } else if (!strcmp(argv[1], "drvdeinit")) {
+        rt_kprintf("rm69310 drv deinit\r\n");
+        hl_drv_rm690a0_deinit();
     } else if (!strcmp(argv[1], "cmd")) {
-        rt_kprintf("display_test thread\r\n");
+        rt_kprintf("display_test thread cmd\r\n");
         msg.cmd             = atoi(argv[2]);
         msg.len             = 4;
         msg.param.u32_param = atoi(argv[3]);
 
-        rt_kprintf("u32_param=%d\r\n", msg.param.u32_param);
-        rt_thread_mdelay(1000);
+        rt_thread_mdelay(500);
         hl_mod_display_io_ctrl(msg.cmd, (void*)&msg.param.u32_param, msg.len);
 
+    } else if (!strcmp(argv[1], "rst")) {
+        rt_kprintf("rm69310 rst\r\n");
+        msg.cmd = atoi(argv[2]);
+        // hl_drv_rm690a0_gpio_init();
+        hl_hal_gpio_low(GPIO_OLED_RST);
+        rt_thread_mdelay(msg.cmd);
+        hl_hal_gpio_high(GPIO_OLED_RST);
     } else {
         rt_kprintf("wrong parameter, please type: oled_test \r\n");
     }

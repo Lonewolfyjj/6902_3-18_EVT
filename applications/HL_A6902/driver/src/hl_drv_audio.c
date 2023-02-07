@@ -375,6 +375,23 @@ static rt_err_t rk_audio_set_gain(struct audio_stream* as, struct AUDIO_DB_CONFI
     return ret;
 }
 
+static rt_err_t rk_audio_hl_set_gain(struct audio_stream* as, struct AUDIO_GAIN_CONFIG* db_config)
+{
+    struct audio_codec* codec = as->card->codec;
+    struct audio_codec* codechp = as->card->codechp;
+    rt_err_t            ret   = RT_EOK;
+
+    if (db_config->device == 1) {
+        if (codechp && codechp->ops->hl_set_gain)
+            ret = codechp->ops->hl_set_gain(codechp, db_config);
+    } else {
+        if (codec && codec->ops->hl_set_gain)
+            ret = codec->ops->hl_set_gain(codec, db_config);        
+    }
+
+    return ret;
+}
+
 static rt_err_t rk_audio_get_gain(struct audio_stream* as, struct AUDIO_DB_CONFIG* db_config)
 {
     struct audio_codec* codec = as->card->codec;
@@ -611,6 +628,15 @@ struct audio_card* rk_audio_new_card(const struct audio_card_desc* acd)
             goto err_sub;
         }
         ac->codec->card = ac;
+    }
+
+    if (acd->codechp) {
+        ac->codechp = rk_audio_find_codec((uint32_t)acd->codechp);
+        if (!ac->codechp) {
+            rt_kprintf("can't find codechp: %p\n", acd->codechp);
+            goto err_sub;
+        }
+        ac->codechp->card = ac;
     }
 
     return ac;
@@ -938,6 +964,9 @@ rt_err_t rk_audio_control(rt_device_t dev, int cmd, void* args)
             break;
         case RK_AUDIO_CTL_SET_GAIN:
             ret = rk_audio_set_gain(as, args);
+            break;
+        case RK_AUDIO_CTL_HL_SET_GAIN:
+            ret = rk_audio_hl_set_gain(as, args);
             break;
         case RK_AUDIO_CTL_GET_GAIN:
             ret = rk_audio_get_gain(as, args);

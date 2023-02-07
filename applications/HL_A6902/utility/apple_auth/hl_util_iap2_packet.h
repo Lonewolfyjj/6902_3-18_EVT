@@ -21,8 +21,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
+
 typedef enum _iap2_protocol_status_enum_
 {
     EM_HL_IAP2_STM_MAIN_IDLE,
@@ -33,20 +35,19 @@ typedef enum _iap2_protocol_status_enum_
     EM_HL_IAP2_STM_MAIN_EAP,
     EM_HL_IAP2_STM_MAIN_SUCCEED,
     EM_HL_IAP2_STM_MAIN_FAILED,
-} em_iap2_protocol_status_t;
-
+} HL_ENUM8(hl_iap2_protocol_status_e);
 typedef enum _iap2_detect_status_enum_
 {
     EM_HL_IAP2_STM_DETECT_SEND,
     EM_HL_IAP2_STM_DETECT_RECV,
-} em_iap2_detect_status_t;
+} HL_ENUM8(hl_iap2_detect_status_e);
 
 typedef enum _iap2_link_status_enum_
 {
     EM_HL_IAP2_STM_LINK_SEND_SYN,
     EM_HL_IAP2_STM_LINK_RECV_SYN_ACK,
-    EM_HL_IAP2_STM_LINK_SEND_ACK,
-} em_iap2_link_status_t;
+    EM_HL_IAP2_STM_LINK_SEND_ACK = 3,
+} HL_ENUM8(hl_iap2_link_status_e);
 
 typedef enum _iap2_identify_status_enum_
 {
@@ -58,7 +59,7 @@ typedef enum _iap2_identify_status_enum_
     EM_HL_IAP2_STM_IDENTIFY_START_IDENTIFICATION,
     EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_INFO,
     EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED,
-} em_iap2_identify_status_t;
+} HL_ENUM8(hl_iap2_identify_status_e);
 
 typedef enum _iap2_power_update_status_enum_
 {
@@ -66,12 +67,12 @@ typedef enum _iap2_power_update_status_enum_
     EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE,
     EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE,
     EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK,
-} em_iap2_power_update_status_t;
+} HL_ENUM8(hl_iap2_power_update_status_e);
 
 typedef enum _iap2_ea_session_status_enum_
 {
     EM_HL_IAP2_STM_EA_SESSION,
-} em_iap2_ea_session_status_t;
+} HL_ENUM8(hl_iap2_ea_session_status_e);
 
 typedef struct _iap2_packet_header_arg_
 {
@@ -90,92 +91,94 @@ typedef struct _iap2_packet_header_
     /// 协议包长度
     uint16_t PacketLength;
     /// 协议包控制命令
-    uint8_t  ControlByte;
+    uint8_t ControlByte;
     /// 协议包seq值
-    uint8_t  PacketSeqNum;
+    uint8_t PacketSeqNum;
     /// 协议包ack值
-    uint8_t  PacketAckNum;
+    uint8_t PacketAckNum;
     /// 协议包SessionId值
-    uint8_t  SessionIdentif;
+    uint8_t SessionIdentif;
     /// 协议包头部异或校验
-    uint8_t  HeaderCksum;
+    uint8_t HeaderCksum;
 } __attribute__((packed, aligned(1))) st_iap2_packet_header_t;
 
 typedef struct _iap2_sync_payload_
 {
-    /// 
-    uint8_t  LinkVersion;
-    /// 
-    uint8_t  MaxNumOfOutstandingPacket;
-    /// 
+    ///
+    uint8_t LinkVersion;
+    ///
+    uint8_t MaxNumOfOutstandingPacket;
+    ///
     uint16_t MaxReceivedPacketLen;
-    /// 
+    ///
     uint16_t RetransmitTimeout;
-    /// 
+    ///
     uint16_t CumulativeAckTimeout;
-    /// 
-    uint8_t  MaxNumOfRetransmit;
-    /// 
-    uint8_t  MaxCumulativeAckNum;
-    /// 
-    uint8_t  SessionId1;
-    /// 
-    uint8_t  SessionType1;
-    /// 
-    uint8_t  SessionVer1;
-    /// 
-    uint8_t  PayloadCksum;
+    ///
+    uint8_t MaxNumOfRetransmit;
+    ///
+    uint8_t MaxCumulativeAckNum;
+    ///
+    uint8_t SessionId1;
+    ///
+    uint8_t SessionType1;
+    ///
+    uint8_t SessionVer1;
+    ///
+    uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_sync_payload_t;
 
 typedef struct _iap2_ctrl_param_
 {
-    /// 
+    ///
     uint16_t Len;
-    /// 
+    ///
     uint16_t Id;
-    /// 
+    ///
     uint8_t* Data;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_param_t;
 
 typedef struct _iap2_ctrl_payload_
 {
-    /// 
+    ///
     uint16_t StartOfMessage;
-    /// 
+    ///
     uint16_t MessageLen;
-    /// 
+    ///
     uint16_t MessageId;
-    /// 
+    ///
     uint16_t ParamLen;
-    /// 
+    ///
     uint16_t ParamId;
-    /// 
+    ///
     uint8_t* ParamData;
-    /// 
-    uint8_t  PayloadCksum;
+    ///
+    uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_payload_t;
 
 typedef struct _iap2_sync_packet_
 {
-    /// 
+    ///
     st_iap2_packet_header_t packet_header;
-    /// 
-    st_iap2_sync_payload_t  sync_payload;
+    ///
+    st_iap2_sync_payload_t sync_payload;
 } __attribute__((packed, aligned(1))) st_iap2_sync_packet_t;
 
 typedef struct _iap2_ctrl_packet_
 {
-    /// 
+    ///
     st_iap2_packet_header_t packet_header;
-    /// 
-    st_iap2_ctrl_payload_t  ctrl_payload;
+    ///
+    st_iap2_ctrl_payload_t ctrl_payload;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_packet_t;
+
 /* define --------------------------------------------------------------------*/
+
 #define EXCHANGE_HIGH_LOW_BYTE(x) ((uint16_t)((((x) >> 8) & 0xFF) | (((x)&0xFF) << 8)))
 
 #define SEND_BUFFER_SIZE 1024
 #define RECV_BUFFER_SIZE 1024
-#define TIMEOUT_US 5000
+#define TIMEOUT_US 1000
 
 #define LINK_CONTROL_SYN (1UL << (7))
 #define LINK_CONTROL_ACK (1UL << (6))
@@ -189,7 +192,7 @@ typedef struct _iap2_ctrl_packet_
 #define IAP2_SERIAL_NAME "0123456789AB"
 #define IAP2_FIRMWAREVERSION "v1.0.0.1"
 #define IAP2_HARDWAREVERSION "v2.0.0.1"
-#define IAP2_PUID "0123456789123456"
+#define IAP2_PUID "0babaf959f694c97"
 #define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
 #define IAP2_HID_COMPONENT "HIDComponent"
 
@@ -248,6 +251,7 @@ typedef struct _iap2_ctrl_packet_
 #define PACKET_PARAM_HEADER_SIZE 4
 #define IDENTIFY_FRAME_SIZE 16
 #define POWERUPDATE_FRAME_SIZE 21
+
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/

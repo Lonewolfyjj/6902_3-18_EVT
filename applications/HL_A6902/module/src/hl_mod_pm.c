@@ -250,7 +250,8 @@ static void _pm_init_state_update(void)
 
 static void _guage_state_update()
 {
-    uint8_t soc;
+    uint8_t     soc;
+    static bool flag = false;
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -259,8 +260,17 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
 
-    if (soc != _pm_mod.bat_info.soc.soc) {
+    if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
         _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+    }
+
+    if (_pm_mod.bat_info.soc.soc <= 3) {
+        if (flag == false) {
+            flag = true;
+            _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
+        }
+    } else if (_pm_mod.bat_info.soc.soc <= 100) {
+        flag = false;
     }
 }
 
@@ -365,64 +375,64 @@ static void _hl_mod_pm_input_check(void)
         .param   = 1,
     };
     // HL_SY_INPUT_PARAM_T input_reg00 = {
-    //     .cfg_opt = E_IINLIM, 
+    //     .cfg_opt = E_IINLIM,
     // };
     // HL_SY_INPUT_PARAM_T input_reg01 = {
-    //     .cfg_opt = E_SYS_MIN, 
+    //     .cfg_opt = E_SYS_MIN,
     // };
     // HL_SY_INPUT_PARAM_T input_reg02 = {
-    //     .cfg_opt = E_ICHG, 
+    //     .cfg_opt = E_ICHG,
     // };
     // HL_SY_INPUT_PARAM_T input_reg04 = {
-    //     .cfg_opt = E_ITERM, 
+    //     .cfg_opt = E_ITERM,
     // };
     // HL_SY_INPUT_PARAM_T input_reg05 = {
-    //     .cfg_opt = E_VREG, 
+    //     .cfg_opt = E_VREG,
     // };
     // HL_SY_INPUT_PARAM_T input_reg07 = {
-    //     .cfg_opt = E_NTC_JEITA, 
+    //     .cfg_opt = E_NTC_JEITA,
     // };
-    pm_ioctl(SY_READ_CMD,&input_stat,1);
+    pm_ioctl(SY_READ_CMD, &input_stat, 1);
     // pm_ioctl(SY_READ_CMD,&input_reg00,1);
     // pm_ioctl(SY_READ_CMD,&input_reg01,1);
     // pm_ioctl(SY_READ_CMD,&input_reg02,1);
     // pm_ioctl(SY_READ_CMD,&input_reg04,1);
     // pm_ioctl(SY_READ_CMD,&input_reg05,1);
     // pm_ioctl(SY_READ_CMD,&input_reg07,1);
-    if(input_stat.param == 1){
-        pm_ioctl(SY_WRITE_CMD,&input_data,1);
+    if (input_stat.param == 1) {
+        pm_ioctl(SY_WRITE_CMD, &input_data, 1);
     }
-//     if(input_reg00.param != 7){
-//         input_reg00.param = 7;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg00,1);
-//     }
-//     if(input_reg01.param != 4){
-//         input_reg01.param = 4;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg01,1);
-//     }
-// #if HL_IS_TX_DEVICE()
-//     if(input_reg02.param != 14){
-//         input_reg02.param = 14;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-//     }
-// #else
-//     if(input_reg02.param != 22){
-//         input_reg02.param = 22;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-//     }
-// #endif
-//     if(input_reg04.param != 1){
-//         input_reg04.param = 1;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg04,1);
-//     }
-//     if(input_reg05.param != 45){
-//         input_reg05.param = 45;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg05,1);
-//     }
-//     if(input_reg07.param != 1){
-//         input_reg07.param = 1;
-//         pm_ioctl(SY_WRITE_CMD,&input_reg07,1);
-//     }
+    //     if(input_reg00.param != 7){
+    //         input_reg00.param = 7;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg00,1);
+    //     }
+    //     if(input_reg01.param != 4){
+    //         input_reg01.param = 4;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg01,1);
+    //     }
+    // #if HL_IS_TX_DEVICE()
+    //     if(input_reg02.param != 14){
+    //         input_reg02.param = 14;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
+    //     }
+    // #else
+    //     if(input_reg02.param != 22){
+    //         input_reg02.param = 22;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
+    //     }
+    // #endif
+    //     if(input_reg04.param != 1){
+    //         input_reg04.param = 1;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg04,1);
+    //     }
+    //     if(input_reg05.param != 45){
+    //         input_reg05.param = 45;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg05,1);
+    //     }
+    //     if(input_reg07.param != 1){
+    //         input_reg07.param = 1;
+    //         pm_ioctl(SY_WRITE_CMD,&input_reg07,1);
+    //     }
 }
 
 static void _pm_thread_entry(void* arg)

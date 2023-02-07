@@ -64,6 +64,10 @@ enum
     SET_MIPI_BACKLIGHT_CMD,
     // /// 设置屏幕显示纯色
     // DISPLAY_FULL_COLOR_CMD,
+    /// 关闭屏幕的正负电压
+    CLOSE_MIPI_SCREENPOWER_CMD,
+    /// @brief  打开屏幕的正负电压
+    OPEN_MIPI_SCREENPOWER_CMD,
     /// 申请缓冲区
     FRAMEBUF_MALLOC_CMD,
     /// 释放缓冲区

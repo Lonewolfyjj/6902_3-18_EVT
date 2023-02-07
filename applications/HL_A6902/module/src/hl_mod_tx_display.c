@@ -124,7 +124,7 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_UPDATE;
     } else if (_display_mod.net_mode == LED_NET_MODE_PAIR) {
         state = HL_DISPLAY_PAIR;
-    } else if (_display_mod.bat_soc <= 6) {
+    } else if (_display_mod.bat_soc <= 6 && _display_mod.charge_state != CHARGING) {
         state = HL_DISPLAY_LOWPOWER;
     } else if (_display_mod.mute_state == SWITCH_OPEN) {
         state = HL_DISPLAY_MUTE;
@@ -300,6 +300,31 @@ static void _record_led_flash_ctrl(void)
     }
 }
 
+static void _aw2016a_drv_status_check(void)
+{
+    int                          ret;
+    static uint8_t               count = 0;
+    hl_drv_aw2016a_chip_status_e chip_status;
+
+    if (count == 0) {
+        ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_CHECK_CHIP_STATUS, &chip_status,
+                                  sizeof(chip_status));
+        if (ret == AW2016A_FUNC_RET_ERR || chip_status != 0) {
+            hl_drv_aw2016a_deinit();
+            ret = hl_drv_aw2016a_init();
+            if (ret == AW2016A_FUNC_RET_ERR) {
+                _display_mod.aw2016a_init_flag = false;
+            } else {
+                _display_mod.aw2016a_init_flag     = true;
+                _display_mod.display_update_flag_1 = true;
+            }
+        }
+        count = 10;
+    } else {
+        count--;
+    }
+}
+
 static void _display_thread_entry(void* arg)
 {
     while (_display_mod.thread_exit_flag == 0) {
@@ -310,6 +335,8 @@ static void _display_thread_entry(void* arg)
         _display_update_2();  //录制灯
 
         _record_led_flash_ctrl();
+
+        _aw2016a_drv_status_check();
 
         rt_thread_mdelay(100);
     }
@@ -386,7 +413,7 @@ uint8_t hl_mod_display_deinit(void)
         rt_thread_mdelay(10);
     }
 
-    LOG_I("display display deinit success!");
+    LOG_I("display deinit success!");
 
     hl_drv_aw2016a_deinit();
 
