@@ -459,6 +459,11 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.screen_off_status = data;
             flag->sys_status.screen_off_status   = 1;
         } break;
+        case UPGRADE_SETTING_SWITCH_CMD: {
+            uint8_t data                            = *(char*)ptr;
+            data_p->sys_status.upgrade_setting_flag = data;
+            flag->sys_status.upgrade_setting_flag   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
