@@ -184,7 +184,7 @@ static lib_bypass_param_type_t_p          sg_rx_bypass_dsp_param = NULL;
 #endif
 #endif
 
-extern const unsigned char srp_profile[386];
+extern const unsigned char srp_profile[276];
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
