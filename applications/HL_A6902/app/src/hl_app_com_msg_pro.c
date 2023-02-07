@@ -142,6 +142,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
+            rt_thread_mdelay(500);
             hl_board_reboot();
         } break;
         default:
@@ -339,6 +340,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
+            rt_thread_mdelay(500);
             hl_board_reboot();
         } break;
         default:

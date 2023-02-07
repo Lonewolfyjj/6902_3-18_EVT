@@ -278,7 +278,8 @@ static void hl_app_mng_charger_goto_power_on()
     sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_PROCESS;
 }
 
-static bool _in_box_flag = false;
+static bool _in_box_flag    = false;
+static bool _shut_down_flag = false;
 
 #if HL_IS_TX_DEVICE()
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
@@ -297,7 +298,9 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_OUT_BOX_IND: {
             _in_box_flag = false;
             LOG_I("out box!");
-            hl_app_mng_charger_goto_power_on();
+            if (_shut_down_flag == false) {
+                hl_app_mng_charger_goto_power_on();
+            }
         } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = tx_info.soc;
@@ -310,6 +313,9 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 0;
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            _shut_down_flag = true;
         } break;
         default:
             break;
@@ -332,7 +338,9 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_OUT_BOX_IND: {
             _in_box_flag = false;
             LOG_I("out box!");
-            hl_app_mng_charger_goto_power_on();
+            if (_shut_down_flag == false) {
+                hl_app_mng_charger_goto_power_on();
+            }
         } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = rx_info.soc;
@@ -345,6 +353,9 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 0;
             hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            _shut_down_flag = true;
         } break;
         default:
             break;
@@ -372,7 +383,7 @@ void hl_app_mng_charger_entry(void* msg_q)
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
-            if (_in_box_flag == false) {
+            if (_in_box_flag == false || _shut_down_flag == true) {
                 hl_app_mng_powerOn();
                 hl_app_mng_powerOff();
             }

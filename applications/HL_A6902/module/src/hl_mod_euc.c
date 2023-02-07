@@ -270,6 +270,7 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
         case HL_HUP_CMD_SHUT_DOWN: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &result, sizeof(result));
             _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
         } break;
         default:
@@ -433,6 +434,7 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
         case HL_HUP_CMD_SHUT_DOWN: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &result, sizeof(result));
             _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
         } break;
         default:
