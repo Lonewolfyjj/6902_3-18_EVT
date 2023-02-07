@@ -1352,11 +1352,11 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 #else
 
 // 设置RX的混音开关
-static void hl_mod_audio_set_mix_switch(uint8_t mix_switch)
+static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
 {
     int8_t ret = 0;
 
-    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MIX_EN, mix_switch, 1);
+    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD, &mix_switch, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mix switch");
         return -RT_ERROR;

@@ -261,10 +261,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             ptr_rf_state = (hl_rf_bypass_state_t*)p_msg->param.ptr;
             if (ptr_rf_state->chn == HL_RF_LEFT_CHANNEL) {
 
-                hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_state->state, 1);
+                hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_state->state, 1);
             } else if (ptr_rf_state->chn == HL_RF_RIGHT_CHANNEL) {
 
-                hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_state->state, 1);
+                hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_state->state, 1);
             } else {
                 LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
             }

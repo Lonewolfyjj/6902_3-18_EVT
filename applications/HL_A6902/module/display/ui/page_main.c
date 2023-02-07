@@ -35,6 +35,7 @@
 
 
 LV_IMG_DECLARE(Main_horn);//喇叭
+LV_IMG_DECLARE(Main_horn_mute);//喇叭-MUTE
 LV_IMG_DECLARE(Main_bat);//电池图标
 LV_IMG_DECLARE(Main_volumebar_short);//音量柱——短
 LV_IMG_DECLARE(Main_volumebar_long);//音量柱——长
@@ -714,7 +715,14 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_obj_remove_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             break;
-
+        case HL_CHANGE_TX1_MUTE:
+            if (voice_img_tx1 != RT_NULL)
+                lv_img_set_src(voice_img_tx1, &Main_horn_mute);
+            break;
+        case HL_CHANGE_TX1_MUTE_DEL:
+            if (voice_img_tx1 != RT_NULL)
+                lv_img_set_src(voice_img_tx1, &Main_horn);
+            break;
         case HL_CHANGE_TX2_SIGNAL:
             lv_signal_hide_set(2,ptr->tx_device_2.signal);
             main_init.tx_device_2.signal = ptr->tx_device_2.signal;
@@ -749,7 +757,14 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_obj_remove_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             break;
-
+        case HL_CHANGE_TX2_MUTE:
+            if (voice_img_tx2 != RT_NULL)
+                lv_img_set_src(voice_img_tx2, &Main_horn_mute);
+            break;
+        case HL_CHANGE_TX2_MUTE_DEL:
+            if (voice_img_tx2 != RT_NULL)
+                lv_img_set_src(voice_img_tx2, &Main_horn);
+            break;
 
         case HL_CHANGE_DELETE_TX1:
             hl_obj_delete(area_tx1,true);
