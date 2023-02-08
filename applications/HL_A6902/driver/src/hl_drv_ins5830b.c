@@ -24,6 +24,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hl_drv_ins5830b.h"
 #include "string.h"
+#include "hl_drv_pcf85063atl.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 #define INS5830B_DEBUG
@@ -178,21 +179,32 @@ INIT_ERR:
 
 int hl_drv_ins5830b_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 {
-    HL_INS5830B_RTC_IOCTL_T* rtc_ptr = (HL_INS5830B_RTC_IOCTL_T*)ptr;
-    if (ptr == NULL || len != 1) {
-        ins_printf("ins5830b param err ! len : [ %X ]\n", len);
+    rtc_time* rtc_p = (rtc_time*) ptr;
+    HL_INS5830B_RTC_IOCTL_T rtc_ptr;
+    if (ptr == NULL) {
+        ins_printf("ins5830b param err !\n");
         goto INIT_ERR;
     }
+    rtc_ptr.year  = rtc_p->year;
+    rtc_ptr.month = rtc_p->month;
+    rtc_ptr.day   = rtc_p->day;
+    rtc_ptr.hour  = rtc_p->hour;
+    rtc_ptr.min   = rtc_p->minute;
     switch (cmd) {
-        case INS5830B_RTC_SET_TIME_CMD:
-            if (hl_drv_rtc_settime(rtc_ptr)) {
+        case RTC_SET_TIME:
+            if (hl_drv_rtc_settime(&rtc_ptr)) {
                 goto INIT_ERR;
             }
             break;
-        case INS5830B_RTC_GET_TIME_CMD:
-            if (hl_drv_rtc_gettime(rtc_ptr)) {
+        case RTC_GET_TIME:
+            if (hl_drv_rtc_gettime(&rtc_ptr)) {
                 goto INIT_ERR;
             }
+            rtc_p->year = rtc_ptr.year; 
+            rtc_p->month = rtc_ptr.month;
+            rtc_p->day = rtc_ptr.day; 
+            rtc_p->hour = rtc_ptr.hour; 
+            rtc_p->minute = rtc_ptr.min;
             break;
         default:
             break;
