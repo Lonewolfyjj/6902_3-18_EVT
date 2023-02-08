@@ -226,10 +226,11 @@ static void roller_year_cb(lv_event_t * e)
 {    
     char * ptr = (char *)lv_event_get_param(e);
     lv_event_code_t code = lv_event_get_code(e);
-    lv_coord_t pos = lv_roller_get_selected(roller_year);
+    lv_coord_t pos = NULL;
 
     if(code == LV_EVENT_CLICKED) {        
         if(strcmp(ptr,lock)){
+            pos = lv_roller_get_selected(roller_year);
             lv_obj_scroll_to_view(roller_year, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_year, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_min,LV_EVENT_CLICKED,lock);
@@ -247,10 +248,11 @@ static void roller_month_cb(lv_event_t * e)
 {    
     char * ptr = (char *)lv_event_get_param(e);
     lv_event_code_t code = lv_event_get_code(e);
-    lv_coord_t pos = lv_roller_get_selected(roller_month);
+    lv_coord_t pos = NULL;
 
     if(code == LV_EVENT_CLICKED) {        
         if(strcmp(ptr,lock)){
+            pos = lv_roller_get_selected(roller_month);
             lv_obj_scroll_to_view(roller_month, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_month, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
@@ -268,10 +270,11 @@ static void roller_day_cb(lv_event_t * e)
 {    
     char * ptr = (char *)lv_event_get_param(e);
     lv_event_code_t code = lv_event_get_code(e);
-    lv_coord_t pos = lv_roller_get_selected(roller_day);
+    lv_coord_t pos = NULL;
 
     if(code == LV_EVENT_CLICKED) {        
         if(strcmp(ptr,lock)){
+            pos = lv_roller_get_selected(roller_day);
             lv_obj_scroll_to_view(roller_day, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_day, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
@@ -288,10 +291,11 @@ static void roller_hour_cb(lv_event_t * e)
 {  
     char * ptr = (char *)lv_event_get_param(e);
     lv_event_code_t code = lv_event_get_code(e);
-    lv_coord_t pos = lv_roller_get_selected(roller_hour);
+    lv_coord_t pos = NULL;
 
     if(code == LV_EVENT_CLICKED) {        
         if(strcmp(ptr,lock)){
+            pos = lv_roller_get_selected(roller_hour);
             lv_obj_scroll_to_view(roller_hour, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_hour, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
@@ -308,10 +312,11 @@ static void roller_min_cb(lv_event_t * e)
 {    
     char * ptr = (char *)lv_event_get_param(e);
     lv_event_code_t code = lv_event_get_code(e);
-    lv_coord_t pos = lv_roller_get_selected(roller_min);
+    lv_coord_t pos = NULL;
 
     if(code == LV_EVENT_CLICKED) {        
         if(strcmp(ptr,lock)){
+            pos = lv_roller_get_selected(roller_min);
             lv_obj_scroll_to_view(roller_min, LV_ANIM_ON);    
             lv_obj_set_style_bg_opa(roller_min, LV_OPA_COVER, LV_PART_MAIN);
             lv_event_send(roller_year,LV_EVENT_CLICKED,lock);
@@ -415,23 +420,23 @@ static void hl_mod_date_init_cfg(hl_lvgl_date_init_t * data)
     hl_opt_value_set(HL_DATE_MIN,data->min,LV_ANIM_OFF,INIT_TYPE);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 void hl_mod_date_ioctl(void * ctl_data)
 {
@@ -445,7 +450,13 @@ void hl_mod_date_ioctl(void * ctl_data)
             break;
         case HL_DATE_EXTI_CMD:
             lv_timer_del(timer);
-            hl_obj_delete(lv_scr_act(),false);
+            // hl_obj_delete(lv_scr_act(),false);
+            lv_obj_clean(lv_scr_act());
+            // while(1){
+            //     lv_task_handler();
+            //     rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
+            // }
+            rt_thread_mdelay(10);
             break;
         default:
             break;
@@ -455,6 +466,7 @@ void hl_mod_date_ioctl(void * ctl_data)
 
 void hl_mod_date_init(void * init_data)
 {
+    // rt_kprintf("hl_mod_date_init\n");
     if (!page_style_bit.page_date) {
         page_style_bit.page_date = 1;
         lv_date_init();

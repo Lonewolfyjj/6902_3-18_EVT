@@ -470,11 +470,23 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 // RX
 static void hl_mod_display_task(void* param)
 {
+    uint32_t wdg_reg = 0;
     static lv_style_t style;
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
     lv_obj_add_style(lv_scr_act(), &style, 0);
+    wdg_reg = *(uint32_t*)(0x40050304);
+    if(wdg_reg == 0){
+        rt_kprintf("\nDevice normal reset ,reg= %X\n",wdg_reg);
+    }
+    else if((wdg_reg & 0x50) == 0x50){
+        rt_kprintf("\nWdg reset ,reg = %X\n",wdg_reg);
+    }else if((wdg_reg & 0x03) == 0x03){
+        rt_kprintf("\nGlobal reset ,reg = %X\n",wdg_reg);
+    }else{
+        rt_kprintf("\nUnknow reset ,reg = %X\n",wdg_reg);
+    }
     while (1) {
         hl_mod_screen_rot_scan();
         hl_mod_display_upgrade_enter();

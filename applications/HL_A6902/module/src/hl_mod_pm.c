@@ -450,6 +450,7 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
     LOG_D("pm init success!");
 
     _pm_mod.init_flag = true;
+    
 
     return HL_MOD_PM_FUNC_RET_OK;
 }

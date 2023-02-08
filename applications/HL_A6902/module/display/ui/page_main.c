@@ -470,25 +470,25 @@ static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
     }
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    sign_1 = 0xFF;
-    sign_2 = 0xFF;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     sign_1 = 0xFF;
+//     sign_2 = 0xFF;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_signal_tx1_set(int16_t signal)
 {    
@@ -640,14 +640,21 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
     // rt_kprintf(" datam \n");
     switch(main_init.display_tx_device){
         case HL_CHANGE_TX1_DEVICE:
-            hl_obj_delete(area_tx1,true);
+            // hl_obj_delete(area_tx1,true);
+            lv_obj_del(area_tx1);
+            rt_thread_mdelay(5); 
             break;
         case HL_CHANGE_TX2_DEVICE:
-            hl_obj_delete(area_tx2,true);
+            // hl_obj_delete(area_tx2,true);
+            lv_obj_del(area_tx2);
+            rt_thread_mdelay(5); 
             break;
         case HL_DISPLAY_DOUBLE:
-            hl_obj_delete(area_tx1,true);
-            hl_obj_delete(area_tx2,true);
+            // hl_obj_delete(area_tx1,true);
+            // hl_obj_delete(area_tx2,true);
+            lv_obj_del(area_tx1);
+            lv_obj_del(area_tx2);
+            rt_thread_mdelay(5); 
             break;
         default:
             break;
@@ -767,14 +774,21 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
 
         case HL_CHANGE_DELETE_TX1:
-            hl_obj_delete(area_tx1,true);
+            // hl_obj_delete(area_tx1,true);
+            lv_obj_del(area_tx1);
+            rt_thread_mdelay(5); 
         break;
         case HL_CHANGE_DELETE_DOUBLE:
-            hl_obj_delete(area_tx1,true);
-            hl_obj_delete(area_tx2,true);
+            // hl_obj_delete(area_tx1,true);
+            // hl_obj_delete(area_tx2,true);
+            lv_obj_del(area_tx1);
+            lv_obj_del(area_tx2);
+            rt_thread_mdelay(5); 
         break;
         case HL_CHANGE_DELETE_TX2:
-            hl_obj_delete(area_tx2,true);
+            // hl_obj_delete(area_tx2,true);
+            lv_obj_del(area_tx2);
+            rt_thread_mdelay(5); 
             break;
         case HL_CHANGE_DELETE_STYLE:
             lv_delete_style();
