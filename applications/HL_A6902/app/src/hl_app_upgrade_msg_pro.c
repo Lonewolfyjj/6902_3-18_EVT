@@ -29,6 +29,7 @@
 #include "hl_mod_upgrade.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_audio.h"
+#include "hl_mod_display.h"
 #define DBG_SECTION_NAME "app_upgrade"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -37,6 +38,35 @@
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
+#if HL_IS_TX_DEVICE()
+static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
+{
+    hl_led_switch led_switch;
+
+    switch (upgrade_state) {
+        case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+            break;
+        case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
+            led_switch = SWITCH_OPEN;
+            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            break;
+        case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
+            led_switch = SWITCH_CLOSE;
+            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            break;
+        case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
+            led_switch = SWITCH_CLOSE;
+            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            break;
+        default:
+            break;
+    }
+}
+#else
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
     switch (upgrade_state) {
@@ -56,6 +86,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
             break;
     }
 }
+#endif
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
@@ -63,8 +94,8 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
     switch (p_msg->cmd) {
         case HL_UPGRADE_FIND_FW_MSG:  /// 找到升级固件包
             hl_mod_audio_deinit();
-            hl_mod_telink_stop();   
-            // hl_mod_telink_deinit(); 
+            hl_mod_telink_stop();
+            // hl_mod_telink_deinit();
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
             break;
         case HL_UPGRADE_STATE_MSG:  /// 获取升级状态

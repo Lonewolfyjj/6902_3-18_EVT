@@ -233,6 +233,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
         tx_info.usb_plug = 1;
     }
     hl_app_audio_stream_updata();
+    hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
 }
 
 /// 外置mic状态处理
@@ -382,6 +383,8 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
     usb_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+    hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
+    
 }
 
 /// 监听口状态处理
