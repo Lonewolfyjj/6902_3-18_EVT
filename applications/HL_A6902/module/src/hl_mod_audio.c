@@ -159,6 +159,8 @@ static uint32_t s_record_bypass_size = 0;
 static uint32_t                  s_vu_en            = 0;
 #endif
 
+// 0 pcf  ;  1 ins
+static uint8_t now_rtc_type = 0;
 ///  app层消息队列
 rt_mq_t s_audio_to_app_mq = RT_NULL;
 /// 当前音频流模式
@@ -261,7 +263,12 @@ static int hl_mod_audio_system_rtc_set(void)
 
     memset(&time1, 0, sizeof(rtc_time));
 
-    ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    if (!now_rtc_type) {
+        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    } else {
+        ret = hl_drv_ins5830b_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
+    }
+
     if (ret != RT_EOK) {
         rt_kprintf("Set RTC device failed\n");
         hl_mod_audio_system_rtc_set_default();
@@ -298,9 +305,14 @@ static int hl_mod_audio_system_rtc_set(void)
 static void hl_mod_audio_rtc_get(char* timer_name)
 {
     rtc_time time;
+    int ret;
     memset(&time, 0, sizeof(rtc_time));
 
-    hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    if (!now_rtc_type) {
+        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    } else {
+        ret = hl_drv_ins5830b_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    }
 
     /* 时、分、秒 的校准 */
     time.hour   = (time.hour & 0x3f) % 24;
@@ -324,6 +336,7 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
         return;
     }
     rtc_time    time;
+    int         ret;
     audio_time* timer = (audio_time*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
@@ -341,7 +354,11 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     timer->minute = time.minute;
     timer->second = time.second;
 
-    hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    if (!now_rtc_type) {
+        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    } else {
+        ret = hl_drv_ins5830b_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    }
 
     rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour,
                time.minute, time.second);
@@ -354,6 +371,7 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
         return;
     }
     rtc_time    time;
+    int         ret;
     audio_time* timer = (audio_time*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
@@ -369,7 +387,11 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
     time.minute = (time.minute & 0x7f) % 60;
     time.second = (time.second & 0x7f) % 60;
 
-    hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    if (!now_rtc_type) {
+        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    } else {
+        ret = hl_drv_ins5830b_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+    }
 
     LOG_I("set time 20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month, time.day, time.hour, time.minute, time.second);
 }
@@ -1949,7 +1971,9 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 
     if (hl_drv_rtc_pcf85063_init() == RT_EOK) {
         LOG_D("hl_drv_rtc_pcf85063_init OK");
+        now_rtc_type = 0;
     } else if (hl_drv_ins5830b_init() == RT_EOK) {
+        now_rtc_type = 1;
         LOG_D("hl_drv_ins5830b_init OK");
     } else {
         LOG_D("!!!!RTC_INIT ERROR");
