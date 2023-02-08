@@ -71,7 +71,7 @@ struct wav_header
 };
 
 /// 声卡类型
-typedef enum _audio_card_type_e 
+typedef enum _audio_card_type_e
 {
     /// 空闲状态
     HL_PLAY_CARD = 0,
@@ -82,35 +82,35 @@ typedef enum _audio_card_type_e
 /// 声卡参数结构体
 typedef struct _hl_card_param_t
 {
-    char                    card_name[8];
-    audio_card_type_e       card_type;
-    struct rt_device*       card;
-    struct AUDIO_PARAMS     param;
-    struct audio_buf        abuf;
+    char                card_name[8];
+    audio_card_type_e   card_type;
+    struct rt_device*   card;
+    struct AUDIO_PARAMS param;
+    struct audio_buf    abuf;
 } hl_card_param_t;
 
 /// uac参数结构体
 typedef struct _hl_uacd_param_t
 {
-    char*                   buff24b;
-    char*                   buff32b;
-    uint32_t                buff24size;
-    uint32_t                buff32size;
-    struct rt_mailbox       *p_mailbox;
-    rt_device_t             card;
+    char*              buff24b;
+    char*              buff32b;
+    uint32_t           buff24size;
+    uint32_t           buff32size;
+    struct rt_mailbox* p_mailbox;
+    rt_device_t        card;
 } hl_uacd_param_t;
 
 /// 录制参数结构体
 typedef struct _hl_record_param_t
 {
-    int                     file_audio_after;
-    int                     file_audio_bypass;
-    struct rt_ringbuffer*   record_after_rb;
-    struct rt_ringbuffer*   record_bypass_rb;
+    int                   file_audio_after;
+    int                   file_audio_bypass;
+    struct rt_ringbuffer* record_after_rb;
+    struct rt_ringbuffer* record_bypass_rb;
 } hl_record_param_t;
 
 /// UAC状态枚举
-typedef enum _play_uac_state_e 
+typedef enum _play_uac_state_e
 {
     /// 空闲状态
     HL_PLAY_UAC_IDLE = 0,
@@ -127,85 +127,83 @@ typedef enum _play_uac_state_e
 /// 音频接口传输的是32bit数据，但实际处理的是24bit数据
 #define HL_MOD_AUDIO_BITS (32)  /// 24BIT
 #define HL_MOD_AUDIO_CHANNELS (2)
-#define HL_MOD_AUDIO_PERIOD_SIZE (96) //(120)
+#define HL_MOD_AUDIO_PERIOD_SIZE (96)  //(120)
 #define HL_MOD_AUDIO_PERIOD_COUNT (3)
 #define HL_MOD_AUDIO_FRAME_SIZE (HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3)
 #define HL_MOD_AUDIO_RECORD_RING_BUFFER_SIZE (HL_MOD_AUDIO_FRAME_SIZE * 30)  //((HL_MOD_AUDIO_FRAME_SIZE * 30) + 5)
 
 #if HL_IS_TX_DEVICE()
-#define HL_PLAY_DEV    "wifip"
+#define HL_PLAY_DEV "wifip"
 #define HL_CAPTURE_DEV "codecc"
 #define HL_PDM_CAP_DEV "pdmc"
 #else
-#define HL_PLAY_DEV    "codecp"
+#define HL_PLAY_DEV "codecp"
 #define HL_CAPTURE_DEV "wific"
 #endif
 
 #define ID_RIFF 0x46464952
 #define ID_WAVE 0x45564157
-#define ID_FMT  0x20746d66
+#define ID_FMT 0x20746d66
 #define ID_DATA 0x61746164
 
 #define FORMAT_PCM 1
 /* variables -----------------------------------------------------------------*/
-static hl_drv_rk_xtensa_dsp_config_t_p dsp_config                = NULL;
-struct wav_header                      s_audio_header            = { 0 };
+static hl_drv_rk_xtensa_dsp_config_t_p dsp_config     = NULL;
+struct wav_header                      s_audio_header = { 0 };
 
 #if HL_IS_TX_DEVICE()
-static char                            s_record_switch           = 0;
-static uint32_t                        s_record_after_size       = 0;
-static uint32_t                        s_record_bypass_size      = 0;
+static char     s_record_switch      = 0;
+static uint32_t s_record_after_size  = 0;
+static uint32_t s_record_bypass_size = 0;
 #else
-static uint32_t                        s_vu_en                   = 0;
+static uint32_t                  s_vu_en            = 0;
 #endif
-
 
 ///  app层消息队列
 rt_mq_t s_audio_to_app_mq = RT_NULL;
 /// 当前音频流模式
-volatile static hl_stream_mode_e  s_stream_mode_cur           = HL_STREAM_IDLE;
+volatile static hl_stream_mode_e s_stream_mode_cur = HL_STREAM_IDLE;
 /// 下个音频流模式
 #if HL_IS_TX_DEVICE()
-volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_PDM2PLAY;
+volatile static hl_stream_mode_e s_stream_mode_next = HL_STREAM_PDM2PLAY;
 #else
-volatile static hl_stream_mode_e  s_stream_mode_next          = HL_STREAM_CAP2PLAY_CAP2UAC;
+volatile static hl_stream_mode_e s_stream_mode_next = HL_STREAM_CAP2PLAY_CAP2UAC;
 #endif
 /// 播放声卡参数信息
-volatile static hl_card_param_t        play_info;
+volatile static hl_card_param_t play_info;
 /// 捕获声卡参数信息
-volatile static hl_card_param_t        cap_info;
+volatile static hl_card_param_t cap_info;
 #if HL_IS_TX_DEVICE()
 /// pdm声卡参数信息
-volatile static hl_card_param_t        pdm_info;
+volatile static hl_card_param_t pdm_info;
 #endif
 #ifdef RT_USB_DEVICE_UAC1
 /// uac声卡参数信息
-volatile static hl_uacd_param_t        uac_info;
+volatile static hl_uacd_param_t uac_info;
 #endif
 /// 录制参数信息
-volatile static hl_record_param_t      record_info;
+volatile static hl_record_param_t record_info;
 /// 录制线程id
-volatile static rt_thread_t record_thread_id       = RT_NULL;
+volatile static rt_thread_t record_thread_id = RT_NULL;
 /// cap2play线程id
-volatile static rt_thread_t cap2play_thread_id     = RT_NULL;
+volatile static rt_thread_t cap2play_thread_id = RT_NULL;
 /// uac2play线程id
-volatile static rt_thread_t uac2play_thread_id     = RT_NULL;
+volatile static rt_thread_t uac2play_thread_id = RT_NULL;
 /// cap2uac线程id
-volatile static rt_thread_t cap2uac_thread_id      = RT_NULL;
+volatile static rt_thread_t cap2uac_thread_id = RT_NULL;
 /// cap2p2u线程id
 volatile static rt_thread_t cap2play2uac_thread_id = RT_NULL;
 /// 音频控制线程id
-volatile static rt_thread_t audio_ctrl_thread_id   = RT_NULL;
+volatile static rt_thread_t audio_ctrl_thread_id = RT_NULL;
 
 /// cap2play线程标志
-static uint8_t cap2play_thread_flag     = 0;
+static uint8_t cap2play_thread_flag = 0;
 /// uac2play线程标志
-static uint8_t uac2play_thread_flag     = 0;
+static uint8_t uac2play_thread_flag = 0;
 /// cap2uac线程标志
-static uint8_t cap2uac_thread_flag      = 0;
+static uint8_t cap2uac_thread_flag = 0;
 /// cap2p2u线程标志
 static uint8_t cap2play2uac_thread_flag = 0;
-
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -220,10 +218,9 @@ static int  hl_mod_audio_record_switch(uint8_t record_switch);
 // 音频模块发送消息给APP层
 static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param);
 
-
 static void mstorage_switch_cb(uint8_t mstorage_state)
 {
-    if(mstorage_state != 0) {
+    if (mstorage_state != 0) {
 #if HL_IS_TX_DEVICE()
         hl_mod_audio_record_switch(0);
 #endif
@@ -235,74 +232,70 @@ static void mstorage_switch_cb(uint8_t mstorage_state)
 
 static int hl_mod_audio_system_rtc_set_default(void)
 {
-    rt_err_t ret = RT_EOK; 
-    
+    rt_err_t ret = RT_EOK;
+
     rt_kprintf("[RTC Set]RTC default Start...\n");
 
-    ret = set_date(2022, 12, 16); 
-    if(ret != RT_EOK)
-    {
-        rt_kprintf("[RTC Set]Set RTC Date failed\n"); 
-        return RT_ERROR;
-    }    
-    
-    ret = set_time(20, 30, 00); 
-    if(ret != RT_EOK)
-    {
-        rt_kprintf("[RTC Set]Set RTC Time failed\n"); 
+    ret = set_date(2022, 12, 16);
+    if (ret != RT_EOK) {
+        rt_kprintf("[RTC Set]Set RTC Date failed\n");
         return RT_ERROR;
     }
-    
+
+    ret = set_time(20, 30, 00);
+    if (ret != RT_EOK) {
+        rt_kprintf("[RTC Set]Set RTC Time failed\n");
+        return RT_ERROR;
+    }
+
     rt_kprintf("\n");
 
     return RT_EOK;
 }
 
 static int hl_mod_audio_system_rtc_set(void)
-{    
+{
     rtc_time time1;
-    time_t now;
-    rt_err_t ret = RT_EOK; 
+    time_t   now;
+    rt_err_t ret = RT_EOK;
 
     memset(&time1, 0, sizeof(rtc_time));
 
     ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
-    if(ret != RT_EOK)
-    {
-        rt_kprintf("Set RTC device failed\n"); 
+    if (ret != RT_EOK) {
+        rt_kprintf("Set RTC device failed\n");
         hl_mod_audio_system_rtc_set_default();
         return RT_ERROR;
-    }   
-    
-    /* 时、分、秒 的校准 */
-    time1.hour = (time1.hour&0x3f)%24;
-    time1.minute = (time1.minute&0x7f)%60;
-    time1.second = (time1.second&0x7f)%60;
+    }
 
-    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month&0x1f, time1.day&0x3f, time1.hour, time1.minute, time1.second);
-    
-    ret = set_date((time1.year + 2000), (time1.month&0x1f), (time1.day&0x3f)); 
-    if(ret != RT_EOK)
-    {
-        rt_kprintf("[RTC Set]Set RTC Date failed\n"); 
+    /* 时、分、秒 的校准 */
+    time1.hour   = (time1.hour & 0x3f) % 24;
+    time1.minute = (time1.minute & 0x7f) % 60;
+    time1.second = (time1.second & 0x7f) % 60;
+
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time1.year, time1.month & 0x1f, time1.day & 0x3f, time1.hour,
+               time1.minute, time1.second);
+
+    ret = set_date((time1.year + 2000), (time1.month & 0x1f), (time1.day & 0x3f));
+    if (ret != RT_EOK) {
+        rt_kprintf("[RTC Set]Set RTC Date failed\n");
         return RT_ERROR;
     }
-    
-    ret = set_time((time1.hour), (time1.minute), (time1.second)); 
-    if(ret != RT_EOK)
-    {
-        rt_kprintf("[RTC Set]Set RTC Time failed\n"); 
+
+    ret = set_time((time1.hour), (time1.minute), (time1.second));
+    if (ret != RT_EOK) {
+        rt_kprintf("[RTC Set]Set RTC Time failed\n");
         return RT_ERROR;
     }
-    
+
     now = time(RT_NULL);
-    rt_kprintf("[RTC Set]Read RTC Date and Time: %s \r\n", ctime(&now)); 
+    rt_kprintf("[RTC Set]Read RTC Date and Time: %s \r\n", ctime(&now));
 
     return RT_EOK;
 }
 
 // 获取时间 timer_name参数BUF大小需要大于24
-static void hl_mod_audio_rtc_get(char *timer_name)
+static void hl_mod_audio_rtc_get(char* timer_name)
 {
     rtc_time time;
     memset(&time, 0, sizeof(rtc_time));
@@ -310,16 +303,18 @@ static void hl_mod_audio_rtc_get(char *timer_name)
     hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
 
     /* 时、分、秒 的校准 */
-    time.hour = (time.hour&0x3f)%24;
-    time.minute = (time.minute&0x7f)%60;
-    time.second = (time.second&0x7f)%60;
+    time.hour   = (time.hour & 0x3f) % 24;
+    time.minute = (time.minute & 0x7f) % 60;
+    time.second = (time.second & 0x7f) % 60;
 
-    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month&0x1f, time.day&0x3f, time.hour, time.minute, time.second);
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour,
+               time.minute, time.second);
     if (timer_name != NULL) {
-        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month&0x1f, time.day&0x3f, time.hour, time.minute, time.second);  
+        rt_sprintf(timer_name, "20%02d-%02d-%02d-%02d-%02d-%02d", time.year, time.month & 0x1f, time.day & 0x3f,
+                   time.hour, time.minute, time.second);
     } else {
         rt_kprintf("timer name get error (timer_name == NULL)\r\n");
-    }      
+    }
 }
 
 // 获取时间
@@ -346,7 +341,8 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     timer->minute = time.minute;
     timer->minute = time.second;
 
-    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour, time.minute, time.second);
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour,
+               time.minute, time.second);
 }
 
 #if HL_IS_TX_DEVICE()
@@ -358,16 +354,16 @@ static void hl_mod_audio_record(int p_file_audio, uint8_t* buffer, uint32_t size
         return;
     }
 
-    if (write(p_file_audio, buffer, size) != size) {  
+    if (write(p_file_audio, buffer, size) != size) {
         LOG_E("write p_file_audio failed !!!");
         return;
     }
-    *s_record_size = (size / 1 / (3)) + *s_record_size; // 只录制一个通道(1)
+    *s_record_size = (size / 1 / (3)) + *s_record_size;  // 只录制一个通道(1)
 }
 
 static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
 {
-    if(p_file_audio < 0){
+    if (p_file_audio < 0) {
         LOG_E("Auaio record stop error(p_file_audio:(NULL))");
         return;
     }
@@ -386,7 +382,7 @@ static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size)
 
 static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t* s_record_size)
 {
-    if(*s_record_size < 86400000) {
+    if (*s_record_size < 86400000) {
         return;
     }
 
@@ -423,9 +419,10 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
     s_audio_header.sample_rate  = cap_info.param.sampleRate;
 
     s_audio_header.bits_per_sample = 24;
-    s_audio_header.byte_rate       = (s_audio_header.bits_per_sample / 8) * s_audio_header.num_channels * s_audio_header.sample_rate;
-    s_audio_header.block_align     = s_audio_header.num_channels * (s_audio_header.bits_per_sample / 8);
-    s_audio_header.data_id         = ID_DATA;
+    s_audio_header.byte_rate =
+        (s_audio_header.bits_per_sample / 8) * s_audio_header.num_channels * s_audio_header.sample_rate;
+    s_audio_header.block_align = s_audio_header.num_channels * (s_audio_header.bits_per_sample / 8);
+    s_audio_header.data_id     = ID_DATA;
 
     lseek(p_file_audio, 0, SEEK_SET);
     write(p_file_audio, &s_audio_header, sizeof(struct wav_header));
@@ -436,35 +433,38 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
     //hl_mod_audio_record_save();
 }
 
-// 
+//
 static int hl_mod_audio_record_switch(uint8_t record_switch)
 {
     if (s_record_switch == record_switch) {
         return -1;
     }
 
-    static char timer_name[50] = {0};
-    static char timer_name_after[50] = {0};
-    static char timer_name_bypass[50] = {0};
-    static char timer_name_file[50] = {0};
+    static char timer_name[50]        = { 0 };
+    static char timer_name_after[50]  = { 0 };
+    static char timer_name_bypass[50] = { 0 };
+    static char timer_name_file[50]   = { 0 };
 
     if (record_switch) {
         rt_ringbuffer_reset(record_info.record_after_rb);
         rt_ringbuffer_reset(record_info.record_bypass_rb);
 
         hl_mod_audio_rtc_get(timer_name);
-        memcpy(&timer_name_file[0], "/mnt/sdcard/", 12); 
-        memcpy(&timer_name_file[12], timer_name, 10); 
+        memcpy(&timer_name_file[0], "/mnt/sdcard/", 12);
+        memcpy(&timer_name_file[12], timer_name, 10);
 
-        if (access(timer_name_file, 0) < 0)
-        {
+        if (access(timer_name_file, 0) < 0) {
             LOG_I("create record mkdir %s.", timer_name_file);
-            mkdir(timer_name_file, 0); //此处添加异常处理<
+            mkdir(timer_name_file, 0);  //此处添加异常处理<
         }
-        rt_sprintf(timer_name_after, "%s/%s-after.wav", timer_name_file, &timer_name[11]); 
-        rt_sprintf(timer_name_bypass, "%s/%s-bypass.wav", timer_name_file, &timer_name[11]); 
-        record_info.file_audio_after  = open(timer_name_after, O_WRONLY | O_CREAT | O_TRUNC);   //open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
-        record_info.file_audio_bypass = open(timer_name_bypass, O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        rt_sprintf(timer_name_after, "%s/%s-after.wav", timer_name_file, &timer_name[11]);
+        rt_sprintf(timer_name_bypass, "%s/%s-bypass.wav", timer_name_file, &timer_name[11]);
+        record_info.file_audio_after =
+            open(timer_name_after,
+                 O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_after.wav", O_WRONLY | O_CREAT | O_TRUNC);
+        record_info.file_audio_bypass = open(
+            timer_name_bypass,
+            O_WRONLY | O_CREAT | O_TRUNC);  //open("/mnt/sdcard/hl_audio_bypass.wav", O_WRONLY | O_CREAT | O_TRUNC);
 
         hl_mod_audio_record_start(record_info.file_audio_after, &s_record_after_size);
         hl_mod_audio_record_start(record_info.file_audio_bypass, &s_record_bypass_size);
@@ -482,28 +482,25 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
 static void hl_mod_audio_dfs_sd()
 {
     rt_device_t disk;
-    char file_name[20] = {0};
-    int ret = 0;
-    
+    char        file_name[20] = { 0 };
+    int         ret           = 0;
+
     disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
-    if(disk == RT_NULL)
-    {
+    if (disk == RT_NULL) {
         LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
         return -RT_ERROR;
     }
 
-    memcpy(&file_name[0], "/mnt", 4); 
-    if (access(file_name, 0) < 0)
-    {
+    memcpy(&file_name[0], "/mnt", 4);
+    if (access(file_name, 0) < 0) {
         LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
+        mkdir(file_name, 0);  //此处添加异常处理<
     }
 
-    memcpy(&file_name[0], "/mnt/sdcard", 11); 
-    if (access(file_name, 0) < 0)
-    {
+    memcpy(&file_name[0], "/mnt/sdcard", 11);
+    if (access(file_name, 0) < 0) {
         LOG_I("create record mkdir %s.", file_name);
-        mkdir(file_name, 0); //此处添加异常处理<
+        mkdir(file_name, 0);  //此处添加异常处理<
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
@@ -520,11 +517,10 @@ static void hl_mod_audio_dfs_sd()
 #endif
 static void hl_mod_audio_dfs_root()
 {
-    rt_device_t disk;    
-    
+    rt_device_t disk;
+
     disk = rt_device_find("root");
-    if(disk == RT_NULL)
-    {
+    if (disk == RT_NULL) {
         LOG_E("no disk named %s", "root");
         return -RT_ERROR;
     }
@@ -546,14 +542,15 @@ static rt_err_t hl_mod_audio_param_config(void)
 {
     /* 捕获声卡配置 */
     strncpy(cap_info.card_name, HL_CAPTURE_DEV, 8);
-    cap_info.card_type          = HL_CAPTURE_CARD;
-    cap_info.param.channels     = HL_MOD_AUDIO_CHANNELS;
-    cap_info.param.sampleRate   = HL_MOD_AUDIO_RATE;
-    cap_info.param.sampleBits   = HL_MOD_AUDIO_BITS;
- 
-    cap_info.abuf.period_size   = HL_MOD_AUDIO_PERIOD_SIZE;
-    cap_info.abuf.buf_size      = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_PERIOD_COUNT;
-    cap_info.abuf.buf           = rt_malloc_uncache(cap_info.abuf.buf_size * cap_info.param.channels * (cap_info.param.sampleBits >> 3));
+    cap_info.card_type        = HL_CAPTURE_CARD;
+    cap_info.param.channels   = HL_MOD_AUDIO_CHANNELS;
+    cap_info.param.sampleRate = HL_MOD_AUDIO_RATE;
+    cap_info.param.sampleBits = HL_MOD_AUDIO_BITS;
+
+    cap_info.abuf.period_size = HL_MOD_AUDIO_PERIOD_SIZE;
+    cap_info.abuf.buf_size    = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_PERIOD_COUNT;
+    cap_info.abuf.buf =
+        rt_malloc_uncache(cap_info.abuf.buf_size * cap_info.param.channels * (cap_info.param.sampleBits >> 3));
     if (cap_info.abuf.buf == RT_NULL) {
         LOG_E("cap_info.abuf.buf malloc failed!");
         goto err0;
@@ -562,14 +559,15 @@ static rt_err_t hl_mod_audio_param_config(void)
 #if HL_IS_TX_DEVICE()
     /* pdm声卡配置 */
     strncpy(pdm_info.card_name, HL_PDM_CAP_DEV, 8);
-    pdm_info.card_type          = HL_CAPTURE_CARD;
-    pdm_info.param.channels     = HL_MOD_AUDIO_CHANNELS;
-    pdm_info.param.sampleRate   = HL_MOD_AUDIO_RATE;
-    pdm_info.param.sampleBits   = HL_MOD_AUDIO_BITS;
- 
-    pdm_info.abuf.period_size   = HL_MOD_AUDIO_PERIOD_SIZE;
-    pdm_info.abuf.buf_size      = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_PERIOD_COUNT;
-    pdm_info.abuf.buf           = rt_malloc_uncache(pdm_info.abuf.buf_size * pdm_info.param.channels * (pdm_info.param.sampleBits >> 3));
+    pdm_info.card_type        = HL_CAPTURE_CARD;
+    pdm_info.param.channels   = HL_MOD_AUDIO_CHANNELS;
+    pdm_info.param.sampleRate = HL_MOD_AUDIO_RATE;
+    pdm_info.param.sampleBits = HL_MOD_AUDIO_BITS;
+
+    pdm_info.abuf.period_size = HL_MOD_AUDIO_PERIOD_SIZE;
+    pdm_info.abuf.buf_size    = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_PERIOD_COUNT;
+    pdm_info.abuf.buf =
+        rt_malloc_uncache(pdm_info.abuf.buf_size * pdm_info.param.channels * (pdm_info.param.sampleBits >> 3));
     if (pdm_info.abuf.buf == RT_NULL) {
         LOG_E("pdm_info.abuf.buf malloc failed!");
         goto err1;
@@ -585,7 +583,8 @@ static rt_err_t hl_mod_audio_param_config(void)
 
     play_info.abuf.period_size = HL_MOD_AUDIO_PERIOD_SIZE;
     play_info.abuf.buf_size    = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_PERIOD_COUNT;
-    play_info.abuf.buf         = rt_malloc_uncache(play_info.abuf.buf_size * play_info.param.channels * (play_info.param.sampleBits >> 3));
+    play_info.abuf.buf =
+        rt_malloc_uncache(play_info.abuf.buf_size * play_info.param.channels * (play_info.param.sampleBits >> 3));
     if (play_info.abuf.buf == RT_NULL) {
         LOG_E("play_info.abuf.buf malloc failed!");
         rt_free_uncache(cap_info.abuf.buf);
@@ -640,16 +639,16 @@ static rt_err_t hl_mod_audio_uac_config(void)
         goto err1;
     }
 
-    uac_info.buff32size = HL_MOD_AUDIO_PERIOD_SIZE*HL_MOD_AUDIO_CHANNELS * 4; 
-    uac_info.buff24size = HL_MOD_AUDIO_PERIOD_SIZE*HL_MOD_AUDIO_CHANNELS * 3;
+    uac_info.buff32size = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 4;
+    uac_info.buff24size = HL_MOD_AUDIO_PERIOD_SIZE * HL_MOD_AUDIO_CHANNELS * 3;
 
-    uac_info.buff32b    = rt_malloc(uac_info.buff32size);
+    uac_info.buff32b = rt_malloc(uac_info.buff32size);
     if (RT_NULL == uac_info.buff32b) {
         LOG_E("uac_info.buff32b malloc failed!");
         goto err1;
     }
 
-    uac_info.buff24b    = rt_malloc(uac_info.buff24size);
+    uac_info.buff24b = rt_malloc(uac_info.buff24size);
     if (RT_NULL == uac_info.buff24b) {
         LOG_E("uac_info.buff24b malloc failed!");
         goto err2;
@@ -683,13 +682,13 @@ static rt_err_t hl_mod_audio_uac_deconfig(void)
 static rt_err_t hl_mod_audio_record_param_config(void)
 {
     record_info.record_after_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
-    if (record_info.record_after_rb  == RT_NULL) {
+    if (record_info.record_after_rb == RT_NULL) {
         LOG_E("record_info.record_after_rb create failed!!!");
         goto err0;
     }
 
     record_info.record_bypass_rb = rt_ringbuffer_create(dsp_config->buffer_size_b24_1ch * 65);
-    if (record_info.record_bypass_rb  == RT_NULL) {
+    if (record_info.record_bypass_rb == RT_NULL) {
         LOG_E("record_info.record_bypass_rb create failed!!!");
         goto err1;
     }
@@ -712,9 +711,9 @@ static rt_err_t hl_mod_audio_record_param_deconfig(void)
 }
 
 // 声卡配置
-static rt_err_t hl_mod_audio_codec_config(hl_card_param_t *p_param)
+static rt_err_t hl_mod_audio_codec_config(hl_card_param_t* p_param)
 {
-    rt_err_t            ret;
+    rt_err_t ret;
 
     p_param->card = rt_device_find(p_param->card_name);
     if (p_param->card == RT_NULL) {
@@ -733,18 +732,19 @@ static rt_err_t hl_mod_audio_codec_config(hl_card_param_t *p_param)
     }
 
     ret = rt_device_control(p_param->card, RK_AUDIO_CTL_PCM_PREPARE, &p_param->abuf);
-    if(ret != RT_EOK) {
+    if (ret != RT_EOK) {
         LOG_E("cap set pcm prepare failed! err: %d", ret);
         goto err1;
     }
 
     ret = rt_device_control(p_param->card, RK_AUDIO_CTL_HW_PARAMS, &p_param->param);
-    if(ret != RT_EOK) {
+    if (ret != RT_EOK) {
         LOG_E("cap set hardware params failed! err: %d", ret);
         goto err2;
     }
 
-    LOG_I("open card:%s %d channel  %d hz  %d bits", p_param->card_name, p_param->param.channels, p_param->param.sampleRate, p_param->param.sampleBits);
+    LOG_I("open card:%s %d channel  %d hz  %d bits", p_param->card_name, p_param->param.channels,
+          p_param->param.sampleRate, p_param->param.sampleBits);
     LOG_I("audio card param config succeed!");
     return RT_EOK;
 
@@ -758,7 +758,7 @@ err0:
 }
 
 // 声卡去配置
-static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
+static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t* p_param)
 {
     if (p_param->card == RT_NULL) {
         LOG_I("audio card param deconfig repeated!");
@@ -774,17 +774,17 @@ static rt_err_t hl_mod_audio_codec_deconfig(hl_card_param_t *p_param)
 }
 
 // 声卡清空buff的数据
-static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t *p_param)
+static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t* p_param)
 {
     rt_err_t ret = RT_EOK;
 
     if (p_param->card == RT_NULL) {
         LOG_I("audio card param deconfig repeated!");
         return;
-    }     
-        
+    }
+
     ret = hl_mod_audio_codec_deconfig(p_param);
-    if(ret != RT_EOK) {
+    if (ret != RT_EOK) {
         LOG_E("audio codec start failed! err: %d", ret);
         return ret;
     }
@@ -792,7 +792,7 @@ static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t *p_param)
     // rt_memset(&p_param->abuf, 0x0, sizeof(p_param->abuf));
 
     ret = hl_mod_audio_codec_config(p_param);
-    if(ret != RT_EOK) {
+    if (ret != RT_EOK) {
         LOG_E("audio codec start failed! err: %d", ret);
         return ret;
     }
@@ -801,25 +801,23 @@ static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t *p_param)
     return ret;
 }
 
-
-
 // dsp内存申请、参数配置和初始化
 static rt_err_t hl_mod_audio_dsp_config(void)
 {
     uint8_t val = 0;
-    dsp_config               = (hl_drv_rk_xtensa_dsp_config_t_p)rkdsp_malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
+    dsp_config  = (hl_drv_rk_xtensa_dsp_config_t_p)rkdsp_malloc(sizeof(hl_drv_rk_xtensa_dsp_config_t));
     if (RT_NULL == dsp_config) {
         LOG_D("dsp_config rkdsp_malloc failed!");
         goto err0;
     }
 
-    dsp_config->bits         = 32;
-    dsp_config->channels     = 2;
-    dsp_config->period_size  = HL_MOD_AUDIO_PERIOD_SIZE;
-    dsp_config->rate         = 48000;
-    dsp_config->process_size = dsp_config->period_size * dsp_config->channels * (dsp_config->bits >> 3);
-    dsp_config->buffer_size_b32_2ch              = dsp_config->process_size;
-    dsp_config->audio_process_in_buffer_b32_2ch  = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
+    dsp_config->bits                = 32;
+    dsp_config->channels            = 2;
+    dsp_config->period_size         = HL_MOD_AUDIO_PERIOD_SIZE;
+    dsp_config->rate                = 48000;
+    dsp_config->process_size        = dsp_config->period_size * dsp_config->channels * (dsp_config->bits >> 3);
+    dsp_config->buffer_size_b32_2ch = dsp_config->process_size;
+    dsp_config->audio_process_in_buffer_b32_2ch = rkdsp_malloc(dsp_config->buffer_size_b32_2ch + 2);
     if (RT_NULL == dsp_config->audio_process_in_buffer_b32_2ch) {
         LOG_D("audio_process_in_buffer_b32_2ch rkdsp_malloc failed!");
         goto err1;
@@ -831,8 +829,8 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     }
 
 #if HL_IS_TX_DEVICE()
-    dsp_config->buffer_size_b24_1ch                     = dsp_config->period_size * 1 * 3;
-    dsp_config->audio_after_process_out_buffer_b24_1ch  = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
+    dsp_config->buffer_size_b24_1ch                    = dsp_config->period_size * 1 * 3;
+    dsp_config->audio_after_process_out_buffer_b24_1ch = rkdsp_malloc(dsp_config->buffer_size_b24_1ch + 2);
     if (RT_NULL == dsp_config->audio_after_process_out_buffer_b24_1ch) {
         LOG_D("audio_after_process_out_buffer_b24_1ch rkdsp_malloc failed!");
         goto err3;
@@ -843,8 +841,8 @@ static rt_err_t hl_mod_audio_dsp_config(void)
         goto err4;
     }
 #else
-    dsp_config->buffer_size_b24_2ch                     = dsp_config->period_size * 2 * 3;
-    dsp_config->audio_after_process_out_buffer_b24_2ch  = rkdsp_malloc(dsp_config->buffer_size_b24_2ch + 2);
+    dsp_config->buffer_size_b24_2ch                    = dsp_config->period_size * 2 * 3;
+    dsp_config->audio_after_process_out_buffer_b24_2ch = rkdsp_malloc(dsp_config->buffer_size_b24_2ch + 2);
     if (RT_NULL == dsp_config->audio_after_process_out_buffer_b24_2ch) {
         LOG_D("audio_after_process_out_buffer_b24_2ch rkdsp_malloc failed!");
         goto err3;
@@ -866,8 +864,8 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
     memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
     memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
-    hl_drv_rk_xtensa_dsp_transfer(); 
-#endif   
+    hl_drv_rk_xtensa_dsp_transfer();
+#endif
 
     LOG_D("audio dsp config succeed!");
     return RT_EOK;
@@ -918,27 +916,27 @@ static rt_err_t hl_mod_audio_dsp_deconfig(void)
 #if HL_IS_TX_DEVICE()
 static void do_record_audio(void* arg)
 {
-    char*    record_buffer;
-    uint32_t record_size;
-    uint8_t  ter = 0;
-    static uint8_t  s_denoise_switch = 0;
-    char*    record_buffer1;
-    uint32_t record_size1;
+    char*          record_buffer;
+    uint32_t       record_size;
+    uint8_t        ter              = 0;
+    static uint8_t s_denoise_switch = 0;
+    char*          record_buffer1;
+    uint32_t       record_size1;
 
-    record_size   = dsp_config->buffer_size_b24_1ch * 57;  
+    record_size   = dsp_config->buffer_size_b24_1ch * 57;
     record_buffer = rt_malloc(record_size);
     if (record_buffer == RT_NULL) {
         LOG_E("record_buffer malloc failed");
         goto err0;
     }
 
-    record_size1   = dsp_config->buffer_size_b24_1ch * 57; 
+    record_size1   = dsp_config->buffer_size_b24_1ch * 57;
     record_buffer1 = rt_malloc(record_size);
     if (record_buffer1 == RT_NULL) {
         LOG_E("record_buffer1 malloc failed");
         goto err1;
     }
-    
+
     while (1) {
         if ((rt_ringbuffer_data_len(record_info.record_after_rb) < record_size) || (s_record_switch != 1)
             || (rt_ringbuffer_data_len(record_info.record_bypass_rb) < record_size1)) {
@@ -954,7 +952,6 @@ static void do_record_audio(void* arg)
                 hl_mod_audio_record(record_info.file_audio_bypass, record_buffer1, record_size1, &s_record_bypass_size);
             }
         }
-        
     }
 err1:
     rt_free(record_buffer);
@@ -1008,14 +1005,14 @@ static void hl_do_record_audio(void* arg)
     rt_free(record_buffer);
 }
 #endif
-uint8_t record_flag = 0;
+uint8_t     record_flag = 0;
 static void _hl_cap2play_thread_entry(void* arg)
 {
-    hl_card_param_t *p_card_param;
+    hl_card_param_t* p_card_param;
 
     LOG_D("audio cap2play thread run");
 
-    p_card_param = (hl_card_param_t *)arg;
+    p_card_param = (hl_card_param_t*)arg;
     if (RT_NULL == p_card_param) {
         LOG_E("p_card_param is NULL, exit cap2play thread");
         goto err;
@@ -1037,7 +1034,7 @@ static void _hl_cap2play_thread_entry(void* arg)
     LOG_D("----cap_info.card_name : %s\r\n", p_card_param->card->parent.name);
     if (strcmp("pdmc", p_card_param->card->parent.name) == 0) {
         hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
-    }else {
+    } else {
         gain = 0;
         hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
     }
@@ -1045,38 +1042,40 @@ static void _hl_cap2play_thread_entry(void* arg)
     hl_drv_rk_xtensa_dsp_transfer();
 #endif
     hl_mod_audio_codec_buff_clear(&play_info);
-    hl_mod_audio_codec_buff_clear(p_card_param);    
+    hl_mod_audio_codec_buff_clear(p_card_param);
 
 #if HL_IS_TX_DEVICE()
     // 关闭降噪
-    uint8_t 
-    val = 0;
+    uint8_t val = 0;
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
     hl_drv_rk_xtensa_dsp_transfer();
 #endif
 
     while (cap2play_thread_flag != 0) {
-        if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch, p_card_param->abuf.period_size) <= 0) {
+        if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch,
+                           p_card_param->abuf.period_size)
+            <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
             //break;
         }
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 5) {                
-            s_vu_en = 0;    
-            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
-        }       
+        if (s_vu_en++ == 5) {
+            s_vu_en = 0;
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);
+        }
 #endif
         hl_drv_rk_xtensa_dsp_transfer();
 
-        if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size) <= 0) {
+        if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)
+            <= 0) {
             LOG_E("write %s failed", play_info.card->parent.name);
         }
 
         if (record_flag == 1) {
             char* p = dsp_config->audio_process_in_buffer_b32_2ch;
             LOG_I("read audio data:");
-            for (uint32_t i =0; i < play_info.abuf.period_size; i++) {
-                LOG_I("%02x %02x %02x %02x, %02x %02x %02x %02x", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
+            for (uint32_t i = 0; i < play_info.abuf.period_size; i++) {
+                LOG_I("%02x %02x %02x %02x, %02x %02x %02x %02x", p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
                 p += 8;
             }
             record_flag = 0;
@@ -1115,21 +1114,24 @@ static void _hl_cap2uac_thread_entry(void* arg)
         goto err;
     }
     while (cap2uac_thread_flag != 0) {
-        if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
+        if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
+            <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
             //break;
         }
 
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 100) {                
-            s_vu_en = 0;    
-            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
-        }       
+        if (s_vu_en++ == 100) {
+            s_vu_en = 0;
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);
+        }
 #endif
 
         hl_drv_rk_xtensa_dsp_transfer();
 #if (!HL_IS_TX_DEVICE())
-        if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
+        if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch,
+                            dsp_config->buffer_size_b24_2ch)
+            <= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
 #endif
@@ -1142,10 +1144,10 @@ err:
 
 static void _hl_uac2play_thread_entry(void* arg)
 {
-    char*               p;
-    rt_size_t           get_data_size;
-    rt_uint8_t          uac_p_state;
-    play_uac_state_e    playback_state = HL_PLAY_UAC_IDLE;
+    char*            p;
+    rt_size_t        get_data_size;
+    rt_uint8_t       uac_p_state;
+    play_uac_state_e playback_state = HL_PLAY_UAC_IDLE;
 
     LOG_D("audio uac2play thread run");
 
@@ -1188,12 +1190,12 @@ static void _hl_uac2play_thread_entry(void* arg)
                     LOG_I("p_buffer empty enter playback idle(%d)", get_data_size);
                 }
                 p = uac_info.buff32b;
-                for (uint32_t i =0; i < uac_info.buff24size; ) {
+                for (uint32_t i = 0; i < uac_info.buff24size;) {
                     p[0] = 0;
                     p[1] = uac_info.buff24b[i++];
                     p[2] = uac_info.buff24b[i++];
                     p[3] = uac_info.buff24b[i++];
-                    p   += 4;
+                    p += 4;
                 }
                 break;
 
@@ -1235,26 +1237,30 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
     }
 
     while (cap2play2uac_thread_flag != 0) {
-        if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size) <= 0) {
+        if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
+            <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
             //break;
         }
 
 #if !HL_IS_TX_DEVICE()
-        if (s_vu_en++ == 5) {                
-            s_vu_en = 0;    
-            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);            
-        }       
+        if (s_vu_en++ == 5) {
+            s_vu_en = 0;
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_GET_VU, NULL, 0);
+        }
 #endif
 
         hl_drv_rk_xtensa_dsp_transfer();
 
-        if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)<= 0) {
+        if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)
+            <= 0) {
             LOG_E("write %s failed", play_info.card->parent.name);
         }
-#ifdef RT_USB_DEVICE_UAC1        
+#ifdef RT_USB_DEVICE_UAC1
 #if (!HL_IS_TX_DEVICE())
-        if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch, dsp_config->buffer_size_b24_2ch)<= 0) {
+        if (rt_device_write(uac_info.card, 0, dsp_config->audio_after_process_out_buffer_b24_2ch,
+                            dsp_config->buffer_size_b24_2ch)
+            <= 0) {
             LOG_E("write %s failed", uac_info.card->parent.name);
         }
 #endif
@@ -1266,7 +1272,6 @@ err:
     LOG_D("audio cap2play2uac thread exit");
 }
 #endif
-
 
 /***
  * 设置声卡增益
@@ -1322,14 +1327,13 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
     if (ret != RT_EOK) {
         LOG_E("fail to set (%d) gain\n", HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L);
     }
-
 }
 
 #if HL_IS_TX_DEVICE()
 // 设置输入声卡静音状态
 static void hl_mod_audio_set_mute(uint8_t mute)
 {
-    int8_t ret = 0;
+    int8_t   ret     = 0;
     uint32_t mute_32 = mute;
 
     ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MUTE, &mute_32, 1);
@@ -1344,7 +1348,7 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 {
     int8_t ret = 0;
 
-    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &denoise, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &denoise, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set denoise");
         return -RT_ERROR;
@@ -1357,7 +1361,7 @@ static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
 {
     int8_t ret = 0;
 
-    ret =  hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD, &mix_switch, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_MIX_MOD, &mix_switch, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set mix switch");
         return -RT_ERROR;
@@ -1367,7 +1371,7 @@ static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
 #endif
 
 // 音频流模式设置
-static void hl_mod_audio_stream_set(void *ptr) 
+static void hl_mod_audio_stream_set(void* ptr)
 {
     hl_stream_mode_e stream_mode = *((hl_stream_mode_e*)ptr);
 
@@ -1376,12 +1380,12 @@ static void hl_mod_audio_stream_set(void *ptr)
             s_stream_mode_next = HL_STREAM_IDLE;
             LOG_I("app set stream stop");
             break;
-        
+
         case HL_STREAM_PDM2PLAY:
             s_stream_mode_next = HL_STREAM_PDM2PLAY;
             LOG_I("app set stream pdm2play");
             break;
-        
+
         case HL_STREAM_CAP2PLAY:
             s_stream_mode_next = HL_STREAM_CAP2PLAY;
             LOG_I("app set stream cap2play");
@@ -1411,7 +1415,7 @@ static void hl_mod_audio_stream_set(void *ptr)
 // 音频模块发送消息给APP层
 static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param)
 {
-    rt_err_t res;
+    rt_err_t          res;
     mode_to_app_msg_t msg;
 
     msg.sender          = AUDIO_MODE;
@@ -1427,7 +1431,7 @@ static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param)
     }
 }
 
-static void hl_cap2play_thread_setup(hl_card_param_t *p_card_info)
+static void hl_cap2play_thread_setup(hl_card_param_t* p_card_info)
 {
     cap2play_thread_id = rt_thread_create("cap2play", _hl_cap2play_thread_entry, p_card_info, 2048, 0, 8);
     if (cap2play_thread_id != RT_NULL) {
@@ -1488,7 +1492,7 @@ static void hl_cap2play_thread_stop(void)
     uint8_t i = 100;
 
     cap2play_thread_flag = 0;
-    while(cap2play_thread_id != RT_NULL) {
+    while (cap2play_thread_id != RT_NULL) {
         rt_thread_mdelay(1);
         i--;
         if (i == 0) {
@@ -1504,7 +1508,7 @@ static void hl_uac2play_thread_stop(void)
     uint8_t i = 100;
 
     uac2play_thread_flag = 0;
-    while (uac2play_thread_id != RT_NULL){
+    while (uac2play_thread_id != RT_NULL) {
         rt_thread_mdelay(1);
         i--;
         if (i == 0) {
@@ -1520,7 +1524,7 @@ static void hl_cap2uac_uac2play_thread_stop(void)
     uint8_t i = 100;
 
     uac2play_thread_flag = 0;
-    cap2uac_thread_flag = 0;
+    cap2uac_thread_flag  = 0;
     while (uac2play_thread_id != RT_NULL) {
         rt_thread_mdelay(1);
         i--;
@@ -1531,7 +1535,7 @@ static void hl_cap2uac_uac2play_thread_stop(void)
         }
     }
     i = 100;
-    while (cap2uac_thread_id != RT_NULL){
+    while (cap2uac_thread_id != RT_NULL) {
         rt_thread_mdelay(1);
         i--;
         if (i == 0) {
@@ -1547,7 +1551,7 @@ static void hl_cap2play2uac_thread_stop(void)
     uint8_t i = 100;
 
     cap2play2uac_thread_flag = 0;
-    while (cap2play2uac_thread_id != RT_NULL){
+    while (cap2play2uac_thread_id != RT_NULL) {
         rt_thread_mdelay(1);
         i--;
         if (i == 0) {
@@ -1559,17 +1563,17 @@ static void hl_cap2play2uac_thread_stop(void)
 }
 
 // 音频流控制
-static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, hl_stream_mode_e next_mode) 
+static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, hl_stream_mode_e next_mode)
 {
     hl_stream_mode_e new_mod = next_mode;
 
-    LOG_D("thread ctrl start cur_mode(%d),next_mode(%d)",cur_mode, next_mode);
+    LOG_D("thread ctrl start cur_mode(%d),next_mode(%d)", cur_mode, next_mode);
     switch (cur_mode) {
         case HL_STREAM_IDLE:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
                     break;
-#if HL_IS_TX_DEVICE()                   
+#if HL_IS_TX_DEVICE()
                 case HL_STREAM_PDM2PLAY:
                     hl_mod_audio_codec_config(&pdm_info);
                     hl_mod_audio_codec_config(&play_info);
@@ -1608,7 +1612,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
             }
             break;
 
-#if HL_IS_TX_DEVICE()             
+#if HL_IS_TX_DEVICE()
         case HL_STREAM_PDM2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
@@ -1646,7 +1650,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
 
-#if HL_IS_TX_DEVICE()                     
+#if HL_IS_TX_DEVICE()
                 case HL_STREAM_PDM2PLAY:
                     hl_mod_audio_codec_config(&pdm_info);
                     hl_cap2play_thread_stop();
@@ -1679,14 +1683,14 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
             }
             break;
 
-#if HL_IS_TX_DEVICE() 
+#if HL_IS_TX_DEVICE()
         case HL_STREAM_UAC2PLAY:
             switch (next_mode) {
                 case HL_STREAM_IDLE:
                     hl_uac2play_thread_stop();
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
-                    
+
                 case HL_STREAM_PDM2PLAY:
                     hl_mod_audio_codec_config(&pdm_info);
                     hl_uac2play_thread_stop();
@@ -1714,7 +1718,7 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
                     hl_mod_audio_codec_deconfig(&cap_info);
                     hl_mod_audio_codec_deconfig(&play_info);
                     break;
-                    
+
                 case HL_STREAM_CAP2PLAY:
                     hl_cap2uac_uac2play_thread_stop();
                     hl_cap2play_thread_setup(&cap_info);
@@ -1769,16 +1773,16 @@ static hl_stream_mode_e _hl_audio_stream_thread_ctrl(hl_stream_mode_e cur_mode, 
 
 static void _hl_audio_ctrl_thread_entry(void* arg)
 {
-    rt_err_t            ret;
-    rt_uint32_t         msg;
-    rt_uint32_t         count_vu = 0;
-    int16_t s_vu_l = 0;
-    int16_t s_vu_r = 0;
+    rt_err_t     ret;
+    rt_uint32_t  msg;
+    rt_uint32_t  count_vu        = 0;
+    int16_t      s_vu_l          = 0;
+    int16_t      s_vu_r          = 0;
     static float show_vu_pre_cal = 118 / 187;
 
     LOG_D("audio ctrl thread run");
     while (1) {
-        #ifdef RT_USB_DEVICE_UAC1
+#ifdef RT_USB_DEVICE_UAC1
         msg = 0;
         while (RT_EOK == rt_mb_recv(uac_info.p_mailbox, &msg, 0)) {
             switch (msg) {
@@ -1797,7 +1801,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                     break;
             }
         }
-        #endif
+#endif
 
         if (s_stream_mode_cur != s_stream_mode_next) {
             // _hl_audio_stream_thread_ctrl(s_stream_mode_cur, HL_SWITCH_OFF);
@@ -1809,16 +1813,16 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if((count_vu % 1 == 0) && (count_vu != 11)) { 
-            if (dsp_config->vu_l > s_vu_l){
+        if ((count_vu % 1 == 0) && (count_vu != 11)) {
+            if (dsp_config->vu_l > s_vu_l) {
                 s_vu_l = dsp_config->vu_l;
             }
-            if (dsp_config->vu_r > s_vu_r){
+            if (dsp_config->vu_r > s_vu_r) {
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 10) {    
-            count_vu = 0;                         
+        if (count_vu >= 10) {
+            count_vu = 0;
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
                 s_vu_r = (s_vu_r < -70) ? 0 : s_vu_r + 70;
@@ -1840,7 +1844,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
 uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 {
     rt_err_t ret;
-    uint8_t temp = 0;
+    uint8_t  temp = 0;
 
     s_audio_to_app_mq = p_msg_handle;
     // elm_init();
@@ -1848,16 +1852,16 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_dfs_sd();
     s_record_switch = 0;
-    hl_hal_gpio_init(GPIO_MIC_SW);    
-    hl_hal_gpio_low(GPIO_MIC_SW);    
+    hl_hal_gpio_init(GPIO_MIC_SW);
+    hl_hal_gpio_low(GPIO_MIC_SW);
 #else
 #endif
 
-    if(hl_drv_rtc_pcf85063_init() == RT_EOK) {
+    if (hl_drv_rtc_pcf85063_init() == RT_EOK) {
         LOG_D("hl_drv_rtc_pcf85063_init OK");
-    }else (hl_drv_ins5830b_init() == RT_EOK) {
+    } else if (hl_drv_ins5830b_init() == RT_EOK) {
         LOG_D("hl_drv_ins5830b_init OK");
-    }else {
+    } else {
         LOG_D("!!!!RTC_INIT ERROR");
     }
 
@@ -1903,7 +1907,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id   = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 1024, 10, 5);
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 1024, 10, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
@@ -1939,7 +1943,7 @@ uint8_t hl_mod_audio_deinit(void)
 
     // hl_mod_audio_codec_deconfig(&cap_info);
     // hl_mod_audio_codec_deconfig(&play_info);
-    
+
     rt_thread_delete(audio_ctrl_thread_id);
 
     s_stream_mode_next = HL_STREAM_IDLE;
@@ -1976,7 +1980,7 @@ void hl_mod_audio_show_info(void)
     LOG_I("play_info.abuf.buf_size = %d ", play_info.abuf.buf_size);
     LOG_I("play_info.abuf.period_size = %d ", play_info.abuf.period_size);
 
-    LOG_I("play_info.param.channels = %d ",  play_info.param.channels);
+    LOG_I("play_info.param.channels = %d ", play_info.param.channels);
     LOG_I("play_info.param.sampleBits = %d ", play_info.param.sampleBits);
     LOG_I("play_info.param.sampleRate = %d ", play_info.param.sampleRate);
 
@@ -1988,7 +1992,7 @@ void hl_mod_audio_show_info(void)
     LOG_I("cap_info.abuf.buf_size = %d ", cap_info.abuf.buf_size);
     LOG_I("cap_info.abuf.period_size = %d ", cap_info.abuf.period_size);
 
-    LOG_I("cap_info.param.channels = %d ",  cap_info.param.channels);
+    LOG_I("cap_info.param.channels = %d ", cap_info.param.channels);
     LOG_I("cap_info.param.sampleBits = %d ", cap_info.param.sampleBits);
     LOG_I("cap_info.param.sampleRate = %d ", cap_info.param.sampleRate);
 
@@ -2017,7 +2021,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            if(((char*)ptr)[0] != 0) {
+            if (((char*)ptr)[0] != 0) {
                 hl_mod_audio_set_denoise(1);
                 LOG_I("[%s][line:%d] open denoise", __FUNCTION__, __LINE__);
             } else {
@@ -2031,7 +2035,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_ALL);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_ALL);
             break;
         case HL_AUDIO_SET_GAIN_L_CMD:
             if (ptr == NULL) {
@@ -2039,7 +2043,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_L);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_L);
             break;
         case HL_AUDIO_SET_GAIN_R_CMD:
             if (ptr == NULL) {
@@ -2047,7 +2051,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_R);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_R);
             break;
         case HL_AUDIO_SET_MUTE_CMD:
             if (ptr == NULL) {
@@ -2055,13 +2059,13 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            if(((char*)ptr)[0] != 0) {
+            if (((char*)ptr)[0] != 0) {
                 hl_mod_audio_set_mute(1);
                 LOG_I("[%s][line:%d] mic open mute", __FUNCTION__, __LINE__);
             } else {
                 hl_mod_audio_set_mute(0);
                 LOG_I("[%s][line:%d] mic close mute", __FUNCTION__, __LINE__);
-            }            
+            }
             break;
         case HL_AUDIO_SET_EQ_CMD:
             break;
@@ -2078,7 +2082,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 LOG_E("HL_AUDIO_MIC_SWITCH_CMD parem error");
                 return -1;
             }
-            if(((char*)ptr)[0] != 0) {
+            if (((char*)ptr)[0] != 0) {
                 hl_hal_gpio_high(GPIO_MIC_SW);
                 LOG_I("[%s][line:%d] external mic!!!\r\n", __FUNCTION__, __LINE__);
             } else {
@@ -2098,10 +2102,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_rtc_get_param(ptr);
             break;
         case HL_AUDIO_SET_MIC_GAIN_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_SET_MIC_PGA_GAIN_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
 
         default:
@@ -2127,7 +2131,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_ALL);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_ALL);
             break;
         case HL_AUDIO_SET_GAIN_L_CMD:
             if (ptr == NULL) {
@@ -2135,7 +2139,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_L);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_L);
             break;
         case HL_AUDIO_SET_GAIN_R_CMD:
             if (ptr == NULL) {
@@ -2143,7 +2147,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int *)ptr)[0], HL_AUDIO_CHANNEL_R);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_R);
             break;
 
         case HL_AUDIO_SET_HP_AMP_CMD:
@@ -2152,7 +2156,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            if(((char*)ptr)[0] != 0) {
+            if (((char*)ptr)[0] != 0) {
                 // hl_hal_gpio_high(GPIO_AMP_EN);
                 LOG_I("enable hp amp!!!");
             } else {
@@ -2175,7 +2179,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            if(((char*)ptr)[0] != 0) {
+            if (((char*)ptr)[0] != 0) {
                 hl_mod_audio_set_mix_switch(1);
                 LOG_I("enable mix amp!!!");
             } else {
@@ -2192,29 +2196,29 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_rtc_get_param(ptr);
             break;
         case HL_AUDIO_SET_CAM_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_PGA_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_HP_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
-            break;    
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;
         case HL_AUDIO_SET_HP_PGA_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_PGA_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
-            break;               
+            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            break;
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;
@@ -2227,12 +2231,12 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 // hl_mod_audio_test [cmd ] [param] [size]
 int hl_mod_audio_test(int argc, char** argv)
 {
-    hl_mod_audio_ctrl_cmd  cmd;
-    uint8_t                u8_data;
-    uint16_t               u16_data;
-    uint32_t               u32_data;
-    uint16_t               size;
-    char                   *endptr;         
+    hl_mod_audio_ctrl_cmd cmd;
+    uint8_t               u8_data;
+    uint16_t              u16_data;
+    uint32_t              u32_data;
+    uint16_t              size;
+    char*                 endptr;
 
     if (argc != 4) {
         LOG_E("wrong parameter, please type: hl_mod_audio_test [cmd] [param] [size]");
@@ -2278,23 +2282,23 @@ int hl_mod_audio_test(int argc, char** argv)
             }
             hl_mod_audio_io_ctrl(cmd, &u32_data, size);
             break;
-#if HL_IS_TX_DEVICE()    
+#if HL_IS_TX_DEVICE()
         case 0x05:
             hl_mod_audio_rtc_get(NULL);
             break;
 
         case 0x06:
-            rt_usbd_msc_disable(); //hl_mod_audio_dfs();
+            rt_usbd_msc_disable();  //hl_mod_audio_dfs();
             break;
         case 0x07:
             hl_mod_audio_set_mute(1);
             break;
         case 0x08:
             hl_mod_audio_set_mute(0);
-            break;     
+            break;
         case 0x09:
             hl_mod_audio_system_rtc_set();
-            break;                      
+            break;
 #endif
         default:
             LOG_E("Bad <size> value '%s'", argv[3]);
