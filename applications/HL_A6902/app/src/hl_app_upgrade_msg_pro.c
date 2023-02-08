@@ -30,6 +30,7 @@
 #include "hl_mod_telink.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_display.h"
+#include "hl_app_disp_msg_pro.h"
 #define DBG_SECTION_NAME "app_upgrade"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -41,30 +42,28 @@
 #if HL_IS_TX_DEVICE()
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
-    hl_led_switch led_switch;
-
     switch (upgrade_state) {
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+            tx_info.upgrade_flag = 3;
             break;
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
-            led_switch = SWITCH_OPEN;
-            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            tx_info.upgrade_flag = 1;
             break;
         case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
-            led_switch = SWITCH_CLOSE;
-            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            tx_info.upgrade_flag = 2;
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
-            led_switch = SWITCH_CLOSE;
-            hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &led_switch, sizeof(led_switch));
+            tx_info.upgrade_flag = 0;
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;
         default:
             break;
     }
+
+    hl_app_disp_state_led_set();
 }
 #else
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)

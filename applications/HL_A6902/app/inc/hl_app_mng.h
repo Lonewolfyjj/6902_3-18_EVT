@@ -51,7 +51,8 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_flag:1;
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
-
+    /// 升级标志(0:失败 1：升级中 2：升级成功 3：升级空闲中)
+    uint8_t             upgrade_flag:2;
     /// mute(1:mute on 0:mute off)
     uint8_t             mute_flag;
     /// 录制保护标志(1:录制保护开  0：录制保护关)
