@@ -35,6 +35,7 @@
 #include "hl_mod_apple_auth.h"
 #include "hl_mod_pm.h"
 #include "hl_util_general_type.h"
+#include "hl_mod_upgrade.h"
 
 #define DBG_SECTION_NAME "app_input"
 #define DBG_LEVEL DBG_LOG
@@ -169,6 +170,10 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
                 LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
                 break;
             }
+            if (tx_info.rec_protect_flag == 1) {
+                LOG_I("rec protect state (%d) !!! \r\n", tx_info.rec_protect_flag);
+                break;
+            }
 
             if (tx_info.rec_flag == 0) {
                 record_switch    = HL_SWITCH_ON;
@@ -223,7 +228,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
         if (tx_info.on_off_flag == 1) {
             hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
         }
-        tx_info.mstorage_plug = 0;
+        tx_info.mstorage_plug = 0;        
     } else {
         tx_info.usb_plug = 1;
     }

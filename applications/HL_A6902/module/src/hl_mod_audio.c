@@ -331,7 +331,7 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     audio_time* timer = (audio_time*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
-    hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
+    
 
     /* 时、分、秒 的校准 */
     time.hour   = (time.hour & 0x3f) % 24;
@@ -343,9 +343,38 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     timer->day    = time.day & 0x3f;
     timer->hour   = time.hour;
     timer->minute = time.minute;
-    timer->minute = time.second;
+    timer->second = time.second;
+
+    hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
 
     rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour, time.minute, time.second);
+}
+
+// 设置时间
+static void hl_mod_audio_rtc_set_param(void* timer_param)
+{
+    if (timer_param == NULL) {
+        return;
+    }
+    rtc_time    time;
+    audio_time* timer = (audio_time*)timer_param;
+    memset(&time, 0, sizeof(rtc_time));
+
+    time.year   = timer->year;
+    time.month  = timer->month;
+    time.day    = timer->day;
+    time.hour   = timer->hour;
+    time.minute = timer->minute;
+    time.second = timer->second;
+
+    /* 时、分、秒 的校准 */
+    time.hour   = (time.hour & 0x3f) % 24;
+    time.minute = (time.minute & 0x7f) % 60;
+    time.second = (time.second & 0x7f) % 60;
+
+    hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
+
+    LOG_I("set time 20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month, time.day, time.hour, time.minute, time.second);
 }
 
 #if HL_IS_TX_DEVICE()
@@ -516,6 +545,42 @@ static void hl_mod_audio_dfs_sd()
     LOG_I("hl mod audio dfs");
 }
 
+static void hl_mod_audio_mkfs_dfs_sd()
+{
+    rt_device_t disk;
+    char file_name[20] = {0};
+    int ret = 0;
+    
+    disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", RT_USB_MSTORAGE_DISK_NAME);
+        return -RT_ERROR;
+    }
+
+    memcpy(&file_name[0], "/mnt", 4); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+    memcpy(&file_name[0], "/mnt/sdcard", 11); 
+    if (access(file_name, 0) < 0)
+    {
+        LOG_I("create record mkdir %s.", file_name);
+        mkdir(file_name, 0); //此处添加异常处理<
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    dfs_mkfs("elm", "sd0");
+    if (dfs_mount_device(disk) < 0) {
+        LOG_I("sd0 elm mkfs dfs ");
+    }
+#endif
+    LOG_I("hl mod audio dfs");
+}
 #endif
 static void hl_mod_audio_dfs_root()
 {
@@ -533,6 +598,28 @@ static void hl_mod_audio_dfs_root()
     if (dfs_mount_device(disk) < 0) {
         dfs_mkfs("elm", "root");
         dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs ");
+    }
+#endif
+
+    LOG_I("hl mod audio dfs");
+}
+
+static void hl_mod_audio_mkfs_dfs_root()
+{
+    rt_device_t disk;    
+    
+    disk = rt_device_find("root");
+    if(disk == RT_NULL)
+    {
+        LOG_E("no disk named %s", "root");
+        return -RT_ERROR;
+    }
+
+#ifdef RT_USING_DFS_MNTTABLE
+    dfs_unmount_device(disk);
+    dfs_mkfs("elm", "root");
+    if (dfs_mount_device(disk) < 0) {
         LOG_I("root elm mkfs dfs ");
     }
 #endif
@@ -1842,10 +1929,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     uint8_t temp = 0;
 
     s_audio_to_app_mq = p_msg_handle;
-    // elm_init();
-    hl_mod_audio_dfs_root();
 #if HL_IS_TX_DEVICE()
-    hl_mod_audio_dfs_sd();
     s_record_switch = 0;
     hl_hal_gpio_init(GPIO_MIC_SW);    
     hl_hal_gpio_low(GPIO_MIC_SW);    
@@ -2084,16 +2168,26 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_USB_MSTORAGE_DISABLE_CMD:
             rt_usbd_msc_disable();
             break;
-
-        case HL_AUDIO_RTC_TIME_CMD:
+        case HL_AUDIO_GET_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
             break;
+        case HL_AUDIO_SET_RTC_TIME_CMD:
+            hl_mod_audio_rtc_set_param(ptr);
+            break;            
         case HL_AUDIO_SET_MIC_GAIN_CMD:
             hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_SET_MIC_PGA_GAIN_CMD:
             hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
+        case HL_AUDIO_MKFS_DFS_CMD:
+            hl_mod_audio_mkfs_dfs_root();
+            hl_mod_audio_mkfs_dfs_sd();
+            break;
+        case HL_AUDIO_CHECK_DFS_CMD:
+            hl_mod_audio_dfs_root();
+            hl_mod_audio_dfs_sd();
+            break;              
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
@@ -2205,7 +2299,13 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             break;
         case HL_AUDIO_SET_HP_PGA_GAIN_R_CMD:
             hl_mod_audio_set_codec_gain(((int *)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
-            break;               
+            break;       
+        case HL_AUDIO_MKFS_DFS_CMD:
+            hl_mod_audio_mkfs_dfs_root();
+            break;   
+        case HL_AUDIO_CHECK_DFS_CMD:
+            hl_mod_audio_dfs_root();
+            break;  
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;

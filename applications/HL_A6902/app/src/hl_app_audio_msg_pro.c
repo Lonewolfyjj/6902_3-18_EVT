@@ -29,6 +29,7 @@
 #include "hl_app_audio_msg_pro.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_display.h"
+#include "hl_mod_upgrade.h"
 
 #define DBG_SECTION_NAME "app_audio"
 #define DBG_LEVEL DBG_LOG
@@ -49,6 +50,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
     
     if (value == 0) {
         tx_info.mstorage_plug = 0;
+        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     } else {
         record_switch    = HL_SWITCH_OFF;
         tx_info.mstorage_plug = 1;

@@ -665,7 +665,7 @@ static bool _upgrade_nuzip_head_(void)
 
     len = lseek(s_upgrade.pack.file_fd, 0, SEEK_END);
 
-    if(len < 128){
+    if(len < 128) {
         LOG_E("pack head size error (%ld)", len); 
         return false;
     }
@@ -961,8 +961,6 @@ static bool _upgrade_nuzip(void)
     long file_len = 0;
     rt_bool_t ret = true;
 
-    
-
     /*modify file name*/
     rt_sprintf(packname, "%s%s", HL_UPGRADE_FILE_PATH, s_upgrade.pack.file_name);
     LOG_I(" %s ", packname);
@@ -1124,17 +1122,30 @@ uint8_t hl_mod_upgrade_deinit()
 
 uint8_t hl_mod_upgrade_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
+    static uint8_t flag = 0;
     int8_t ret = 0;
+
     LOG_D("[line:%d] cmd(%d)", __LINE__, cmd);
     switch (cmd) {
         case HL_UPGRADE_OPEN_CMD:  /// 进行升级文件查找
-            _upgrade_seek_();
+            if ((flag == 1)||(s_upgrade.telink_state != HL_UPGRADE_IDLE_STATE)) {
+                break;
+            }
+            flag = 1;
+            rt_thread_mdelay(5000);     
+            _upgrade_seek_();      
+            flag = 0;
             break;
         case HL_UPGRADE_CLOSE_CMD:  /// 关闭升级进程
             _upgrade_stop();
             break;
         case HL_UPGRADE_START_CMD:  /// 开始升级
+            if ((flag == 1)||(s_upgrade.telink_state != HL_UPGRADE_IDLE_STATE)) {
+                break;
+            }
+            flag = 1;
             _upgrade_nuzip();
+            flag = 0;
             break;
         case HL_UPGRADE_STATE_CMD:  /// 获取升级状态
             break;
