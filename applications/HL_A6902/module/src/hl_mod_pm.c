@@ -424,7 +424,10 @@ static void _hl_mod_pmwdg(void)
         .cfg_opt = E_WD_RST,
         .param   = 1,
     };
-    pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+    if(power_ic_typ    == HL_MOD_PM_CHARGER_SY6971){
+        pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+    }
+    
 }
 
 static void _hl_mod_pm_input_check(void)
