@@ -215,6 +215,7 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
                 hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
                 rx_info.mstorage_plug = 0;
                 hl_mod_appleauth_ioctl(HL_APPLE_AUTH_STOP_CMD);
+                hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &usb_state, 1);
             } else {
                 rx_info.usb_plug = 1;
                 usb_state = 1;

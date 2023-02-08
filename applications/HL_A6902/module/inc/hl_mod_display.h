@@ -168,6 +168,8 @@ typedef enum _hl_screen_page_e
     PAGE_VERSION,
     /// 恢复出厂设置
     PAGE_RESTORE,
+    /// 开启升级功能
+    PAGE_OPEN_MSC,
 
     /// 通用设置
     PAGE_OTHER_SET,
@@ -369,6 +371,9 @@ typedef enum _hl_out_msg_e
     /// 声音外放设置 1：开启外放；0：关闭外放
     SOUNDOUT_SETTING_SWITCH_IND,
 
+    /// 开启升级设置 1：开启升级功能
+    UPGRADE_SETTING_SWITCH_IND,
+
     IND_CNT,
 
 } HL_ENUM8(hl_out_msg_e);
@@ -532,6 +537,12 @@ typedef enum _hl_cmd_e
 
     /// 声音外放设置 1：开启外放；0：关闭外放
     SOUNDOUT_SETTING_SWITCH_CMD,
+
+    /// @brief 开启升级命令结果返回，1设置成功，0设置失败
+    UPGRADE_SETTING_SWITCH_CMD,
+
+    /// @brief 苹果认证命令下发，1苹果认证成功，0苹果认证失败或USB拔出
+    APPLE_AUTH_SWITCH_CMD,
 
     MSG_ID_CNT
     

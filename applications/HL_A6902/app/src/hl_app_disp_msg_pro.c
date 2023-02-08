@@ -318,6 +318,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             _hl_app_disp_msg_pro_rf_connect();
             LOG_D("DEVICE_PAIR_IND\r\n");
             break;
+        case UPGRADE_SETTING_SWITCH_IND:
+            // 开启升级的相关设置
+            LOG_D("UPGRADE_SETTING_SWITCH_IND\r\n");
+            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;

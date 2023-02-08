@@ -37,6 +37,8 @@ typedef struct _tx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)
@@ -83,6 +85,8 @@ typedef struct _rx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)
