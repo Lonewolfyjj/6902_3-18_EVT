@@ -406,10 +406,7 @@ static void _upgrade_telink_do(void)
                 }
             }
         }
-        if(s_upgrade.telink_state == HL_UPGRADE_SUCCEED_STATE || s_upgrade.telink_state == HL_UPGRADE_FAIL_STATE) {
-            s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
-            break;
-        }
+        
         // 延时5ms
         rt_thread_mdelay(5);
     }
@@ -504,12 +501,14 @@ static void hl_mod_upgrade_ota(void* arg)
     if (file_url) {
         rt_free(file_url);
         unlink(HL_UPGRADE_FILE_NAME_RK);
+        s_upgrade.ota_state = HL_UPGRADE_SUCCEED_STATE;
         return;
     }
             
 END:
     if (file_url)
         rt_free(file_url);
+    s_upgrade.ota_state = HL_UPGRADE_FAIL_STATE;
 }
 
 void hl_mod_upgrade_ota_start(void)
@@ -596,6 +595,9 @@ static void _upgrade_seek(void)
     rt_bool_t ret = RT_FALSE;
 
     s_upgrade.task.type_num = 0;
+
+    // start upgrade
+    _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_UPGRADE_STATE);
 
     ret = RT_FALSE;
     ret = _upgrade_seek_fw_file(HL_UPGRADE_FILE_NAME_RK);
@@ -961,6 +963,9 @@ static bool _upgrade_nuzip(void)
     long file_len = 0;
     rt_bool_t ret = true;
 
+    // start upgrade
+    _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_START_STATE);
+
     /*modify file name*/
     rt_sprintf(packname, "%s%s", HL_UPGRADE_FILE_PATH, s_upgrade.pack.file_name);
     LOG_I(" %s ", packname);
@@ -1022,8 +1027,8 @@ static bool _upgrade_nuzip(void)
         }      
         LOG_I("delete file (%s) ", packname);
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
-    }
-    
+    }    
+
     _upgrade_seek();
 
     return true;
@@ -1033,6 +1038,18 @@ static void hl_mod_upgrade_guard(void)
 {
     while(1){
         hl_mod_feed_dog();
+        if(s_upgrade.telink_state == HL_UPGRADE_SUCCEED_STATE && s_upgrade.ota_state == HL_UPGRADE_SUCCEED_STATE) {
+            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_SUCCEED_STATE);
+            s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
+            s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;            
+            break;
+        } else if(s_upgrade.telink_state >= HL_UPGRADE_SUCCEED_STATE && s_upgrade.ota_state >= HL_UPGRADE_SUCCEED_STATE) {
+            // 升级失败处理
+            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_SUCCEED_STATE);
+            s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
+            s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;
+            break;
+        }
         rt_thread_mdelay(1000);
     }
 }
@@ -1144,7 +1161,11 @@ uint8_t hl_mod_upgrade_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                 break;
             }
             flag = 1;
-            _upgrade_nuzip();
+            ret = _upgrade_nuzip();
+            if(ret == false) {
+                // upgrade fail
+                _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_FAIL_STATE);
+            }
             flag = 0;
             break;
         case HL_UPGRADE_STATE_CMD:  /// 获取升级状态

@@ -44,7 +44,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
     switch (upgrade_state) {
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
-            tx_info.upgrade_flag = 3;
+            tx_info.upgrade_flag = 0;
             break;
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
             tx_info.upgrade_flag = 1;
@@ -55,7 +55,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
             // hl_mod_audio_init();
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
-            tx_info.upgrade_flag = 0;
+            tx_info.upgrade_flag = 3;
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;

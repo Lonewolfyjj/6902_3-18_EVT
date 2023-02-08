@@ -398,8 +398,8 @@ static void _charge_state_judge(void)
 
 static void _charge_full_timer_set(void)
 {
-    static bool    flag  = false;
-    static uint8_t soc   = 255;
+    static bool    flag = false;
+    static uint8_t soc  = 255;
 
     if (soc != _pm_mod.bat_info.soc.soc) {
         soc  = _pm_mod.bat_info.soc.soc;
@@ -424,7 +424,9 @@ static void _hl_mod_pmwdg(void)
         .cfg_opt = E_WD_RST,
         .param   = 1,
     };
-    pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+    if (power_ic_typ == HL_MOD_PM_CHARGER_SY6971) {
+        pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+    }
 }
 
 static void _hl_mod_pm_input_check(void)
