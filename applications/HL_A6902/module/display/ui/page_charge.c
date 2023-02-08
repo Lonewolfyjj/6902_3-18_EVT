@@ -224,23 +224,23 @@ static void lv_tx2_device_creat(int16_t value)
     lab_power3 = lv_power_lab_creat_fun(area_tx2,img3,bar_power_tx2,LV_ALIGN_OUT_BOTTOM_MID,1,0);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -264,20 +264,26 @@ void hl_mod_charge_ioctl(void * ctl_data)
     switch(ptr->charge_cmd){
         case HL_DELETE_TX1_DEVICE:
             if(charge_init.display_device & HL_CHARGE_DISPLAY_TX1){
-                hl_obj_delete(area_tx1,true);
+                // hl_obj_delete(area_tx1,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX1;
+                lv_obj_del(area_tx1);
+                rt_thread_mdelay(5);                 
             }            
             break;
         case HL_DELETE_RX_DEVICE:
             if(charge_init.display_device & HL_CHARGE_DISPLAY_RX){
-                hl_obj_delete(area_rx,true);
+                // hl_obj_delete(area_rx,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_RX;
+                lv_obj_del(area_rx);
+                rt_thread_mdelay(5);                 
             }  
             break;
         case HL_DELETE_TX2_DEVICE:
             if(charge_init.display_device & HL_CHARGE_DISPLAY_TX2){
-                hl_obj_delete(area_tx2,true);
+                // hl_obj_delete(area_tx2,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX2;
+                lv_obj_del(area_tx2);
+                rt_thread_mdelay(5); 
             }  
             break;
         
@@ -374,7 +380,9 @@ void hl_mod_charge_ioctl(void * ctl_data)
             break;
 
         case HL_CHARGE_CHANGE_DELETE_PAGE:
-            hl_obj_delete(lv_scr_act(),false);            
+            // hl_obj_delete(lv_scr_act(),false);  
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);          
             break;
         case HL_CHARGE_CHANGE_DELETE_STYLE:
             lv_delete_style();            

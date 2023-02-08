@@ -521,23 +521,23 @@ static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
     lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"降噪开关",LAB_COLOR_WHITE);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -581,7 +581,9 @@ static void hl_postion_cmd_deal(hl_moreone_mid_opt_t pos)
             hl_option_mid_set(pos,LV_ANIM_ON);
             break;
         case HL_MOREONE_OPTION_EXTI:  
-            hl_obj_delete(lv_scr_act(),false);
+            // hl_obj_delete(lv_scr_act(),false);
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
             break;
         case HL_MOREONE_OPTION_DELETE_STYLE:  
             lv_delete_style();

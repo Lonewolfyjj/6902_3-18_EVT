@@ -244,23 +244,23 @@ static void btn_right_cb(lv_event_t * e)
     }
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -287,7 +287,9 @@ void hl_mod_storage_ioctl(void * ctl_data)
             lv_event_send(btn_right,LV_EVENT_CLICKED,ulock);
             break;
         case HL_STORAGE_CHOOSE_EXIT:
-            hl_obj_delete(lv_scr_act(),false);
+            // hl_obj_delete(lv_scr_act(),false);
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
             break;
         case HL_STORAGE_CHOOSE_DEL_STYLE:
             lv_delete_style();
