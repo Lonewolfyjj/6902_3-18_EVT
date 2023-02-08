@@ -170,7 +170,7 @@ typedef struct _hl_display_screen_s
     hl_display_systime_s systime;
 }hl_display_screen_s;
 
-// 下发信息变更标志
+// 下发信息变更标志,如果多个页面都存在这个状态，那么不适用这个flag判断参数是否变更
 typedef struct _hl_display_screen_change_s{
     hl_display_status sys_status;
     uint32_t rf_net_connect:1;

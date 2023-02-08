@@ -99,7 +99,7 @@ typedef enum _hl_moreone_cmd_type_t
 }hl_moreone_cmd_type_t;
 
 /// @brief 回调函数
-typedef void(*hl_moreone_event_cb)(hl_moreone_check_t);
+typedef void(*hl_moreone_event_cb)(hl_moreone_mid_opt_t moreone_mid_opt, hl_moreone_choose_t choose);
 
 /// @brief 配置项结构体
 typedef struct __hl_lvgl_moreone_option_t
