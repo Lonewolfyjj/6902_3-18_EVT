@@ -100,7 +100,8 @@ static hl_mod_pm_st _pm_mod = { .init_flag             = false,
                                     .voltage     = 0,
                                 } };
 
-static pm_io_ctl pm_ioctl = RT_NULL;
+static pm_io_ctl pm_ioctl     = RT_NULL;
+static uint8_t   power_ic_typ = HL_MOD_PM_CHARGER_SGM41518;
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
@@ -367,6 +368,9 @@ static void _hl_mod_pmwdg(void)
 
 static void _hl_mod_pm_input_check(void)
 {
+    if (power_ic_typ == HL_MOD_PM_CHARGER_SGM41518) {
+        return;
+    }
     HL_SY_INPUT_PARAM_T input_stat = {
         .cfg_opt = E_IDPM_STAT,
     };
@@ -374,65 +378,10 @@ static void _hl_mod_pm_input_check(void)
         .cfg_opt = E_FORCE_AICL,
         .param   = 1,
     };
-    // HL_SY_INPUT_PARAM_T input_reg00 = {
-    //     .cfg_opt = E_IINLIM,
-    // };
-    // HL_SY_INPUT_PARAM_T input_reg01 = {
-    //     .cfg_opt = E_SYS_MIN,
-    // };
-    // HL_SY_INPUT_PARAM_T input_reg02 = {
-    //     .cfg_opt = E_ICHG,
-    // };
-    // HL_SY_INPUT_PARAM_T input_reg04 = {
-    //     .cfg_opt = E_ITERM,
-    // };
-    // HL_SY_INPUT_PARAM_T input_reg05 = {
-    //     .cfg_opt = E_VREG,
-    // };
-    // HL_SY_INPUT_PARAM_T input_reg07 = {
-    //     .cfg_opt = E_NTC_JEITA,
-    // };
     pm_ioctl(SY_READ_CMD, &input_stat, 1);
-    // pm_ioctl(SY_READ_CMD,&input_reg00,1);
-    // pm_ioctl(SY_READ_CMD,&input_reg01,1);
-    // pm_ioctl(SY_READ_CMD,&input_reg02,1);
-    // pm_ioctl(SY_READ_CMD,&input_reg04,1);
-    // pm_ioctl(SY_READ_CMD,&input_reg05,1);
-    // pm_ioctl(SY_READ_CMD,&input_reg07,1);
     if (input_stat.param == 1) {
         pm_ioctl(SY_WRITE_CMD, &input_data, 1);
     }
-    //     if(input_reg00.param != 7){
-    //         input_reg00.param = 7;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg00,1);
-    //     }
-    //     if(input_reg01.param != 4){
-    //         input_reg01.param = 4;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg01,1);
-    //     }
-    // #if HL_IS_TX_DEVICE()
-    //     if(input_reg02.param != 14){
-    //         input_reg02.param = 14;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-    //     }
-    // #else
-    //     if(input_reg02.param != 22){
-    //         input_reg02.param = 22;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg02,1);
-    //     }
-    // #endif
-    //     if(input_reg04.param != 1){
-    //         input_reg04.param = 1;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg04,1);
-    //     }
-    //     if(input_reg05.param != 45){
-    //         input_reg05.param = 45;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg05,1);
-    //     }
-    //     if(input_reg07.param != 1){
-    //         input_reg07.param = 1;
-    //         pm_ioctl(SY_WRITE_CMD,&input_reg07,1);
-    //     }
 }
 
 static void _pm_thread_entry(void* arg)
@@ -473,10 +422,12 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
     }
 
     if (hl_drv_sy6971_init() == HL_SUCCESS) {
+        power_ic_typ    = HL_MOD_PM_CHARGER_SY6971;
         _pm_mod.charger = HL_MOD_PM_CHARGER_SY6971;
         pm_ioctl        = hl_drv_sy6971_io_ctrl;
         LOG_I("sy6971 charger init success!");
     } else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
+        power_ic_typ    = HL_MOD_PM_CHARGER_SGM41518;
         _pm_mod.charger = HL_MOD_PM_CHARGER_SGM41518;
         pm_ioctl        = hl_drv_sgm41518_io_ctrl;
         LOG_I("sgm41518 charger init success!");
