@@ -280,7 +280,7 @@ void hl_app_mng_powerOff(void)
         hl_mod_audio_deinit();
     } 
 #endif
-    
+    hl_util_nvram_param_save();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
     hl_mod_input_deinit();

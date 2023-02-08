@@ -111,7 +111,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             if(tx_info.rec_auto_flag != bypass_switch) {
                 tx_info.rec_auto_flag = bypass_switch;
                 hl_util_nvram_param_set_integer("REC_AUTO_OPEN", bypass_switch);
-                hl_util_nvram_param_save();
+                // hl_util_nvram_param_save();
             }
             LOG_I("app get TX%d Auto Record(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
@@ -122,7 +122,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             if(tx_info.rec_protect_flag != bypass_switch) {
                 tx_info.rec_protect_flag = bypass_switch;
                 hl_util_nvram_param_set_integer("REC_PROTECT_OPEN", bypass_switch);
-                hl_util_nvram_param_save();
+                // hl_util_nvram_param_save();
             }
             LOG_I("app get TX%d Record Protect(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
