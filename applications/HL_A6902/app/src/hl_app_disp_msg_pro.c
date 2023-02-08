@@ -101,6 +101,7 @@ void hl_app_disp_state_led_set(void)
         mute_ctrl = SWITCH_OPEN;
     }
     hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));
+    
 }
 
 #else

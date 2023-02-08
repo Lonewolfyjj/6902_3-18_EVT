@@ -62,6 +62,8 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_auto_flag;
     /// 降噪等级()
     uint8_t             denoise_class;
+    /// 升级状态(hl_mod_upgrade_state)
+    uint8_t             upgrade_state;
     
     /// 无线状态
     hl_rf_state_e       rf_state;
