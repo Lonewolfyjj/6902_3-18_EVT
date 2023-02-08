@@ -26,6 +26,7 @@
 #include "hl_config.h"
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
+#include "hl_board_commom.h"
 
 #include "hl_mod_euc.h"
 #include "hl_mod_display.h"
@@ -76,6 +77,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t                   dev_mac_temp[6]  = { 0xf4, 0x4e, 0x35, 0x46, 0xff, 0x35 };
     uint8_t*                  rx_mac_addr;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    uint8_t                   turn_on_state;
 
     hl_rf_work_mode_e telink_work_mode;
     hl_rf_pair_info_t telink_pair_info;
@@ -135,6 +137,14 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             charge_state_temp = tx_info.charge_flag + 1;
             hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
         } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 1;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            rt_thread_mdelay(500);
+            hl_board_reboot();
+        } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -161,6 +171,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_rtc_st          rtc_time_temp = { 0 };
     hl_mod_euc_box_lid_state_e box_lid_state_temp;
     uint8_t                    pair_mac_temp[12] = { 0 };
+    uint8_t                    turn_on_state;
 
     uint8_t           temp;
     hl_rf_work_mode_e telink_work_mode;
@@ -323,6 +334,14 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   pair_mac_temp[10], pair_mac_temp[11]);
 
             hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 1;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            rt_thread_mdelay(500);
+            hl_board_reboot();
         } break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

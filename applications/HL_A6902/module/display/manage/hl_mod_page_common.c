@@ -1021,6 +1021,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_FAST_TX2_CONFIG);
     PAGE_REG(PAGE_FORMAT);
     PAGE_REG(PAGE_SOUNDOUT_SETTING);
+    PAGE_REG(PAGE_OPEN_MSC);
 }
 
 void lvgl2rtt_init(void)

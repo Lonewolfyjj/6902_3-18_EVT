@@ -53,10 +53,11 @@ LV_IMG_DECLARE(Main_single_voice);   //单声道
 LV_IMG_DECLARE(Main_lock);     //锁屏
 LV_IMG_DECLARE(Main_heatset);  //监听
 LV_IMG_DECLARE(Main_noise);    //降噪
+LV_IMG_DECLARE(Main_apple);    // 苹果认证
 
 #define ICON_POS_CURRENT 0
 #define ICON_POS_DEFAULT 1
-#define ICON_NUM 3
+#define ICON_NUM 4
 #define ICON_POS_VOR 2
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
@@ -75,7 +76,7 @@ typedef struct _HL_DISPLAY_TOP_T
 
     uint8_t heatset : 1;
 
-    uint8_t reserve1 : 1;
+    uint8_t apple : 1;
     uint8_t reserve2 : 1;
 } HL_DISPLAY_TOP_T;
 
@@ -97,6 +98,7 @@ static icon_pos_t icon_list_l[ICON_NUM] = {
     { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_stereo },
     { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_noise },
     { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_lock },
+    { .duf_pos = 3, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_apple },
 };
 
 static icon_pos_t icon_list_r[ICON_NUM] = {
@@ -369,6 +371,14 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             top_icon_sta.heatset = 1;
             hl_mod_creat_top_icon(&icon_list_r[2], icon_list_r, ICON_POS_RIGHT);
             break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 1){
+                rt_kprintf("Top apple is exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 1;
+            hl_mod_creat_top_icon(&icon_list_l[3], icon_list_l, ICON_POS_LIFT);
+            break;
         default:
             break;
     }
@@ -459,6 +469,15 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
             top_icon_sta.heatset = 0;
             delete_icon_pos_set(&icon_list_r[2], icon_list_r, 2, ICON_POS_RIGHT);
             icon_list_r[2].icon = NULL;
+            break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 0){
+                rt_kprintf("Top apple is not exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 0;
+            delete_icon_pos_set(&icon_list_l[3], icon_list_l, 3, ICON_POS_LIFT);
+            icon_list_l[3].icon = NULL;
             break;
         default:
             break;
