@@ -910,7 +910,7 @@ ufunction_t rt_usbd_function_hid_create(udevice_t device)
 
     hl_board_nvram_init();
 
-    if (!hl_util_nvram_param_get("HL_SN", usb_sn, usb_sn, sizeof(usb_sn))) {
+    if (!hl_util_nvram_param_get("SN", usb_sn, usb_sn, sizeof(usb_sn))) {
         rt_kprintf("USB SN : %s\r\n", usb_sn);
     }
 

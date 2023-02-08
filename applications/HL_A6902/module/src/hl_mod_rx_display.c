@@ -80,7 +80,7 @@ static void hl_mod_display_get_sn_version(void)
 
 
     // 从NVRAM获取当前RX版本号
-    if (!hl_util_nvram_param_get("HL_SN", sn_buf, sn_buf, sizeof(sn_buf))) {
+    if (!hl_util_nvram_param_get("SN", sn_buf, sn_buf, sizeof(sn_buf))) {
         rt_kprintf("disp HL_SN : %s\r\n", sn_buf);
 
         hl_mod_display_mux_take();
@@ -89,7 +89,7 @@ static void hl_mod_display_get_sn_version(void)
     }
     // 先用默认的，后面NVRAM功能开发好了就用NVRAM的
 #if 0
-    if (!hl_util_nvram_param_get("HL_VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
+    if (!hl_util_nvram_param_get("VER", rx_ver_buf, rx_ver_buf, sizeof(rx_ver_buf))) {
         rt_kprintf("disp HL_VER : %s\r\n", rx_ver_buf);
 
         hl_mod_display_mux_take();

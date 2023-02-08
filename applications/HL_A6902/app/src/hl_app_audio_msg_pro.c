@@ -86,6 +86,7 @@ static void hl_app_rx_mstorage_plug_pro(uint32_t value)
     
     if (value == 0) {
         rx_info.mstorage_plug = 0;
+        hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     } else {
         record_switch    = HL_SWITCH_OFF;
         rx_info.mstorage_plug = 1;

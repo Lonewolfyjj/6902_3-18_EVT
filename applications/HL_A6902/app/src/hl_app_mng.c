@@ -219,19 +219,19 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_init(&hl_app_mq);
     hl_mod_telink_start();
 
-#if HL_IS_TX_DEVICE()
     hl_mod_audio_init(&hl_app_mq);
+#if HL_IS_TX_DEVICE()    
 #else
-    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
         rt_kprintf("nvram be used before not init\n");
         hl_board_nvram_init();
-        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     }
 
     LOG_D("msc_open_flag = %d ,ret = %d ", msc_open_flag, ret);
-    if (msc_open_flag == 0) {
-        hl_mod_audio_init(&hl_app_mq);
+    if (msc_open_flag == 1) {
+        hl_mod_audio_deinit();//hl_mod_audio_init(&hl_app_mq);
     } 
 #endif
     
@@ -266,11 +266,11 @@ void hl_app_mng_powerOff(void)
     hl_mod_euc_deinit();
 
 #if !HL_IS_TX_DEVICE()
-    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
         LOG_E("nvram be used before not init");
         hl_board_nvram_init();
-        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     }
 
     LOG_D("msc_open_flag = %d ,ret = %d ", msc_open_flag, ret);
