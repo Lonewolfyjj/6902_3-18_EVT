@@ -74,7 +74,7 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 
     if (!(ptr_header->ControlByte & ctrl_byte)) {
         return -2;
-    } else if (ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
+    } else if ((ptr_header->PacketAckNum != header_arg->ack_num )&&ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
         return -3;
     } else {
         *packet_len            = ptr_header->PacketLength;

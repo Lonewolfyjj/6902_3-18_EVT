@@ -276,8 +276,6 @@ int hl_iap2_powerupdate_recv_update(hl_util_apple_p apple);
  */
 int hl_iap2_powerupdate_send_power_source(hl_util_apple_p apple);
 
-int hl_iap2_eap_check_power_insert(hl_util_apple_p apple);
-
 #endif
 /*
  * EOF

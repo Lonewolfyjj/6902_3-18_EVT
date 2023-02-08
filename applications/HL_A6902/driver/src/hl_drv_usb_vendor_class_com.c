@@ -98,7 +98,7 @@ uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len, uint16
     int ret  = rt_sem_take(handle->rx_notice, timeout);
 
     if (ret != 0) {
-        rt_kprintf("read data error = %d\r\n", data_len);
+        // rt_kprintf("read data error = %d\r\n", data_len);
         return 0;
     }
 

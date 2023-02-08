@@ -240,6 +240,11 @@ static int _hl_iap2_identify_process(hl_util_apple_p apple)
  */
 static int _hl_iap2_power_update_process(hl_util_apple_p apple)
 {
+    if (NULL == apple) {
+        apple->log("[%s][line:%d]param(apple) is NULL!\n", __func__, __LINE__);
+        return -1;
+    }
+
     switch (apple->iap2.powerupdate_status) {
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER:
             hl_iap2_powerupdate_send_power(apple);
@@ -254,16 +259,8 @@ static int _hl_iap2_power_update_process(hl_util_apple_p apple)
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE:
 #if POWERSOURCEUPDATE_OPEN
             hl_iap2_powerupdate_send_power_source(apple);
-            apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK;
-#else
-            apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
 #endif
-            break;
-
-        case EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK:
-            hl_iap2_link_send_ack(apple);
-            apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-            apple->iap2.main_status        = EM_HL_IAP2_STM_MAIN_SUCCEED;
+            apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
             break;
 
         default:
@@ -296,43 +293,51 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
         return -1;
     }
 
-    int     result     = -1;
-    uint8_t ret        = 0;
-    uint8_t len        = 0;
-    uint8_t message_id = 0;
+    int      result     = -1;
+    int      read_len   = 0;
+    uint8_t  ret        = 0;
+    uint8_t  len        = 0;
+    uint16_t message_id = 0;
+    uint16_t param_id   = 0;
 
-    apple->usb_read(apple->iap2.recv_buffer, 64, TIMEOUT_US);
+    read_len = apple->usb_read(apple->iap2.recv_buffer, 27, TIMEOUT_US);
+
     result = hl_iap2_packet_header_decode(apple->iap2.recv_buffer, &len, LINK_CONTROL_ACK, &apple->packet_arg);
+    apple->log("[%s:%d]USB Read SessionID = %X\n", __func__, __LINE__, apple->packet_arg.session_id);
 
     switch (apple->packet_arg.session_id) {
         case SESSION_ID_CTRL: {
             message_id = hl_iap2_ctrl_packet_get_message_id(apple->iap2.recv_buffer);
+            param_id   = hl_iap2_ctrl_packet_get_param_id(apple->iap2.recv_buffer);
+            apple->log("%s:%d:xxx usb MessageID = %X\n", __func__, __LINE__, message_id);
+            apple->log("%s:%d:xxx usb ParamID = %04X\n\n", __func__, __LINE__, param_id);
             switch (message_id) {
                 case MESSAGE_ID_START_EAP:
-                    /* code */
+                    apple->log("[Apple]Get EAP Start!!!\n");
                     break;
 
                 case MESSAGE_ID_STOP_EAP:
-                    /* code */
+                    apple->log("[Apple]Get EAP Stop!!!\n");
                     break;
 
                 case MESSAGE_ID_POWER_UPDATE:
-                    /* code */
+                    apple->log("[Apple]Get Power Update!!!\n");
                     break;
 
                 default:
                     break;
             }
-            hl_iap2_link_send_ack(apple);
         } break;
 
         case SESSION_ID_EA:
-            // send msg to eap_event_handle_thread by msg_queue
+            apple->log("[Apple]Get EA Message!!!\n");
             break;
 
         default:
             break;
     }
+
+    hl_iap2_link_send_ack(apple);
 
     return 0;
 }
@@ -348,7 +353,7 @@ int hl_util_iap2_oneshot(hl_util_apple_p apple)
 
     switch (apple->iap2.main_status) {
         case EM_HL_IAP2_STM_MAIN_IDLE:
-            apple->delay_usec(50000);
+            apple->delay_usec(10000);
             break;
 
         case EM_HL_IAP2_STM_MAIN_DETECT:
@@ -372,7 +377,7 @@ int hl_util_iap2_oneshot(hl_util_apple_p apple)
             break;
 
         case EM_HL_IAP2_STM_MAIN_SUCCEED:
-            apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_ACK_CTRL;
             result                  = EM_HL_IAP2_SUCCEED;
             break;
 

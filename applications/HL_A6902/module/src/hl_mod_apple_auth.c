@@ -43,15 +43,18 @@ static int _hl_mod_apple_usb_read(uint8_t* read_data_addr, uint16_t read_data_le
     }
 
     rt_thread_mdelay(10);
-    // rt_kprintf("\n-->[iAP2]USB Read Len:%d", ret);
-    // for (uint16_t i = 0; i < ret; i++) {
-    //     if (i % 20 == 0) {
-    //         rt_kprintf("\n");
-    //     }
-    //     rt_kprintf("%02x ", read_data_addr[i]);
-    // }
-    // rt_kprintf("\n");
-    // rt_kprintf("\n");
+
+#if LOG_APPLE_USB_OPEN
+    rt_kprintf("\n-->[iAP2]USB Read Len:%d", ret);
+    for (uint16_t i = 0; i < ret; i++) {
+        if (i % 20 == 0) {
+            rt_kprintf("\n");
+        }
+        rt_kprintf("%02x ", read_data_addr[i]);
+    }
+    rt_kprintf("\n");
+    rt_kprintf("\n");
+#endif
     return ret;
 }
 
@@ -92,9 +95,12 @@ static int _hl_mod_apple_usb_write(uint8_t* write_data_addr, uint16_t write_data
     }
 
     rt_thread_mdelay(10);
-    // rt_kprintf("\n-->[iAP2]USB Write Len:%d", write_data_len);
-    // rt_kprintf("\n");
-    // rt_kprintf("\n");
+
+#if LOG_APPLE_USB_OPEN
+    rt_kprintf("\n-->[iAP2]USB Write Len:%d", write_data_len);
+    rt_kprintf("\n");
+    rt_kprintf("\n");
+#endif
 
     return RT_EOK;
 }
@@ -136,13 +142,17 @@ static int _hl_mod_apple_i2c_read(uint8_t reg_addr, uint8_t* read_data_addr, uin
             rt_kprintf("i2c read1 err!\n");
             return 0;
         }
-        // rt_kprintf("i2c read msg[0] = %d\n", size);
+#if LOG_APPLE_I2C_OPEN
+        rt_kprintf("i2c read msg[0] = %d\n", size);
+#endif
         rt_thread_mdelay(5);
     } while (size != 1);
 
-    // for (size_t i = 0; i < msgs[0].len; i++) {
-    //     rt_kprintf("%02x ", msgs[0].buf[i]);
-    // }
+#if LOG_APPLE_I2C_OPEN
+    for (size_t i = 0; i < msgs[0].len; i++) {
+        rt_kprintf("%02x ", msgs[0].buf[i]);
+    }
+#endif
     try_time = 5;
 
     msgs[1].addr  = MFI_IC_IIC_ADDR;
@@ -157,19 +167,23 @@ static int _hl_mod_apple_i2c_read(uint8_t reg_addr, uint8_t* read_data_addr, uin
             rt_kprintf("i2c read2 err!\n");
             return 0;
         }
-        // rt_kprintf("i2c read msg[1] = %d\n", size);
+#if LOG_APPLE_I2C_OPEN
+        rt_kprintf("i2c read msg[1] = %d\n", size);
+#endif
         rt_thread_mdelay(5);
     } while (size != 1);
 
-    // rt_kprintf("\n-->[iAP2]IIC Read Data:[");
-    // for (uint16_t i = 0; i < read_data_len; i++) {
-    //     if (i % 20 == 0) {
-    //         rt_kprintf("\n");
-    //     }
-    //     rt_kprintf("%02x ", read_data_addr[i]);
-    // }
-    // rt_kprintf("\n");
-    // rt_kprintf("\n");
+#if LOG_APPLE_I2C_OPEN
+    rt_kprintf("\n-->[iAP2]IIC Read Data:[");
+    for (uint16_t i = 0; i < read_data_len; i++) {
+        if (i % 20 == 0) {
+            rt_kprintf("\n");
+        }
+        rt_kprintf("%02x ", read_data_addr[i]);
+    }
+    rt_kprintf("\n");
+    rt_kprintf("\n");
+#endif
 
     return read_data_len;
 }
@@ -214,18 +228,22 @@ static int _hl_mod_apple_i2c_write(uint8_t reg_addr, uint8_t* write_data_addr, u
             rt_kprintf("i2c write err!\n");
             return RT_ERROR;
         }
-        // rt_kprintf("i2c write msg[0] size = %d\n", size);
+#if LOG_APPLE_I2C_OPEN
+        rt_kprintf("i2c write msg[0] size = %d\n", size);
+#endif
     } while (size != 1);
 
-    // rt_kprintf("\n-->[iAP2]IIC Write Data:");
-    // for (uint16_t i = 0; i < msgs.len; i++) {
-    //     if (i % 20 == 0) {
-    //         rt_kprintf("\n");
-    //     }
-    //     rt_kprintf("%02x ", msgs.buf[i]);
-    // }
-    // rt_kprintf("\n");
-    // rt_kprintf("\n");
+#if LOG_APPLE_I2C_OPEN
+    rt_kprintf("\n-->[iAP2]IIC Write Data:");
+    for (uint16_t i = 0; i < msgs.len; i++) {
+        if (i % 20 == 0) {
+            rt_kprintf("\n");
+        }
+        rt_kprintf("%02x ", msgs.buf[i]);
+    }
+    rt_kprintf("\n");
+    rt_kprintf("\n");
+#endif
 
     return RT_EOK;
 }
@@ -271,7 +289,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
 
     rt_thread_mdelay(200);
 
-    while (s_apple.iap2_thread_flag == RT_TRUE) {
+    while (RT_TRUE == s_apple.iap2_thread_flag) {
         result = hl_util_apple_oneshot(&s_apple.apple, EM_HL_IAP2);
         if (result >= 0) {
             app_msg_t.cmd = result;
@@ -280,7 +298,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
             result = rt_mq_send(s_apple.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             // 判断消息队列上传结果
             if (RT_EOK != result) {
-                rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __func__, __LINE__, result);
+                rt_kprintf("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
             }
         }
         rt_thread_mdelay(10);
@@ -306,25 +324,38 @@ static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
 {
     int result = 0;
 
-    while (s_apple.eap_thread_flag == RT_TRUE) {
+    while (RT_TRUE == s_apple.eap_thread_flag) {
+        result = hl_util_apple_oneshot(&s_apple.apple, EM_HL_EAP);
+        if (result >= 0) {
+            app_msg_t.cmd = result;
+            app_msg_t.len = 0;
+            // 上报透传数据
+            result = rt_mq_send(s_apple.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            // 判断消息队列上传结果
+            if (RT_EOK != result) {
+                rt_kprintf("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
+            }
+        }
+        rt_thread_mdelay(10);
     }
 }
 
 int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 {
-    char* dev_sn = NULL;
-
     if (NULL == input_msq) {
         rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __func__, __LINE__, input_msq);
         return 1;
     }
 
-    uint8_t ret = 0;
+    uint8_t ret    = 0;
+    char*   dev_sn = NULL;
 
     // 获取并赋值APP层下发的消息队列指针
     s_apple.app_msq          = input_msq;
     s_apple.iap2_thread_flag = RT_TRUE;
     s_apple.eap_thread_flag  = RT_FALSE;
+    // Telink消息队列结构体赋初值
+    app_msg_t.sender = APPLE_AUTH_MODE;
 
     // 获取苹果认证芯片I2C设备句柄
     s_apple.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
@@ -343,21 +374,14 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     }
 
     // 函数注册
-    s_apple.func_handle.delay_usec = _hl_mod_apple_iap2_delay_usec;
-    s_apple.func_handle.usb_read   = _hl_mod_apple_iap2_usb_read;
-    s_apple.func_handle.usb_write  = _hl_mod_apple_iap2_usb_write;
-    s_apple.func_handle.iic_read   = _hl_mod_apple_iap2_i2c_read;
-    s_apple.func_handle.iic_write  = _hl_mod_apple_iap2_i2c_write;
+    s_apple.func_handle.delay_usec = _hl_mod_apple_delay_usec;
+    s_apple.func_handle.usb_read   = _hl_mod_apple_usb_read;
+    s_apple.func_handle.usb_write  = _hl_mod_apple_usb_write;
+    s_apple.func_handle.iic_read   = _hl_mod_apple_i2c_read;
+    s_apple.func_handle.iic_write  = _hl_mod_apple_i2c_write;
     s_apple.func_handle.log        = rt_kprintf;
 
     hl_util_apple_init(&s_apple.apple, s_apple.func_handle);
-
-    // Telink获取并赋值APP层下发的消息队列指针
-    s_apple.app_msq          = input_msq;
-    s_apple.iap2_thread_flag = RT_TRUE;
-    s_apple.eap_thread_flag  = RT_FALSE;
-    // Telink消息队列结构体赋初值
-    app_msg_t.sender = APPLE_AUTH_MODE;
 
     return 0;
 }
@@ -408,7 +432,18 @@ int hl_mod_apple_auth_stop()
     // 脱离Telink线程
     result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_iap2_thread detach faild!!! \r\n", __func__, __LINE__);
+        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_iap2_thread delete faild!!! \r\n", __func__, __LINE__);
+        return 1;
+    }
+
+    if (RT_NULL == hl_mod_apple_auth_eap_thread) {
+        rt_kprintf("[%s][line:%d]delete return!!! \r\n", __func__, __LINE__);
+        return 0;
+    }
+    // 脱离Telink线程
+    result = rt_thread_delete(hl_mod_apple_auth_eap_thread);
+    if (RT_EOK != result) {
+        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_eap_thread delete faild!!! \r\n", __func__, __LINE__);
         return 1;
     }
 

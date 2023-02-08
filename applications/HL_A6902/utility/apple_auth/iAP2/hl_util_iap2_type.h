@@ -73,7 +73,6 @@ typedef enum _iap2_power_update_status_enum_
     EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER,
     EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE,
     EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE,
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK,
 } HL_ENUM8(hl_iap2_power_update_status_e);
 
 typedef struct _hl_apple_iap2_t_

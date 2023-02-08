@@ -19,7 +19,7 @@
  * <tr><td>2023-02-07     <td>v1.0     <td>lisonglin     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __HL_UTIL_APPLE_CONFIG_H__
 #define __HL_UTIL_APPLE_CONFIG_H__
@@ -30,12 +30,33 @@
 
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
-#define POWERSOURCEUPDATE_OPEN 1
+
+/// (PowerUpdate)可设置参数<MaxomumCurrentDrawnFromAccessory>
+#define POWERUPDATE_ID0 0
+/// (PowerUpdate)可设置参数<DeviceBatteryWillChargeIfPowerIsPresent>
+#define POWERUPDATE_ID1 0
+/// (PowerUpdate)可设置参数<AccessoryPowerMode>
+#define POWERUPDATE_ID2 1
+/// (PowerUpdate)可设置参数<IsExternalChargerConnected>
+#define POWERUPDATE_ID4 1
+/// (PowerUpdate)可设置参数<BatteryChargingState>
+#define POWERUPDATE_ID5 0
+/// (PowerUpdate)可设置参数<BatteryChargeLevel>
+#define POWERUPDATE_ID6 0
+
+/// 发送PowerSourceUpdate消息
+#define POWERSOURCEUPDATE_OPEN 0
+
+/// 苹果功能USB读写操作打印
+#define LOG_APPLE_USB_OPEN 0
+/// 苹果功能I2C读写操作打印
+#define LOG_APPLE_I2C_OPEN 0
 
 // 内存资源大小
 #define SEND_BUFFER_SIZE 1024
 #define RECV_BUFFER_SIZE 1024
 #define APPLE_FIFO_BUF_SIZE 1024
+/// 超时时间
 #define TIMEOUT_US 1000
 
 // 厂商识别信息
