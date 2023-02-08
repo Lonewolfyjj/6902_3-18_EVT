@@ -68,8 +68,8 @@ static hl_display_screen_s hl_screendata = {
     .display_fault_code       = 0,
     .monitor_category         = 0,
     .voice_module             = HIGH_FIDELITY,
-    .now_sound_module         = MONO,
-    .down_sound_module        = MONO,
+    .now_sound_module         = STEREO,
+    .down_sound_module        = STEREO,
     .low_cut                  = LOW_CUT_OFF,
     .page_id                  = PAGE_NONE,
     .tx1_bat_val              = 0,
@@ -1021,6 +1021,7 @@ void hl_mod_page_cb_reg(void)
     PAGE_REG(PAGE_FAST_TX2_CONFIG);
     PAGE_REG(PAGE_FORMAT);
     PAGE_REG(PAGE_SOUNDOUT_SETTING);
+    PAGE_REG(PAGE_OPEN_MSC);
 }
 
 void lvgl2rtt_init(void)

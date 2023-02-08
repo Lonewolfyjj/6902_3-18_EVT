@@ -1526,13 +1526,9 @@ int hl_drv_sgm41518_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
 static uint8_t hl_drv_sgm41518_init_test(uint8_t* data)
 {
     uint8_t reg_config_bak[16] = { 0 }, i = 0;
-    memset(reg_config_bak,0,16);
+    memset(reg_config_bak, 0, 16);
     if (hl_i2c_read_reg(i2c_bus, SGM_REG00_ADDR, &reg_config_bak[0])) {
         smg_printf("cfg_opt %d read err !\n", SGM_REG00_ADDR);
-        goto INIT_ERR;
-    }
-    if (hl_i2c_read_reg(i2c_bus, SGM_REG01_ADDR, &reg_config_bak[1])) {
-        smg_printf("cfg_opt %d read err !\n", SGM_REG01_ADDR);
         goto INIT_ERR;
     }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG02_ADDR, &reg_config_bak[2])) {
@@ -1547,27 +1543,18 @@ static uint8_t hl_drv_sgm41518_init_test(uint8_t* data)
         smg_printf("cfg_opt %d read err !\n", SGM_REG04_ADDR);
         goto INIT_ERR;
     }
-    if (hl_i2c_read_reg(i2c_bus, SGM_REG05_ADDR, &reg_config_bak[5])) {
-        smg_printf("cfg_opt %d read err !\n", SGM_REG05_ADDR);
-        goto INIT_ERR;
-    }
     if (hl_i2c_read_reg(i2c_bus, SGM_REG06_ADDR, &reg_config_bak[6])) {
         smg_printf("cfg_opt %d read err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
     }
-    if (hl_i2c_read_reg(i2c_bus, SGM_REG07_ADDR, &reg_config_bak[7])) {
-        smg_printf("cfg_opt %d read err !\n", SGM_REG07_ADDR);
-        goto INIT_ERR;
-    }
-    if (hl_i2c_read_reg(i2c_bus, SGM_REG0C_ADDR, &reg_config_bak[0x0C])) {
-        smg_printf("cfg_opt %d read err !\n", SGM_REG0C_ADDR);
+    if (hl_i2c_read_reg(i2c_bus, SGM_REG0F_ADDR, &reg_config_bak[0x0F])) {
+        smg_printf("cfg_opt %d read err !\n", SGM_REG0F_ADDR);
         goto INIT_ERR;
     }
 
-    for (i = 0; i < 16; i++) {
-        if (reg_config_bak[i] != data[i]) {
-            goto INIT_ERR;
-        }
+    if (reg_config_bak[0] != data[0] || reg_config_bak[2] != data[2] || reg_config_bak[3] != data[3]
+        || reg_config_bak[4] != data[4] || reg_config_bak[6] != data[6] || reg_config_bak[0x0F] != data[0x0F]) {
+        goto INIT_ERR;
     }
     return HL_SUCCESS;
 INIT_ERR:
@@ -1598,7 +1585,7 @@ int hl_drv_sgm41518_init(void)
     smg_printf("smg41518 init !\n");
     hl_reg_arr_init();
     hl_reg_ctl_fun_init();
-    memset(reg_config,0,16);
+    memset(reg_config, 0, 16);
     if (i2c_bus == RT_NULL) {
         smg_printf("can't find %s device!\n", SGM41518_IIC_NAME);
         goto INIT_ERR;
@@ -1628,8 +1615,8 @@ int hl_drv_sgm41518_init(void)
         smg_printf("cfg_opt %d read err !\n", SGM_REG0F_ADDR);
         goto INIT_ERR;
     }
-    reg_all.reg00.IINDPM      = IINDPM_SET(7);            //
-    reg_config[0]             = *(uint8_t*)&reg_all.reg00;
+    reg_all.reg00.IINDPM = IINDPM_SET(7);  //
+    reg_config[0]        = *(uint8_t*)&reg_all.reg00;
 
 #if HL_IS_TX_DEVICE()
     reg_all.reg02.ICHG = FAST_CHARGE_CURRENT_SET(11);  // Tx
@@ -1638,17 +1625,17 @@ int hl_drv_sgm41518_init(void)
 #endif
     reg_config[2] = *(uint8_t*)&reg_all.reg02;
 
-    reg_all.reg03.ITERM   = TER_CURRENT_SET(0);  // 设置终止电流20mA
-    reg_config[3]         = *(uint8_t*)&reg_all.reg03;
+    reg_all.reg03.ITERM = TER_CURRENT_SET(0);  // 设置终止电流20mA
+    reg_config[3]       = *(uint8_t*)&reg_all.reg03;
 
-    reg_all.reg04.VREG         = CHARGE_VOLTAGE_LIMIT(18);  // 充电电压限制
-    reg_config[4]              = *(uint8_t*)&reg_all.reg04;
-    
-    reg_all.reg06.OVP    = VAC_OVP_THRESHOLD_6V5;     //设置VAC检测输入电压阈值 6.5V（5V输入时）
-    reg_config[6]        = *(uint8_t*)&reg_all.reg06;
+    reg_all.reg04.VREG = CHARGE_VOLTAGE_LIMIT(18);  // 充电电压限制
+    reg_config[4]      = *(uint8_t*)&reg_all.reg04;
+
+    reg_all.reg06.OVP = VAC_OVP_THRESHOLD_6V5;  //设置VAC检测输入电压阈值 6.5V（5V输入时）
+    reg_config[6]     = *(uint8_t*)&reg_all.reg06;
 
     reg_all.reg0F.VREG_FT = VREG_FINE_TUNING_ADD_8MV;
-    reg_config[0x0F]        = *(uint8_t*)&reg_all.reg0F;
+    reg_config[0x0F]      = *(uint8_t*)&reg_all.reg0F;
 
     if (hl_i2c_write_reg(i2c_bus, SGM_REG00_ADDR, (uint8_t*)&reg_all.reg00)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG00_ADDR);
@@ -1669,7 +1656,7 @@ int hl_drv_sgm41518_init(void)
     if (hl_i2c_write_reg(i2c_bus, SGM_REG06_ADDR, (uint8_t*)&reg_all.reg06)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG06_ADDR);
         goto INIT_ERR;
-    }    
+    }
     if (hl_i2c_write_reg(i2c_bus, SGM_REG0F_ADDR, (uint8_t*)&reg_all.reg0F)) {
         smg_printf("cfg_opt %d write err !\n", SGM_REG0F_ADDR);
         goto INIT_ERR;

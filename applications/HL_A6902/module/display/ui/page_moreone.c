@@ -248,12 +248,9 @@ static void btn11_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1=0;
             btn_left_1++;
-            if(btn_left_1 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_ONE_LEFT);
-            }
-            if(btn_left_1 > 1){
+            if(btn_left_1 >= 1){
                 LV_LOG_USER("btn_left1 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_ONE_LEFT);
+                hl_moreone_func(HL_MOREONE_OPTION_ONE,HL_MOREONE_CHOOSE_LEFT);
             } 
             lv_obj_style_set(lab11,btn11,btn1_l,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn12,LV_EVENT_CLICKED,lock);
@@ -272,12 +269,9 @@ static void btn12_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_1++;
             btn_left_1 = 0;
-            if(btn_right_1 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_ONE_RIGHT);
-            }
-            if(btn_right_1 > 1){
+            if(btn_right_1 >= 1){
                 LV_LOG_USER("btn_right1 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_ONE_RIGHT);
+                hl_moreone_func(HL_MOREONE_OPTION_ONE,HL_MOREONE_CHOOSE_RIGHT);
             }
             lv_obj_style_set(lab12,btn12,btn1_r,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn11,LV_EVENT_CLICKED,lock);
@@ -296,12 +290,9 @@ static void btn21_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2=0;
             btn_left_2++;
-            if(btn_left_2 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_TWO_LEFT);
-            }
-            if(btn_left_2 > 1){
+            if(btn_left_2 >= 1){
                 LV_LOG_USER("btn_left2 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_TWO_LEFT);
+                hl_moreone_func(HL_MOREONE_OPTION_TWO,HL_MOREONE_CHOOSE_LEFT);
             }
             lv_obj_style_set(lab21,btn21,btn2_l,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn22,LV_EVENT_CLICKED,lock);
@@ -320,12 +311,10 @@ static void btn22_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_2++;
             btn_left_2 = 0;
-            if(btn_right_2 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_TWO_RIGHT);
-            }
-            if(btn_right_2 > 1){
+
+            if(btn_right_2 >= 1){
                 LV_LOG_USER("btn_right2 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_TWO_RIGHT);
+                hl_moreone_func(HL_MOREONE_OPTION_TWO,HL_MOREONE_CHOOSE_RIGHT);
             }
             lv_obj_style_set(lab22,btn22,btn2_r,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn21,LV_EVENT_CLICKED,lock);
@@ -344,12 +333,10 @@ static void btn31_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3=0;
             btn_left_3++;
-            if(btn_left_3 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_THREE_LEFT);
-            }
-            if(btn_left_3 > 1){
+
+            if(btn_left_3 >= 1){
                 LV_LOG_USER("btn_left3 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_THREE_LEFT);
+                hl_moreone_func(HL_MOREONE_OPTION_THREE,HL_MOREONE_CHOOSE_LEFT);
             }
             lv_obj_style_set(lab31,btn31,btn3_l,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn32,LV_EVENT_CLICKED,lock);
@@ -368,12 +355,10 @@ static void btn32_cb(lv_event_t * e)
         if(strcmp(ptr,lock)){
             btn_right_3++;
             btn_left_3 = 0;
-            if(btn_right_3 == 1){
-                hl_moreone_func(HL_MOREONE_CHG_THREE_RIGHT);
-            }
-            if(btn_right_3 > 1){
+
+            if (btn_right_3 >= 1) {
                 LV_LOG_USER("btn_right3 Clicked\n");
-                hl_moreone_func(HL_MOREONE_CHECK_THREE_RIGHT);
+                hl_moreone_func(HL_MOREONE_OPTION_THREE, HL_MOREONE_CHOOSE_RIGHT);
             }
             lv_obj_style_set(lab32,btn32,btn3_r,&style_label_black,&style_choose_main,&style_choose_lr_main);
             lv_event_send(btn31,LV_EVENT_CLICKED,lock);
@@ -536,23 +521,23 @@ static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
     lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"降噪开关",LAB_COLOR_WHITE);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -596,7 +581,9 @@ static void hl_postion_cmd_deal(hl_moreone_mid_opt_t pos)
             hl_option_mid_set(pos,LV_ANIM_ON);
             break;
         case HL_MOREONE_OPTION_EXTI:  
-            hl_obj_delete(lv_scr_act(),false);
+            // hl_obj_delete(lv_scr_act(),false);
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
             break;
         case HL_MOREONE_OPTION_DELETE_STYLE:  
             lv_delete_style();

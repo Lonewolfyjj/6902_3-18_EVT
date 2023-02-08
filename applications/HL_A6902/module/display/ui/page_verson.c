@@ -120,11 +120,15 @@ static lv_obj_t * lv_verson_dot_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offse
     return dot;
 }
 
-static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr)
+static lv_obj_t * lv_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,const char * ptr,uint8_t mod)
 {
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
     // lv_obj_set_style_text_font(lab, &language, 0);
+    if(mod){
+        lv_label_set_long_mode(lab, LV_LABEL_LONG_SCROLL_CIRCULAR);
+        lv_obj_set_size(lab, 140, 26);
+    }    
     lv_label_set_text(lab,ptr);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
@@ -202,14 +206,14 @@ static lv_obj_t * lv_con_child_creat(lv_obj_t *src_obj,lv_coord_t x_size,lv_coor
 
 static void lv_page_1_init(lv_obj_t *con_obj,const char * text)
 {   
-    lab11 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"SN序列号");
-    lab12 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text);
+    lab11 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"SN序列号",0);
+    lab12 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text,1);
 }
 
 static void lv_page_2_init(lv_obj_t *con_obj,const char * text)
 {   
-    lab21 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"固件版本信息");
-    lab22 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text);
+    lab21 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"固件版本信息",0);
+    lab22 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text,0);
 }
 
 static void lv_page_3_init(lv_obj_t *con_obj,const char * text1,const char * text2)
@@ -218,27 +222,27 @@ static void lv_page_3_init(lv_obj_t *con_obj,const char * text1,const char * tex
     uint8_t buf2[32] = {"TX2版本信息 "};
     strcat(buf1,text1);
     strcat(buf2,text2);
-    lab31 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,-15,buf1);
-    lab32 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,15,buf2);
+    lab31 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,-15,buf1,0);
+    lab32 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,15,buf2,0);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -265,7 +269,9 @@ void hl_mod_verson_ioctl(void * ctl_data)
             lv_current_dot(3);
             break;
         case HL_VERSON_OPTION_EXTI:
-            hl_obj_delete(lv_scr_act(),false);
+            // hl_obj_delete(lv_scr_act(),false);
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
             break;
         case HL_VERSON_OPTION_DEL_STYLE:
             lv_delete_style();
@@ -282,10 +288,10 @@ void hl_mod_verson_init(void * init_data)
         lv_style_page4_init();
     }
     
-    con_src = lv_con_scr_creat(180,100);
-    con1 = lv_con_child_creat(con_src,172,90);
-    con2 = lv_con_child_creat(con_src,172,90);
-    con3 = lv_con_child_creat(con_src,172,90);
+    con_src = lv_con_scr_creat(294,126);
+    con1 = lv_con_child_creat(con_src,290,120);
+    con2 = lv_con_child_creat(con_src,290,120);
+    con3 = lv_con_child_creat(con_src,290,120);
     dot1 = lv_verson_dot_creat_fun(lv_scr_act(),-20,0,0);
     dot2 = lv_verson_dot_creat_fun(lv_scr_act(),0,0,0);
     dot3 = lv_verson_dot_creat_fun(lv_scr_act(),20,0,0);

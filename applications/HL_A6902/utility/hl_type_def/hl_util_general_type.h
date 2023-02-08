@@ -60,6 +60,16 @@ typedef enum _hl_rf_state_e
     HL_RF_PAIRING,
 } HL_ENUM8(hl_rf_state_e);
 
+typedef enum _hl_rf_channel_e
+{
+    /// 左声道
+    HL_RF_LEFT_CHANNEL = 0x00,
+    /// 右声道
+    HL_RF_RIGHT_CHANNEL,
+    /// 左右双声道
+    HL_RF_DOUBLE_CHANNEL,
+} HL_ENUM8(hl_rf_channel_e);
+
 typedef enum _hl_key_event_e
 {
     HL_KEY_EVENT_IDLE = 0x00,

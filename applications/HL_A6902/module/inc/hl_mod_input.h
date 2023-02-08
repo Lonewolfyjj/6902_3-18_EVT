@@ -64,6 +64,8 @@ typedef enum _input_mod_msg_cmd_e
     MSG_TX_VBUS_DET,
     /// mic插入检测消息：类型hl_switch_event_e
     MSG_TX_MIC_DET,
+    /// POGO 的VBUS插入检测消息：类型hl_switch_event_e
+    MSG_TX_PVBUS_DET,
     /// 组合按键1的消息：降噪和录制
     MSG_COMB_PAIR_REC,
     /// 组合按键2的消息：降噪和开关机
@@ -91,6 +93,8 @@ typedef enum _input_mod_msg_cmd_e
     MSG_RX_CAM_DET,
     /// 耳机插入检测消息：类型hl_switch_event_e
     MSG_RX_HP_DET,
+    /// POGO 的VBUS插入检测消息：类型hl_switch_event_e
+    MSG_RX_PVBUS_DET,
     /// 组合按键1的消息：左按和右按
     MSG_COMB_L_R_VOL,    
 } input_mod_msg_cmd_e;

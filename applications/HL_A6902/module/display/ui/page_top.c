@@ -53,10 +53,11 @@ LV_IMG_DECLARE(Main_single_voice);   //单声道
 LV_IMG_DECLARE(Main_lock);     //锁屏
 LV_IMG_DECLARE(Main_heatset);  //监听
 LV_IMG_DECLARE(Main_noise);    //降噪
+LV_IMG_DECLARE(Main_apple);    // 苹果认证
 
 #define ICON_POS_CURRENT 0
 #define ICON_POS_DEFAULT 1
-#define ICON_NUM 3
+#define ICON_NUM 4
 #define ICON_POS_VOR 2
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
@@ -75,7 +76,7 @@ typedef struct _HL_DISPLAY_TOP_T
 
     uint8_t heatset : 1;
 
-    uint8_t reserve1 : 1;
+    uint8_t apple : 1;
     uint8_t reserve2 : 1;
 } HL_DISPLAY_TOP_T;
 
@@ -97,6 +98,7 @@ static icon_pos_t icon_list_l[ICON_NUM] = {
     { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_stereo },
     { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_noise },
     { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_lock },
+    { .duf_pos = 3, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_apple },
 };
 
 static icon_pos_t icon_list_r[ICON_NUM] = {
@@ -169,14 +171,16 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
 {
     uint8_t  i, j, is_used = 0, new_f = 1;
     uint8_t  icon_ar[ICON_NUM];
-    int16_t icon_offset,ori;
+    int16_t icon_offset,ori,icon_sign;
     if (icon_typ == ICON_POS_LIFT) {
-        icon_offset = 0;
-        ori = 1;
+        icon_offset = 10; // 最左图标距离对齐边的距离
+        ori = 5; // 间隔
+        icon_sign = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
         icon_offset = -50;
-        ori = -1;
+        ori = 0;
+        icon_sign = -1;
     }
 
     for (i = 0; i < ICON_NUM; i++) {
@@ -200,18 +204,18 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         } else {
             new_f           = 0;
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
-            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
             for (j = i; j < is_used; j++) {
                 icon_list[icon_ar[j]].cur_pos += 1;
                 lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
-                             icon_list[icon_ar[j]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+                             icon_list[icon_ar[j]].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
             }
             return;
         }
     }
     if (new_f) {
         icon[0].cur_pos = is_used;
-        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
     }
 }
 
@@ -367,28 +371,36 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             top_icon_sta.heatset = 1;
             hl_mod_creat_top_icon(&icon_list_r[2], icon_list_r, ICON_POS_RIGHT);
             break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 1){
+                rt_kprintf("Top apple is exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 1;
+            hl_mod_creat_top_icon(&icon_list_l[3], icon_list_l, ICON_POS_LIFT);
+            break;
         default:
             break;
     }
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -458,6 +470,15 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
             delete_icon_pos_set(&icon_list_r[2], icon_list_r, 2, ICON_POS_RIGHT);
             icon_list_r[2].icon = NULL;
             break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 0){
+                rt_kprintf("Top apple is not exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 0;
+            delete_icon_pos_set(&icon_list_l[3], icon_list_l, 3, ICON_POS_LIFT);
+            icon_list_l[3].icon = NULL;
+            break;
         default:
             break;
     }
@@ -495,7 +516,7 @@ static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
 
 void hl_mod_top_ioctl(void* ctl_data)
 {
-    char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
         case HL_TOP_ADD_ICON_CMD:
@@ -531,7 +552,9 @@ void hl_mod_top_ioctl(void* ctl_data)
 
         case HL_TOP_ALL_DEL:
             *(uint8_t*)&top_icon_sta = 0;
-            hl_obj_delete(lv_scr_act(), false);
+            // hl_obj_delete(lv_scr_act(), false);
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
             break;
         case HL_TOP_DELETE_STYLE:
             lv_delete_style();

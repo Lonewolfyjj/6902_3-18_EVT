@@ -590,6 +590,10 @@ static void hl_mod_page_top_init(void)
 
         hl_mod_icon_deal(HL_TOP_ICON_HEATSET, HL_TOP_ADD_ICON_CMD);
     }
+
+    if (data_ptr->sys_status.apple_auth_flag) {
+        hl_mod_icon_deal(HL_TOP_ICON_APPLE, HL_TOP_ADD_ICON_CMD);
+    }
 }
 static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
@@ -625,16 +629,16 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
 
     // 降噪一起的
     if (flag->sys_status.tx1_noise || flag->sys_status.tx2_noise) {
-        hl_mod_display_mux_take();
-        flag->sys_status.tx1_noise = 0;
-        flag->sys_status.tx2_noise = 0;
-        hl_mod_display_mux_release();
         if (now->sys_status.tx1_noise || now->sys_status.tx2_noise) {
 
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
         } else if (!now->sys_status.tx1_noise && !now->sys_status.tx2_noise) {
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_DELETE_ICON_CMD);
         }
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_noise = 0;
+        flag->sys_status.tx2_noise = 0;
+        hl_mod_display_mux_release();
     }
 
     // // 锁屏
@@ -649,28 +653,40 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
 
     // line out
     if (flag->sys_status.line_out_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
         hl_mod_display_mux_take();
         flag->sys_status.line_out_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
+    }
+
+    if (flag->sys_status.apple_auth_flag) {
+        hl_mod_icon_deal(HL_TOP_ICON_APPLE, (hl_top_cmd_t)now->sys_status.apple_auth_flag);
+        hl_mod_display_mux_take();
+        flag->sys_status.apple_auth_flag = 0;
+        hl_mod_display_mux_release();
+
+        // if (now->sys_status.apple_auth_flag == 1) {
+        //     hl_mod_icon_deal(HL_TOP_ICON_APPLE, (hl_top_cmd_t)now->sys_status.apple_auth_flag);
+        // }
     }
 
     // usb
     if (flag->sys_status.usb_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
         hl_mod_display_mux_take();
         flag->sys_status.usb_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
+
+        // if (!now->sys_status.usb_in && now->sys_status.apple_auth_flag) {
+        //     hl_mod_icon_deal(HL_TOP_ICON_APPLE, HL_TOP_DELETE_ICON_CMD);
+        // }
     }
 
     if (flag->sys_status.monitor_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
         hl_mod_display_mux_take();
         flag->sys_status.monitor_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
     }
 }
 static void hl_mod_page_home_tx1lowbat_deal(uint8_t batval)
@@ -728,6 +744,21 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
 {
     hl_lvgl_main_ioctl_t data1;
 
+    if (flag->sys_status.tx1_mute_switch) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_mute_switch = 0;
+
+        if (now->sys_status.tx1_mute_switch) {
+            data1.cmd = HL_CHANGE_TX1_MUTE;
+        } else {
+            data1.cmd = HL_CHANGE_TX1_MUTE_DEL;
+        }
+        hl_mod_display_mux_release();
+        
+        hl_mod_main_ioctl(&data1);
+        LOG_D("mute1=%d",now->sys_status.tx1_mute_switch);
+    }
+
     if (flag->tx1_bat_val) {
         hl_mod_display_mux_take();
         flag->tx1_bat_val          = 0;
@@ -773,6 +804,21 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
 static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
     hl_lvgl_main_ioctl_t data2;
+
+    if (flag->sys_status.tx2_mute_switch) {
+        hl_mod_display_mux_take();
+        flag->sys_status.tx2_mute_switch = 0;
+
+        if (now->sys_status.tx2_mute_switch) {
+            data2.cmd = HL_CHANGE_TX2_MUTE;
+        } else {
+            data2.cmd = HL_CHANGE_TX2_MUTE_DEL;
+        }
+        hl_mod_display_mux_release();
+
+        hl_mod_main_ioctl(&data2);
+        LOG_D("mute2=%d",now->sys_status.tx2_mute_switch);
+    }
 
     if (flag->tx2_bat_val) {
         hl_mod_display_mux_take();

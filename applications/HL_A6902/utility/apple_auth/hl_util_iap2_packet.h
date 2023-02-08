@@ -192,7 +192,7 @@ typedef struct _iap2_ctrl_packet_
 #define IAP2_SERIAL_NAME "0123456789AB"
 #define IAP2_FIRMWAREVERSION "v1.0.0.1"
 #define IAP2_HARDWAREVERSION "v2.0.0.1"
-#define IAP2_PUID "0123456789123456"
+#define IAP2_PUID "0babaf959f694c97"
 #define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
 #define IAP2_HID_COMPONENT "HIDComponent"
 
