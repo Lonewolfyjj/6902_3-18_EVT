@@ -1157,11 +1157,11 @@ ufunction_t rt_usbd_function_mstorage_create(udevice_t device)
     int msc_open_flag;
     uint8_t ret;
 
-    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
         rt_kprintf("nvram be used before not init\n");
         hl_board_nvram_init();
-        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
+        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     }
 
     rt_kprintf("msc_open_flag = %d ,ret = %d \n", msc_open_flag, ret);
