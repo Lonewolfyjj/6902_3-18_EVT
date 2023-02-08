@@ -146,6 +146,8 @@ typedef enum _hl_drv_rk_xtensa_dsp_cmd_e_
     HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN,
     /// UAC GAIN GET
     HL_EM_DRV_RK_DSP_CMD_GET_UAC_GAIN,
+    /// Denoise level: 0 - (-15)
+    HL_EM_DRV_RK_DSP_CMD_SET_DENOISE_LVL,
 } hl_drv_rk_xtensa_dsp_cmd_e;
 
 /// DSP的运行角色枚举
