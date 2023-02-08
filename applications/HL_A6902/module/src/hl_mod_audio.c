@@ -42,6 +42,7 @@
 #endif
 #include "hl_util_msg_type.h"
 #include "hl_drv_pcf85063atl.h"
+#include "hl_drv_ins5830b.h"
 
 #include "./class/mstorage.h"
 #include <dfs_fs.h>
@@ -1851,7 +1852,15 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     hl_hal_gpio_low(GPIO_MIC_SW);    
 #else
 #endif
-    hl_drv_rtc_pcf85063_init();
+
+    if(hl_drv_rtc_pcf85063_init() == RT_EOK) {
+        LOG_D("hl_drv_rtc_pcf85063_init OK");
+    }else (hl_drv_ins5830b_init() == RT_EOK) {
+        LOG_D("hl_drv_ins5830b_init OK");
+    }else {
+        LOG_D("!!!!RTC_INIT ERROR");
+    }
+
     hl_mod_audio_system_rtc_set();
 
     ret = hl_mod_audio_param_config();
