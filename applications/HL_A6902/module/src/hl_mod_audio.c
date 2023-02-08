@@ -1860,6 +1860,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
     rt_uint32_t         count_vu = 0;
     int16_t s_vu_l = 0;
     int16_t s_vu_r = 0;
+    static uint16_t idx = 0;
     static float show_vu_pre_cal = 118 / 187;
 
     LOG_D("audio ctrl thread run");
@@ -1903,7 +1904,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 10) {    
+        if(count_vu >= 10 && idx >= 1000) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
@@ -1919,6 +1920,11 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #endif
         rt_thread_mdelay(10);
+        
+        if (idx < 1001) {
+            idx++;
+        }
+
     }
 }
 
