@@ -184,7 +184,7 @@ static lib_bypass_param_type_t_p          sg_rx_bypass_dsp_param = NULL;
 #endif
 #endif
 
-extern const unsigned char srp_profile[386];
+extern const unsigned char srp_profile[276];
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -499,6 +499,7 @@ static uint8_t _hl_drv_rk_xtensa_dsp_update_get_data()
     switch (sg_dsp_io_ctrl.io_ctrl_param) {
         case EM_A6902_ALGO_IO_CTL_PARAM_NS:
             /* code */
+            HL_DRV_DSP_LOG("Get alango NS = 0x%08x\r\n", sg_dsp_io_ctrl.io_ctrl_value);
             break;
         case EM_A6902_ALGO_IO_CTL_PARAM_GAIN_EN:
             HL_DRV_DSP_LOG("Get GAIN en status value = 0x%08x\r\n", sg_dsp_io_ctrl.io_ctrl_value);
@@ -820,12 +821,12 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 #if HL_IS_TX_DEVICE()
             if (sg_dsp_io_ctrl.io_ctrl_notify) {
                 HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
-                sg_dsp_io_ctrl_next.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
-                sg_dsp_io_ctrl_next.io_ctrl_value = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
                 sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
             } else {
-                sg_dsp_io_ctrl.io_ctrl_op    = EM_A6902_ALGO_IO_CTL_OP_MUTE;
-                sg_dsp_io_ctrl.io_ctrl_value = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_MUTE;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
                 sg_dsp_io_ctrl.io_ctrl_notify = 1;
             }
 #endif
@@ -970,6 +971,21 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                 sg_dsp_io_ctrl.io_ctrl_notify = 1;
             }
 #endif
+            break;
+
+        case HL_EM_DRV_RK_DSP_CMD_SET_DENOISE_LVL:
+            if (sg_dsp_io_ctrl.io_ctrl_notify) {
+                HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_SET_ALANGO;
+                sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_NS;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
+            } else {
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_SET_ALANGO;
+                sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_NS;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr;
+                sg_dsp_io_ctrl.io_ctrl_notify = 1;
+            }
             break;
         default:
             HL_DRV_DSP_LOG("dsp error ctrl msg = 0x%02x\r\n", cmd);

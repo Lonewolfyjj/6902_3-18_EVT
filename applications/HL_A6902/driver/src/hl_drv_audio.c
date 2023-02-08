@@ -528,9 +528,16 @@ struct audio_codec* rk_audio_find_codec(uint32_t id)
     rt_mutex_take(&codec_lock, RT_WAITING_FOREVER);
     rt_list_for_each_entry(codec, &s_audio_codec_list, list)
     {
-        if (codec->id == id) {
-            rt_mutex_release(&codec_lock);
-            return codec;
+        if (codec != NULL) {
+            if (codec && codec->id == id) {
+                rt_mutex_release(&codec_lock);
+                return codec;
+            }else {
+                rt_kprintf("----------error----------- codec is null or id not match\r\n");
+            }
+        }else{
+            rt_kprintf("----------error-----------find codec\r\n");
+            break;
         }
     }
     rt_mutex_release(&codec_lock);
