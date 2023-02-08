@@ -64,7 +64,7 @@ static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
                 value = 1;
                 hl_mod_display_send_msg(UPGRADE_SETTING_SWITCH_IND, &value, 0);
                 if (!update_state) {
-                    hl_mod_page_exit();
+                    // hl_mod_page_exit();
                     hl_lvgl_upgrade_ioctl_t ioctl;
                     uint8_t                 ret = 0;
 
