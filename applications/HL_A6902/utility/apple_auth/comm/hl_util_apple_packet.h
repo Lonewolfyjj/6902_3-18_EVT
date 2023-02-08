@@ -1,5 +1,5 @@
 /**
- * @file hl_iap2_packet.h
+ * @file hl_util_apple_packet.h
  * @author lisonglin (songlin.li@hollyland-tech.com)
  * @brief 
  * @version 0.1
@@ -15,75 +15,18 @@
  * 
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HL_IAP2_PACKET_H
-#define _HL_IAP2_PACKET_H
+#ifndef __HL_UTIL_APPLE_PACKET_H__
+#define __HL_UTIL_APPLE_PACKET_H__
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include "hl_util_apple_type.h"
 #include "hl_util_apple_config.h"
 #include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
-
-typedef enum _iap2_protocol_status_enum_
-{
-    EM_HL_IAP2_STM_MAIN_IDLE,
-    EM_HL_IAP2_STM_MAIN_LINK,
-    EM_HL_IAP2_STM_MAIN_DETECT,
-    EM_HL_IAP2_STM_MAIN_IDENTIFY,
-    EM_HL_IAP2_STM_MAIN_POWER_UPDATE,
-    EM_HL_IAP2_STM_MAIN_ACK_CTRL,
-    EM_HL_IAP2_STM_MAIN_SUCCEED,
-    EM_HL_IAP2_STM_MAIN_FAILED,
-} HL_ENUM8(hl_iap2_protocol_status_e);
-typedef enum _iap2_detect_status_enum_
-{
-    EM_HL_IAP2_STM_DETECT_SEND,
-    EM_HL_IAP2_STM_DETECT_RECV,
-} HL_ENUM8(hl_iap2_detect_status_e);
-
-typedef enum _iap2_link_status_enum_
-{
-    EM_HL_IAP2_STM_LINK_SEND_SYN,
-    EM_HL_IAP2_STM_LINK_RECV_SYN_ACK,
-    EM_HL_IAP2_STM_LINK_SEND_ACK = 3,
-} HL_ENUM8(hl_iap2_link_status_e);
-
-typedef enum _iap2_identify_status_enum_
-{
-    EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH,
-    EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH,
-    EM_HL_IAP2_STM_IDENTIFY_REQ_CHALLENGE,
-    EM_HL_IAP2_STM_IDENTIFY_ACK_CHALLENGE,
-    EM_HL_IAP2_STM_IDENTIFY_SUCCEDD,
-    EM_HL_IAP2_STM_IDENTIFY_START_IDENTIFICATION,
-    EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_INFO,
-    EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED,
-} HL_ENUM8(hl_iap2_identify_status_e);
-
-typedef enum _iap2_power_update_status_enum_
-{
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER,
-    EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE,
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE,
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK,
-} HL_ENUM8(hl_iap2_power_update_status_e);
-
-typedef enum _iap2_ea_session_status_enum_
-{
-    EM_HL_IAP2_STM_EA_SESSION,
-} HL_ENUM8(hl_iap2_ea_session_status_e);
-
-typedef struct _iap2_packet_header_arg_
-{
-    /// seq值
-    uint8_t seq_num;
-    /// ack值
-    uint8_t ack_num;
-    /// SessionId值
-    uint8_t session_id;
-} st_packet_header_arg;
 
 typedef struct _iap2_packet_header_
 {
@@ -183,27 +126,11 @@ typedef struct _iap2_ctrl_packet_
 
 #define EXCHANGE_HIGH_LOW_BYTE(x) ((uint16_t)((((x) >> 8) & 0xFF) | (((x)&0xFF) << 8)))
 
-#define SEND_BUFFER_SIZE 1024
-#define RECV_BUFFER_SIZE 1024
-#define TIMEOUT_US 1000
-
 #define LINK_CONTROL_SYN (1UL << (7))
 #define LINK_CONTROL_ACK (1UL << (6))
 #define LINK_CONTROL_EAK (1UL << (5))
 #define LINK_CONTROL_RST (1UL << (4))
 #define LINK_CONTROL_SLP (1UL << (3))
-
-#define IAP2_DEVICE_NAME "LARK 150 Pro"
-#define IAP2_MODEID "A6902"
-#define IAP2_MANUFATORY "Hollyland"
-#define IAP2_SERIAL_NAME "0123456789AB"
-#define IAP2_FIRMWAREVERSION "v1.0.0.1"
-#define IAP2_HARDWAREVERSION "v2.0.0.1"
-#define IAP2_PUID "0babaf959f694c97"
-#define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
-#define IAP2_HID_COMPONENT "HIDComponent"
-#define IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME "com.hollyland.protocol"
-#define IAP2_APP_MATCH_TEAM_ID "XDB3HGKJ3W"
 
 #define MESSAGE_ID_START_EAP 0xEA00
 #define MESSAGE_ID_STOP_EAP 0xEA01

@@ -1,7 +1,7 @@
 /**
- * @file hl_util_iap2_config.h
+ * @file hl_util_eap_type.h
  * @author lisonglin (songlin.li@hollyland-tech.com)
- * @brief iap2苹果相关功能配置
+ * @brief 
  * @version 1.0
  * @date 2023-02-07
  * 
@@ -19,38 +19,34 @@
  * <tr><td>2023-02-07     <td>v1.0     <td>lisonglin     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __HL_UTIL_APPLE_CONFIG_H__
-#define __HL_UTIL_APPLE_CONFIG_H__
+#ifndef __HL_UTIL_EAP_TYPE_H__
+#define __HL_UTIL_EAP_TYPE_H__
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include "hl_util_hup.h"
+#include "hl_util_fifo.h"
+#include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
+
+typedef enum _iap2_ea_session_status_enum_
+{
+    EM_HL_IAP2_STM_EA_SESSION,
+} HL_ENUM8(hl_iap2_ea_session_status_e);
+
+typedef struct _hl_apple_eap_t_
+{
+    /// hup结构体
+    hl_util_hup_t hup;
+    /// fifo结构体
+    hl_util_fifo_t fifo;
+} hl_apple_eap_t, *hl_apple_eap_p;
+
 /* define --------------------------------------------------------------------*/
-#define POWERSOURCEUPDATE_OPEN 1
-
-// 内存资源大小
-#define SEND_BUFFER_SIZE 1024
-#define RECV_BUFFER_SIZE 1024
-#define APPLE_FIFO_BUF_SIZE 1024
-#define TIMEOUT_US 1000
-
-// 厂商识别信息
-#define IAP2_DEVICE_NAME "LARK 150 Pro"
-#define IAP2_MODEID "A6902"
-#define IAP2_MANUFATORY "Hollyland"
-#define IAP2_SERIAL_NAME "0123456789AB"
-#define IAP2_FIRMWAREVERSION "v1.0.0.1"
-#define IAP2_HARDWAREVERSION "v2.0.0.1"
-#define IAP2_PUID "0babaf959f694c97"
-#define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
-#define IAP2_HID_COMPONENT "HIDComponent"
-#define IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME "com.hollyland.protocol"
-#define IAP2_APP_MATCH_TEAM_ID "XDB3HGKJ3W"
-
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/

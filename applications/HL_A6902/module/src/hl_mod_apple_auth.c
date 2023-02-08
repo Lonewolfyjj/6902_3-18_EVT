@@ -8,12 +8,12 @@ static rt_thread_t hl_mod_apple_auth_iap2_thread;
 /// EAP线程句柄
 static rt_thread_t hl_mod_apple_auth_eap_thread;
 /// appleauth控制句柄
-static hl_mod_apple_auth_t s_apple_auth;
+static hl_mod_apple_auth_t s_apple;
 /// 消息队列结构体
 static mode_to_app_msg_t app_msg_t;
 
 /**
- * _hl_mod_apple_auth_iap2_usb_read
+ * _hl_mod_apple_usb_read
  * @brief USB读数据操作
  * @param [in] read_data_addr 读数据缓冲区
  * @param [in] read_data_len 读数据长度
@@ -30,7 +30,7 @@ static mode_to_app_msg_t app_msg_t;
  * <tr><td>2023-01-12      <td>lisonglin     <td>新建
  * </table>
  */
-static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
+static int _hl_mod_apple_usb_read(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
     int ret = 0;
 
@@ -56,7 +56,7 @@ static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t re
 }
 
 /**
- * _hl_mod_apple_auth_iap2_usb_write
+ * _hl_mod_apple_usb_write
  * @brief USB写数据操作
  * @param [in] write_data_addr 写数据内容
  * @param [in] write_data_len 写数据长度
@@ -72,7 +72,7 @@ static int _hl_mod_apple_auth_iap2_usb_read(uint8_t* read_data_addr, uint16_t re
  * <tr><td>2023-01-12      <td>lisonglin     <td>新建
  * </table>
  */
-static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t write_data_len)
+static int _hl_mod_apple_usb_write(uint8_t* write_data_addr, uint16_t write_data_len)
 {
     uint8_t ret = 0;
     uint8_t len = 64;
@@ -100,7 +100,7 @@ static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t 
 }
 
 /**
- * _hl_mod_apple_auth_iap2_cp_read
+ * _hl_mod_apple_i2c_read
  * @brief IIC读数据操作
  * @param [in] reg_addr 读取寄存器
  * @param [in] read_data_addr 读数据缓冲区
@@ -118,8 +118,7 @@ static int _hl_mod_apple_auth_iap2_usb_write(uint8_t* write_data_addr, uint16_t 
  * <tr><td>2023-01-12      <td>lisonglin     <td>新建
  * </table>
  */
-static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len,
-                                           uint16_t timeout)
+static int _hl_mod_apple_i2c_read(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout)
 {
     struct rt_i2c_msg msgs[2]  = { 0 };
     rt_size_t         size     = 0;
@@ -131,7 +130,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
     msgs[0].len   = 1;
 
     do {
-        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[0], 1);
+        size = rt_i2c_transfer(s_apple.mfi_chip_iic, &msgs[0], 1);
         try_time--;
         if (!try_time) {
             rt_kprintf("i2c read1 err!\n");
@@ -152,7 +151,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
     msgs[1].len   = read_data_len;
 
     do {
-        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs[1], 1);
+        size = rt_i2c_transfer(s_apple.mfi_chip_iic, &msgs[1], 1);
         try_time--;
         if (!try_time) {
             rt_kprintf("i2c read2 err!\n");
@@ -176,7 +175,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
 }
 
 /**
- * _hl_mod_apple_auth_iap2_cp_write
+ * _hl_mod_apple_i2c_write
  * @brief IIC写数据操作
  * @param [in] reg_addr 写数据寄存器
  * @param [in] write_data_addr 写数据内容
@@ -193,7 +192,7 @@ static int _hl_mod_apple_auth_iap2_cp_read(uint8_t reg_addr, uint8_t* read_data_
  * <tr><td>2023-01-12      <td>lisonglin     <td>新建
  * </table>
  */
-static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len)
+static int _hl_mod_apple_i2c_write(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len)
 {
     struct rt_i2c_msg msgs        = { 0 };
     uint8_t           buffer[128] = { 0 };
@@ -209,7 +208,7 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
     msgs.len   = write_data_len + 1;
 
     do {
-        size = rt_i2c_transfer(s_apple_auth.mfi_chip_iic, &msgs, 1);
+        size = rt_i2c_transfer(s_apple.mfi_chip_iic, &msgs, 1);
         try_time--;
         if (!try_time) {
             rt_kprintf("i2c write err!\n");
@@ -232,7 +231,7 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
 }
 
 /**
- * _hl_mod_apple_auth_iap2_delay
+ * _hl_mod_apple_delay_usec
  * @brief 延时函数
  * @param [in] usec 延时时间（微秒）
  * @date 2023-01-12
@@ -246,7 +245,7 @@ static int _hl_mod_apple_auth_iap2_cp_write(uint8_t reg_addr, uint8_t* write_dat
  * <tr><td>2023-01-12      <td>lisonglin     <td>新建
  * </table>
  */
-static void _hl_mod_apple_auth_iap2_delay(uint16_t usec)
+static void _hl_mod_apple_delay_usec(uint16_t usec)
 {
     rt_thread_mdelay(usec / 1000);
 }
@@ -272,16 +271,16 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
 
     rt_thread_mdelay(200);
 
-    while (s_apple_auth.iap2_thread_flag == RT_TRUE) {
-        result = hl_iap2_process_oneshot(s_apple_auth.iap2_handle);
+    while (s_apple.iap2_thread_flag == RT_TRUE) {
+        result = hl_util_apple_oneshot(&s_apple.apple, EM_HL_IAP2);
         if (result >= 0) {
             app_msg_t.cmd = result;
             app_msg_t.len = 0;
             // 上报透传数据
-            result = rt_mq_send(s_apple_auth.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+            result = rt_mq_send(s_apple.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             // 判断消息队列上传结果
             if (RT_EOK != result) {
-                rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
+                rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __func__, __LINE__, result);
             }
         }
         rt_thread_mdelay(10);
@@ -307,7 +306,7 @@ static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
 {
     int result = 0;
 
-    while (s_apple_auth.eap_thread_flag == RT_TRUE) {
+    while (s_apple.eap_thread_flag == RT_TRUE) {
     }
 }
 
@@ -316,51 +315,47 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     char* dev_sn = NULL;
 
     if (NULL == input_msq) {
-        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
+        rt_kprintf("[%s][line:%d] cmd(%d) unkown!!! \r\n", __func__, __LINE__, input_msq);
         return 1;
     }
 
     uint8_t ret = 0;
 
     // 获取并赋值APP层下发的消息队列指针
-    s_apple_auth.app_msq          = input_msq;
-    s_apple_auth.iap2_thread_flag = RT_TRUE;
-    s_apple_auth.eap_thread_flag  = RT_FALSE;
+    s_apple.app_msq          = input_msq;
+    s_apple.iap2_thread_flag = RT_TRUE;
+    s_apple.eap_thread_flag  = RT_FALSE;
 
     // 获取苹果认证芯片I2C设备句柄
-    s_apple_auth.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
-    RT_ASSERT(s_apple_auth.mfi_chip_iic);
+    s_apple.mfi_chip_iic = (struct rt_i2c_bus_device*)rt_device_find("i2c1");
+    RT_ASSERT(s_apple.mfi_chip_iic);
 
     // USB通信初始化
     ret = hl_drv_usb_vendor_class_com_init();
     rt_kprintf("\nhl_drv_usb_vendor_class_com_init ret = %d\n", ret);
 
-    // 初始化结构体
-    s_apple_auth.iap2_handle = (st_iap2_protocol_t*)rt_malloc(sizeof(st_iap2_protocol_t));
-    rt_memset(s_apple_auth.iap2_handle, 0, sizeof(st_iap2_protocol_t));
-
     // 获取设备SN码
-    dev_sn = s_apple_auth.iap2_handle->dev_sn;
-    rt_memset(dev_sn, 0, sizeof(s_apple_auth.iap2_handle->dev_sn));
+    dev_sn = s_apple.apple.iap2.dev_sn;
+    rt_memset(dev_sn, 0, sizeof(s_apple.apple.iap2.dev_sn));
     strcpy(dev_sn, "xxxxxxxxxxxxxxx");
-    if (!hl_util_nvram_param_get("HL_SN", dev_sn, dev_sn, sizeof(s_apple_auth.iap2_handle->dev_sn))) {
+    if (!hl_util_nvram_param_get("HL_SN", dev_sn, dev_sn, sizeof(s_apple.apple.iap2.dev_sn))) {
         rt_kprintf("\nMFI Get SN Number: [%s][%d]\n", dev_sn, rt_strlen(dev_sn));
     }
 
     // 函数注册
-    s_apple_auth.iap2_func_handle.delay_usec_func = _hl_mod_apple_auth_iap2_delay;
-    s_apple_auth.iap2_func_handle.iap2_usb_read   = _hl_mod_apple_auth_iap2_usb_read;
-    s_apple_auth.iap2_func_handle.iap2_usb_write  = _hl_mod_apple_auth_iap2_usb_write;
-    s_apple_auth.iap2_func_handle.iap2_iic_read   = _hl_mod_apple_auth_iap2_cp_read;
-    s_apple_auth.iap2_func_handle.iap2_iic_write  = _hl_mod_apple_auth_iap2_cp_write;
-    s_apple_auth.iap2_func_handle.iap2_printf     = rt_kprintf;
+    s_apple.func_handle.delay_usec = _hl_mod_apple_iap2_delay_usec;
+    s_apple.func_handle.usb_read   = _hl_mod_apple_iap2_usb_read;
+    s_apple.func_handle.usb_write  = _hl_mod_apple_iap2_usb_write;
+    s_apple.func_handle.iic_read   = _hl_mod_apple_iap2_i2c_read;
+    s_apple.func_handle.iic_write  = _hl_mod_apple_iap2_i2c_write;
+    s_apple.func_handle.log        = rt_kprintf;
 
-    hl_iap2_protocol_init(s_apple_auth.iap2_handle, s_apple_auth.iap2_func_handle);
+    hl_util_apple_init(&s_apple.apple, s_apple.func_handle);
 
     // Telink获取并赋值APP层下发的消息队列指针
-    s_apple_auth.app_msq          = input_msq;
-    s_apple_auth.iap2_thread_flag = RT_TRUE;
-    s_apple_auth.eap_thread_flag  = RT_FALSE;
+    s_apple.app_msq          = input_msq;
+    s_apple.iap2_thread_flag = RT_TRUE;
+    s_apple.eap_thread_flag  = RT_FALSE;
     // Telink消息队列结构体赋初值
     app_msg_t.sender = APPLE_AUTH_MODE;
 
@@ -369,10 +364,6 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 
 int hl_mod_apple_auth_deinit()
 {
-    if (s_apple_auth.iap2_handle) {
-        rt_free(s_apple_auth.iap2_handle);
-    }
-
     return 0;
 }
 
@@ -381,7 +372,7 @@ int hl_mod_apple_auth_start()
     rt_err_t result;
 
     // 状态机状态初始化
-    s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+    s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
 
     // 创建线程
     hl_mod_apple_auth_iap2_thread =
@@ -411,13 +402,13 @@ int hl_mod_apple_auth_stop()
     rt_err_t result;
 
     if (RT_NULL == hl_mod_apple_auth_iap2_thread) {
-        rt_kprintf("[%s][line:%d]delete return!!! \r\n", __FUNCTION__, __LINE__);
+        rt_kprintf("[%s][line:%d]delete return!!! \r\n", __func__, __LINE__);
         return 0;
     }
     // 脱离Telink线程
     result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
     if (RT_EOK != result) {
-        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_iap2_thread detach faild!!! \r\n", __FUNCTION__, __LINE__);
+        rt_kprintf("[%s][line:%d]hl_mod_apple_auth_iap2_thread detach faild!!! \r\n", __func__, __LINE__);
         return 1;
     }
 
@@ -429,17 +420,17 @@ uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
     switch (cmd) {
         case HL_APPLE_AUTH_START_CMD:
             rt_kprintf("\n\n\n*********iAP2 START*********\n\n\n");
-            s_apple_auth.iap2_handle->main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
-            s_apple_auth.iap2_handle->detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
-            s_apple_auth.iap2_handle->link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
-            s_apple_auth.iap2_handle->identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
-            s_apple_auth.iap2_handle->powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-            s_apple_auth.iap2_handle->retry_time         = 3;
+            s_apple.apple.iap2.main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
+            s_apple.apple.iap2.detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
+            s_apple.apple.iap2.link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
+            s_apple.apple.iap2.identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
+            s_apple.apple.iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+            s_apple.apple.iap2.retry_time         = 3;
             break;
 
         case HL_APPLE_AUTH_STOP_CMD:
             rt_kprintf("\n\n\n*********iAP2 STOP*********\n\n\n");
-            s_apple_auth.iap2_handle->main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
             break;
 
         default:
