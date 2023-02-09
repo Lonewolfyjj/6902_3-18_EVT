@@ -64,25 +64,9 @@ static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
                 value = 1;
                 hl_mod_display_send_msg(UPGRADE_SETTING_SWITCH_IND, &value, 0);
                 if (!update_state) {
-                    // hl_mod_page_exit();
-                    hl_lvgl_upgrade_ioctl_t ioctl;
-                    uint8_t                 ret = 0;
-
-                    hl_util_nvram_param_set("MSC_OPEN", "1");
-                    ret = hl_util_nvram_param_save();
-                    rt_kprintf("save ret = %d\r\n", ret);
-                    if (ret == 0) {
-                        ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
-                        ioctl.ptr           = "设置成功";
-                    } else {
-                        ioctl.upgrade_ioctl = HL_UPGRADE_FAIL_CMD;
-                        ioctl.ptr           = "设置失败";
-                    }
-
-                    hl_mod_lvgl_upgrade_ioctl(&ioctl);
-
                     update_state = 1;
                 }
+
                 break;
             case HL_S_TWO_ONE_CHECK_RIGHT:
 
@@ -111,6 +95,9 @@ static void hl_mod_page_setup(void)
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
+
+    display_choose = s_two_in_one_test.s_two_in_one_choose;
+    now_num = (int16_t)display_choose;
 }
 
 static void hl_mod_page_exit(void)
@@ -132,7 +119,7 @@ static void hl_mod_page_loop(void)
     // 返回按键
     uint8_t back_btn = hl_mod_keypad_touchkey_read();
 
-    if (update_state) {
+    if (update_state == 3) {
         return;
     }
     // 触摸返回
@@ -150,6 +137,38 @@ static void hl_mod_page_loop(void)
     if (ok_btn == HL_KEY_EVENT_SHORT) {
         s_two_in_one_test.s_two_in_one_choose = now_num;
         hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
+    }
+
+    switch (update_state) {
+        case 0: {
+        } break;
+        case 1: {
+            hl_mod_page_exit();
+            update_state = 2;
+        } break;
+        case 2: {
+            // hl_mod_page_exit();
+            hl_lvgl_upgrade_ioctl_t ioctl;
+            uint8_t                 ret = 0;
+
+            hl_util_nvram_param_set("MSC_OPEN", "1");
+            ret = hl_util_nvram_param_save();
+            rt_kprintf("save ret = %d\r\n", ret);
+            if (ret == 0) {
+                ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
+                ioctl.ptr           = "设置成功";
+            } else {
+                ioctl.upgrade_ioctl = HL_UPGRADE_FAIL_CMD;
+                ioctl.ptr           = "设置失败";
+            }
+
+            hl_mod_lvgl_upgrade_ioctl(&ioctl);
+            update_state = 3;
+        } break;
+        case 3: {
+        } break;
+        default:
+            break;
     }
 }
 

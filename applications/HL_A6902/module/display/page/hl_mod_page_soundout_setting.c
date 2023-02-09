@@ -1,7 +1,7 @@
 /**
  * @file hl_mod_page_soundout_setting.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
+ * @brief 声音外放设置界面
  * @version V1.0
  * @date 2023-01-12
  * 
@@ -43,7 +43,7 @@
 
 static int16_t                knob_choose;
 static hl_two_in_one_choose_t display_choose;
-static uint8_t                goto_reboot_dialog_flag = 0;
+// static uint8_t                goto_reboot_dialog_flag = 0;
 
 static void hl_two_in_one_trg(hl_three_in_one_check_t choose)
 {
@@ -75,7 +75,7 @@ static void hl_soundout_setting_reboot_page(void)
     hl_lvgl_upgrade_ioctl_t    ioctrl;
     hl_lvgl_two_in_one_ioctl_t two_in_one_test_ctl;
 
-    if (goto_reboot_dialog_flag == 1) {
+    // if (goto_reboot_dialog_flag == 1) {
         // 删除
         two_in_one_test_ctl.two_in_one_choose = HL_TWO_ONE_CHOOSE_EXIT;
         hl_mod_two_in_one_ioctl(&two_in_one_test_ctl);
@@ -83,7 +83,7 @@ static void hl_soundout_setting_reboot_page(void)
         ioctrl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
         ioctrl.ptr           = "设置成功";
         hl_mod_lvgl_upgrade_ioctl(&ioctrl);
-    }
+    // }
 }
 
 static void hl_autorecode_test_cb(hl_two_in_one_check_t event_num)
@@ -114,7 +114,7 @@ static void hl_autorecode_test_cb(hl_two_in_one_check_t event_num)
         data_ptr->sys_status.soundout_setting = value;
         hl_mod_display_mux_release();
         hl_mod_display_send_msg(SOUNDOUT_SETTING_SWITCH_IND, &value, 0);
-        goto_reboot_dialog_flag = 1;
+        // goto_reboot_dialog_flag = 1;
 
     } else {
         display_choose = event_num;
@@ -148,7 +148,7 @@ static void hl_mod_page_setup(void)
     };
     hl_mod_two_in_one_init(&two_in_one_test);
 
-    goto_reboot_dialog_flag = 0;
+    // goto_reboot_dialog_flag = 0;
 }
 
 static void hl_mod_page_exit(void)
@@ -165,10 +165,10 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    // 如果已经进入了让客户重启的对话框页面,就不再响应输入了
-    if (goto_reboot_dialog_flag == 1) {
-        return;
-    }
+    // // 如果已经进入了让客户重启的对话框页面,就不再响应输入了
+    // if (goto_reboot_dialog_flag == 1) {
+    //     return;
+    // }
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();
     // 返回按键
@@ -176,7 +176,7 @@ static void hl_mod_page_loop(void)
 
     // 触摸返回
     if (1 == back_btn) {
-        hl_two_in_one_trg(knob_choose);
+        // hl_two_in_one_trg(knob_choose);
         PageManager_PagePop();
     }
 
@@ -194,7 +194,7 @@ static void hl_mod_page_loop(void)
 
     hl_two_in_one_update();
 
-    hl_soundout_setting_reboot_page();
+    // hl_soundout_setting_reboot_page();
 }
 
 PAGE_DEC(PAGE_SOUNDOUT_SETTING)

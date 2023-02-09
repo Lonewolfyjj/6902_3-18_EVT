@@ -43,7 +43,8 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
-
+static int16_t                 knob_choose;
+static hl_b_two_in_one_check_t display_choose;
 
 //监听设置界面
 LV_IMG_DECLARE(Other_monitor_uac_black);//
@@ -53,24 +54,103 @@ LV_IMG_DECLARE(Other_monitor_tx_white);//
 
 static void hl_monitor_test_cb(hl_b_two_in_one_check_t event_num)
 {
-    uint32_t value = 0;
-    switch(event_num){
-        case HL_B_TWO_ONE_CHECK_LEFT:
-            value = MONITOR_UAC_IN;
-            break;
-        case HL_B_TWO_ONE_CHECK_RIGHT:
-            value = MONITOR_TX_IN;
-            break;
-        default:
-            return;
-            break;
+    uint32_t             value    = 0;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+
+    LOG_E("event_num=%d\n", event_num);
+
+    if (display_choose != event_num) {
+        display_choose = event_num;
+        knob_choose    = (int16_t)event_num;
+        // 上报并更新参数
+        hl_mod_display_mux_take();
+        switch (event_num) {
+            case HL_B_TWO_ONE_CHECK_LEFT:
+                value = MONITOR_TX_IN;
+                break;
+            case HL_B_TWO_ONE_CHECK_RIGHT:
+                value = MONITOR_UAC_IN;
+                break;
+            default:
+                hl_mod_display_mux_release();
+                return;
+                break;
+        }
+        data_ptr->monitor_category = value;
+        hl_mod_display_mux_release();
+        hl_mod_display_send_msg(MONITOR_CATEGORY_VAL_IND, &value, 0);
     }
-    hl_mod_display_send_msg(MONITOR_CATEGORY_VAL_IND,&value,0);
+    // } else {
+    //     switch (event_num) {
+    //         case HL_B_TWO_ONE_CHECK_LEFT:
+    //             value = MONITOR_TX_IN;
+    //             break;
+    //         case HL_B_TWO_ONE_CHECK_RIGHT:
+    //             value = MONITOR_UAC_IN;
+    //             break;
+    //         default:
+    //             break;
+    //     }
+
+    //     if (data_ptr->monitor_category != value) {
+
+    //         hl_mod_display_mux_take();
+    //         data_ptr->monitor_category = value;
+    //         hl_mod_display_mux_release();
+    //     }
+    //     hl_mod_display_send_msg(MONITOR_CATEGORY_VAL_IND, &value, 0);
+    // }
 }
 
+static void hl_b_two_in_one_update(void)
+{
+    uint8_t                     value;
+    hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+
+    if (flag->monitor_category) {
+
+        hl_mod_display_mux_take();
+        value              = data_ptr->monitor_category;
+        flag->monitor_category = 0;
+        hl_mod_display_mux_release();
+        switch (value) {
+            case MONITOR_TX_IN:
+                value = HL_B_TWO_ONE_CHOOSE_LEFT;
+                break;
+            case MONITOR_UAC_IN:
+                value = HL_B_TWO_ONE_CHOOSE_RIGHT;
+                break;
+            default:
+                value = HL_B_TWO_ONE_CHOOSE_LEFT;
+                break;
+        }
+
+        hl_b_two_in_one_trg(value);
+    }
+}
 
 static void hl_mod_page_setup(void)
 {
+    hl_display_screen_s*         data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl;
+
+    LOG_D("monitorset=%d\n", data_ptr->monitor_category);
+
+    switch (data_ptr->monitor_category) {
+
+        case MONITOR_TX_IN:
+            display_choose = HL_B_TWO_ONE_CHECK_LEFT;
+            break;
+        case MONITOR_UAC_IN:
+            display_choose = HL_B_TWO_ONE_CHECK_RIGHT;
+            break;
+        default:
+            display_choose = HL_B_TWO_ONE_CHECK_LEFT;
+            break;
+    }
+    knob_choose =  (int16_t)display_choose;
+
     hl_lvgl_b_two_in_one_init_t two_in_one_test = 
     {
         .func_cb = hl_monitor_test_cb,
@@ -81,14 +161,11 @@ static void hl_mod_page_setup(void)
         .ptr_lift = "UAC输入",
         .ptr_right = "TX输入",
         .ptr_top = "监听设置",
-        .b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_LEFT,
+        .b_two_in_one_choose = display_choose,
     };
     hl_mod_b_two_in_one_init(&two_in_one_test);
 
-    hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl = 
-    {
-        .b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_LEFT,
-    };
+    two_in_one_test_ctl.b_two_in_one_choose = display_choose;
 
     hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 }
@@ -106,7 +183,30 @@ static void hl_mod_page_exit(void)
 
 static void hl_mod_page_loop(void)
 {
-    hl_mod_menu_backbtn_scan();
+    // OK按键
+    uint8_t ok_btn = hl_mod_get_knob_okkey_val();
+    // 返回按键
+    uint8_t back_btn = hl_mod_keypad_touchkey_read();
+
+    // 触摸返回
+    if (1 == back_btn) {
+        hl_b_two_in_one_trg(knob_choose);
+        PageManager_PagePop();
+    }
+
+    // 旋钮对配置的更改
+    if (hl_mod_knob_select_val_change(&knob_choose, 0, 1, true)) {
+        LOG_E("knob choose chg=%d\n", knob_choose);
+
+        hl_b_two_in_one_trg(knob_choose);
+    }
+
+    // OK按键
+    if (ok_btn == HL_KEY_EVENT_SHORT) {
+        hl_b_two_in_one_trg(knob_choose);
+    }
+
+    hl_b_two_in_one_update();
 }
 
 PAGE_DEC(PAGE_MONITOR_SET)
