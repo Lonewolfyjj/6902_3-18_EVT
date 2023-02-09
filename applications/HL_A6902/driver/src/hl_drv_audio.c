@@ -305,6 +305,7 @@ static rt_err_t rk_audio_init(rt_device_t dev)
     struct audio_dai*        dai     = card->dai;
     struct audio_dai*        vad_dai = card->vad_dai;
     struct audio_codec*      codec   = card->codec;
+    struct audio_codec*      codecHp = card->codechp;
     struct AUDIO_INIT_CONFIG cfg     = { 0 };
     rt_err_t                 ret     = RT_EOK;
 
@@ -329,6 +330,7 @@ static rt_err_t rk_audio_init(rt_device_t dev)
     if (codec) {
         cfg.master = desc->codec_master;
         ret        = codec->ops->init(codec, &cfg);
+        ret       |= card->codechp->ops->init(codecHp, &cfg);
         if (ret)
             return ret;
     }
