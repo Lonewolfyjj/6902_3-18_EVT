@@ -37,6 +37,8 @@ typedef struct _tx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)
@@ -49,7 +51,8 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_flag:1;
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
-
+    /// 升级标志(0:空闲 1：升级中 2：升级成功 3：升级失败)
+    uint8_t             upgrade_flag:2;
     /// mute(1:mute on 0:mute off)
     uint8_t             mute_flag;
     /// 录制保护标志(1:录制保护开  0：录制保护关)
@@ -85,6 +88,8 @@ typedef struct _rx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)

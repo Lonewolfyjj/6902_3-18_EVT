@@ -194,6 +194,8 @@ void hl_app_mng_init(void)
     hl_mod_display_init(&hl_app_mq);
     hl_mod_pm_init(&hl_app_mq);
     hl_mod_pm_start();
+    hl_mod_euc_init(&hl_app_mq);
+    hl_mod_euc_start();  
 
     app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
     if (app_task_tid) {
@@ -278,7 +280,7 @@ void hl_app_mng_powerOff(void)
         hl_mod_audio_deinit();
     } 
 #endif
-    
+    hl_util_nvram_param_save();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
     hl_mod_input_deinit();

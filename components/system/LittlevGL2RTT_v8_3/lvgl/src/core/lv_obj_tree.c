@@ -120,7 +120,10 @@ void lv_obj_del_delayed(lv_obj_t * obj, uint32_t delay_ms)
 
 void lv_obj_del_anim_ready_cb(lv_anim_t * a)
 {
-    lv_obj_del(a->var);
+    if(a->var != NULL){
+        lv_obj_del(a->var);
+        a->var = NULL;
+    }    
 }
 
 void lv_obj_del_async(lv_obj_t * obj)

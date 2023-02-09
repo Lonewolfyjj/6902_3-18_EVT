@@ -233,6 +233,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
         tx_info.usb_plug = 1;
     }
     hl_app_audio_stream_updata();
+    hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
 }
 
 /// 外置mic状态处理
@@ -249,6 +250,22 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
     }
     hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
     hl_app_audio_stream_updata();
+}
+
+/// POGO VBUS的状态处理
+static void hl_app_tx_pogo_vbus_plug_pro(uint32_t value)
+{
+
+    if (value == 0) {
+        tx_info.usb_pogo_flag = 0;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+
+    } else {
+        tx_info.usb_pogo_flag = 1;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+    }
 }
 
 #else
@@ -370,9 +387,9 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
         rx_info.usb_plug      = 0;
         usb_state             = 0;
         rx_info.uac_link_flag = 0;
-        if (rx_info.on_off_flag == 1) {
-            hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
-        }        
+
+        hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
+        hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &usb_state, 1);
         rx_info.mstorage_plug = 0;
         hl_mod_appleauth_ioctl(HL_APPLE_AUTH_STOP_CMD);
     } else {
@@ -384,6 +401,8 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
     usb_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+    hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
+    
 }
 
 /// 监听口状态处理
@@ -422,6 +441,22 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
 }
 
+/// POGO VBUS的状态处理
+static void hl_app_rx_pogo_vbus_plug_pro(uint32_t value)
+{
+
+    if (value == 0) {
+        rx_info.usb_pogo_flag = 0;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+
+    } else {
+        rx_info.usb_pogo_flag = 1;
+
+        hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
+    }
+}
+
 #endif
 
 ///
@@ -450,6 +485,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
         case MSG_TX_MIC_DET:
             hl_app_tx_ex_mic_plug_pro(p_msg->param.u32_param);
             LOG_D("MSG_TX_MIC_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case MSG_TX_PVBUS_DET:
+            hl_app_tx_pogo_vbus_plug_pro(p_msg->param.u32_param);
+            LOG_D("MSG_POGO_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -496,6 +535,10 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
+        case MSG_RX_PVBUS_DET:
+            hl_app_rx_pogo_vbus_plug_pro(p_msg->param.u32_param);
+            LOG_D("MSG_POGO_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;

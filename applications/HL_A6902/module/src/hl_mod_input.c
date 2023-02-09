@@ -71,6 +71,7 @@ typedef enum _hl_input_insert_e
 {
     VBUS_DET = 0,
     MIC_DET,
+    POGO_VBUS_DET,
     HL_INPUT_INSERT,
 } hl_input_insert_e;
 
@@ -88,6 +89,7 @@ typedef enum _hl_input_insert_e
     VBUS_DET = 0,
     CAM_DET,
     HP_DET,
+    POGO_VBUS_DET,
     HL_INPUT_INSERT,
 } hl_input_insert_e;
 
@@ -181,12 +183,12 @@ typedef struct _hl_input_mod_t
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_PAIR_KEY, GPIO_REC_KEY };
 static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {1000}, {3000}, {3000} };
 
-static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_MIC_DET };
+static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_MIC_DET ,GPIO_PBUS_DET};
 #else
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_VOL_OK };
 static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {1000}, {3000}, {3000} };
 
-static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT]   = { GPIO_VBUS_DET, GPIO_CAM_DET, GPIO_HP_DET };
+static hl_gpio_pin_e hl_insert_map[HL_INPUT_INSERT] = { GPIO_VBUS_DET, GPIO_CAM_DET, GPIO_HP_DET, GPIO_PBUS_DET };
 
 #endif
 static hl_input_msg_t hl_input_msg = { 0 };
@@ -267,6 +269,9 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
                 case MIC_DET:
                     res = MSG_TX_MIC_DET;
                     break;
+                case POGO_VBUS_DET:
+                    res = MSG_TX_PVBUS_DET;
+                    break;
                 default:
                     break;
             }
@@ -316,6 +321,9 @@ static input_mod_msg_cmd_e pin_index_to_msg_cmd(uint8_t nums, uint8_t class)
                     break;
                 case HP_DET:                    
                     res = MSG_RX_HP_DET;
+                    break;
+                case POGO_VBUS_DET:                    
+                    res = MSG_RX_PVBUS_DET;
                     break;
                 default:
                     break;
@@ -672,6 +680,11 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
                 return LINE_INSERT;
             }
             break;
+        case POGO_VBUS_DET:
+            if (hl_hal_gpio_read(hl_insert_map[POGO_VBUS_DET]) == PIN_LOW) {
+                return LINE_INSERT;
+            }
+            break;
         default:
             break;
     }
@@ -693,6 +706,11 @@ static hl_input_insert_state_e hl_mod_input_insert_read(hl_input_insert_e insert
             break;
         case HP_DET:
             if (hl_hal_gpio_read(hl_insert_map[HP_DET]) == PIN_HIGH) {
+                return LINE_INSERT;
+            }
+            break;
+        case POGO_VBUS_DET:
+            if (hl_hal_gpio_read(hl_insert_map[POGO_VBUS_DET]) == PIN_LOW) {
                 return LINE_INSERT;
             }
             break;

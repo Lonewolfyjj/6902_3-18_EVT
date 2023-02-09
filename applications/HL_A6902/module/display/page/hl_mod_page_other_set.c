@@ -44,7 +44,7 @@
 #include "hl_util_general_type.h"
 
 
-#define MENU_ICON_NUM 5
+#define MENU_ICON_NUM 6
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
     PAGE_PAIR,
@@ -52,6 +52,7 @@ static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
     PAGE_SYS_TIME_SET,
     PAGE_VERSION,
     PAGE_RESTORE,
+    PAGE_OPEN_MSC,
 };
 
 static int8_t menu_center_icon = 0;
@@ -82,6 +83,7 @@ static void page_9_test(void)
         ADD_IMG_DATA(NULL, NULL, &Menu_time_config, "时间设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_verson, "版本信息"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, "恢复出厂设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, "开启升级"),
     };
     // 如果是下一级菜单，就默认显示最左边图标
     if (flag->menu_defaut) {
