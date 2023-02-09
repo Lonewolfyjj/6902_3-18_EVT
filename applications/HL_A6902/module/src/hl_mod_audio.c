@@ -1466,7 +1466,7 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 #else
 
 // 设置RX的混音开关
-static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
+static rt_err_t hl_mod_audio_set_mix_switch(int32_t mix_switch)
 {
     int8_t ret = 0;
 

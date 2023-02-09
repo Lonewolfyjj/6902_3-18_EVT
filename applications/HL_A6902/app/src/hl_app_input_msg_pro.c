@@ -36,6 +36,7 @@
 #include "hl_mod_pm.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_upgrade.h"
+#include "hl_mod_upgrade.h"
 #include "hl_board_commom.h"
 #include "hl_util_nvram.h"
 

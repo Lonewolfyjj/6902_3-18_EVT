@@ -45,7 +45,7 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_lvgl_upgrade_init_t init;
-
+    data_ptr->upgrade_progress = 99;
     init.upgrade_progress = data_ptr->upgrade_progress;
     hl_mod_lvgl_upgrade_init(&init);
 }
@@ -88,7 +88,7 @@ static void hl_mod_page_loop(void)
 
             ioctrl.upgrade_ioctl = HL_UPGRADE_CLEAR_CMD;
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
-
+            ioctrl.ptr           = "升级成功";
             ioctrl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
             if (!status) {
@@ -97,11 +97,12 @@ static void hl_mod_page_loop(void)
             break;
         case HL_UPGRADE_STATUS_FAIL:
             ioctrl.upgrade_ioctl = HL_UPGRADE_CLEAR_CMD;
-            ioctrl.ptr = "升级失败";
+
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
             if (!status) {
                 status = 1;
             }
+            ioctrl.ptr           = "升级失败";
             ioctrl.upgrade_ioctl = HL_UPGRADE_FAIL_CMD;
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
             break;

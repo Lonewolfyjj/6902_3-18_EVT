@@ -59,7 +59,6 @@ LV_IMG_DECLARE(Main_apple);    // 苹果认证
 #define ICON_POS_DEFAULT 1
 #define ICON_LIFT_NUM 4
 #define ICON_RIGHT_NUM 3
-
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
 
