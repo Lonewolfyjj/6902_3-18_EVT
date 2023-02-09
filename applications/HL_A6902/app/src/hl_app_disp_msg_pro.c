@@ -268,9 +268,15 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
+            ptr = p_msg->param.u32_param;            
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);   
+            rx_info.cam_gain_l = ptr;        
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_r =  ptr;
             LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_CATEGORY_VAL_IND:
@@ -292,14 +298,29 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case MONO_LINE_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置相机口音量
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_l = ptr;
+            rx_info.cam_gain_r = ptr;
+            // 保存本地。。。
             LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
             // TBD: SAFETRACK设置相机口音量
+            ptr =  p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_l =  ptr;
+            rx_info.cam_gain_r =  ptr;
             LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_VOLUME_VAL_IND:
             // TBD: audio模块设置监听口音量
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr, 4);
+            rx_info.hp_gain = ptr;
             LOG_D("MONITOR_VOLUME_VAL_IND\r\n");
             break;
         case LED_BRITNESS_VAL_IND:
