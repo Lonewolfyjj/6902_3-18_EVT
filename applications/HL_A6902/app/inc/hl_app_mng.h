@@ -51,10 +51,23 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_flag:1;
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
-
+    /// 升级标志(0:空闲 1：升级中 2：升级成功 3：升级失败)
+    uint8_t             upgrade_flag:2;
     /// mute(1:mute on 0:mute off)
     uint8_t             mute_flag;
-
+    /// 录制保护标志(1:录制保护开  0：录制保护关)
+    uint8_t             rec_protect_flag;
+    /// 自动录制标志(1:自动录制开  0：自动录制关)
+    uint8_t             rec_auto_flag;
+    /// 降噪保护标志(1:降噪保护开  0：降噪保护关)
+    uint8_t             denoise_protect_flag;
+    /// 自动降噪标志(1:自动降噪开  0：自动降噪关)
+    uint8_t             denoise_auto_flag;
+    /// 降噪等级()
+    uint8_t             denoise_class;
+    /// 升级状态(hl_mod_upgrade_state)
+    uint8_t             upgrade_state;
+    
     /// 无线状态
     hl_rf_state_e       rf_state;
     /// TX当前声道(0:左声道  1：右声道)

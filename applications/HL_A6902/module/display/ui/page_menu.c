@@ -33,7 +33,8 @@
 #include "page_menu.h"
 #include "language.h"
 #include "page_style_bit.h"
-
+#include <rtthread.h>
+#include <rtdevice.h>
 #define CHECK_POS_CENTRE(X,Y)    ((X >= 125) && (X < 175) )//&& (Y > 186) && (Y < 286)
 #define CHECK_POS_LR(X,Y)    (X) < (125) ? 0 : 1 //0:lift 1:right
 #define LAB_ADD(X)  lab##X
@@ -47,7 +48,7 @@
 
 static event_cb func_cb;
 static uint8_t ICON_NUMBER = 0;
-static lv_obj_t *cont_row;
+static lv_obj_t *cont_row = NULL;
 static lv_obj_t *lab_obj[MAX_MENU_NUMBER];
 static lv_obj_t *pic_obj[MAX_MENU_NUMBER];
 
@@ -113,10 +114,10 @@ static void lv_icon_event_cb(lv_event_t * e)
     
 
     if(code == LV_EVENT_SCROLL){
-        if(!cont_x_center){
-            if(cont_row == NULL){
-                return ;
-            }
+        if(cont_row == NULL){
+            return ;
+        }
+        if(!cont_x_center){            
             lv_obj_get_coords(cont_row, &cont_a);//复制对象
             cont_x_center = cont_a.x1 + lv_area_get_width(&cont_a) / 2;//获取Y方向中心轴坐标    
             child_cnt = lv_obj_get_child_cnt(cont_row);//获取子对象数量
@@ -230,36 +231,35 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata,    int8_t center
     lv_obj_set_flex_flow(cont_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(cont_row, LV_SCROLLBAR_MODE_OFF);
-    
     for(i = 0; i <pic_num; i++){
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
-        lv_img_set_zoom(picdata[i].obj,128);
+        // lv_img_set_zoom(picdata[i].obj,128);
         picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,15,1,picdata[i].ptr);
-    }    
+    }  
     // lv_img_set_zoom(picdata[0].obj,256);
     lv_obj_scroll_to_view(lv_obj_get_child(cont_row, center), LV_ANIM_OFF);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(cont_row, lv_icon_event_cb, LV_EVENT_ALL, NULL);
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 // FALSE 表示切换居中的图标，  true表示选中图标  都会触发中断
 void lv_set_icon_postion(uint8_t pos, bool en)
 {
@@ -274,9 +274,18 @@ void lv_set_icon_postion(uint8_t pos, bool en)
 
 void lv_menu_exit(void)
 {
-    hl_obj_delete(lv_scr_act(),false);
+    // hl_obj_delete(lv_scr_act(),false);
     // lv_style_reset(&screen_style);
     // lv_style_reset(&style_label);
+    // if(cont_row != NULL){        
+    //     // lv_obj_clean(cont_row);
+    //     // rt_kprintf("hl_mod_date_init 1\n");
+    //     lv_obj_clean(lv_scr_act());
+    //     cont_row = NULL;
+    // }   
+    lv_obj_clean(lv_scr_act());
+    rt_thread_mdelay(10);
+    // rt_kprintf("hl_mod_date_init 2\n"); 
 }
 
 void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func,int8_t center)

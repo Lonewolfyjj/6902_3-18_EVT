@@ -56,6 +56,7 @@ void hl_app_disp_state_led_set(void)
     hl_led_switch   denoise_ctrl;
     hl_led_switch   record_ctrl;
     hl_led_switch   mute_ctrl;
+    hl_led_switch   upgrade_ctrl;
 
     // RF
     switch (tx_info.rf_state) {
@@ -101,6 +102,13 @@ void hl_app_disp_state_led_set(void)
         mute_ctrl = SWITCH_OPEN;
     }
     hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));
+
+    if (tx_info.upgrade_flag == 1) {
+        upgrade_ctrl = SWITCH_OPEN;
+    } else {
+        upgrade_ctrl = SWITCH_CLOSE;
+    }
+    hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &upgrade_ctrl, sizeof(upgrade_ctrl));
 }
 
 #else
