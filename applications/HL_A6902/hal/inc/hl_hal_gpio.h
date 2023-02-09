@@ -40,6 +40,8 @@ typedef enum _hl_gpio_port_e
     GPIO_GAUGE_INT,
     /// (mic插入检测，外部上拉，低电平有效)
     GPIO_MIC_DET,
+    /// (POGO插入检测，外部下拉，高电平有效)
+    GPIO_PBUS_DET,
 
     // OUT
     /// (EMMC复位脚，无外部上下拉，低电平有效)
@@ -100,7 +102,9 @@ typedef enum _hl_gpio_port_e
     GPIO_OLED_TE,
     /// (触摸屏中断脚，无外部上下拉，...)
     GPIO_TP_INT,
-
+    /// (POGO插入检测，外部下拉，高电平有效)
+    GPIO_PBUS_DET,
+    
     // OUT
     /// (OLED RST脚，无外部上下拉，低电平有效)
     GPIO_OLED_RST,

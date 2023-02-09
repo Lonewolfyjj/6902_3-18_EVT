@@ -34,6 +34,7 @@ extern "C" {
 #include "hal_base.h"
 #include "drv_snor.h"
 #include "finsh.h"
+#include "hl_util_nvram.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /// NVRAM的地址，具体值为setting.ini中nvran的 （区块地址*0x200）
@@ -276,6 +277,7 @@ uint8_t hl_board_nvram_init()
 
 void hl_board_reboot(void)
 {
+    hl_util_nvram_param_save();
     extern void rt_hw_cpu_reset(void);
     rt_hw_cpu_reset();
 }

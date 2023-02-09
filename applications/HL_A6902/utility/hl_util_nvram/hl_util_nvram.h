@@ -220,6 +220,25 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
 uint8_t hl_util_nvram_param_set(char* param_key, char* param_value);
 
 /**
+ * hl_util_nvram_param_set_integer
+ * @brief 获取数值参数，返回的是数值结果
+ * @param [in] param_key 写入的参数名
+ * @param [in] integer_value 写入的参数的值的保存地址
+ * @return uint8_t 写入状态 0：成功 | 非0：失败 
+ * @date 2023-02-07
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-07      <td>lixiang     <td>新建
+ * </table>
+ */
+uint8_t hl_util_nvram_param_set_integer(char* param_key, uint8_t integer_value);
+
+/**
  * hl_util_nvram_param_save
  * @brief 保存JSON的内容到NVRAM中
  * @return uint8_t 保存状态 0：保存成功 | 非0：保存失败

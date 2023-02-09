@@ -3,7 +3,7 @@
  * @author liujie (jie.liu@hollyland-tech.com)
  * @brief 
  * @version V1.0
- * @date 2023-01-09
+ * @date 2023-02-07
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -16,7 +16,7 @@
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2023-01-09     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2023-02-07     <td>v1.0     <td>liujie     <td>内容
  * </table>
  * 
  */ 
@@ -42,11 +42,11 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 
-static int16_t now_num = (int16_t)HL_MOREONE_CHECK_ONE_LEFT;
+static int16_t                 now_num = (int16_t)HL_MOREONE_OPTION_ONE;
 static hl_lvgl_moreone_ioctl_t now_opt;
-static hl_moreone_choose_t opt1_choose;
-static hl_moreone_choose_t opt2_choose;
-static hl_moreone_choose_t opt3_choose;
+static hl_moreone_choose_t     opt1_choose;
+static hl_moreone_choose_t     opt2_choose;
+static hl_moreone_choose_t     opt3_choose;
 
 static hl_moreone_choose_t tx2_record_switch(hl_display_screen_s* data_ptr)
 {
@@ -75,90 +75,95 @@ static hl_moreone_choose_t tx2_noise_switch(hl_display_screen_s* data_ptr)
 }
 
 //录制开关、静音、降噪开关界面
-static void hl_moreone_test_cb(hl_moreone_check_t event_num)
+static void hl_moreone_test_cb(hl_moreone_mid_opt_t moreone_mid_opt, hl_moreone_choose_t choose)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-    uint32_t              value    = 0;
-    hl_out_msg_e         msg_cmd;
-    LOG_E("event=%x", event_num);
-    if (event_num > HL_MOREONE_CHECK_THREE_RIGHT) {
-        switch (event_num) {
-            case HL_MOREONE_CHG_ONE_LEFT:
-                now_num                    = HL_MOREONE_CHECK_ONE_LEFT;
-                opt1_choose                = HL_MOREONE_CHECK_ONE_LEFT;
-                now_opt.moreone_choose     = opt1_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_ONE;
-                break;
-            case HL_MOREONE_CHG_ONE_RIGHT:
-                now_num                    = HL_MOREONE_CHECK_ONE_RIGHT;
-                opt1_choose                = HL_MOREONE_CHECK_ONE_RIGHT;
-                now_opt.moreone_choose     = opt1_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_ONE;
-                break;
-            case HL_MOREONE_CHG_TWO_LEFT:
-                now_num                    = HL_MOREONE_CHECK_TWO_LEFT;
-                opt2_choose                = HL_MOREONE_CHECK_TWO_LEFT;
-                now_opt.moreone_choose     = opt2_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_TWO;
-                break;
-            case HL_MOREONE_CHG_TWO_RIGHT:
-                now_num                    = HL_MOREONE_CHECK_TWO_RIGHT;
-                opt2_choose                = HL_MOREONE_CHECK_TWO_RIGHT;
-                now_opt.moreone_choose     = opt2_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_TWO;
-                break;
-            case HL_MOREONE_CHG_THREE_LEFT:
-                now_num                    = HL_MOREONE_CHECK_THREE_LEFT;
-                opt3_choose                = HL_MOREONE_CHECK_THREE_LEFT;
-                now_opt.moreone_choose     = opt3_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_THREE;
-                break;
-            case HL_MOREONE_CHG_THREE_RIGHT:
-                now_num                    = HL_MOREONE_CHECK_THREE_RIGHT;
-                opt3_choose                = HL_MOREONE_CHECK_THREE_RIGHT;
-                now_opt.moreone_choose     = opt3_choose;
-                now_opt.moreone_choose_opt = HL_MOREONE_OPTION_THREE;
-                break;
-            default:
-                break;
-        }
-    } else {
-        switch (event_num) {
-            case HL_MOREONE_CHECK_ONE_LEFT:
-                msg_cmd                               = TX2_RECORD_STATE_SWITCH_IND;
-                data_ptr->sys_status.tx2_record_state = 1;
-                value                                 = 1;
-                break;
-            case HL_MOREONE_CHECK_ONE_RIGHT:
-                msg_cmd                               = TX2_RECORD_STATE_SWITCH_IND;
-                data_ptr->sys_status.tx2_record_state = 0;
-                value                                 = 0;
-                break;
-            case HL_MOREONE_CHECK_TWO_LEFT:
-                msg_cmd                              = TX2_MUTE_SWITCH_SWITCH_IND;
-                data_ptr->sys_status.tx2_mute_switch = 1;
-                value                                = 1;
-                break;
-            case HL_MOREONE_CHECK_TWO_RIGHT:
-                msg_cmd                              = TX2_MUTE_SWITCH_SWITCH_IND;
-                data_ptr->sys_status.tx2_mute_switch = 0;
-                value                                = 0;
-                break;
-            case HL_MOREONE_CHECK_THREE_LEFT:
-                msg_cmd                        = TX2_NOISE_SWITCH_IND;
-                data_ptr->sys_status.tx2_noise = 1;
-                value                          = 1;
-                break;
-            case HL_MOREONE_CHECK_THREE_RIGHT:
-                msg_cmd                        = TX2_NOISE_SWITCH_IND;
-                data_ptr->sys_status.tx2_noise = 0;
-                value                          = 0;
-                break;
-            default:
-                return;
-                break;
-        }
-        hl_mod_display_send_msg(msg_cmd, &value, 0);
+    hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
+    uint32_t             value    = 0;
+
+    LOG_E("opt=%d,choose=%d\n", moreone_mid_opt, choose);
+    // 上报并更新参数
+    switch (moreone_mid_opt) {
+        case HL_MOREONE_OPTION_ONE:
+            if (opt1_choose != choose) {
+                opt1_choose = choose;
+                // 上报并更新参数
+                switch (choose) {
+                    case HL_MOREONE_CHOOSE_LEFT:
+                        value = 1;
+                        break;
+                    case HL_MOREONE_CHOOSE_RIGHT:
+                        value = 0;
+                        break;
+                    default:
+                        return;
+                        break;
+                }
+
+                if (data_ptr->sys_status.tx2_record_state != value) {
+                    // 上报并更新参数
+                    hl_mod_display_mux_take();
+                    data_ptr->sys_status.tx2_record_state = value;
+                    flag->sys_status.tx2_record_state = 1;
+                    hl_mod_display_mux_release();
+                    hl_mod_display_send_msg(TX2_RECORD_STATE_SWITCH_IND, &value, 0);
+                }
+            }
+            break;
+        case HL_MOREONE_OPTION_TWO:
+            if (opt2_choose != choose) {
+                opt2_choose = choose;
+
+                switch (choose) {
+                    case HL_MOREONE_CHOOSE_LEFT:
+                        value = 1;
+                        break;
+                    case HL_MOREONE_CHOOSE_RIGHT:
+                        value = 0;
+                        break;
+                    default:
+                        return;
+                        break;
+                }
+                if (data_ptr->sys_status.tx2_mute_switch != value) {
+                    // 上报并更新参数
+                    hl_mod_display_mux_take();
+                    data_ptr->sys_status.tx2_mute_switch = value;
+                    flag->sys_status.tx2_mute_switch = 1;
+                    hl_mod_display_mux_release();
+                    hl_mod_display_send_msg(TX2_MUTE_SWITCH_SWITCH_IND, &value, 0);
+                }
+            }
+
+            break;
+        case HL_MOREONE_OPTION_THREE:
+            if (opt3_choose != choose) {
+                opt3_choose = choose;
+
+                switch (choose) {
+                    case HL_MOREONE_CHOOSE_LEFT:
+                        value = 1;
+                        break;
+                    case HL_MOREONE_CHOOSE_RIGHT:
+                        value = 0;
+                        break;
+                    default:
+                        return;
+                        break;
+                }
+                if (data_ptr->sys_status.tx2_noise != value) {
+                    // 上报并更新参数
+                    hl_mod_display_mux_take();
+                    data_ptr->sys_status.tx2_noise = value;
+                    flag->sys_status.tx2_noise = 1;
+                    hl_mod_display_mux_release();
+                    hl_mod_display_send_msg(TX2_NOISE_SWITCH_IND, &value, 0);
+                }
+            }
+
+            break;
+        default:
+            break;
     }
 }
 
@@ -167,54 +172,46 @@ static void hl_mod_page_state_update(void)
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
     hl_lvgl_moreone_ioctl_t     ioctrl;
-    uint8_t temp;
+    hl_moreone_choose_t         temp;
 
-    if (flag->sys_status.tx2_record_state) {
-        flag->sys_status.tx2_record_state = 0;
-        temp                              = tx2_record_switch(data_ptr);
+    temp = tx2_record_switch(data_ptr);
 
-        if (temp != opt1_choose) {
-            opt1_choose               = temp;
-            ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
-            ioctrl.moreone_choose     = temp;
-            ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_ONE;
-            hl_mod_moreone_ioctl(&ioctrl);
+    if (temp != opt1_choose) {
+        opt1_choose               = temp;
+        ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
+        ioctrl.moreone_choose     = temp;
+        ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_ONE;
+        hl_mod_moreone_ioctl(&ioctrl);
 
-            ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
-            hl_mod_moreone_ioctl(&ioctrl);
-        }
+        ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
+        hl_mod_moreone_ioctl(&ioctrl);
     }
 
-    if (flag->sys_status.tx2_mute_switch) {
-        flag->sys_status.tx2_mute_switch = 0;
-        temp                             = tx2_mute_switch(data_ptr);
-        if (temp != opt2_choose) {
-            temp                      = opt2_choose;
-            ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
-            ioctrl.moreone_choose     = temp;
-            ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_TWO;
+    temp = tx2_mute_switch(data_ptr);
+    if (temp != opt2_choose) {
+        opt2_choose                      = temp;
+        ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
+        ioctrl.moreone_choose     = temp;
+        ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_TWO;
 
-            hl_mod_moreone_ioctl(&ioctrl);
+        hl_mod_moreone_ioctl(&ioctrl);
 
-            ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
-            hl_mod_moreone_ioctl(&ioctrl);
-        }
+        ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
+        hl_mod_moreone_ioctl(&ioctrl);
     }
 
-    if (flag->sys_status.tx2_noise) {
-        flag->sys_status.tx2_noise = 0;
-        temp                       = tx2_noise_switch(data_ptr);
+    temp = tx2_noise_switch(data_ptr);
 
-        if (temp != opt3_choose) {
-            ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
-            ioctrl.moreone_choose     = temp;
-            ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_THREE;
+    if (temp != opt3_choose) {
+        opt3_choose = temp;
+        ioctrl.cmd_type           = HL_MOREONE_OPTION_CMD;
+        ioctrl.moreone_choose     = temp;
+        ioctrl.moreone_choose_opt = HL_MOREONE_OPTION_THREE;
 
-            hl_mod_moreone_ioctl(&ioctrl);
+        hl_mod_moreone_ioctl(&ioctrl);
 
-            ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
-            hl_mod_moreone_ioctl(&ioctrl);
-        }
+        ioctrl.cmd_type = HL_MOREONE_POSTION_CMD;
+        hl_mod_moreone_ioctl(&ioctrl);
     }
 }
 
@@ -236,9 +233,8 @@ static void hl_mod_page_setup(void)
     };
 
     hl_mod_moreone_init(&data);
+    now_num = data.moreone_mid_opt;
 
-    now_opt.moreone_choose     = opt1_choose;
-    now_opt.moreone_choose_opt = data.moreone_mid_opt;
     hl_mod_knob_select_val_set(&now_num, opt1_choose);
 }
 
@@ -256,22 +252,10 @@ static void hl_mod_page_exit(void)
     // hl_mod_moreone_ioctl(&data);
 }
 
-// static void hl_mod_switch_choose(hl_moreone_choose_t moreone_choose, hl_moreone_mid_opt_t moreone_choose_opt)
-// {
-//     switch(){
-//         case :
-//         break;
-//         case :
-//         break;
-
-//     }
-
-// }
-
 static void hl_mod_page_loop(void)
 {
-    hl_moreone_choose_t moreone_choose;//
-    hl_moreone_mid_opt_t moreone_choose_opt;
+    hl_moreone_choose_t     moreone_choose;  //
+    hl_moreone_mid_opt_t    moreone_choose_opt;
     hl_lvgl_moreone_ioctl_t io_ctrl;
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();
@@ -280,30 +264,27 @@ static void hl_mod_page_loop(void)
 
     // 触摸返回
     if (1 == hl_mod_keypad_touchkey_read()) {
-        now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
-        hl_mod_moreone_ioctl(&now_opt);
+        // now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
+        // hl_mod_moreone_ioctl(&now_opt);
+        // PageManager_PagePush(PAGE_FAST_TX2_CONFIG);
         hl_mod_menu_goto_home_page();
     }
 
     // 旋钮选择
-    if (hl_mod_knob_select_val_change(&now_num,0,5,false) ) {
-          
-         moreone_choose_opt = hl_mod_knob_select_val_get(&now_num)/2;
-         moreone_choose = hl_mod_knob_select_val_get(&now_num)%2;
-         io_ctrl.cmd_type = HL_MOREONE_POSTION_CMD;
-         io_ctrl.moreone_choose =  moreone_choose;
-         io_ctrl.moreone_choose_opt = moreone_choose_opt;
+    if (hl_mod_knob_select_val_change(&now_num, 0, 2, false)) {
 
-         hl_mod_moreone_ioctl(&io_ctrl);
-         
-         io_ctrl.cmd_type = HL_MOREONE_OPTION_CMD;
-         hl_mod_moreone_ioctl(&io_ctrl);
+        moreone_choose_opt = now_num;
+
+        io_ctrl.cmd_type           = HL_MOREONE_POSTION_CMD;
+        io_ctrl.moreone_choose_opt = moreone_choose_opt;
+
+        hl_mod_moreone_ioctl(&io_ctrl);
     }
 
     // OK按键
     if (ok_btn == HL_KEY_EVENT_SHORT) {
-        now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
-        hl_mod_moreone_ioctl(&now_opt);
+        // now_opt.cmd_type = HL_MOREONE_OPTION_CMD;
+        // hl_mod_moreone_ioctl(&now_opt);
     }
 }
 
@@ -311,8 +292,7 @@ PAGE_DEC(PAGE_FAST_TX2_CONFIG)
 {
     bool result;
 
-    result     = PageManager_PageRegister(PAGE_FAST_TX2_CONFIG, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit,
-                                      NULL);
+    result = PageManager_PageRegister(PAGE_FAST_TX2_CONFIG, hl_mod_page_setup, hl_mod_page_loop, hl_mod_page_exit, NULL);
 
     if (result == false) {
         LV_LOG_USER("PAGE_FAST_TX2_CONFIG init fail\n");
@@ -323,6 +303,3 @@ PAGE_DEC(PAGE_FAST_TX2_CONFIG)
 /*
  * EOF
  */
-
-
-

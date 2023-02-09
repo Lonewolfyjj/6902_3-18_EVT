@@ -64,11 +64,17 @@ typedef enum _hl_mod_audio_ctrl_cmd
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
     /// 获取RTC时间 参数<audio_time>
-    HL_AUDIO_RTC_TIME_CMD, 
+    HL_AUDIO_GET_RTC_TIME_CMD, 
+    /// 设置RTC时间 参数<audio_time>
+    HL_AUDIO_SET_RTC_TIME_CMD, 
     /// 设置监听接口的左通道增益 int(-103~24)
     HL_AUDIO_SET_MIC_GAIN_CMD,
     /// 设置监听接口PGA的右通道增益 int(-103~24)
     HL_AUDIO_SET_MIC_PGA_GAIN_CMD,
+    /// 格式化文件系统
+    HL_AUDIO_MKFS_DFS_CMD,   
+    /// 检查文件系统（如果无法挂载就自动格式化）
+    HL_AUDIO_CHECK_DFS_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 
 typedef enum _hl_mod_audio_indicate
@@ -131,6 +137,10 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_HP_PGA_GAIN_L_CMD,
     /// 设置监听接口PGA的右通道增益 int(-103~24)
     HL_AUDIO_SET_HP_PGA_GAIN_R_CMD,
+    /// 格式化文件系统
+    HL_AUDIO_MKFS_DFS_CMD,   
+    /// 检查文件系统（如果无法挂载就自动格式化）
+    HL_AUDIO_CHECK_DFS_CMD, 
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 

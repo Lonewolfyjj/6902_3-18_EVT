@@ -42,6 +42,10 @@ typedef enum _hl_mod_pm_cmd_e
     HL_PM_POWER_DOWN_CMD,
     /// 更新一次电池信息到App，无参数
     HL_PM_BAT_INFO_UPDATE_CMD,
+    /// 设置VBUS_C的插入状态，参数为<uint8_t *>(1:连接 0：未连接)
+    HL_PM_SET_VBUS_C_STATE_CMD,
+    /// 设置VBUS_P的插入状态，参数为<uint8_t *>(1:连接 0：未连接)
+    HL_PM_SET_VBUS_P_STATE_CMD,
 } hl_mod_pm_cmd_e;
 
 typedef enum _hl_mod_pm_ind_e
