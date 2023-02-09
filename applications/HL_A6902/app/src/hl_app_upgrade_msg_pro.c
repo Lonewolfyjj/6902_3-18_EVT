@@ -31,6 +31,7 @@
 #include "hl_mod_audio.h"
 #include "hl_mod_display.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_util_nvram.h"
 #define DBG_SECTION_NAME "app_upgrade"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -76,6 +77,8 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
         case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
             // hl_mod_telink_start();
             // hl_mod_audio_init();
+            hl_util_nvram_param_set("MSC_OPEN", "0");
+            hl_util_nvram_param_save();
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
             // hl_mod_telink_start();
