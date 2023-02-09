@@ -36,6 +36,8 @@
 #include "hl_mod_pm.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_upgrade.h"
+#include "hl_board_commom.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "app_input"
 #define DBG_LEVEL DBG_LOG
@@ -86,9 +88,8 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (tx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
-                extern void rt_hw_cpu_reset(void);
-                tx_info.on_off_flag = 0;
-                rt_hw_cpu_reset();
+                hl_util_nvram_param_set_integer("HALT", 1);
+                hl_board_reboot();
             } else {
                 // hl_app_mng_powerOn();
                 tx_info.on_off_flag = 1;
@@ -293,9 +294,8 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (rx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
-                extern void rt_hw_cpu_reset(void);
-                rx_info.on_off_flag = 0;
-                rt_hw_cpu_reset();
+                hl_util_nvram_param_set_integer("HALT", 1);
+                hl_board_reboot();
             } else {
                 // hl_app_mng_powerOn();
                 rx_info.on_off_flag = 1;
