@@ -30,6 +30,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "app_disp"
 #define DBG_LEVEL DBG_LOG
@@ -271,12 +272,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             ptr = p_msg->param.u32_param;            
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);   
             rx_info.cam_gain_l = ptr;        
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
             ptr = p_msg->param.u32_param;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_r =  ptr;
+            rx_info.cam_gain_r =  ptr;            
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_CATEGORY_VAL_IND:
@@ -303,7 +306,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
             rx_info.cam_gain_r = ptr;
-            // 保存本地。。。
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
@@ -313,6 +317,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l =  ptr;
             rx_info.cam_gain_r =  ptr;
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_VOLUME_VAL_IND:
@@ -321,6 +327,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr, 4);
             rx_info.hp_gain = ptr;
+            hl_util_nvram_param_set_integer("RX_HP_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_HP_R_GAIN", ptr);
             LOG_D("MONITOR_VOLUME_VAL_IND\r\n");
             break;
         case LED_BRITNESS_VAL_IND:
