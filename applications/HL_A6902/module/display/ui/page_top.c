@@ -32,7 +32,7 @@
  */
 #include "page_top.h"
 #include "page_style_bit.h"
-
+#include <rtthread.h>
 #define POSTION_IS_NULL 0xFF
 
 typedef struct __icon_pos_t
@@ -59,9 +59,12 @@ LV_IMG_DECLARE(Main_apple);    // 苹果认证
 #define ICON_POS_DEFAULT 1
 #define ICON_LIFT_NUM 4
 #define ICON_RIGHT_NUM 3
-#define ICON_POS_VOR 2
+
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
+
+#define ICON_POS_VOR 0
+#define ICON_SPACE_LIFT 10
 
 typedef struct _HL_DISPLAY_TOP_T
 {
@@ -168,8 +171,13 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
     }
     for (i = icon_pos + 1; i < is_used; i++) {
         icon_list[icon_ar[i]].cur_pos -= 1;
-        lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
-                     icon_list[icon_ar[i]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        if(icon_typ == ICON_POS_LIFT){
+            lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
+                        icon_list[icon_ar[i]].cur_pos * 20 * ori + i * ICON_SPACE_LIFT, ICON_POS_VOR);
+        }else{
+            lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
+                        icon_list[icon_ar[i]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        }
     }
     lv_obj_del(icon_list[duf_pos].icon);
     icon_list[duf_pos].cur_pos = POSTION_IS_NULL;
@@ -192,7 +200,7 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         icon_offset = -50;
         ori = -1;
     }
-
+    
     for (i = 0; i < ICON_NUM; i++) {
         if (icon_list[i].cur_pos != POSTION_IS_NULL) {
             is_used++;  //已经绘制的图标个数
@@ -216,16 +224,25 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
             lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
             for (j = i; j < is_used; j++) {
-                icon_list[icon_ar[j]].cur_pos += 1;
-                lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
+                icon_list[icon_ar[j]].cur_pos += 1;                
+                if(icon_typ == ICON_POS_LIFT){
+                    lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
+                             icon_list[icon_ar[j]].cur_pos * 20 * ori + j * ICON_SPACE_LIFT, ICON_POS_VOR);
+                }else{
+                    lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
                              icon_list[icon_ar[j]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+                }
             }
             return;
         }
     }
     if (new_f) {
         icon[0].cur_pos = is_used;
-        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        if(icon_typ == ICON_POS_LIFT){
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + is_used * ICON_SPACE_LIFT, ICON_POS_VOR);
+        }else{
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        }
     }
 }
 
