@@ -632,6 +632,10 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
         }
         else
         {
+            if (NULL == data->ep_out->buffer) {
+                rt_kprintf("-----------disk read error of buffer is null\n");
+                return -RT_ERROR;
+            }
             RT_DEBUG_LOG(RT_DEBUG_USB, ("return to cbw status\n"));
             data->ep_out->request.buffer = data->ep_out->buffer;
             data->ep_out->request.size = SIZEOF_CBW;

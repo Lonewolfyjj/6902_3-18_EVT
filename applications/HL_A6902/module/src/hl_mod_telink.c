@@ -601,6 +601,11 @@ uint8_t hl_mod_telink_stop(void)
 {
     rt_err_t result = RT_EOK;
 
+    if (!s_telink.module_flag) {
+        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
+        return 1;
+    }
+
     // 脱离Telink线程
     result = rt_thread_delete(s_telink.thread_id);
     if (RT_EOK != result) {
