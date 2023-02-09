@@ -84,6 +84,9 @@ static void _hl_app_mng_charger_power_on_stm()
             LOG_D("charge process\r\n");
 #if HL_IS_TX_DEVICE()
             tx_info.on_off_flag = 1;
+            hl_led_net_mode net_ctrl = LED_NET_MODE_RECONNECTION;
+            // 告诉显示模块正常开机
+            hl_mod_display_io_ctrl(LED_NET_MODLE_CMD, &net_ctrl, sizeof(net_ctrl));
 #else
             uint8_t param = OUTBOX_OFFCHARGE_LOGO;
             // 告诉显示模块正常开机
