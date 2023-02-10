@@ -337,6 +337,7 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
                 rt_kprintf("telink upgrade succeed! \r\n");                
             } else {
                 _upgrade_telink_stop();
+                unlink(HL_UPGRADE_FILE_NAME_TELINK); // 待优化
                 s_upgrade.telink_state = HL_UPGRADE_FAIL_STATE;
                 rt_kprintf("telink upgrade error! \r\n");                
             }            
@@ -508,6 +509,7 @@ static void hl_mod_upgrade_ota(void* arg)
 END:
     if (file_url)
         rt_free(file_url);
+        unlink(HL_UPGRADE_FILE_NAME_RK); // 待优化
     s_upgrade.ota_state = HL_UPGRADE_FAIL_STATE;
 }
 

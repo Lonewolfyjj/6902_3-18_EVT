@@ -28,6 +28,7 @@
 
 #include "hl_drv_aw2016a.h"
 #include "hl_hal_gpio.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_INFO
@@ -367,6 +368,9 @@ uint8_t hl_mod_display_init(void* display_msq)
 
     hl_hal_gpio_init(GPIO_REC_LED_EN);
 
+    hl_util_nvram_param_get_integer("LED_BRIGHTNESS", &_display_mod.led_brightness, 30);
+    _set_brightness();
+
     _display_mod.display_update_flag_1 = false;
     _display_mod.display_update_flag_2 = false;
     _display_mod.net_mode              = LED_NET_MODE_ID_CNT;
@@ -528,6 +532,9 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             }
 
             _display_mod.led_brightness = *(uint8_t*)ptr;
+
+            hl_util_nvram_param_set_integer("LED_BRIGHTNESS", _display_mod.led_brightness);
+            hl_util_nvram_param_save();
 
             ret = _set_brightness();
             if (ret == HL_DISPLAY_FAILED) {

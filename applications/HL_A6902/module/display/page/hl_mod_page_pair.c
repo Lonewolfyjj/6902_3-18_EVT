@@ -92,7 +92,8 @@ static void hl_mod_page_setup(void)
     // };
 
     // hl_mod_s_two_in_one_ioctl(&s_two_in_one_test_ctl);
-    now_num = s_two_in_one_test.s_two_in_one_choose;
+    display_choose = s_two_in_one_test.s_two_in_one_choose;
+    now_num        = (int16_t)display_choose;
 }
 
 static void hl_mod_page_exit(void)

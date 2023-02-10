@@ -203,6 +203,9 @@ static insert_state_s insert_state[HL_INPUT_INSERT] = { 0 };
 /// 电源键定时器（开机电源键长按时间1s, 定时3s后修改为3s）
 static struct rt_timer power_key_timer;
 
+/// 初始化标志
+static uint8_t hl_mod_input_init_flag = 0;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 /* 输入模块相关函数 */
 //static void hl_mod_input_set_param(void);
@@ -821,11 +824,16 @@ uint8_t hl_mod_input_init(void* msg_hander)
         return HL_FAILED;
     }
 
+    hl_mod_input_init_flag = 1;
     return HL_SUCCESS;
 }
 
 uint8_t hl_mod_input_deinit(void)
 {
+    if (!hl_mod_input_init_flag) {
+        return 1;
+    }
+
     if (HL_SUCCESS != hl_mod_input_key_deinit()) {
         HL_PRINT("key deinit err!");
         return HL_FAILED;
@@ -836,9 +844,9 @@ uint8_t hl_mod_input_deinit(void)
         return HL_FAILED;
     }
 
-    if (input_tid != RT_NULL) {
-        rt_thread_delete(input_tid);
-    }
+    // if (input_tid != RT_NULL) {
+    //     rt_thread_delete(input_tid);
+    // }
 
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
 

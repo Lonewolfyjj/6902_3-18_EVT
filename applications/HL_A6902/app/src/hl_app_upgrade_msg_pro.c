@@ -69,18 +69,30 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 #else
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
+    hl_upgrade_status status;
     switch (upgrade_state) {
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+
             break;
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
+            status = HL_UPGRADE_STATUS_UPGRADE;
+            LOG_D("HL_UPGRADE_STATUS_UPGRADE");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
             break;
         case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             hl_util_nvram_param_set("MSC_OPEN", "0");
             hl_util_nvram_param_save();
+            status = HL_UPGRADE_STATUS_SUCCESS;
+            LOG_D("HL_UPGRADE_STATUS_SUCCESS");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
+
+            status = HL_UPGRADE_STATUS_FAIL;
+            LOG_D("HL_UPGRADE_STATUS_FAIL");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;
