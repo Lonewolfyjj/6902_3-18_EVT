@@ -57,6 +57,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_switch_e            bypass_switch;
     hl_rf_bypass_state_t*  ptr_rf_state;
     hl_rf_bypass_value_t*  ptr_rf_value;
+    uint32_t               u32_param;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -165,6 +166,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_TX_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            tx_info.gain = (int)ptr_rf_value->val;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
+            // 保存本地。。。
             LOG_D("app get TX%d Gain Value(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
@@ -176,6 +180,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            tx_info.uac_gain = (int)ptr_rf_value->val;
+            if(tx_info.mstorage_plug == 0) {
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.uac_gain, 4); // 待优化 （TX增益与UAC增益同时只能用一个）
+            }
+            // 保存本地。。。       
             LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 

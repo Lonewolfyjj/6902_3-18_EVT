@@ -1399,14 +1399,22 @@ static void hl_mod_audio_set_codec_gain(int gain, uint8_t ch, uint8_t sound_ch, 
     db_config.sound_ch = sound_ch;
     db_config.device   = device;
 
-    LOG_E("set gain (%d)", gain);
+    // LOG_E("set gain (%d)", gain);
 #if HL_IS_TX_DEVICE()
+    if(cap_info.card == NULL) {
+        LOG_E("cap card is NULL");
+        return -RT_ERROR;
+    }
     ret = rt_device_control(cap_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
 #else
+    if(play_info.card == NULL) {
+        LOG_E("play card is NULL");
+        return -RT_ERROR;
+    }
     ret = rt_device_control(play_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
 #endif
     if (ret != RT_EOK) {
-        LOG_E("fail to set gain\n");
+        LOG_E("fail to set gain");
         return -RT_ERROR;
     }
 }
@@ -1475,6 +1483,8 @@ static rt_err_t hl_mod_audio_set_mix_switch(int32_t mix_switch)
         LOG_E("fail to set mix switch");
         return -RT_ERROR;
     }
+
+    return RT_EOK;
 }
 
 #endif
