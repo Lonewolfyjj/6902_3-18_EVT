@@ -35,6 +35,7 @@ extern "C" {
 #include "lvgl.h"
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
+#include "page_b_two_in_one.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -241,7 +242,7 @@ typedef enum _device_pose_t
 void hl_mod_display_mux_init(void);
 void hl_mod_display_mux_take(void);
 void hl_mod_display_mux_release(void);
-
+void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose);
 hl_screen_page_e hl_mod_display_scr_get_page(void);
 hl_display_screen_s* hl_mod_page_get_screen_data_ptr();
 void hl_mod_page_delete(lv_obj_t* obj);

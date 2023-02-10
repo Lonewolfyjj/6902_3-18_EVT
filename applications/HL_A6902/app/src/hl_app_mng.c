@@ -108,7 +108,10 @@ void hl_app_param_fun(void)
 #else
 void hl_app_param_loader(void)
 {
-
+    hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
+    // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
+    hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
+    hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
 }
 
 void hl_app_param_fun(void)
@@ -134,6 +137,7 @@ void hl_app_msg_thread(void* parameter)
         hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);        
         hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     }
+    // hl_app_param_fun();
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
@@ -264,6 +268,7 @@ void hl_app_mng_powerOff(void)
     uint8_t ret;
 
     LOG_I("power off");    
+    hl_util_nvram_param_save();
     hl_mod_euc_stop();
     hl_mod_euc_deinit();
 
@@ -280,7 +285,6 @@ void hl_app_mng_powerOff(void)
         hl_mod_audio_deinit();
     } 
 #endif
-    hl_util_nvram_param_save();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
     hl_mod_input_deinit();

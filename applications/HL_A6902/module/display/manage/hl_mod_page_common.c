@@ -182,6 +182,15 @@ uint8_t hl_mode_report_event(hl_timeout_t* timer, uint32_t time, int16_t bar_num
 
     return changeflag;
 }
+
+
+void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose)
+{    hl_lvgl_b_two_in_one_ioctl_t two_b_in_one_test_ctl;
+
+    two_b_in_one_test_ctl.b_two_in_one_choose = choose;
+    hl_mod_b_two_in_one_ioctl(&two_b_in_one_test_ctl);
+}
+
 // 返回触摸按键消抖功能实现
 uint8_t hl_mod_keypad_touchkey_read()
 {

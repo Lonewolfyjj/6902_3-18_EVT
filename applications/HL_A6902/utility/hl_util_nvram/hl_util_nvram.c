@@ -306,15 +306,16 @@ uint8_t hl_util_nvram_param_save()
     }
 
     //有更改才写入
-    sg_nvram_handle->have_changed = 1;
     if (sg_nvram_handle->have_changed == 1) {
         data = cJSON_PrintUnformatted(sg_json_paramaters);
-        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         memset(sg_json_str_buffer, 0x00, HL_UTIL_NVRAM_JSON_BUFFER_SIZE);
         strcpy(sg_json_str_buffer, data);
         ret = sg_nvram_handle->nvram_write(sg_json_str_buffer, HL_UTIL_NVRAM_JSON_BUFFER_SIZE);
+        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         free(data);
     } else {
+        data = cJSON_PrintUnformatted(sg_json_paramaters);
+        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         sg_nvram_handle->std_printf("error: nvram no change to save\r\n");
         ret = 2;
     }

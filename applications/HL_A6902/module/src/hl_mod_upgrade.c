@@ -337,6 +337,7 @@ static void _upgrade_telink_hup_handle_cb(hup_protocol_type_t hup_frame)
                 rt_kprintf("telink upgrade succeed! \r\n");                
             } else {
                 _upgrade_telink_stop();
+                unlink(HL_UPGRADE_FILE_NAME_TELINK); // 待优化
                 s_upgrade.telink_state = HL_UPGRADE_FAIL_STATE;
                 rt_kprintf("telink upgrade error! \r\n");                
             }            
@@ -508,6 +509,7 @@ static void hl_mod_upgrade_ota(void* arg)
 END:
     if (file_url)
         rt_free(file_url);
+        unlink(HL_UPGRADE_FILE_NAME_RK); // 待优化
     s_upgrade.ota_state = HL_UPGRADE_FAIL_STATE;
 }
 
@@ -1036,6 +1038,8 @@ static bool _upgrade_nuzip(void)
 
 static void hl_mod_upgrade_guard(void)
 {
+    uint32_t guard_time = 0; //
+
     while(1){
         hl_mod_feed_dog();
         if(s_upgrade.telink_state == HL_UPGRADE_SUCCEED_STATE && s_upgrade.ota_state == HL_UPGRADE_SUCCEED_STATE) {
@@ -1043,13 +1047,25 @@ static void hl_mod_upgrade_guard(void)
             s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
             s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;            
             break;
+        } else if((s_upgrade.telink_state == HL_UPGRADE_SUCCEED_STATE || s_upgrade.ota_state == HL_UPGRADE_SUCCEED_STATE) && (s_upgrade.task.type_num == 1)) {
+            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_SUCCEED_STATE);
+            s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
+            s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE; 
+            break;
         } else if(s_upgrade.telink_state >= HL_UPGRADE_SUCCEED_STATE && s_upgrade.ota_state >= HL_UPGRADE_SUCCEED_STATE) {
             // 升级失败处理
-            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_SUCCEED_STATE);
+            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_FAIL_STATE);
             s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
             s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;
             break;
+        } else if(guard_time > 300) {
+            _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_FAIL_STATE);
+            s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
+            s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;
+            guard_time = 0;
+            break;
         }
+        guard_time ++;
         rt_thread_mdelay(1000);
     }
 }
@@ -1060,7 +1076,7 @@ void hl_mod_upgrade_guard_start(void)
     s_upgrade.ota_task_thread = rt_thread_create("WDog", hl_mod_upgrade_guard, RT_NULL, 255, 5, 1);
 
     if (!s_upgrade.ota_task_thread) {
-        rt_kprintf("guard start task create failed");
+        rt_kprintf("guard start task create failed\n");
         return;
     } else {
         rt_thread_startup(s_upgrade.ota_task_thread);
@@ -1070,6 +1086,11 @@ void hl_mod_upgrade_guard_start(void)
 static void _upgrade_start(void)
 {
     uint32_t i = 0;
+
+    if (s_upgrade.task.type_num == 0) {
+        _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_FAIL_STATE);
+        return;
+    }
 
     // 初始化Telink模块串口设备
     hl_mod_upgrade_uart_init();

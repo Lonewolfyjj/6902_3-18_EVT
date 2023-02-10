@@ -67,6 +67,10 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_class;
     /// 升级状态(hl_mod_upgrade_state)
     uint8_t             upgrade_state;
+    /// TX增益设置
+    int32_t              gain;
+    /// UAC的增益设置
+    int32_t              uac_gain;
     
     /// 无线状态
     hl_rf_state_e       rf_state;
@@ -138,6 +142,12 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
+
+    /// 监听口增益设置
+    int32_t              hp_gain;
+    /// 相机口增益设置
+    int32_t              cam_gain_l;
+    int32_t              cam_gain_r;
 
     /// 本地Mac地址
     uint8_t             local_mac[6];
