@@ -320,6 +320,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
             _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
         } break;
         default:
             break;
@@ -360,6 +361,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
             _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
         } break;
         default:
             break;
