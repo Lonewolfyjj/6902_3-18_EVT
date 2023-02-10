@@ -385,22 +385,12 @@ void hl_app_mng_charger_entry(void* msg_q)
 {
     struct rt_messagequeue* app_mq              = msg_q;
     mode_to_app_msg_t       msg                 = { 0 };
-    int                     last_power_on_state = 0;
-
-    hl_util_nvram_param_get_integer("HALT", &last_power_on_state, 0);
 
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
             // 关机
             if (_in_box_flag == false || _shut_down_flag == true) {
-                hl_app_mng_powerOff();
-                while ((1));
-            }
-        } else {
-            // 开机
-            if (last_power_on_state) {
-                hl_util_nvram_param_set_integer("HALT", 0);
                 hl_app_mng_powerOff();
                 while ((1));
             }
