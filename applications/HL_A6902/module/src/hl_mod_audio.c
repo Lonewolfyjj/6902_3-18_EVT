@@ -207,6 +207,9 @@ static uint8_t cap2uac_thread_flag = 0;
 /// cap2p2u线程标志
 static uint8_t cap2play2uac_thread_flag = 0;
 
+/// 初始化标志
+static uint8_t hl_mod_audio_init_flag = 0;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 
 #if HL_IS_TX_DEVICE()
@@ -2039,6 +2042,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
         goto err5;
     }
 
+    hl_mod_audio_init_flag = 1;
     return RT_EOK;
 
 err5:
@@ -2061,6 +2065,9 @@ err0:
 
 uint8_t hl_mod_audio_deinit(void)
 {
+    if (!hl_mod_audio_init_flag) {
+        return RT_ERROR;
+    }
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_record_switch(0);
 #endif
