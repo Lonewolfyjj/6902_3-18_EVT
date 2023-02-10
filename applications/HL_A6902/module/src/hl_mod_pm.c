@@ -415,6 +415,7 @@ static void _charge_full_timer_set(void)
     if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
         if (flag == false) {
             rt_timer_start(&(_pm_mod.charge_full_timer));
+            _pm_mod.charge_full_timeout_flag = false;
             flag = true;
         }
     } else if (_pm_mod.bat_info.soc.soc < 98

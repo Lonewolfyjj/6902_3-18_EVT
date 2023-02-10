@@ -295,6 +295,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
             _in_box_flag = true;
             dev_num      = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", dev_num);
@@ -336,6 +337,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
             _in_box_flag = true;
             dev_num = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", dev_num);
