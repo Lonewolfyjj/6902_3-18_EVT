@@ -526,7 +526,12 @@ static rt_err_t nau88l25b_codec_standby(struct nau88l25b_priv* nau88l25b)
 
 static rt_err_t nau88l25b_init(struct audio_codec* codec, struct AUDIO_INIT_CONFIG* config)
 {
-    rt_kprintf("nau88l25b_init\n");
+    rt_err_t ret;
+    struct nau88l25b_priv* nau88l25b = to_nau88l25bhp_priv(codec);
+
+    ret = nau88l25b_reg_init(nau88l25b);
+
+    rt_kprintf("nau88l25b_init(hp) ret =%d\n",ret);
     return RT_EOK;
 }
 
@@ -642,8 +647,8 @@ int rt_hw_codec_nau88l25bhp_init(void)
         goto err;
     }
 
-    if (nau88l25b->work_cnt <= 0)
-        ret |= nau88l25b_reg_init(nau88l25b);
+    // if (nau88l25b->work_cnt <= 0)
+    //     ret |= nau88l25b_reg_init(nau88l25b);
     
     if (ret == RT_EOK) {
         rt_kprintf("TAG: register codec nau88l25b success\n");
