@@ -44,6 +44,7 @@ LV_IMG_DECLARE(Main_signal_1);//信号
 LV_IMG_DECLARE(Main_signal_2);//信号
 LV_IMG_DECLARE(Main_signal_3);//信号
 LV_IMG_DECLARE(Main_signal_4);//信号
+LV_IMG_DECLARE(Main_charging);//充电图标
 
 #define VOICE_TOP_BAR_WITH  4
 #define VOICE_TOP_BAR_DELAY  1000
@@ -69,6 +70,7 @@ static lv_obj_t * device_lab_tx1,*device_lab_tx2;
 static lv_obj_t * video_dot_tx1,*video_dot_tx2;
 static lv_obj_t * tx1_signal_obj[5];
 static lv_obj_t * tx2_signal_obj[5];
+static lv_obj_t * imgftx1,*imgftx2;
 
 static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
 static int16_t tx1_value_max;
@@ -88,7 +90,7 @@ static lv_style_t style_power_bar_indicator,style_power_bar_main;
 static lv_style_t style_voice_label;
 static lv_style_t style_power_label;
 static lv_style_t style_device_label;
-static lv_style_t style_video_dot,style_power_bar_white_indicator,style_power_bar_red_indicator;
+static lv_style_t style_video_dot,style_power_bar_white_indicator,style_power_bar_red_indicator,style_power_bar_green_indicator;
     
 static hl_lvgl_main_init_t main_init;
 /***************************************************************************************************/
@@ -196,6 +198,11 @@ static void lv_style_page1_init(void)
     lv_style_set_bg_opa(&style_power_bar_red_indicator, LV_OPA_COVER);
     lv_style_set_bg_color(&style_power_bar_red_indicator, lv_palette_main(LV_PALETTE_RED));
     lv_style_set_radius(&style_power_bar_red_indicator, 0);
+
+    lv_style_init(&style_power_bar_green_indicator);
+    lv_style_set_bg_opa(&style_power_bar_green_indicator, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_power_bar_green_indicator, lv_palette_main(LV_PALETTE_GREEN));
+    lv_style_set_radius(&style_power_bar_green_indicator, 0);
 }
 
 static lv_obj_t * lv_area_creat_fun(lv_align_t align,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high)
@@ -271,6 +278,7 @@ static lv_obj_t * lv_power_bar_creat_fun(lv_obj_t *align_obj,lv_coord_t x_offset
     lv_obj_align_to(bar,align_obj,LV_ALIGN_LEFT_MID,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
     lv_bar_set_range(bar,0,100);
+    lv_obj_move_background(bar);
     return bar;
 }
 
@@ -489,6 +497,16 @@ static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
 //         }        
 //     }
 // }
+static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const void * src,lv_coord_t x_offset,lv_coord_t y_offset)
+{
+    lv_obj_t* img = lv_img_create(align_obj);
+    lv_img_set_src(img, src);
+    lv_obj_align(img, align, x_offset, y_offset);
+    lv_img_set_zoom(img, 192);
+    lv_obj_set_height(img,16);
+    lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
+    return img;
+}
 
 static void lv_signal_tx1_set(int16_t signal)
 {    
@@ -517,7 +535,7 @@ static void lv_display_tx1(device_data_t * init_data)
     area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
     voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,-14,6,256);
     power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
-
+    imgftx1       = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -3);
     voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
     power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
     
@@ -544,6 +562,7 @@ static void lv_display_tx2(device_data_t * init_data)
     area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
     voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,-14,6,256);
     power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
+    imgftx2       = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -3);
 
     voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
     power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
@@ -576,6 +595,8 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     //电池图标图片
     power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
     power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
+    imgftx1       = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -3);
+    imgftx2       = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -3);
     //音量大小进度条
     voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
     voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
@@ -628,6 +649,7 @@ static void lv_delete_style(void)
     lv_style_reset(&style_video_dot);
     lv_style_reset(&style_power_bar_white_indicator);
     lv_style_reset(&style_power_bar_red_indicator);
+    lv_style_reset(&style_power_bar_green_indicator);
 }
 
 static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
@@ -792,6 +814,27 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
         case HL_CHANGE_DELETE_STYLE:
             lv_delete_style();
+            break;
+        case HL_CHANGE_TX1_BAR_GREEN:
+            lv_obj_remove_style(power_bar_tx1, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx1, &style_power_bar_green_indicator, LV_PART_INDICATOR);
+            break;
+        case HL_CHANGE_TX2_BAR_GREEN:
+            lv_obj_remove_style(power_bar_tx2, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            lv_obj_add_style(power_bar_tx2, &style_power_bar_green_indicator, LV_PART_INDICATOR);
+            break;
+            /// @brief 隐藏TX1设备充电闪电图标
+        case HL_CHANGE_TX1_ICON_HIDE:
+            lv_obj_add_flag(imgftx1, LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_CHANGE_TX2_ICON_HIDE:
+            lv_obj_add_flag(imgftx2, LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_CHANGE_TX1_ICON_DISHIDE:
+            lv_obj_clear_flag(imgftx1, LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_CHANGE_TX2_ICON_DISHIDE:
+            lv_obj_clear_flag(imgftx2, LV_OBJ_FLAG_HIDDEN);
             break;
         default:
             break;

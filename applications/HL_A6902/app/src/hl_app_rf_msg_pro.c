@@ -90,6 +90,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 // battery
                 bypass_value.val = tx_info.soc;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, (uint8_t*)&bypass_value, sizeof(bypass_value));
+                // 充电状态
+                bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
+                hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
             }
             hl_app_disp_state_led_set();
             LOG_D("telink info(%02X)", tx_info.rf_state);

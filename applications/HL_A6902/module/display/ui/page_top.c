@@ -45,6 +45,7 @@ typedef struct __icon_pos_t
 } icon_pos_t;
 
 LV_IMG_DECLARE(Main_bat);      //电池图标
+LV_IMG_DECLARE(Main_charging);//充电图标
 LV_IMG_DECLARE(Main_line_in);  //耳机插入
 LV_IMG_DECLARE(Main_usb_c);    //USB插入
 LV_IMG_DECLARE(Main_stereo);   //立体声
@@ -95,7 +96,7 @@ static HL_DISPLAY_TOP_T top_icon_sta = {
 static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main,style_power_bar_red_indicator;
 static lv_style_t style_power_label;
 
-static lv_obj_t *bat_icon, *bat_bar, *bat_label;
+static lv_obj_t *bat_icon, *bat_bar, *bat_label,*bat_charger_icon;
 
 static icon_pos_t icon_list_l[ICON_LIFT_NUM] = {
     { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_stereo },
@@ -170,6 +171,7 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
     }
     for (i = icon_pos + 1; i < is_used; i++) {
         icon_list[icon_ar[i]].cur_pos -= 1;
+        
         if(icon_typ == ICON_POS_LIFT){
             lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
                         icon_list[icon_ar[i]].cur_pos * 20 * ori + i * ICON_SPACE_LIFT, ICON_POS_VOR);
@@ -221,7 +223,12 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         } else {
             new_f           = 0;
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
-            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+            if(icon_typ == ICON_POS_LIFT){
+                lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + i * ICON_SPACE_LIFT, ICON_POS_VOR);
+            }else{
+                lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+            }
+            
             for (j = i; j < is_used; j++) {
                 icon_list[icon_ar[j]].cur_pos += 1;                
                 if(icon_typ == ICON_POS_LIFT){
@@ -312,6 +319,17 @@ static lv_obj_t* lv_power_bar_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);
     lv_bar_set_range(bar, 0, 100);
     return bar;
+}
+
+static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const void * src,lv_coord_t x_offset,lv_coord_t y_offset)
+{
+    lv_obj_t* img = lv_img_create(align_obj);
+    lv_img_set_src(img, src);
+    lv_obj_align(img, align, x_offset, y_offset);
+    lv_img_set_zoom(img, 192);
+    lv_obj_set_height(img,16);
+    lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
+    return img;
 }
 
 static lv_obj_t* lv_power_img_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset, lv_coord_t y_offset, uint16_t zoom)
@@ -557,6 +575,14 @@ void hl_mod_top_ioctl(void* ctl_data)
             // lv_label_set_text(bat_label, buf);
             break;
 
+        case HL_TOP_BAT_CHARGER_HIDE:
+
+            lv_obj_add_flag(bat_charger_icon,LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_TOP_BAT_CHARGER_NOT_HIDE:
+
+            lv_obj_clear_flag(bat_charger_icon,LV_OBJ_FLAG_HIDDEN);
+            break;
         case HL_TOP_BAT_COLOR_GREEN:
             lv_obj_remove_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
@@ -598,4 +624,5 @@ void hl_mod_top_init(void* init_data)
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
+    bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -3);
 }
