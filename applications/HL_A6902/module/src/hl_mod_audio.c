@@ -1475,6 +1475,8 @@ static rt_err_t hl_mod_audio_set_mix_switch(int32_t mix_switch)
         LOG_E("fail to set mix switch");
         return -RT_ERROR;
     }
+
+    return RT_EOK;
 }
 
 #endif
