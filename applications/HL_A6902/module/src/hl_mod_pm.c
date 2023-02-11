@@ -428,12 +428,19 @@ static void _charge_full_timer_set(void)
 
 static void _hl_mod_pmwdg(void)
 {
-    HL_SY_INPUT_PARAM_T wdg = {
+    HL_SY_INPUT_PARAM_T wdg_sy = {
         .cfg_opt = E_WD_RST,
         .param   = 1,
     };
+    HL_SGM_INPUT_PARAM_T wdg_sgm = {
+        .cfg_opt = RW_WDG_RST,
+        .param   = 1,
+    };
     if (power_ic_typ == HL_MOD_PM_CHARGER_SY6971) {
-        pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+        pm_ioctl(SY_WRITE_CMD, &wdg_sy, 1);
+    }
+    if(power_ic_typ == HL_MOD_PM_CHARGER_SGM41518){
+        pm_ioctl(SGM_WRITE_CMD, &wdg_sgm, 1);
     }
 }
 
