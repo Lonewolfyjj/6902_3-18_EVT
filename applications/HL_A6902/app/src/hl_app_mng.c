@@ -216,9 +216,10 @@ void hl_app_mng_init(void)
 // 开机，初始化模块
 void hl_app_mng_powerOn(void)
 {
-    uint8_t value = 0;
-    int msc_open_flag;
-    uint8_t ret;
+    uint8_t              value = 0;
+    int                  msc_open_flag;
+    uint8_t              ret;
+    hl_rf_bypass_state_t bypass_state;
 
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
@@ -227,7 +228,11 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_start();
 
     hl_mod_audio_init(&hl_app_mq);
-#if HL_IS_TX_DEVICE()    
+#if HL_IS_TX_DEVICE()
+    //开机同步数据
+    bypass_state.chn   = tx_info.rf_chn;
+    bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
+    hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
 #else
     ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
