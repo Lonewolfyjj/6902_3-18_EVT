@@ -90,6 +90,7 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             if (tx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
                 hl_util_nvram_param_set_integer("HALT", 1);
+                hl_mod_display_deinit();
                 hl_board_reboot();
             } else {
                 // hl_app_mng_powerOn();

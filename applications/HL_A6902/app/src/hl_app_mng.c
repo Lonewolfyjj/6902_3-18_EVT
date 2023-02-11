@@ -46,6 +46,7 @@
 #include "hl_mod_wdog.h"
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
+#include "hl_hal_gpio.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -269,6 +270,11 @@ void hl_app_mng_powerOff(void)
 
     LOG_I("power off");    
     hl_util_nvram_param_save();
+#if HL_IS_TX_DEVICE()
+    hl_hal_gpio_low(GPIO_DC3V3_EN);
+#else
+    hl_hal_gpio_high(GPIO_CODEC_EN);
+#endif
     hl_mod_euc_stop();
     hl_mod_euc_deinit();
 
