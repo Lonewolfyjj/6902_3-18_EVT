@@ -2337,10 +2337,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_rtc_get_param(ptr);
             break;
         case HL_AUDIO_SET_CAM_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] - 8), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] - 8), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD:
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
@@ -2349,10 +2349,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_HP_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 6), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 6), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_PGA_GAIN_L_CMD:
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
