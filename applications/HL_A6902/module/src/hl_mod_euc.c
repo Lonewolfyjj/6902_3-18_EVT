@@ -270,7 +270,6 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
         case HL_HUP_CMD_SHUT_DOWN: {
-            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &result, sizeof(result));
             _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
         } break;
         default:
@@ -434,7 +433,6 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
         } break;
         case HL_HUP_CMD_SHUT_DOWN: {
-            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &result, sizeof(result));
             _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
         } break;
         default:
@@ -808,6 +806,9 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 
             _uart_send_hup_data(HL_HUP_CMD_GET_TURN_ON_STATE, (uint8_t*)arg, arg_size);
         } break;
+        case HL_SHUTDOWN_ACK_CMD: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &charge_state, sizeof(charge_state));
+        } break;
         default:
             break;
     }
@@ -893,6 +894,9 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             _uart_send_hup_data(HL_HUP_CMD_GET_TURN_ON_STATE, (uint8_t*)arg, arg_size);
+        } break;
+        case HL_SHUTDOWN_ACK_CMD: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &charge_state, sizeof(charge_state));
         } break;
         default:
             break;
