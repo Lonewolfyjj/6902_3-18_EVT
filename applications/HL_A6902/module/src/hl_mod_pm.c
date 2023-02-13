@@ -391,6 +391,7 @@ static void _charge_state_judge(void)
     }
 
     if (charge_state != _pm_mod.charge_state) {
+        LOG_I("%d %d", charge_state, _pm_mod.charge_state);
         _pm_mod.charge_state = charge_state;
         _mod_msg_send(HL_CHARGE_STATE_IND, &(_pm_mod.charge_state), sizeof(_pm_mod.charge_state));
     }
@@ -402,16 +403,23 @@ static void _charge_full_timer_set(void)
     static uint8_t soc  = 255;
 
     if (soc != _pm_mod.bat_info.soc.soc) {
-        soc  = _pm_mod.bat_info.soc.soc;
-        flag = false;
+        if (soc != 99 && _pm_mod.bat_info.soc.soc == 100) {
+            flag                             = true;
+            _pm_mod.charge_full_timeout_flag = true;
+        } else {
+            flag = false;
+        }
+        soc = _pm_mod.bat_info.soc.soc;
     }
 
     if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
         if (flag == false) {
             rt_timer_start(&(_pm_mod.charge_full_timer));
+            _pm_mod.charge_full_timeout_flag = false;
             flag = true;
         }
-    } else if (_pm_mod.bat_info.soc.soc < 98 || _pm_mod.charge_state == HL_CHARGE_STATE_NO_CHARGE) {
+    } else if (_pm_mod.bat_info.soc.soc < 98
+               || (_pm_mod.charge_state == HL_CHARGE_STATE_NO_CHARGE && _pm_mod.bat_info.soc.soc != 100)) {
         flag                             = false;
         _pm_mod.charge_full_timeout_flag = false;
         rt_timer_stop(&(_pm_mod.charge_full_timer));
@@ -420,12 +428,19 @@ static void _charge_full_timer_set(void)
 
 static void _hl_mod_pmwdg(void)
 {
-    HL_SY_INPUT_PARAM_T wdg = {
+    HL_SY_INPUT_PARAM_T wdg_sy = {
         .cfg_opt = E_WD_RST,
         .param   = 1,
     };
+    HL_SGM_INPUT_PARAM_T wdg_sgm = {
+        .cfg_opt = RW_WDG_RST,
+        .param   = 1,
+    };
     if (power_ic_typ == HL_MOD_PM_CHARGER_SY6971) {
-        pm_ioctl(SY_WRITE_CMD, &wdg, 1);
+        pm_ioctl(SY_WRITE_CMD, &wdg_sy, 1);
+    }
+    if(power_ic_typ == HL_MOD_PM_CHARGER_SGM41518){
+        pm_ioctl(SGM_WRITE_CMD, &wdg_sgm, 1);
     }
 }
 
