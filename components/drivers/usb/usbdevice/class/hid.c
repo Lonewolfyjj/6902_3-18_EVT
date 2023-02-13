@@ -24,6 +24,7 @@
 #include "hl_config.h"
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
+#include "hl_app_mng.h"
 
 #ifdef RT_USB_DEVICE_HID
 
@@ -898,22 +899,26 @@ err0:
  */
 ufunction_t rt_usbd_function_hid_create(udevice_t device)
 {
-    ufunction_t     func;
-    struct hid_s   *data;
+    ufunction_t   func;
+    struct hid_s* data;
 
-    uintf_t         hid_intf;
-    ualtsetting_t   hid_setting;
+    uintf_t          hid_intf;
+    ualtsetting_t    hid_setting;
     uhid_comm_desc_t hid_desc;
+    int              last_halt_state = 0;
 
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
 
     hl_board_nvram_init();
 
+    // 开机需要立即检测是否要关机，这里是最快的能检测开机标志位的地方了
+    hl_util_nvram_param_get_integer("HALT", &last_halt_state, 0);
+    hl_app_mng_charger_set_halt_state((uint8_t)last_halt_state);
+
     if (!hl_util_nvram_param_get("SN", usb_sn, usb_sn, sizeof(usb_sn))) {
         rt_kprintf("USB SN : %s\r\n", usb_sn);
     }
-
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
 

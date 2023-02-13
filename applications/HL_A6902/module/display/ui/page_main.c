@@ -664,19 +664,19 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
         case HL_CHANGE_TX1_DEVICE:
             // hl_obj_delete(area_tx1,true);
             lv_obj_del(area_tx1);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
             break;
         case HL_CHANGE_TX2_DEVICE:
             // hl_obj_delete(area_tx2,true);
             lv_obj_del(area_tx2);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
             break;
         case HL_DISPLAY_DOUBLE:
             // hl_obj_delete(area_tx1,true);
             // hl_obj_delete(area_tx2,true);
             lv_obj_del(area_tx1);
             lv_obj_del(area_tx2);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
             break;
         default:
             break;
@@ -798,19 +798,19 @@ void hl_mod_main_ioctl(void * ctl_data)
         case HL_CHANGE_DELETE_TX1:
             // hl_obj_delete(area_tx1,true);
             lv_obj_del(area_tx1);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
         break;
         case HL_CHANGE_DELETE_DOUBLE:
             // hl_obj_delete(area_tx1,true);
             // hl_obj_delete(area_tx2,true);
             lv_obj_del(area_tx1);
             lv_obj_del(area_tx2);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
         break;
         case HL_CHANGE_DELETE_TX2:
             // hl_obj_delete(area_tx2,true);
             lv_obj_del(area_tx2);
-            rt_thread_mdelay(5); 
+            rt_thread_mdelay(10); 
             break;
         case HL_CHANGE_DELETE_STYLE:
             lv_delete_style();
