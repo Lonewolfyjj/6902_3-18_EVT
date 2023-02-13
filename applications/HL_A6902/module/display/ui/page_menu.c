@@ -52,6 +52,9 @@ static lv_obj_t *cont_row = NULL;
 static lv_obj_t *lab_obj[MAX_MENU_NUMBER];
 static lv_obj_t *pic_obj[MAX_MENU_NUMBER];
 
+static lv_style_t screen_style;
+static lv_style_t style_label;
+
 static void lv_lab_hide_set(uint8_t lab_cur)
 {    
     uint8_t i;
@@ -142,8 +145,8 @@ static void lv_icon_event_cb(lv_event_t * e)
     if (code == LV_EVENT_CLICKED) {    
         // rt_kprintf("LV_EVENT_CLICKED:current = %d  check_pos = %d\n",0,0);    
         lv_indev_get_point(param, &pos);        
-        if(cont_row == NULL){
-                return ;
+        if(cont_row == NULL || param == NULL){
+            return ;
         }
         for(i = 0; i < child_cnt; i++) {            
             child = lv_obj_get_child(cont_row, i);   
@@ -185,8 +188,7 @@ static void lv_icon_event_cb(lv_event_t * e)
     }
 }
 
-static lv_style_t screen_style;
-static lv_style_t style_label;
+
 static void lv_style_menu_init(void)
 {    
     lv_style_init(&screen_style);
