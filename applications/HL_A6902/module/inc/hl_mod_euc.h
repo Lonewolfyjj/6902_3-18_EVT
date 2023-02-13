@@ -48,6 +48,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_CHARGE_STATE_CMD,
     /// 设置设备开机状态，参数为<uint8_t *>
     HL_SET_TURN_ON_STATE_CMD,
+    /// 回复收纳盒准备关机，无参数
+    HL_SHUTDOWN_ACK_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e
@@ -94,6 +96,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_HID_START_RECORD_CMD,
     /// 设置设备开机状态，参数为<uint8_t *>
     HL_SET_TURN_ON_STATE_CMD,
+    /// 回复收纳盒准备关机，无参数
+    HL_SHUTDOWN_ACK_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e

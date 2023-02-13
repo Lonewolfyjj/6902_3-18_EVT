@@ -206,6 +206,23 @@ void hl_app_mng_powerOff(void);
  */
 void hl_app_mng_charger_entry(void *msg_q);
 
+/**
+ * 
+ * @brief 关机充电时确定是否关停设备
+ * @param [in] state 0：不关停 | 1：关停
+ * @date 2023-02-10
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-10      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_set_halt_state(uint8_t state);
+
 #endif /* __HL_APP_MNG_H__ */
 /*
  * EOF

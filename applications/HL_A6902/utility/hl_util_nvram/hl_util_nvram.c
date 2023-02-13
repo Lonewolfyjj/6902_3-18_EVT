@@ -156,7 +156,7 @@ uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
         return 3;
     }
 
-    _hl_util_nvram_print_json_data();
+    // _hl_util_nvram_print_json_data();
 
     return 0;
 }
@@ -319,6 +319,8 @@ uint8_t hl_util_nvram_param_save()
         sg_nvram_handle->std_printf("error: nvram no change to save\r\n");
         ret = 2;
     }
+
+    sg_nvram_handle->have_changed = 0;
 
     return ret;
 }
