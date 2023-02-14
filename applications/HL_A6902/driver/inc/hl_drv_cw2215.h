@@ -63,6 +63,8 @@ typedef enum _hl_drv_guage_op
     HL_DRV_GUAGE_CLEAR_IT_FLAG,
     ///dump all register value, no param
     HL_DRV_GUAGE_DUMP_ALL_REGISTER_VALUE,
+    ///自检测，无参数
+    HL_DRV_GUAGE_CHIP_SELF_CHECK,
 } hl_drv_guage_op_t;
 
 /**

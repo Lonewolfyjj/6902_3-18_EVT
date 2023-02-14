@@ -58,6 +58,7 @@ typedef struct _hl_mod_pm_bat_info_st
 typedef struct _hl_mod_pm_st
 {
     bool                     init_flag;
+    bool                     guage_init_flag;
     bool                     start_flag;
     bool                     update_flag;
     bool                     interrupt_update_flag;
@@ -292,11 +293,35 @@ static void _guage_state_update()
     }
 }
 
+static void _guage_err_monitor(void)
+{
+    int ret;
+
+    if (_pm_mod.guage_init_flag == true) {
+        ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, RT_NULL, 0);
+        if (ret == CW2215_FUNC_RET_ERR) {
+            _pm_mod.guage_init_flag = false;
+            // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+        }
+    } else {
+        ret = hl_drv_cw2215_deinit();
+        if (ret == CW2215_FUNC_RET_OK) {
+            ret = hl_drv_cw2215_init();
+        }
+
+        if (ret == CW2215_FUNC_RET_OK) {
+            _pm_mod.guage_init_flag = true;
+            // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+        }
+    }
+}
+
 static void _guage_state_poll()
 {
     static uint8_t count = 0;
 
     if (count == 0) {
+        _guage_err_monitor();
         _guage_state_update();
         count = 500;
     } else {
@@ -415,7 +440,7 @@ static void _charge_full_timer_set(void)
         if (flag == false) {
             rt_timer_start(&(_pm_mod.charge_full_timer));
             _pm_mod.charge_full_timeout_flag = false;
-            flag = true;
+            flag                             = true;
         }
     } else if (_pm_mod.bat_info.soc.soc < 98
                || (_pm_mod.charge_state == HL_CHARGE_STATE_NO_CHARGE && _pm_mod.bat_info.soc.soc != 100)) {
@@ -513,7 +538,9 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
 
     ret = hl_drv_cw2215_init();
     if (ret == CW2215_FUNC_RET_ERR) {
-        return HL_MOD_PM_FUNC_RET_ERR;
+        _pm_mod.guage_init_flag = false;
+    } else {
+        _pm_mod.guage_init_flag = true;
     }
 
     rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _timer_timeout_handle, RT_NULL, 1000 * 60 * 5,

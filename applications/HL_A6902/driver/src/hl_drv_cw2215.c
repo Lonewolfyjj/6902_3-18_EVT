@@ -265,7 +265,7 @@ static int get_state(void)
         return CW2215_PROFILE_NEED_UPDATE;
     }
 
-    LOG_I("Guage state: normal!");
+    // LOG_I("Guage state: normal!");
 
     return 0;
 }
@@ -715,6 +715,15 @@ static int dump_all_register_value(void)
     return 0;
 }
 
+static int _self_check(void)
+{
+    int ret;
+
+    ret = init();
+
+    return ret;
+}
+
 /* Exported functions --------------------------------------------------------*/
 
 int8_t hl_drv_cw2215_init(void)
@@ -723,7 +732,7 @@ int8_t hl_drv_cw2215_init(void)
 
     if (_init_flag != 0) {
         LOG_W("Guage is already inited!");
-        return CW2215_FUNC_RET_ERR;
+        return CW2215_FUNC_RET_OK;
     }
 
     _p_i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(CW2215_IIC_BUS_NAME);
@@ -750,7 +759,7 @@ int8_t hl_drv_cw2215_deinit(void)
     int ret;
     if (_init_flag != 1) {
         LOG_W("Guage is not inited!");
-        return CW2215_FUNC_RET_ERR;
+        return CW2215_FUNC_RET_OK;
     }
 
     ret = sleep();
@@ -877,6 +886,12 @@ int8_t hl_drv_cw2215_ctrl(hl_drv_guage_op_t op, void* arg, int32_t arg_size)
         } break;
         case HL_DRV_GUAGE_DUMP_ALL_REGISTER_VALUE: {
             ret = dump_all_register_value();
+            if (ret < 0) {
+                return CW2215_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_GUAGE_CHIP_SELF_CHECK: {
+            ret = _self_check();
             if (ret < 0) {
                 return CW2215_FUNC_RET_ERR;
             }
