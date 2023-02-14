@@ -1802,7 +1802,7 @@ int hl_drv_aw2016a_init(void)
 
     if (_init_flag == 1) {
         LOG_W("LED is already inited!");
-        return AW2016A_FUNC_RET_ERR;
+        return AW2016A_FUNC_RET_OK;
     }
 
     _p_i2c_bus_0 = (struct rt_i2c_bus_device*)rt_device_find(AW2016_IIC_BUS_0_NAME);
@@ -1912,7 +1912,7 @@ int hl_drv_aw2016a_deinit(void)
 
     if (_init_flag == 0) {
         LOG_W("LED is not inited!");
-        return AW2016A_FUNC_RET_ERR;
+        return AW2016A_FUNC_RET_OK;
     }
 
     work_mode = HL_DRV_AW2016A_STANDBY_MODE;

@@ -312,14 +312,19 @@ static void _aw2016a_drv_status_check(void)
     hl_drv_aw2016a_chip_status_e chip_status;
 
     if (count == 0) {
-        ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_CHECK_CHIP_STATUS, &chip_status,
-                                  sizeof(chip_status));
-        if (ret == AW2016A_FUNC_RET_ERR || chip_status != 0) {
-            hl_drv_aw2016a_deinit();
-            ret = hl_drv_aw2016a_init();
-            if (ret == AW2016A_FUNC_RET_ERR) {
+        if (_display_mod.aw2016a_init_flag == true) {
+            ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_CHECK_CHIP_STATUS, &chip_status,
+                                      sizeof(chip_status));
+            if (ret == AW2016A_FUNC_RET_ERR || chip_status != 0) {
                 _display_mod.aw2016a_init_flag = false;
-            } else {
+            }
+        } else {
+            ret = hl_drv_aw2016a_deinit();
+            if (ret == AW2016A_FUNC_RET_OK) {
+                ret = hl_drv_aw2016a_init();
+            }
+
+            if (ret == AW2016A_FUNC_RET_OK) {
                 _display_mod.aw2016a_init_flag     = true;
                 _display_mod.display_update_flag_1 = true;
             }
