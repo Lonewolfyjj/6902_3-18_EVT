@@ -29,6 +29,9 @@
 #include "hl_mod_upgrade.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_audio.h"
+#include "hl_mod_display.h"
+#include "hl_app_disp_msg_pro.h"
+#include "hl_util_nvram.h"
 #define DBG_SECTION_NAME "app_upgrade"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -37,18 +40,59 @@
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
+#if HL_IS_TX_DEVICE()
 static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
 {
     switch (upgrade_state) {
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+            tx_info.upgrade_flag = 0;
             break;
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
+            tx_info.upgrade_flag = 1;
             break;
         case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
+            tx_info.upgrade_flag = 2;
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
+            tx_info.upgrade_flag = 3;
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            break;
+        default:
+            break;
+    }
+
+    hl_app_disp_state_led_set();
+}
+#else
+static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
+{
+    hl_upgrade_status status;
+    switch (upgrade_state) {
+        case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
+
+            break;
+        case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
+            status = HL_UPGRADE_STATUS_UPGRADE;
+            LOG_D("HL_UPGRADE_STATUS_UPGRADE");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
+            break;
+        case HL_UPGRADE_SUCCEED_STATE:  /// 升级成功状态
+            // hl_mod_telink_start();
+            // hl_mod_audio_init();
+            hl_util_nvram_param_set("MSC_OPEN", "0");
+            hl_util_nvram_param_save();
+            status = HL_UPGRADE_STATUS_SUCCESS;
+            LOG_D("HL_UPGRADE_STATUS_SUCCESS");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
+            break;
+        case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
+
+            status = HL_UPGRADE_STATUS_FAIL;
+            LOG_D("HL_UPGRADE_STATUS_FAIL");
+            hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
             // hl_mod_telink_start();
             // hl_mod_audio_init();
             break;
@@ -56,6 +100,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
             break;
     }
 }
+#endif
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
@@ -63,8 +108,8 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
     switch (p_msg->cmd) {
         case HL_UPGRADE_FIND_FW_MSG:  /// 找到升级固件包
             hl_mod_audio_deinit();
-            hl_mod_telink_stop();   
-            // hl_mod_telink_deinit(); 
+            hl_mod_telink_stop();
+            // hl_mod_telink_deinit();
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
             break;
         case HL_UPGRADE_STATE_MSG:  /// 获取升级状态

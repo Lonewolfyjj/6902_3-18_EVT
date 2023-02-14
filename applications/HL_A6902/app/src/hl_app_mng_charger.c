@@ -29,11 +29,14 @@
 #include "rtdevice.h"
 #include "hl_mod_pm.h"
 #include "hl_mod_display.h"
+#include "hl_mod_euc.h"
 #include "hl_mod_input.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_apple_auth.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_mod_wdog.h"
+#include "hl_util_nvram.h"
+#include "hl_board_commom.h"
 
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
@@ -50,6 +53,7 @@ typedef enum _charger_powe_on_stm_e_
 /* variables -----------------------------------------------------------------*/
 static hl_charger_power_on_stm_e sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
 static uint8_t                   charger_alive                = 1;
+static int                       last_halt_state              = 0;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
@@ -57,7 +61,11 @@ static void _hl_app_mng_charger_power_on_stm()
     switch (sg_stm_charger_pwr_key_state) {
         case EM_CHARGER_POWER_ON_STM_IDLE:
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
-                hold_times = 50;
+#if HL_IS_TX_DEVICE()
+                hold_times = 150;
+#else
+                hold_times = 2;
+#endif
                 sg_stm_charger_pwr_key_state++;
             }
             break;
@@ -83,6 +91,9 @@ static void _hl_app_mng_charger_power_on_stm()
             LOG_D("charge process\r\n");
 #if HL_IS_TX_DEVICE()
             tx_info.on_off_flag = 1;
+            hl_led_net_mode net_ctrl = LED_NET_MODE_RECONNECTION;
+            // 告诉显示模块正常开机
+            hl_mod_display_io_ctrl(LED_NET_MODLE_CMD, &net_ctrl, sizeof(net_ctrl));
 #else
             uint8_t param = OUTBOX_OFFCHARGE_LOGO;
             // 告诉显示模块正常开机
@@ -189,7 +200,22 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
 
     switch (p_msg->cmd) {
 #if HL_IS_TX_DEVICE()
-
+        case MSG_TX_VBUS_DET: {
+            if (p_msg->param.u32_param == 0) {
+                tx_info.usb_plug = 0;
+            } else {
+                tx_info.usb_plug = 1;
+            }
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
+        } break;
+        case MSG_TX_PVBUS_DET: {
+            if (p_msg->param.u32_param == 0) {
+                // to be done
+            } else {
+                // to be done
+            }
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
+        } break;
 #else
         case MSG_RX_VBUS_DET:
             if (p_msg->param.u32_param == 0) {
@@ -199,6 +225,7 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
                 hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
                 rx_info.mstorage_plug = 0;
                 hl_mod_appleauth_ioctl(HL_APPLE_AUTH_STOP_CMD);
+                hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &usb_state, 1);
             } else {
                 rx_info.usb_plug = 1;
                 usb_state = 1;
@@ -208,6 +235,7 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(USB_IN_SWITCH_CMD, &usb_state, 1);
             usb_state = 1;
             hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
             LOG_D("MSG_RX_VBUS_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
 
@@ -239,6 +267,15 @@ static void _hl_app_mng_charger_input_process(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
             LOG_D("MSG_RX_CAM_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
+
+        case MSG_RX_PVBUS_DET:
+            if (p_msg->param.u32_param == 0) {
+                // to be done
+            } else {
+                // to be done
+            }
+            hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(p_msg->param.u32_param), sizeof(uint8_t));
+            break;
 #endif
 
         default:
@@ -252,18 +289,138 @@ static void hl_app_mng_charger_goto_power_on()
     sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_PROCESS;
 }
 
+static bool _in_box_flag    = false;
+static bool _shut_down_flag = false;
+
+#if HL_IS_TX_DEVICE()
+static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
+{
+    uint8_t                   dev_num;
+    uint8_t                   bat_soc_temp      = 50;
+    hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    uint8_t                   turn_on_state;
+
+    switch (p_msg->cmd) {
+        case HL_IN_BOX_IND: {
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
+            _in_box_flag = true;
+            dev_num      = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", dev_num);
+        } break;
+        case HL_OUT_BOX_IND: {
+            _in_box_flag = false;
+            LOG_I("out box!");
+            if (_shut_down_flag == false) {
+                hl_app_mng_charger_goto_power_on();
+            }
+        } break;
+        case HL_GET_SOC_REQ_IND: {  //请求获取电量
+            bat_soc_temp = tx_info.soc;
+            hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
+        } break;
+        case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
+            charge_state_temp = tx_info.charge_flag + 1;
+            hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 0;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
+        } break;
+        default:
+            break;
+    }
+}
+#else
+static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
+{
+    uint8_t dev_num;
+    uint8_t bat_soc_temp = 50;
+    hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
+    uint8_t turn_on_state;
+
+    switch (p_msg->cmd) {
+        case HL_IN_BOX_IND: {
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
+            _in_box_flag = true;
+            dev_num = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", dev_num);
+        } break;
+        case HL_OUT_BOX_IND: {
+            _in_box_flag = false;
+            LOG_I("out box!");
+            if (_shut_down_flag == false) {
+                hl_app_mng_charger_goto_power_on();
+            }
+        } break;
+        case HL_GET_SOC_REQ_IND: {  //请求获取电量
+            bat_soc_temp = rx_info.soc;
+            hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
+        } break;
+        case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
+            charge_state_temp = rx_info.charge_flag + 1;
+            hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
+        } break;
+        case HL_GET_TURN_ON_STATE_REQ_IND: {
+            turn_on_state = 0;
+            hl_mod_euc_ctrl(HL_SET_TURN_ON_STATE_CMD, &turn_on_state, sizeof(turn_on_state));
+        } break;
+        case HL_SHUT_DOWN_REQ_IND: {
+            _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
+        } break;
+        default:
+            break;
+    }
+}
+#endif
+
 MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);
+
+static bool _hl_app_mng_check_power_on_state(void)
+{
+    if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH
+        && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH ) {
+        // USB未接入 && POGO pin未接入 && 开关机按键未按下
+        return true;
+    } else {
+        // 如果USB || POGO未接入 && 开关机键按下 && HALT = 1
+        if(last_halt_state) {
+            if ((hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH || hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH)
+                && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+                    return true;
+                }
+        }
+        return false;
+    }
+}
 /* Exported functions --------------------------------------------------------*/
+void hl_app_mng_charger_set_halt_state(uint8_t state)
+{
+    if (state) {
+        hl_util_nvram_param_set_integer("HALT", 0);
+        hl_util_nvram_param_save();
+    }
+    last_halt_state = state;
+}
 void hl_app_mng_charger_entry(void* msg_q)
 {
-    struct rt_messagequeue* app_mq = msg_q;
-    mode_to_app_msg_t       msg    = { 0 };
+    struct rt_messagequeue* app_mq              = msg_q;
+    mode_to_app_msg_t       msg                 = { 0 };
 
     while (charger_alive) {
         hl_mod_feed_dog();
-        if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
-            hl_app_mng_powerOn();
-            hl_app_mng_powerOff();
+        if (_hl_app_mng_check_power_on_state()) {
+            // 关机
+            if (_in_box_flag == false || _shut_down_flag == true) {
+                hl_app_mng_powerOff();
+                // while ((1));
+                rt_thread_mdelay(5000);
+                hl_board_reboot();
+            }
         }
 
         if (rt_mq_recv(app_mq, &msg, sizeof(msg), 10) == RT_EOK) {
@@ -274,6 +431,9 @@ void hl_app_mng_charger_entry(void* msg_q)
                     break;
                 case INPUT_MODE:
                     _hl_app_mng_charger_input_process(&msg);
+                    break;
+                case EXT_COM_MODE:
+                    _hl_app_mng_charger_euc_process(&msg);
                     break;
                 default:
                     LOG_E("sender(%d) unkown!!!", msg.sender);

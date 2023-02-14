@@ -49,13 +49,6 @@ LV_IMG_DECLARE(Other_led_low_white);   //  22
 static int16_t                 knob_choose;
 static hl_b_two_in_one_check_t display_choose;
 
-static void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose)
-{
-    hl_lvgl_b_two_in_one_ioctl_t two_b_in_one_test_ctl;
-
-    two_b_in_one_test_ctl.b_two_in_one_choose = choose;
-    hl_mod_b_two_in_one_ioctl(&two_b_in_one_test_ctl);
-}
 
 static void hl_b_two_in_one_update(void)
 {

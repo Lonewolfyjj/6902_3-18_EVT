@@ -32,6 +32,7 @@
 #include "hl_mod_telink.h"
 #include "hl_mod_euc.h"
 #include "hl_mod_audio.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "app_rf"
 #define DBG_LEVEL DBG_LOG
@@ -56,6 +57,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_switch_e            bypass_switch;
     hl_rf_bypass_state_t*  ptr_rf_state;
     hl_rf_bypass_value_t*  ptr_rf_value;
+    uint32_t               u32_param;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -88,6 +90,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 // battery
                 bypass_value.val = tx_info.soc;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, (uint8_t*)&bypass_value, sizeof(bypass_value));
+                // 充电状态
+                bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
+                hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
             }
             hl_app_disp_state_led_set();
             LOG_D("telink info(%02X)", tx_info.rf_state);
@@ -106,22 +111,35 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_AUTO_RECORD_IND:
             ptr_rf_state  = (hl_rf_bypass_state_t*)p_msg->param.ptr;
-            bypass_switch = (hl_switch_e)ptr_rf_state->state;
-            LOG_D("app get TX%d Auto Record(%d)\r\n", ptr_rf_state->chn, bypass_switch);
+            bypass_switch = (hl_switch_e)ptr_rf_state->state;            
+            if(tx_info.rec_auto_flag != bypass_switch) {
+                tx_info.rec_auto_flag = bypass_switch;
+                hl_util_nvram_param_set_integer("REC_AUTO_OPEN", bypass_switch);
+                // hl_util_nvram_param_save();
+            }
+            LOG_I("app get TX%d Auto Record(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_RECORD_PROTECT_IND:
             ptr_rf_state  = (hl_rf_bypass_state_t*)p_msg->param.ptr;
             bypass_switch = (hl_switch_e)ptr_rf_state->state;
-            LOG_D("app get TX%d Record Protect(%d)\r\n", ptr_rf_state->chn, bypass_switch);
+            if(tx_info.rec_protect_flag != bypass_switch) {
+                tx_info.rec_protect_flag = bypass_switch;
+                hl_util_nvram_param_set_integer("REC_PROTECT_OPEN", bypass_switch);
+                // hl_util_nvram_param_save();
+            }
+            LOG_I("app get TX%d Record Protect(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_RECORD_IND:
             ptr_rf_state     = (hl_rf_bypass_state_t*)p_msg->param.ptr;
             bypass_switch    = (hl_switch_e)ptr_rf_state->state;
-            tx_info.rec_flag = bypass_switch;
-            hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
-            LOG_D("app get TX%d Record Switch(%d)\r\n", ptr_rf_state->chn, bypass_switch);
+            if (tx_info.rec_flag != bypass_switch) {                
+                tx_info.rec_flag = bypass_switch;
+                hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
+                hl_app_disp_state_led_set();
+            }            
+            LOG_I("app get TX%d Record Switch(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -132,7 +150,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &bypass_switch, 1);
                 hl_app_disp_state_led_set();
             }
-            LOG_D("app get TX%d mute(%d)\r\n", ptr_rf_state->chn, bypass_switch);
+            LOG_I("app get TX%d mute(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
 
         case HL_RF_GET_LOCAL_MAC_IND:
@@ -151,16 +169,25 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_TX_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            tx_info.gain = (int)ptr_rf_value->val;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
+            // 保存本地。。。
             LOG_D("app get TX%d Gain Value(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
         case HL_RF_BYPASS_FORMAT_DISK_IND:
             bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
+            hl_mod_audio_io_ctrl(HL_AUDIO_MKFS_DFS_CMD, NULL, 0);
             LOG_D("app get TX%d Format disk", bypass_chn);
             break;
 
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            tx_info.uac_gain = (int)ptr_rf_value->val;
+            if(tx_info.mstorage_plug == 0) {
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.uac_gain, 4); // 待优化 （TX增益与UAC增益同时只能用一个）
+            }
+            // 保存本地。。。       
             LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 

@@ -158,9 +158,9 @@ NAU88L25B_REG_T s_nau88l25b_param[] = {
     { 0x0020, 0x0000 }, { 0x0021, 0x0000 }, { 0x0022, 0x0000 }, { 0x0023, 0x0000 }, { 0x0024, 0x0000 },
     { 0x0025, 0x0000 }, { 0x0026, 0x0000 }, { 0x0027, 0x0000 }, { 0x0028, 0x0000 }, { 0x0029, 0x0000 },
     { 0x002A, 0x0000 }, { 0x002B, 0x00D2 }, { 0x002C, 0x0080 }, { 0x002D, 0x0000 }, { 0x002F, 0x0000 },
-    { 0x0030, 0x0000 }, { 0x0031, 0x1004 }, { 0x0032, 0x0208 }, // //0x0082 }, 老链路 //0x0208 }, 新链路
-    { 0x0033, 0x00CF }, //0x00BF }, 老链路 //0x00CF }, 新链路
-    { 0x0034, 0x02CF }, //0x00BF }, 老链路 //0x00CF }, 新链路
+    { 0x0030, 0x0000 }, { 0x0031, 0x1004 }, { 0x0032, 0x0000 }, // //0x0000 }, 0 //0x0208 }, -8
+    { 0x0033, 0x00BF }, //0x00BF }, -8 //0x00CF }, 0
+    { 0x0034, 0x02BF }, //0x00BF }, -8 //0x00CF }, 0
     { 0x0038, 0x1486 }, { 0x0039, 0x0F12 }, { 0x003A, 0x25FF }, { 0x003B, 0x3457 }, { 0x0045, 0x1486 },
     { 0x0046, 0x0F12 }, { 0x0047, 0x25F9 }, { 0x0048, 0x3457 }, { 0x004C, 0x0000 }, { 0x0050, 0x2007 },
     { 0x0051, 0x0000 }, { 0x0055, 0x0000 }, { 0x0058, 0x1A14 }, { 0x0059, 0x00FF }, { 0x0066, 0x0060 },
@@ -529,7 +529,14 @@ static rt_err_t nau88l25b_codec_standby(struct nau88l25b_priv* nau88l25b)
 
 static rt_err_t nau88l25b_init(struct audio_codec* codec, struct AUDIO_INIT_CONFIG* config)
 {
-    rt_kprintf("nau88l25b_init\n");
+#if !HL_IS_TX_DEVICE()
+    rt_err_t ret;
+    struct nau88l25b_priv* nau88l25b = to_nau88l25b_priv(codec);
+
+    ret = nau88l25b_reg_init(nau88l25b);
+
+    rt_kprintf("nau88l25b_init ret =%d\n",ret);
+#endif
     return RT_EOK;
 }
 
@@ -644,10 +651,12 @@ int rt_hw_codec_nau88l25b_init(void)
         rt_kprintf("NAU88L25B write reset cmd failed\r\n");
         goto err;
     }
-
+    
+#if HL_IS_TX_DEVICE()
     if (nau88l25b->work_cnt <= 0)
         ret |= nau88l25b_reg_init(nau88l25b);
-    
+#endif
+
     if (ret == RT_EOK) {
         rt_kprintf("TAG: register codec nau88l25b success\n");
         return RT_EOK;

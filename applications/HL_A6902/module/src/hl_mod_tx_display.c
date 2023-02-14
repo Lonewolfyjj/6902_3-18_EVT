@@ -28,6 +28,7 @@
 
 #include "hl_drv_aw2016a.h"
 #include "hl_hal_gpio.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_INFO
@@ -166,8 +167,8 @@ static void _display_update_1(void)
             led.color       = HL_DRV_AW2016A_COLOR_WHITE;
         } break;
         case HL_DISPLAY_UPDATE: {
-            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_RB_SLOW;
-            led.color       = HL_DRV_AW2016A_COLOR_WHITE;
+            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
+            led.color       = HL_DRV_AW2016A_COLOR_PINK;
         } break;
         case HL_DISPLAY_PAIR: {
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_FAST;
@@ -266,13 +267,17 @@ static void _display_update_2(void)
 
 static int _set_brightness(void)
 {
-    int                         ret;
-    hl_drv_aw2016a_pwm_level_st br;
+    int                                 ret;
+    hl_drv_aw2016a_max_output_current_e imax;
 
-    br.led_chan  = HL_DRV_AW2016A_LED_CHANNEL1 | HL_DRV_AW2016A_LED_CHANNEL2 | HL_DRV_AW2016A_LED_CHANNEL3;
-    br.pwm_level = _display_mod.led_brightness;
+    if (_display_mod.led_brightness == 30) {
+        imax = HL_DRV_AW2016A_IMAX_15MA;
+    } else {
+        imax = HL_DRV_AW2016A_IMAX_5MA;
+    }
 
-    ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_LED_CHANNEL_PWM_LEVEL, &br, sizeof(br));
+    ret =
+        hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_SET_GLOBAL_MAX_OUTPUT_CURRENT, &imax, sizeof(uint8_t));
     if (ret == AW2016A_FUNC_RET_ERR) {
         return HL_DISPLAY_FAILED;
     }
@@ -362,6 +367,9 @@ uint8_t hl_mod_display_init(void* display_msq)
     }
 
     hl_hal_gpio_init(GPIO_REC_LED_EN);
+
+    hl_util_nvram_param_get_integer("LED_BRIGHTNESS", &_display_mod.led_brightness, 30);
+    _set_brightness();
 
     _display_mod.display_update_flag_1 = false;
     _display_mod.display_update_flag_2 = false;
@@ -524,6 +532,9 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             }
 
             _display_mod.led_brightness = *(uint8_t*)ptr;
+
+            hl_util_nvram_param_set_integer("LED_BRIGHTNESS", _display_mod.led_brightness);
+            hl_util_nvram_param_save();
 
             ret = _set_brightness();
             if (ret == HL_DISPLAY_FAILED) {

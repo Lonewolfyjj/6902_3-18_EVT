@@ -40,27 +40,38 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-#define LOWBAT_THRESHOLD 8
+#define LOWBAT_THRESHOLD 6
 // static hl_icon_status icon_state = {0};
 static hl_top_cmd_t              icon_state[HL_TOP_ICON_CNT] = { 0 };
 static hl_rf_state_e             main_tx;
 static hl_display_sound_module_e sound_module = MONO;
+typedef struct hl_page_home_bat_state_s
+{
+    /// @brief 0表示当前正常显示电量 ；1表示当前欠压；2表示当前充电中
+    uint8_t rx;
+    /// @brief 0表示当前正常显示电量 ；1表示当前欠压；2表示当前充电中
+    uint8_t tx1;
+    /// @brief 0表示当前正常显示电量 ；1表示当前欠压；2表示当前充电中
+    uint8_t tx2;
+} hl_page_home_bat_state;
 
-static void            hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
-static void            hl_mod_icon_deal_init();
-static void            hl_mod_icon_deal_deinit();
-static void            hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr);
-static void            hl_mod_main_tx_deal_deinit();
-static void            hl_mod_page_main_init(void);
-static void            hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void            hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void            hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static void            hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
-static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
-static void            hl_mod_page_home_tx1lowbat_deal(uint8_t batval);
-static void            hl_mod_page_home_tx2lowbat_deal(uint8_t batval);
-static void            hl_mod_page_home_rxlowbat_deal(uint8_t batval);
-static void            hl_mod_page_lock_event(hl_lvgl_lock_sta_t state);
+static hl_page_home_bat_state bat_state;
+
+static void                   hl_mod_icon_deal(hl_top_icon_t icon, hl_top_cmd_t deal);
+static void                   hl_mod_icon_deal_init();
+static void                   hl_mod_icon_deal_deinit();
+static void                   hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr);
+static void                   hl_mod_main_tx_deal_deinit();
+static void                   hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void                   hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void                   hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static void                   hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
+static hl_signal_int_t        hl_mod_page_signal_deal(uint8_t data);
+static void                   hl_mod_page_lock_event(hl_lvgl_lock_sta_t state);
+static uint8_t                bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho);
+static void                   hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr);
+static void                   hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr);
+static void                   hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr);
 
 static int16_t hl_mod_lineout_volume_get(hl_display_screen_s* data_ptr, uint8_t channl)
 {
@@ -193,6 +204,135 @@ static void hl_mod_icon_deal_deinit()
     }
 }
 
+static uint8_t bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho)
+{
+    uint8_t ret;
+
+    if (charge_state) {
+        ret = 2;
+    } else if (charge_state == 0 && bat_val > thresho) {
+        ret = 0;
+    } else if (charge_state == 0 && bat_val <= thresho) {
+        ret = 1;
+    } else {
+        ret = 0;
+    }
+
+    return ret;
+}
+
+static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_top_ioctl_t ioctrl;
+
+    bat_state.rx = bat_state_deal(data_ptr->sys_status.rx_charge_status, data_ptr->rx_bat_val, LOWBAT_THRESHOLD);
+
+    // 更新当前的RX电量信息
+    ioctrl.top_cmd      = HL_TOP_BAT_VAL;
+    ioctrl.electric_top = data_ptr->rx_bat_val;
+    hl_mod_top_ioctl(&ioctrl);
+
+    switch (bat_state.rx) {
+        case 0:
+            ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
+            hl_mod_top_ioctl(&ioctrl);
+
+            ioctrl.top_cmd = HL_TOP_BAT_CHARGER_HIDE;
+            hl_mod_top_ioctl(&ioctrl);
+            break;
+        case 1:
+            ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
+            hl_mod_top_ioctl(&ioctrl);
+
+            ioctrl.top_cmd = HL_TOP_BAT_CHARGER_HIDE;
+            hl_mod_top_ioctl(&ioctrl);
+            break;
+        case 2:
+            ioctrl.top_cmd = HL_TOP_BAT_COLOR_GREEN;
+            hl_mod_top_ioctl(&ioctrl);
+
+            ioctrl.top_cmd = HL_TOP_BAT_CHARGER_NOT_HIDE;
+            hl_mod_top_ioctl(&ioctrl);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_main_ioctl_t ioctrl;
+
+    bat_state.tx1 = bat_state_deal(data_ptr->sys_status.tx1_charge_status, data_ptr->tx1_bat_val, LOWBAT_THRESHOLD);
+
+    ioctrl.cmd                  = HL_CHANGE_TX1_ELEC;
+    ioctrl.tx_device_1.electric = data_ptr->tx1_bat_val;
+    hl_mod_main_ioctl(&ioctrl);
+
+    switch (bat_state.tx1) {
+        case 0:
+            ioctrl.cmd = HL_CHANGE_TX1_BAR_WHITE;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX1_ICON_HIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        case 1:
+            ioctrl.cmd = HL_CHANGE_TX1_BAR_RED;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX1_ICON_HIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        case 2:
+            ioctrl.cmd = HL_CHANGE_TX1_BAR_GREEN;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX1_ICON_DISHIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        default:
+            break;
+    }
+}
+
+static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
+{
+    hl_lvgl_main_ioctl_t ioctrl;
+
+    bat_state.tx2 = bat_state_deal(data_ptr->sys_status.tx2_charge_status, data_ptr->tx2_bat_val, LOWBAT_THRESHOLD);
+
+    ioctrl.cmd                  = HL_CHANGE_TX2_ELEC;
+    ioctrl.tx_device_2.electric = data_ptr->tx2_bat_val;
+    hl_mod_main_ioctl(&ioctrl);
+
+    switch (bat_state.tx2) {
+        case 0:
+            ioctrl.cmd = HL_CHANGE_TX2_BAR_WHITE;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX2_ICON_HIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        case 1:
+            ioctrl.cmd = HL_CHANGE_TX2_BAR_RED;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX2_ICON_HIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        case 2:
+            ioctrl.cmd = HL_CHANGE_TX2_BAR_GREEN;
+            hl_mod_main_ioctl(&ioctrl);
+
+            ioctrl.cmd = HL_CHANGE_TX2_ICON_DISHIDE;
+            hl_mod_main_ioctl(&ioctrl);
+            break;
+        default:
+            break;
+    }
+}
+
 static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_main_init_t data;
@@ -216,6 +356,9 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
             data.tx_device_2.volume         = data_ptr->tx2_vu;
             hl_mod_main_init(&data);
+
+            hl_mod_home_tx1_bat_update(data_ptr);
+            hl_mod_home_tx2_bat_update(data_ptr);
             break;
         case HL_RF_R_CONNECT:
             data.display_tx_device = HL_DISPLAY_TX2;
@@ -227,6 +370,8 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.tx_device_2.record         = data_ptr->sys_status.tx2_record_state;
             data.tx_device_2.volume         = data_ptr->tx2_vu;
             hl_mod_main_init(&data);
+
+            hl_mod_home_tx2_bat_update(data_ptr);
             break;
         case HL_RF_L_CONNECT:
             data.display_tx_device = HL_DISPLAY_TX1;
@@ -239,6 +384,7 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.tx_device_1.volume         = data_ptr->tx1_vu;
             hl_mod_main_init(&data);
             break;
+            hl_mod_home_tx1_bat_update(data_ptr);
         case HL_RF_UNCONNECT:
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
@@ -498,48 +644,19 @@ static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data)
         signal = 4;
     return signal;
 }
-static void hl_mod_main_two_init()
-{
-    hl_lvgl_main_init_t data;
-    main_tx = HL_RF_UNCONNECT;
-    LV_LOG_USER("twoinit%d\n", main_tx);
 
-    data.display_tx_device = HL_DISPLAY_DOUBLE;
-
-    data.tx_device_1.electric = 0;
-    data.tx_device_1.signal   = HL_NO_SIGNAL;
-    data.tx_device_1.record   = HL_NO_RECODE;
-    data.tx_device_1.volume   = 0;
-
-    data.tx_device_2.electric = 0;
-    data.tx_device_2.signal   = HL_NO_SIGNAL;
-    data.tx_device_2.record   = HL_NO_RECODE;
-    data.tx_device_2.volume   = 0;
-    hl_mod_main_init(&data);
-}
 // top层初始化
 static void hl_mod_page_top_init(void)
 {
     hl_display_sound_module_e now;
     hl_lvgl_top_init_t        top_init;
-    hl_lvgl_top_ioctl_t       ioctrl;
     hl_display_screen_s*      data_ptr = hl_mod_page_get_screen_data_ptr();
 
     // 更新当前的RX电量信息
     top_init.electric_top = data_ptr->rx_bat_val;
     hl_mod_top_init(&top_init);
 
-    if (data_ptr->sys_status.rx_charge_status) {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_GREEN;
-    } else if (data_ptr->sys_status.rx_charge_status == 0 && top_init.electric_top > LOWBAT_THRESHOLD) {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
-    } else if (data_ptr->sys_status.rx_charge_status == 0 && top_init.electric_top <= LOWBAT_THRESHOLD) {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
-    } else {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
-    }
-
-    hl_mod_top_ioctl(&ioctrl);
+    hl_mod_home_rx_bat_update(data_ptr);
 
     now          = data_ptr->now_sound_module;
     sound_module = now;
@@ -590,51 +707,35 @@ static void hl_mod_page_top_init(void)
 
         hl_mod_icon_deal(HL_TOP_ICON_HEATSET, HL_TOP_ADD_ICON_CMD);
     }
+
+    if (data_ptr->sys_status.apple_auth_flag) {
+        hl_mod_icon_deal(HL_TOP_ICON_APPLE, HL_TOP_ADD_ICON_CMD);
+    }
 }
 static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
-    hl_lvgl_top_ioctl_t ioctl_top;
 
-    if (flag->rx_bat_val) {
+    if (flag->rx_bat_val || flag->sys_status.rx_charge_status) {
+        hl_mod_home_rx_bat_update(now);
         hl_mod_display_mux_take();
-        flag->rx_bat_val       = 0;
-        ioctl_top.top_cmd      = HL_TOP_BAT_VAL;
-        ioctl_top.electric_top = now->rx_bat_val;
-        hl_mod_display_mux_release();
-        hl_mod_top_ioctl(&ioctl_top);
-
-        hl_mod_page_home_rxlowbat_deal(ioctl_top.electric_top);
-        if (now->sys_status.rx_charge_status == 1) {
-            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_GREEN;
-            hl_mod_top_ioctl(&ioctl_top);
-        }
-    }
-
-    // 充电状态下显示电量柱为绿色
-    if (flag->sys_status.rx_charge_status) {
-        hl_mod_display_mux_take();
+        flag->rx_bat_val                  = 0;
         flag->sys_status.rx_charge_status = 0;
-        if (now->sys_status.rx_charge_status == 1) {
-            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_GREEN;
-        } else {
-            ioctl_top.top_cmd = HL_TOP_BAT_COLOR_WHITE;
-        }
         hl_mod_display_mux_release();
-        hl_mod_top_ioctl(&ioctl_top);
+        LOG_D("update rx bat %d,%d", now->sys_status.rx_charge_status, now->rx_bat_val);
     }
 
     // 降噪一起的
     if (flag->sys_status.tx1_noise || flag->sys_status.tx2_noise) {
-        hl_mod_display_mux_take();
-        flag->sys_status.tx1_noise = 0;
-        flag->sys_status.tx2_noise = 0;
-        hl_mod_display_mux_release();
         if (now->sys_status.tx1_noise || now->sys_status.tx2_noise) {
 
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_ADD_ICON_CMD);
         } else if (!now->sys_status.tx1_noise && !now->sys_status.tx2_noise) {
             hl_mod_icon_deal(HL_TOP_ICON_NOISE, HL_TOP_DELETE_ICON_CMD);
         }
+        hl_mod_display_mux_take();
+        flag->sys_status.tx1_noise = 0;
+        flag->sys_status.tx2_noise = 0;
+        hl_mod_display_mux_release();
     }
 
     // // 锁屏
@@ -649,81 +750,43 @@ static void hl_mod_page_top_update(hl_display_screen_change_s* flag, hl_display_
 
     // line out
     if (flag->sys_status.line_out_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
         hl_mod_display_mux_take();
         flag->sys_status.line_out_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_LINEOUT, (hl_top_cmd_t)now->sys_status.line_out_in);
+    }
+
+    if (flag->sys_status.apple_auth_flag) {
+        hl_mod_icon_deal(HL_TOP_ICON_APPLE, (hl_top_cmd_t)now->sys_status.apple_auth_flag);
+        hl_mod_display_mux_take();
+        flag->sys_status.apple_auth_flag = 0;
+        hl_mod_display_mux_release();
+
+        // if (now->sys_status.apple_auth_flag == 1) {
+        //     hl_mod_icon_deal(HL_TOP_ICON_APPLE, (hl_top_cmd_t)now->sys_status.apple_auth_flag);
+        // }
     }
 
     // usb
     if (flag->sys_status.usb_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
         hl_mod_display_mux_take();
         flag->sys_status.usb_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_TYPEC, (hl_top_cmd_t)now->sys_status.usb_in);
+
+        // if (!now->sys_status.usb_in && now->sys_status.apple_auth_flag) {
+        //     hl_mod_icon_deal(HL_TOP_ICON_APPLE, HL_TOP_DELETE_ICON_CMD);
+        // }
     }
 
     if (flag->sys_status.monitor_in) {
-
+        hl_mod_icon_deal_anim(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
         hl_mod_display_mux_take();
         flag->sys_status.monitor_in = 0;
         hl_mod_display_mux_release();
-        hl_mod_icon_deal_anim(HL_TOP_ICON_HEATSET, (hl_top_cmd_t)now->sys_status.monitor_in);
     }
 }
-static void hl_mod_page_home_tx1lowbat_deal(uint8_t batval)
-{
-    hl_lvgl_main_ioctl_t data1;
 
-    if (batval <= LOWBAT_THRESHOLD) {
-        data1.cmd = HL_CHANGE_TX1_BAR_RED;
-
-    } else if (batval >= LOWBAT_THRESHOLD) {
-        data1.cmd = HL_CHANGE_TX1_BAR_WHITE;
-    }
-    hl_mod_main_ioctl(&data1);
-
-    data1.tx_device_1.electric = batval;
-    data1.cmd                  = HL_CHANGE_TX1_ELEC;
-    hl_mod_main_ioctl(&data1);
-
-}
-
-static void hl_mod_page_home_tx2lowbat_deal(uint8_t batval)
-{
-    hl_lvgl_main_ioctl_t data1;
-
-    if (batval <= LOWBAT_THRESHOLD) {
-        data1.cmd = HL_CHANGE_TX2_BAR_RED;
-
-    } else if (batval >= LOWBAT_THRESHOLD) {
-        data1.cmd = HL_CHANGE_TX2_BAR_WHITE;
-    }
-    hl_mod_main_ioctl(&data1);
-    data1.tx_device_2.electric = batval;
-    data1.cmd                  = HL_CHANGE_TX2_ELEC;
-    hl_mod_main_ioctl(&data1);
-}
-
-static void hl_mod_page_home_rxlowbat_deal(uint8_t batval)
-{
-    hl_lvgl_top_ioctl_t ioctrl;
-
-    if (batval <= LOWBAT_THRESHOLD) {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
-
-    } else if (batval >= LOWBAT_THRESHOLD) {
-        ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
-    }
-
-    hl_mod_top_ioctl(&ioctrl);
-
-    ioctrl.top_cmd      = HL_TOP_BAT_VAL;
-    ioctrl.electric_top = batval;
-    hl_mod_top_ioctl(&ioctrl);
-}
 static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_display_screen_s* now)
 {
     hl_lvgl_main_ioctl_t data1;
@@ -738,20 +801,18 @@ static void hl_mod_page_home_tx1_update(hl_display_screen_change_s* flag, hl_dis
             data1.cmd = HL_CHANGE_TX1_MUTE_DEL;
         }
         hl_mod_display_mux_release();
-        
+
         hl_mod_main_ioctl(&data1);
-        LOG_D("mute1=%d",now->sys_status.tx1_mute_switch);
+        LOG_D("mute1=%d", now->sys_status.tx1_mute_switch);
     }
 
-    if (flag->tx1_bat_val) {
+    if (flag->tx1_bat_val || flag->sys_status.tx1_charge_status) {
+        hl_mod_home_tx1_bat_update(now);
         hl_mod_display_mux_take();
-        flag->tx1_bat_val          = 0;
-        data1.cmd                  = HL_CHANGE_TX1_ELEC;
-        data1.tx_device_1.electric = now->tx1_bat_val;
+        flag->tx1_bat_val                  = 0;
+        flag->sys_status.tx1_charge_status = 0;
         hl_mod_display_mux_release();
-        hl_mod_main_ioctl(&data1);
-        hl_mod_page_home_tx1lowbat_deal(data1.tx_device_1.electric);
-        LOG_I("tx1 batval = %d\n", data1.tx_device_1.electric);
+        LOG_D("update bat tx1 %d,%d", now->sys_status.tx1_charge_status, now->tx1_bat_val);
     }
 
     if (flag->tx1_signal) {
@@ -801,17 +862,16 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
 
         hl_mod_main_ioctl(&data2);
-        LOG_D("mute2=%d",now->sys_status.tx2_mute_switch);
+        LOG_D("mute2=%d", now->sys_status.tx2_mute_switch);
     }
 
-    if (flag->tx2_bat_val) {
+    if (flag->tx2_bat_val || flag->sys_status.tx2_charge_status) {
+        hl_mod_home_tx2_bat_update(now);
         hl_mod_display_mux_take();
-        flag->tx2_bat_val          = 0;
-        data2.cmd                  = HL_CHANGE_TX2_ELEC;
-        data2.tx_device_2.electric = now->tx2_bat_val;
+        flag->tx2_bat_val                  = 0;
+        flag->sys_status.tx2_charge_status = 0;
         hl_mod_display_mux_release();
-        hl_mod_main_ioctl(&data2);
-        hl_mod_page_home_tx2lowbat_deal(data2.tx_device_2.electric);
+        LOG_D("update bat tx2 %d,%d", now->sys_status.tx2_charge_status, now->tx2_bat_val);
     }
 
     if (flag->tx2_signal) {
@@ -896,7 +956,7 @@ static void hl_mod_page_home_update(void)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-    // hl_mod_main_two_init();
+
     main_tx = data_ptr->rf_net_connect;
     hl_mod_icon_deal_init();
     hl_mod_page_top_init();
@@ -925,7 +985,6 @@ static void hl_mod_page_exit(void)
 // 锁屏显示时间到的回调
 static void hl_mod_page_lock_event(hl_lvgl_lock_sta_t state)
 {
-    hl_lvgl_top_ioctl_t  ioctl_top;
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     if (state == HL_LOCK_STATUS_HIDE) {

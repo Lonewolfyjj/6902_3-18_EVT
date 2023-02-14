@@ -32,7 +32,7 @@
  */
 #include "page_top.h"
 #include "page_style_bit.h"
-
+#include <rtthread.h>
 #define POSTION_IS_NULL 0xFF
 
 typedef struct __icon_pos_t
@@ -45,6 +45,7 @@ typedef struct __icon_pos_t
 } icon_pos_t;
 
 LV_IMG_DECLARE(Main_bat);      //电池图标
+LV_IMG_DECLARE(Main_charging);//充电图标
 LV_IMG_DECLARE(Main_line_in);  //耳机插入
 LV_IMG_DECLARE(Main_usb_c);    //USB插入
 LV_IMG_DECLARE(Main_stereo);   //立体声
@@ -53,13 +54,17 @@ LV_IMG_DECLARE(Main_single_voice);   //单声道
 LV_IMG_DECLARE(Main_lock);     //锁屏
 LV_IMG_DECLARE(Main_heatset);  //监听
 LV_IMG_DECLARE(Main_noise);    //降噪
+LV_IMG_DECLARE(Main_apple);    // 苹果认证
 
 #define ICON_POS_CURRENT 0
 #define ICON_POS_DEFAULT 1
-#define ICON_NUM 3
-#define ICON_POS_VOR 2
+#define ICON_LIFT_NUM 4
+#define ICON_RIGHT_NUM 3
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
+
+#define ICON_POS_VOR 0
+#define ICON_SPACE_LIFT 10
 
 typedef struct _HL_DISPLAY_TOP_T
 {
@@ -75,7 +80,7 @@ typedef struct _HL_DISPLAY_TOP_T
 
     uint8_t heatset : 1;
 
-    uint8_t reserve1 : 1;
+    uint8_t apple : 1;
     uint8_t reserve2 : 1;
 } HL_DISPLAY_TOP_T;
 
@@ -91,23 +96,27 @@ static HL_DISPLAY_TOP_T top_icon_sta = {
 static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicator,style_power_bar_main,style_power_bar_red_indicator;
 static lv_style_t style_power_label;
 
-static lv_obj_t *bat_icon, *bat_bar, *bat_label;
+static lv_obj_t *bat_icon, *bat_bar, *bat_label,*bat_charger_icon;
 
-static icon_pos_t icon_list_l[ICON_NUM] = {
+static icon_pos_t icon_list_l[ICON_LIFT_NUM] = {
     { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_stereo },
     { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_noise },
     { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_lock },
+    { .duf_pos = 3, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_LEFT, .icon_data = &Main_apple },
 };
 
-static icon_pos_t icon_list_r[ICON_NUM] = {
+static icon_pos_t icon_list_r[ICON_RIGHT_NUM] = {
     { .duf_pos = 0, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_line_in },
     { .duf_pos = 1, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_usb_c },
     { .duf_pos = 2, .cur_pos = POSTION_IS_NULL, .align = LV_ALIGN_TOP_RIGHT, .icon_data = &Main_heatset },
 };
 
-static uint8_t icon_pos_judge(uint8_t icon_pos, icon_pos_t* icon_list, uint8_t cmd_typ)
+static uint8_t icon_pos_judge(uint8_t icon_pos, icon_pos_t* icon_list, uint8_t cmd_typ,uint8_t dev_typ)
 {
-    uint8_t i;
+    uint8_t i,ICON_NUM = ICON_RIGHT_NUM;
+    if(dev_typ == ICON_POS_LIFT){
+        ICON_NUM = ICON_LIFT_NUM;
+    }
     if (ICON_POS_DEFAULT == cmd_typ) {  //
         for (i = 0; i < ICON_NUM; i++) {
             if (icon_list[i].cur_pos == icon_pos) {
@@ -127,14 +136,18 @@ static uint8_t icon_pos_judge(uint8_t icon_pos, icon_pos_t* icon_list, uint8_t c
 
 static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t duf_pos, uint8_t icon_typ)
 {
-    uint8_t  i, is_used = 0;
-    uint8_t  icon_pos, icon_ar[ICON_NUM];
+    uint8_t  i, is_used = 0,dev_icon_typ,ICON_NUM;
+    uint8_t  icon_pos, icon_ar[4];
     int16_t icon_offset,ori;
     if (icon_typ == ICON_POS_LIFT) {
+        dev_icon_typ = ICON_POS_LIFT;
+        ICON_NUM = ICON_LIFT_NUM;
         icon_offset = 0;
         ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
+        ICON_NUM = ICON_RIGHT_NUM;
+        dev_icon_typ = ICON_POS_RIGHT;
         icon_offset = -50;
         ori = -1;
     }
@@ -147,19 +160,25 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
     if (is_used == 0) {  //
         return;
     }
-    icon_pos = icon_pos_judge(duf_pos, icon_list, ICON_POS_CURRENT);  //获取图标的当前位置
+    icon_pos = icon_pos_judge(duf_pos, icon_list, ICON_POS_CURRENT,dev_icon_typ);  //获取图标的当前位置
     if (icon_pos + 1 == is_used) {
         lv_obj_del(icon_list[duf_pos].icon);
         icon_list[duf_pos].cur_pos = POSTION_IS_NULL;
         return;
     }
     for (i = 0; i < is_used; i++) {
-        icon_ar[i] = icon_pos_judge(i, icon_list, ICON_POS_DEFAULT);  //获取已绘制图标的默认位置排序
+        icon_ar[i] = icon_pos_judge(i, icon_list, ICON_POS_DEFAULT,dev_icon_typ);  //获取已绘制图标的默认位置排序
     }
     for (i = icon_pos + 1; i < is_used; i++) {
         icon_list[icon_ar[i]].cur_pos -= 1;
-        lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
-                     icon_list[icon_ar[i]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        
+        if(icon_typ == ICON_POS_LIFT){
+            lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
+                        icon_list[icon_ar[i]].cur_pos * 20 * ori + i * ICON_SPACE_LIFT, ICON_POS_VOR);
+        }else{
+            lv_obj_align(icon_list[icon_ar[i]].icon, icon_list[icon_ar[i]].align,
+                        icon_list[icon_ar[i]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        }
     }
     lv_obj_del(icon_list[duf_pos].icon);
     icon_list[duf_pos].cur_pos = POSTION_IS_NULL;
@@ -168,19 +187,21 @@ static void delete_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t
 static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t icon_typ)
 {
     uint8_t  i, j, is_used = 0, new_f = 1;
-    uint8_t  icon_ar[ICON_NUM];
-    int16_t icon_offset,ori,icon_sign;
+    uint8_t  icon_ar[4],dev_icon_typ,ICON_NUM;
+    int16_t icon_offset,ori;
     if (icon_typ == ICON_POS_LIFT) {
-        icon_offset = 10; // 最左图标距离对齐边的距离
-        ori = 5; // 间隔
-        icon_sign = 1;
+        dev_icon_typ = ICON_POS_LIFT;
+        ICON_NUM = ICON_LIFT_NUM;
+        icon_offset = 0;        
+        ori = 1;
     }
     if (icon_typ == ICON_POS_RIGHT) {
+        dev_icon_typ = ICON_POS_RIGHT;
+        ICON_NUM = ICON_RIGHT_NUM;
         icon_offset = -50;
-        ori = 0;
-        icon_sign = -1;
+        ori = -1;
     }
-
+    
     for (i = 0; i < ICON_NUM; i++) {
         if (icon_list[i].cur_pos != POSTION_IS_NULL) {
             is_used++;  //已经绘制的图标个数
@@ -192,7 +213,7 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         return;
     }
     for (i = 0; i < is_used; i++) {
-        icon_ar[i] = icon_pos_judge(i, icon_list, ICON_POS_DEFAULT);  //获取已绘制图标的默认位置排序
+        icon_ar[i] = icon_pos_judge(i, icon_list, ICON_POS_DEFAULT,dev_icon_typ);  //获取已绘制图标的默认位置排序
     }
     for (i = 0; i < is_used; i++) {
         if (icon[0].duf_pos > icon_list[icon_ar[i]].duf_pos) {  //优先级低
@@ -202,18 +223,32 @@ static void add_icon_pos_set(icon_pos_t* icon, icon_pos_t* icon_list, uint8_t ic
         } else {
             new_f           = 0;
             icon[0].cur_pos = icon_list[icon_ar[i]].cur_pos;
-            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
+            if(icon_typ == ICON_POS_LIFT){
+                lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + i * ICON_SPACE_LIFT, ICON_POS_VOR);
+            }else{
+                lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+            }
+            
             for (j = i; j < is_used; j++) {
-                icon_list[icon_ar[j]].cur_pos += 1;
-                lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
-                             icon_list[icon_ar[j]].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
+                icon_list[icon_ar[j]].cur_pos += 1;                
+                if(icon_typ == ICON_POS_LIFT){
+                    lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
+                             icon_list[icon_ar[j]].cur_pos * 20 * ori + j * ICON_SPACE_LIFT, ICON_POS_VOR);
+                }else{
+                    lv_obj_align(icon_list[icon_ar[j]].icon, icon_list[icon_ar[j]].align,
+                             icon_list[icon_ar[j]].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+                }
             }
             return;
         }
     }
     if (new_f) {
         icon[0].cur_pos = is_used;
-        lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * (20 + ori)*icon_sign + icon_offset, ICON_POS_VOR);
+        if(icon_typ == ICON_POS_LIFT){
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + is_used * ICON_SPACE_LIFT, ICON_POS_VOR);
+        }else{
+            lv_obj_align(icon[0].icon, icon[0].align, icon[0].cur_pos * 20 * ori + icon_offset, ICON_POS_VOR);
+        }
     }
 }
 
@@ -286,6 +321,17 @@ static lv_obj_t* lv_power_bar_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset
     return bar;
 }
 
+static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const void * src,lv_coord_t x_offset,lv_coord_t y_offset)
+{
+    lv_obj_t* img = lv_img_create(align_obj);
+    lv_img_set_src(img, src);
+    lv_obj_align(img, align, x_offset, y_offset);
+    lv_img_set_zoom(img, 192);
+    lv_obj_set_height(img,16);
+    lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
+    return img;
+}
+
 static lv_obj_t* lv_power_img_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset, lv_coord_t y_offset, uint16_t zoom)
 {
     lv_obj_t* img = lv_img_create(align_obj);
@@ -345,6 +391,14 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             top_icon_sta.lock = 1;
             hl_mod_creat_top_icon(&icon_list_l[2], icon_list_l, ICON_POS_LIFT);
             break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 1){
+                rt_kprintf("Top apple is exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 1;
+            hl_mod_creat_top_icon(&icon_list_l[3], icon_list_l, ICON_POS_LIFT);
+            break;
         case HL_TOP_ICON_LINEOUT:
             if(top_icon_sta.lineout == 1){
                 rt_kprintf("Top lineout is exist!\n");
@@ -368,7 +422,7 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             }
             top_icon_sta.heatset = 1;
             hl_mod_creat_top_icon(&icon_list_r[2], icon_list_r, ICON_POS_RIGHT);
-            break;
+            break;        
         default:
             break;
     }
@@ -432,6 +486,15 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
             top_icon_sta.lock = 0;
             delete_icon_pos_set(&icon_list_l[2], icon_list_l, 2, ICON_POS_LIFT);
             icon_list_l[2].icon = NULL;
+            break;
+        case HL_TOP_ICON_APPLE:
+            if(top_icon_sta.apple == 0){
+                rt_kprintf("Top apple is not exist!\n");
+                return ;
+            }
+            top_icon_sta.apple = 0;
+            delete_icon_pos_set(&icon_list_l[3], icon_list_l, 3, ICON_POS_LIFT);
+            icon_list_l[3].icon = NULL;
             break;
         case HL_TOP_ICON_LINEOUT:
             if(top_icon_sta.lineout == 0){
@@ -497,7 +560,7 @@ static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
 
 void hl_mod_top_ioctl(void* ctl_data)
 {
-    // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
         case HL_TOP_ADD_ICON_CMD:
@@ -512,6 +575,14 @@ void hl_mod_top_ioctl(void* ctl_data)
             // lv_label_set_text(bat_label, buf);
             break;
 
+        case HL_TOP_BAT_CHARGER_HIDE:
+
+            lv_obj_add_flag(bat_charger_icon,LV_OBJ_FLAG_HIDDEN);
+            break;
+        case HL_TOP_BAT_CHARGER_NOT_HIDE:
+
+            lv_obj_clear_flag(bat_charger_icon,LV_OBJ_FLAG_HIDDEN);
+            break;
         case HL_TOP_BAT_COLOR_GREEN:
             lv_obj_remove_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar,&style_power_bar_green_indicator,LV_PART_INDICATOR);
@@ -553,4 +624,5 @@ void hl_mod_top_init(void* init_data)
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
+    bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -3);
 }

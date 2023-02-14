@@ -37,6 +37,8 @@ typedef struct _tx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)
@@ -49,10 +51,27 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_flag:1;
     /// 充电标志(1:充电中 0:不充电 2：充满)
     uint8_t             charge_flag:2;
-
+    /// 升级标志(0:空闲 1：升级中 2：升级成功 3：升级失败)
+    uint8_t             upgrade_flag:2;
     /// mute(1:mute on 0:mute off)
     uint8_t             mute_flag;
-
+    /// 录制保护标志(1:录制保护开  0：录制保护关)
+    uint8_t             rec_protect_flag;
+    /// 自动录制标志(1:自动录制开  0：自动录制关)
+    uint8_t             rec_auto_flag;
+    /// 降噪保护标志(1:降噪保护开  0：降噪保护关)
+    uint8_t             denoise_protect_flag;
+    /// 自动降噪标志(1:自动降噪开  0：自动降噪关)
+    uint8_t             denoise_auto_flag;
+    /// 降噪等级()
+    uint8_t             denoise_class;
+    /// 升级状态(hl_mod_upgrade_state)
+    uint8_t             upgrade_state;
+    /// TX增益设置
+    int32_t              gain;
+    /// UAC的增益设置
+    int32_t              uac_gain;
+    
     /// 无线状态
     hl_rf_state_e       rf_state;
     /// TX当前声道(0:左声道  1：右声道)
@@ -73,6 +92,8 @@ typedef struct _rx_app_info_t
     uint8_t             on_off_flag;
     /// usb接口状态(1:连接 0：未连接)
     uint8_t             usb_plug:1;
+    /// usb接口状态(1:连接 0：未连接)
+    uint8_t             usb_pogo_flag:1;
     /// uac连接标志(1:连接 0：未连接)
     uint8_t             uac_link_flag:1;
     /// 大容量接口状态(1:连接 0：未连接)
@@ -121,6 +142,12 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
+
+    /// 监听口增益设置
+    int32_t              hp_gain;
+    /// 相机口增益设置
+    int32_t              cam_gain_l;
+    int32_t              cam_gain_r;
 
     /// 本地Mac地址
     uint8_t             local_mac[6];
@@ -178,6 +205,23 @@ void hl_app_mng_powerOff(void);
  * </table>
  */
 void hl_app_mng_charger_entry(void *msg_q);
+
+/**
+ * 
+ * @brief 关机充电时确定是否关停设备
+ * @param [in] state 0：不关停 | 1：关停
+ * @date 2023-02-10
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-10      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_set_halt_state(uint8_t state);
 
 #endif /* __HL_APP_MNG_H__ */
 /*

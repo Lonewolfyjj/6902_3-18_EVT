@@ -37,12 +37,14 @@
 
 typedef enum _hl_mod_extcom_hup_cmd_e
 {
-    HL_HUP_CMD_PROBE            = 0x01,
-    HL_HUP_CMD_GET_BAT_INFO     = 0x02,
-    HL_HUP_CMD_GET_PAIR_INFO    = 0x05,
-    HL_HUP_CMD_SET_PAIR_INFO    = 0x06,
-    HL_HUP_CMD_GET_MAC_ADDR     = 0x07,
-    HL_HUP_CMD_GET_CHARGE_STATE = 0x0A,
+    HL_HUP_CMD_PROBE             = 0x01,
+    HL_HUP_CMD_GET_BAT_INFO      = 0x02,
+    HL_HUP_CMD_GET_PAIR_INFO     = 0x05,
+    HL_HUP_CMD_SET_PAIR_INFO     = 0x06,
+    HL_HUP_CMD_GET_MAC_ADDR      = 0x07,
+    HL_HUP_CMD_GET_CHARGE_STATE  = 0x0A,
+    HL_HUP_CMD_GET_TURN_ON_STATE = 0x0F,
+    HL_HUP_CMD_SHUT_DOWN         = 0x10,
 } hl_mod_extcom_hup_cmd_e;
 
 #else
@@ -63,6 +65,8 @@ typedef enum _hl_mod_extcom_hup_cmd_e
     HL_HUP_CMD_SET_RTC_TIME      = 0x0C,
     HL_HUP_CMD_SET_RTC_TIME_BACK = 0x0D,
     HL_HUP_CMD_SET_BOX_LID_STATE = 0x0E,
+    HL_HUP_CMD_GET_TURN_ON_STATE = 0x0F,
+    HL_HUP_CMD_SHUT_DOWN         = 0x10,
 } hl_mod_extcom_hup_cmd_e;
 
 #endif
@@ -262,6 +266,12 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         case HL_HUP_CMD_GET_CHARGE_STATE: {
             _mod_msg_send(HL_GET_CHARGE_STATE_REQ_IND, NULL, 0);
         } break;
+        case HL_HUP_CMD_GET_TURN_ON_STATE: {
+            _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_SHUT_DOWN: {
+            _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
+        } break;
         default:
             break;
     }
@@ -419,6 +429,12 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
         case HL_HUP_CMD_GET_PAIR_INFO: {
             _mod_msg_send(HL_GET_PAIR_MAC_REQ_IND, NULL, 0);
         } break;
+        case HL_HUP_CMD_GET_TURN_ON_STATE: {
+            _mod_msg_send(HL_GET_TURN_ON_STATE_REQ_IND, NULL, 0);
+        } break;
+        case HL_HUP_CMD_SHUT_DOWN: {
+            _mod_msg_send(HL_SHUT_DOWN_REQ_IND, NULL, 0);
+        } break;
         default:
             break;
     }
@@ -444,7 +460,8 @@ static inline int _hl_mod_euc_hup_init(void)
     _euc_mod.uart_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
     _euc_mod.uart_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, (uint32_t(*)(void))rt_tick_get, uart_hup_success_handle_func);
+    ret = hl_util_hup_init(&(_euc_mod.uart_hup), uart_hup_buf, (uint32_t(*)(void))rt_tick_get,
+                           uart_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("uart_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -454,7 +471,8 @@ static inline int _hl_mod_euc_hup_init(void)
     _euc_mod.hid_hup.hup_handle.role           = EM_HUP_ROLE_SLAVE;
     _euc_mod.hid_hup.hup_handle.timer_state    = EM_HUP_TIMER_ENABLE;
 
-    ret = hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, (uint32_t(*)(void))rt_tick_get, hid_hup_success_handle_func);
+    ret =
+        hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, (uint32_t(*)(void))rt_tick_get, hid_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("hid_hup init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
@@ -780,6 +798,17 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
 
             _uart_send_hup_data(HL_HUP_CMD_GET_CHARGE_STATE, &charge_state, sizeof(charge_state));
         } break;
+        case HL_SET_TURN_ON_STATE_CMD: {
+            if (arg_size != sizeof(uint8_t)) {
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_TURN_ON_STATE, (uint8_t*)arg, arg_size);
+        } break;
+        case HL_SHUTDOWN_ACK_CMD: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &charge_state, sizeof(charge_state));
+        } break;
         default:
             break;
     }
@@ -857,6 +886,17 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
             }
 
             _uart_send_hup_data(HL_HUP_CMD_GET_PAIR_INFO, (char*)arg, sizeof(uint8_t[12]));
+        } break;
+        case HL_SET_TURN_ON_STATE_CMD: {
+            if (arg_size != sizeof(uint8_t)) {
+                LOG_E("size err, ctrl arg need <uint8_t> type pointer!");
+                return HL_MOD_EUC_FUNC_RET_ERR;
+            }
+
+            _uart_send_hup_data(HL_HUP_CMD_GET_TURN_ON_STATE, (uint8_t*)arg, arg_size);
+        } break;
+        case HL_SHUTDOWN_ACK_CMD: {
+            _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &charge_state, sizeof(charge_state));
         } break;
         default:
             break;

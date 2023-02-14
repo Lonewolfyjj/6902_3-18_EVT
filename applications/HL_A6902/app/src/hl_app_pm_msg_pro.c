@@ -60,7 +60,7 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         state               = 2;
     }
     bypass_state.chn   = tx_info.rf_chn;
-    bypass_state.state = tx_info.charge_flag;
+    bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
     hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, 1);
 #else

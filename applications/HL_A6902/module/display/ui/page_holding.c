@@ -106,23 +106,23 @@ static lv_obj_t * lv_power_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,l
     return lab;
 }
 
-static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
-{
-    uint32_t child_cnt = 0,i;
-    child_cnt = lv_obj_get_child_cnt(obj);
-    if(child_cnt == 0){
-        lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-        lv_obj_del_delayed(obj,0);
-    }else{
-        for(i=0;i<child_cnt;i++){
-            hl_obj_delete(lv_obj_get_child(obj, i),true);            
-        }
-        if(obj_typ){
-            lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
-            lv_obj_del_delayed(obj,0);
-        }        
-    }
-}
+// static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
+// {
+//     uint32_t child_cnt = 0,i;
+//     child_cnt = lv_obj_get_child_cnt(obj);
+//     if(child_cnt == 0){
+//         lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//         lv_obj_del_delayed(obj,0);
+//     }else{
+//         for(i=0;i<child_cnt;i++){
+//             hl_obj_delete(lv_obj_get_child(obj, i),true);            
+//         }
+//         if(obj_typ){
+//             lv_obj_add_flag(obj,LV_OBJ_FLAG_HIDDEN);
+//             lv_obj_del_delayed(obj,0);
+//         }        
+//     }
+// }
 
 static void lv_delete_style(void)
 {
@@ -157,7 +157,9 @@ void hl_mod_holding_ioctl(void * ctl_data)
             lv_obj_clear_flag(img2,LV_OBJ_FLAG_HIDDEN);
             break;
         case HL_HOLDING_DELETE_PAGE:
-            hl_obj_delete(lv_scr_act(),false); 
+            // hl_obj_delete(lv_scr_act(),false); 
+            lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10); 
             break;
         case HL_HOLDING_DELETE_STYLE:
             lv_delete_style();

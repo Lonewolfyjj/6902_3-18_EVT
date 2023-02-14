@@ -35,6 +35,7 @@ extern "C" {
 #include "lvgl.h"
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
+#include "page_b_two_in_one.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -106,6 +107,11 @@ typedef struct _hl_display_status{
     uint32_t restore_state:1; 
     /// @brief 背景变暗标志位
     uint32_t lowbrightness_flag:1; 
+    /// @brief 开启升级设置标志位 1表示已下发 0 表示未下发
+    /// @brief 数据部分 1成功 0 表示失败
+    uint32_t upgrade_setting_flag:1;
+    /// @brief 苹果认证标志，1：苹果认证成功 0 ：苹果认证失败
+    uint32_t apple_auth_flag:1; 
 }hl_display_status;
 
 typedef struct _hl_display_screen_s
@@ -165,7 +171,7 @@ typedef struct _hl_display_screen_s
     hl_display_systime_s systime;
 }hl_display_screen_s;
 
-// 下发信息变更标志
+// 下发信息变更标志,如果多个页面都存在这个状态，那么不适用这个flag判断参数是否变更
 typedef struct _hl_display_screen_change_s{
     hl_display_status sys_status;
     uint32_t rf_net_connect:1;
@@ -236,7 +242,7 @@ typedef enum _device_pose_t
 void hl_mod_display_mux_init(void);
 void hl_mod_display_mux_take(void);
 void hl_mod_display_mux_release(void);
-
+void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose);
 hl_screen_page_e hl_mod_display_scr_get_page(void);
 hl_display_screen_s* hl_mod_page_get_screen_data_ptr();
 void hl_mod_page_delete(lv_obj_t* obj);

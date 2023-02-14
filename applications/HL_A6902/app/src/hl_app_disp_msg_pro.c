@@ -30,6 +30,7 @@
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
+#include "hl_util_nvram.h"
 
 #define DBG_SECTION_NAME "app_disp"
 #define DBG_LEVEL DBG_LOG
@@ -56,6 +57,7 @@ void hl_app_disp_state_led_set(void)
     hl_led_switch   denoise_ctrl;
     hl_led_switch   record_ctrl;
     hl_led_switch   mute_ctrl;
+    hl_led_switch   upgrade_ctrl;
 
     // RF
     switch (tx_info.rf_state) {
@@ -101,6 +103,13 @@ void hl_app_disp_state_led_set(void)
         mute_ctrl = SWITCH_OPEN;
     }
     hl_mod_display_io_ctrl(LED_SWITCH_MUTE_CMD, &mute_ctrl, sizeof(mute_ctrl));
+
+    if (tx_info.upgrade_flag == 1) {
+        upgrade_ctrl = SWITCH_OPEN;
+    } else {
+        upgrade_ctrl = SWITCH_CLOSE;
+    }
+    hl_mod_display_io_ctrl(LED_SWITCH_UPDATE_CMD, &upgrade_ctrl, sizeof(upgrade_ctrl));
 }
 
 #else
@@ -260,9 +269,17 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
+            ptr = p_msg->param.u32_param;            
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);   
+            rx_info.cam_gain_l = ptr;        
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_r =  ptr;            
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_CATEGORY_VAL_IND:
@@ -284,14 +301,34 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case MONO_LINE_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置相机口音量
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_l = ptr;
+            rx_info.cam_gain_r = ptr;
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
             // TBD: SAFETRACK设置相机口音量
+            ptr =  p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
+            rx_info.cam_gain_l =  ptr;
+            rx_info.cam_gain_r =  ptr;
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_VOLUME_VAL_IND:
             // TBD: audio模块设置监听口音量
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr, 4);
+            rx_info.hp_gain = ptr;
+            hl_util_nvram_param_set_integer("RX_HP_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_HP_R_GAIN", ptr);
             LOG_D("MONITOR_VOLUME_VAL_IND\r\n");
             break;
         case LED_BRITNESS_VAL_IND:
@@ -317,6 +354,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             // 进入配对状态
             _hl_app_disp_msg_pro_rf_connect();
             LOG_D("DEVICE_PAIR_IND\r\n");
+            break;
+        case UPGRADE_SETTING_SWITCH_IND:
+            // 开启升级的相关设置
+            LOG_D("UPGRADE_SETTING_SWITCH_IND\r\n");
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

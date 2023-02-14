@@ -577,7 +577,7 @@ int dfs_unmount_device(rt_device_t dev)
     }
 
     if (fs == NULL ||
-        fs->ops->unmount == NULL ||
+        fs->ops->unmount == NULL || fs->data == NULL ||
         fs->ops->unmount(fs) < 0)
     {
         goto err1;

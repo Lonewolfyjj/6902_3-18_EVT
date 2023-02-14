@@ -632,6 +632,10 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
         }
         else
         {
+            if (NULL == data->ep_out->buffer) {
+                rt_kprintf("-----------disk read error of buffer is null\n");
+                return -RT_ERROR;
+            }
             RT_DEBUG_LOG(RT_DEBUG_USB, ("return to cbw status\n"));
             data->ep_out->request.buffer = data->ep_out->buffer;
             data->ep_out->request.size = SIZEOF_CBW;
@@ -1092,10 +1096,6 @@ static rt_err_t _function_disable(ufunction_t func)
 
     RT_DEBUG_LOG(RT_DEBUG_USB, ("Mass storage function disabled\n"));
 
-    if(s_p_metorage_switch_cb != NULL) {
-        s_p_metorage_switch_cb(0);
-    }
-
     data = (struct mstorage*)func->user_data;   
     if(data->ep_in->buffer != RT_NULL)
     {
@@ -1118,6 +1118,10 @@ static rt_err_t _function_disable(ufunction_t func)
     }
     
     data->status = STAT_CBW;
+
+    if(s_p_metorage_switch_cb != NULL) {
+        s_p_metorage_switch_cb(0);
+    }
     
     return RT_EOK;
 }
@@ -1157,11 +1161,11 @@ ufunction_t rt_usbd_function_mstorage_create(udevice_t device)
     int msc_open_flag;
     uint8_t ret;
 
-    ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
         rt_kprintf("nvram be used before not init\n");
         hl_board_nvram_init();
-        ret = hl_util_nvram_param_get_integer("HL_MSC_OPEN", &msc_open_flag, 1);
+        ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     }
 
     rt_kprintf("msc_open_flag = %d ,ret = %d \n", msc_open_flag, ret);

@@ -1,7 +1,7 @@
 /**
  * @file hl_mod_page_volume_set.c
  * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
+ * @brief 主菜单音效模式设置界面
  * @version V1.0
  * @date 2022-12-09
  * 
@@ -52,13 +52,7 @@ LV_IMG_DECLARE(Other_sound_white);      //声音增强
 static int16_t                 knob_choose;
 static hl_b_two_in_one_check_t display_choose;
 
-static void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose)
-{
-    hl_lvgl_b_two_in_one_ioctl_t two_b_in_one_test_ctl;
 
-    two_b_in_one_test_ctl.b_two_in_one_choose = choose;
-    hl_mod_b_two_in_one_ioctl(&two_b_in_one_test_ctl);
-}
 
 static void hl_b_two_in_one_update(void)
 {
@@ -116,6 +110,26 @@ static void hl_soundeffect_test_cb(hl_b_two_in_one_check_t event_num)
         hl_mod_display_mux_release();
         hl_mod_display_send_msg(VOICE_MODULE_VAL_IND, &value, 0);
     }
+    // } else {
+    //     switch (event_num) {
+    //         case HL_B_TWO_ONE_CHECK_LEFT:
+    //             value = HIGH_FIDELITY;
+    //             break;
+    //         case HL_B_TWO_ONE_CHECK_RIGHT:
+    //             value = SOUND_ENHANCEMENT;
+    //             break;
+    //         default:
+    //             break;
+    //     }
+
+    //     if (data_ptr->voice_module != value) {
+
+    //         hl_mod_display_mux_take();
+    //         data_ptr->monitor_category = value;
+    //         hl_mod_display_mux_release();
+    //     }
+    //     hl_mod_display_send_msg(MONITOR_CATEGORY_VAL_IND, &value, 0);
+    // }
 }
 
 static void hl_mod_page_setup(void)

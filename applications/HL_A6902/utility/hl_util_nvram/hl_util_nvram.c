@@ -20,6 +20,7 @@
 #include "hl_util_nvram.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 
@@ -155,7 +156,7 @@ uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
         return 3;
     }
 
-    _hl_util_nvram_print_json_data();
+    // _hl_util_nvram_print_json_data();
 
     return 0;
 }
@@ -235,6 +236,7 @@ uint8_t hl_util_nvram_param_get_integer(char* param_key, int* param_value, int d
         // strcpy(param_value, item->valueint);
         *param_value = atoi(item->valuestring);
     } else {
+        *param_value = default_value;
         sg_nvram_handle->std_printf("error: nvram have no item %d\r\n", param_key);
         ret = 2;
     }
@@ -285,6 +287,14 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
     return ret;
 }
 
+uint8_t hl_util_nvram_param_set_integer(char* param_key, uint8_t integer_value)
+{
+    char param_value[10] = {0};
+
+    sprintf(param_value, "%d", integer_value);
+    return hl_util_nvram_param_set(param_key, param_value);
+}
+
 uint8_t hl_util_nvram_param_save()
 {
     char* data;
@@ -296,18 +306,21 @@ uint8_t hl_util_nvram_param_save()
     }
 
     //有更改才写入
-    sg_nvram_handle->have_changed = 1;
     if (sg_nvram_handle->have_changed == 1) {
         data = cJSON_PrintUnformatted(sg_json_paramaters);
-        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         memset(sg_json_str_buffer, 0x00, HL_UTIL_NVRAM_JSON_BUFFER_SIZE);
         strcpy(sg_json_str_buffer, data);
         ret = sg_nvram_handle->nvram_write(sg_json_str_buffer, HL_UTIL_NVRAM_JSON_BUFFER_SIZE);
+        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         free(data);
     } else {
+        data = cJSON_PrintUnformatted(sg_json_paramaters);
+        _hl_util_nvram_print_json_data_from_a_json(data, strlen(data));
         sg_nvram_handle->std_printf("error: nvram no change to save\r\n");
         ret = 2;
     }
+
+    sg_nvram_handle->have_changed = 0;
 
     return ret;
 }
