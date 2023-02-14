@@ -196,9 +196,9 @@ static lv_obj_t * hl_mod_creat_top_icon(const void * img_src,lv_obj_t *align_obj
 
 static void hl_top_icon_init(void)
 {
-    head_lift_list = (top_list_t *)malloc(sizeof(top_list_t));
+    head_lift_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     head_lift_list->next = NULL;
-    head_right_list = (top_list_t *)malloc(sizeof(top_list_t));
+    head_right_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     head_right_list->next = NULL;
 }
 
@@ -238,7 +238,7 @@ static void hl_top_icon_add(img_info_t * img_info,uint8_t typ,top_list_t* head)
 {
     uint8_t end_flag = 1;
     top_list_t* node = head,*node_list = NULL;
-    node_list = (top_list_t *)malloc(sizeof(top_list_t));
+    node_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     node_list->img_info = img_info;
     node_list->next = NULL;
     if(node->next == NULL){        
@@ -277,7 +277,7 @@ static lv_obj_t* hl_top_icon_obj_get(hl_top_icon_t icon,top_list_t* head)
 static void hl_top_icon_delete(uint8_t def_num,uint8_t typ,top_list_t* head)
 {
     top_list_t* node = head,*del_list;
-    del_list = (top_list_t *)malloc(sizeof(top_list_t));
+    del_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     top_list_t* del = del_list;
     while(node->next != NULL){
         if(node->next->img_info->default_pos == def_num){
@@ -299,7 +299,7 @@ static void hl_top_list_clean(top_list_t* head)
     last_node = node->next;
     while(last_node != NULL)
     {
-        free(node);
+        rt_free(node);
         node = last_node;
         last_node = last_node->next;
     }
