@@ -157,11 +157,11 @@ static void _hl_app_mng_charger_pm_process(mode_to_app_msg_t* p_msg)
 #if HL_IS_TX_DEVICE()
             tx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(LED_BATTERY_VAL_CMD, &soc_temp, 1);
-            LOG_I("current soc:%d", tx_info.soc);
+            // LOG_I("current soc:%d", tx_info.soc);
 #else
             rx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(RX_BAT_VAL_VAL_CMD, &soc_temp, 1);
-            LOG_I("current soc:%d", rx_info.soc);
+            // LOG_I("current soc:%d", rx_info.soc);
 #endif
             break;
 

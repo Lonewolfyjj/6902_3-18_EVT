@@ -273,14 +273,13 @@ static void _guage_state_update()
 
     if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
         _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
-        LOG_I("电池打印");
+        LOG_I("------bat log------");
         LOG_I("soc:%d . %d", _pm_mod.bat_info.soc.soc, _pm_mod.bat_info.soc.soc_d);
         LOG_I("voltage:%d", _pm_mod.bat_info.voltage);
         LOG_I("current:%d", _pm_mod.bat_info.current);
         LOG_I("temp:%d . %d", _pm_mod.bat_info.temp.temp, _pm_mod.bat_info.temp.temp_d);
         LOG_I("soh:%d", _pm_mod.bat_info.soh);
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
-        LOG_I("结束");
     }
 
     if (_pm_mod.bat_info.soc.soc <= 3) {
