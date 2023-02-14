@@ -58,6 +58,8 @@ typedef struct _iap2_packet_header_arg_
 
 typedef struct _hl_util_apple_t_
 {
+    /// 数据缓冲区
+    uint8_t recv_buf[128];
     /// fifo缓冲区
     uint8_t* fifo_buf;
     /// fifo结构体
@@ -66,6 +68,8 @@ typedef struct _hl_util_apple_t_
     hl_apple_iap2_t iap2;
     /// EAP通信句柄
     hl_apple_eap_t eap;
+    ///
+    uint16_t eap_session_identifier;
 
     volatile st_packet_header_arg packet_arg;
 

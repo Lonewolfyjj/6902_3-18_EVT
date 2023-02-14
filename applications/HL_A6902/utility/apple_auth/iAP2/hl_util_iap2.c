@@ -295,22 +295,27 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
 
     int      result     = -1;
     int      read_len   = 0;
-    uint8_t  ret        = 0;
     uint8_t  len        = 0;
     uint16_t message_id = 0;
     uint16_t param_id   = 0;
+    uint16_t data_len   = 0;
+
+    st_iap2_ea_packet_t* ptr_ea_packet = NULL;
 
     read_len = apple->usb_read(apple->iap2.recv_buffer, 27, TIMEOUT_US);
+    if(!read_len){
+        return 0;
+    }
+    // apple->log("%s:%d:xxx usb Read = %d\n", __func__, __LINE__, read_len);
 
     result = hl_iap2_packet_header_decode(apple->iap2.recv_buffer, &len, LINK_CONTROL_ACK, &apple->packet_arg);
-    apple->log("[%s:%d]USB Read SessionID = %X\n", __func__, __LINE__, apple->packet_arg.session_id);
 
     switch (apple->packet_arg.session_id) {
         case SESSION_ID_CTRL: {
             message_id = hl_iap2_ctrl_packet_get_message_id(apple->iap2.recv_buffer);
             param_id   = hl_iap2_ctrl_packet_get_param_id(apple->iap2.recv_buffer);
-            apple->log("%s:%d:xxx usb MessageID = %X\n", __func__, __LINE__, message_id);
-            apple->log("%s:%d:xxx usb ParamID = %04X\n\n", __func__, __LINE__, param_id);
+            // apple->log("%s:%d:xxx usb MessageID = %X\n", __func__, __LINE__, message_id);
+            // apple->log("%s:%d:xxx usb ParamID = %04X\n\n", __func__, __LINE__, param_id);
             switch (message_id) {
                 case MESSAGE_ID_START_EAP:
                     apple->log("[Apple]Get EAP Start!!!\n");
@@ -321,7 +326,7 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
                     break;
 
                 case MESSAGE_ID_POWER_UPDATE:
-                    apple->log("[Apple]Get Power Update!!!\n");
+                    // apple->log("[Apple]Get Power Update!!!\n");
                     break;
 
                 default:
@@ -329,9 +334,14 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
             }
         } break;
 
-        case SESSION_ID_EA:
-            apple->log("[Apple]Get EA Message!!!\n");
-            break;
+        case SESSION_ID_EA: {
+            ptr_ea_packet = apple->iap2.recv_buffer;
+            // apple->log("[Apple]Get EA Message!!!\n");
+            data_len = hl_eap_payload_decode(ptr_ea_packet, apple->eap_session_identifier, apple->recv_buf);
+            if (data_len > 0) {
+                hl_util_fifo_write(&apple->fifo, apple->recv_buf, data_len);
+            }
+        } break;
 
         default:
             break;

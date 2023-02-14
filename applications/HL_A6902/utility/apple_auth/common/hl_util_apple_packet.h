@@ -106,6 +106,14 @@ typedef struct _iap2_ctrl_payload_
     uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_payload_t;
 
+typedef struct _iap2_ea_payload_
+{
+    ///
+    uint16_t EASessionIdentifier;
+    ///
+    uint8_t* EASessionData;
+} __attribute__((packed, aligned(1))) st_iap2_ea_payload_t;
+
 typedef struct _iap2_sync_packet_
 {
     ///
@@ -121,6 +129,14 @@ typedef struct _iap2_ctrl_packet_
     ///
     st_iap2_ctrl_payload_t ctrl_payload;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_packet_t;
+
+typedef struct _iap2_ea_packet_
+{
+    ///
+    st_iap2_packet_header_t packet_header;
+    ///
+    st_iap2_ea_payload_t ea_payload;
+} __attribute__((packed, aligned(1))) st_iap2_ea_packet_t;
 
 /* define --------------------------------------------------------------------*/
 
@@ -238,6 +254,24 @@ int hl_iap2_detect_packet_encode(uint8_t* write_data_addr);
  * </table>
  */
 int hl_iap2_detect_packet_decode(uint8_t* read_data_addr);
+
+/**
+ * hl_apple_get_packet_len
+ * @brief 获取消息包整体长度
+ * @param [in] packet_header 包头指针
+ * @return uint16_t 成功 消息包整体长度 | 失败 <0
+ * @date 2023-02-13
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-13      <td>lisonglin     <td>新建
+ * </table>
+ */
+uint16_t hl_apple_get_packet_len(st_iap2_packet_header_t* packet_header);
 
 /**
  * hl_iap2_packet_header_encode
@@ -364,6 +398,26 @@ int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t
  * </table>
  */
 uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_t param_id, uint8_t* write_data);
+
+/**
+ * hl_eap_payload_decode
+ * @brief 解析EAP消息包并读出数据内容
+ * @param [in] packet_payload EAP消息包
+ * @param [in] easession_id EASessionId
+ * @param [in] data_addr 数据存放缓冲区
+ * @return uint16_t 成功 读取数据长度 | 失败 <0
+ * @date 2023-02-08
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-08      <td>lisonglin     <td>新建
+ * </table>
+ */
+uint16_t hl_eap_payload_decode(st_iap2_ea_packet_t* ea_packet, uint16_t easession_id, uint8_t* data_addr);
 
 #endif
 /*

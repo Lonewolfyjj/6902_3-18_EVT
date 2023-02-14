@@ -42,6 +42,15 @@ int hl_iap2_detect_packet_decode(uint8_t* read_data_addr)
     return result;
 }
 
+uint16_t hl_apple_get_packet_len(st_iap2_packet_header_t* packet_header)
+{
+    if (NULL == packet_header) {
+        return -1;
+    }
+
+    return packet_header->PacketLength;
+}
+
 int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_t packet_len, uint8_t ctrl_byte,
                                  st_packet_header_arg header_arg)
 {
@@ -74,7 +83,8 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 
     if (!(ptr_header->ControlByte & ctrl_byte)) {
         return -2;
-    } else if ((ptr_header->PacketAckNum != header_arg->ack_num )&&ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
+    } else if ((ptr_header->PacketAckNum != header_arg->ack_num)
+               && ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
         return -3;
     } else {
         *packet_len            = ptr_header->PacketLength;
@@ -176,4 +186,25 @@ uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_
     }
 
     return param_len;
+}
+
+uint16_t hl_eap_payload_decode(st_iap2_ea_packet_t* ea_packet, uint16_t easession_id, uint8_t* data_addr)
+{
+    if (NULL == ea_packet) {
+        return -1;
+    }
+
+    uint16_t data_len = 0;
+
+    data_len = hl_apple_get_packet_len(&ea_packet->packet_header);
+
+    data_len = data_len - PACKET_HEADER_SIZE - 4;
+
+    if (ea_packet->ea_payload.EASessionIdentifier != easession_id) {
+        return -2;
+    }
+
+    memcpy(data_addr, ea_packet->ea_payload.EASessionData, data_len);
+
+    return data_len;
 }

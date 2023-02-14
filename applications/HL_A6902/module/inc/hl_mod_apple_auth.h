@@ -23,6 +23,7 @@
 #include <rtdevice.h>
 #include <stdint.h>
 #include "hl_util_apple.h"
+#include "hl_util_apple_type.h"
 #include "hl_config.h"
 #include "stdbool.h"
 
