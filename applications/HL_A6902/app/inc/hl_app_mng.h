@@ -149,6 +149,10 @@ typedef struct _rx_app_info_t
     int32_t              cam_gain_l;
     int32_t              cam_gain_r;
 
+    /// TX1版本号
+    uint8_t             tx1_version[32];
+    /// TX2版本号
+    uint8_t             tx2_version[32];
     /// 本地Mac地址
     uint8_t             local_mac[6];
     /// 配对Mac地址 tx1:[0 - 5] tx2:[6 - 11]

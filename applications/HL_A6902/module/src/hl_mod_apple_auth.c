@@ -369,7 +369,7 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     dev_sn = s_apple.apple.iap2.dev_sn;
     rt_memset(dev_sn, 0, sizeof(s_apple.apple.iap2.dev_sn));
     strcpy(dev_sn, "xxxxxxxxxxxxxxx");
-    if (!hl_util_nvram_param_get("SN", dev_sn, dev_sn, sizeof(s_apple_auth.iap2_handle->dev_sn))) {
+    if (!hl_util_nvram_param_get("SN", dev_sn, dev_sn, sizeof(s_apple.apple.iap2.dev_sn))) {
         rt_kprintf("\nMFI Get SN Number: [%s][%d]\n", dev_sn, rt_strlen(dev_sn));
     }
 

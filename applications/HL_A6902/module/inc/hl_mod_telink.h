@@ -75,7 +75,7 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_LOWCUT_CMD = 0x29,
     /// 透传自动关机时间：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_AUTO_POWEROFF_CMD = 0x2a,
-    /// 透传版本信息：类型hl_rf_bypass_version_t
+    /// 透传版本信息：类型hl_rf_bypass_string_t
     HL_RF_BYPASS_VERSION_CMD = 0x2b,
     /// 透传混音状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_SOUND_MIX_CMD = 0x2c,
@@ -85,6 +85,10 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_STATUS_LED_CMD = 0x2e,
     /// 透传TX增益信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_TX_GAIN_CMD = 0x2f,
+    /// 透传音效状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_SOUND_EFFECT_CMD = 0x30,
+    /// 透传恢复出厂设置状态：
+    HL_RF_BYPASS_XXX_CMD = 0x31,
 } HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -129,7 +133,7 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_LOWCUT_IND = 0x29,
     /// 返回自动关机时间：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_AUTO_POWEROFF_IND = 0x2a,
-    /// 返回版本信息：类型hl_rf_bypass_version_t
+    /// 返回版本信息：类型hl_rf_bypass_string_t
     HL_RF_BYPASS_VERSION_IND = 0x2b,
     /// 返回混音状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_SOUND_MIX_IND = 0x2c,
@@ -139,6 +143,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_STATUS_LED_IND = 0x2e,
     /// 返回TX增益信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_TX_GAIN_IND = 0x2f,
+    /// 返回音效状态：类型hl_rf_bypass_state_t
+    HL_RF_BYPASS_SOUND_EFFECT_IND = 0x30,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_onoff_e
@@ -224,7 +230,7 @@ typedef struct
     /// 透传声道
     hl_rf_channel_e chn;
     /// 透传数组
-    uint8_t str[128];
+    uint8_t str[32];
 } hl_rf_bypass_string_t;
 
 typedef struct
