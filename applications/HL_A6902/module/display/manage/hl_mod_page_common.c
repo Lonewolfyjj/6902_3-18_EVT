@@ -90,6 +90,7 @@ static hl_display_screen_s hl_screendata = {
     .tx1_gain_volume          = 0,
     .tx2_gain_volume          = 0,
     .monitor_volume           = 0,
+    .scr_bl                   = SCREEN_BRIGHTNESS_DEFAULT_VALUE,
     .led_britness             = NORMAL_BRIGTNESS,
     .tx1_remained_record_time = STROGE_MAX_USED_TIME,
     .tx2_remained_record_time = STROGE_MAX_USED_TIME,
@@ -794,13 +795,14 @@ void hl_mod_page_screenofftimer_close(hl_screenofftime_t *timer)
 static void hl_mod_page_screen_lowbritness_trigfunc(bool flag)
 {
     uint8_t brightness;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     if (flag == true) {
         // 暗屏的亮度
         brightness = SCREEN_LOWBRIGHTNESS;
     } else {
         // 屏幕恢复原亮度
-        brightness = SCREEN_BRIGHTNESS_DEFAULT_VALUE;
+        brightness = data_ptr->scr_bl;
     }
     hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &brightness, 1);
 }
@@ -824,12 +826,11 @@ void hl_mod_page_screen_lowbritness_update(void)
 // 降低屏幕定时器完全关闭
 void hl_mod_page_screen_lowbritness_deinit(void)
 {
-    uint8_t brightness;
-
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
+    
     LOG_E("close low br timer");
     hl_mod_page_screenofftimer_close(&hl_lowbrightness_time);
-    brightness = SCREEN_BRIGHTNESS_DEFAULT_VALUE;
-    hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &brightness, 1);
+    hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &data_ptr->scr_bl, 1);
 }
 
 static void hl_mod_page_inbox_screenoff_trig(bool flag)
