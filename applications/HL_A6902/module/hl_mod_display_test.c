@@ -32,7 +32,7 @@
 #include "hl_drv_rm690a0.h"
 #include "hl_mod_display.h"
 #include "hl_util_msg_type.h"
-#include "hl_mod_page_common.h"
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -48,7 +48,7 @@
 
 
 #if (!HL_IS_TX_DEVICE())
-
+#include "hl_mod_page_common.h"
 #if (HL_DISPLAY_SCREEN_HARDWARE)
 
 
