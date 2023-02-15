@@ -201,7 +201,7 @@ static void hl_top_icon_init(void)
     head_right_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     head_right_list->next = NULL;
 }
-static void get_chl(top_list_t* head);
+
 static void hl_top_icon_ref(uint8_t typ,top_list_t* head)
 {
     uint8_t i = 0;
@@ -412,7 +412,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
                 return ;
             }
             top_icon_sta.voice_mod = 0;
-            hl_top_icon_delete(icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_delete(HL_TOP_ICON_STEREO_MOD,ICON_POS_LIFT,head_lift_list);
             break;
         case HL_TOP_ICON_NOISE:
             if(top_icon_sta.noise == 0){
