@@ -44,6 +44,7 @@ typedef struct _hl_s_rf_info_t
     hl_rf_version_t        version;
     hl_rf_pair_info_t      mac;
     hl_rf_rssi_t           rssi;
+    hl_rf_bypass_time_t    time;
     hl_rf_bypass_version_t remote_version;
     hl_rf_bypass_state_t   mute;
     hl_rf_bypass_state_t   denoise;
@@ -58,6 +59,7 @@ typedef struct _hl_s_rf_info_t
     hl_rf_bypass_value_t   tx_gain;
     hl_rf_bypass_value_t   battery;
     hl_rf_bypass_value_t   auto_poweroff;
+    hl_rf_bypass_value_t   sound_effect;
 } hl_rf_info_t;
 
 typedef struct
@@ -257,6 +259,7 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr   = (uint8_t*)&s_rf_info.battery;
             break;
 
+        case HL_RF_BYPASS_REFACTORY_IND:
         case HL_RF_BYPASS_FORMAT_DISK_IND:
             app_msg_t.len             = sizeof(uint32_t);
             app_msg_t.param.u32_param = (uint32_t)hup_frame.data_addr[0];
@@ -303,6 +306,19 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             s_rf_info.tx_gain.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
             app_msg_t.len         = sizeof(s_rf_info.tx_gain);
             app_msg_t.param.ptr   = (uint8_t*)&s_rf_info.tx_gain;
+            break;
+
+        case HL_RF_BYPASS_SOUND_EFFECT_IND:
+            s_rf_info.sound_effect.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.sound_effect.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len              = sizeof(s_rf_info.sound_effect);
+            app_msg_t.param.ptr        = (uint8_t*)&s_rf_info.sound_effect;
+            break;
+
+        case HL_RF_BYPASS_TIME_IND:
+            rt_memcpy(&s_rf_info.time, (hl_rf_bypass_time_t*)&hup_frame.data_addr, sizeof(hl_rf_bypass_time_t));
+            app_msg_t.len       = sizeof(s_rf_info.time);
+            app_msg_t.param.ptr = (uint8_t*)&s_rf_info.time;
             break;
 
         default:

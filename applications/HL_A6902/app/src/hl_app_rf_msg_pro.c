@@ -57,6 +57,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_switch_e           bypass_switch;
     hl_rf_bypass_state_t* ptr_rf_state;
     hl_rf_bypass_value_t* ptr_rf_value;
+    hl_rf_bypass_time_t*  ptr_rf_time;
     uint32_t              u32_param;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
@@ -223,6 +224,24 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("app get TX%d Auto Poweroff(%d)", ptr_rf_state->chn, ptr_rf_state->state);
             break;
 
+        case HL_RF_BYPASS_TIME_IND:
+            ptr_rf_time = (hl_rf_bypass_time_t*)p_msg->param.ptr;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_TIME_CMD, &ptr_rf_time->time, sizeof(ptr_rf_time->time));
+            // LOG_D("app get TX%d Time[%d][%d][%d][%d][%d][%d]", ptr_rf_time->chn, ptr_rf_time->time.year,
+            //       ptr_rf_time->time.month, ptr_rf_time->time.day, ptr_rf_time->time.hour, ptr_rf_time->time.minute,
+            //       ptr_rf_time->time.second);
+            break;
+
+        case HL_RF_BYPASS_SOUND_EFFECT_IND:
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
+            LOG_D("app get TX%d Sound Effect(%d)", ptr_rf_value->chn, ptr_rf_value->val);
+            break;
+
+        case HL_RF_BYPASS_REFACTORY_IND:
+            bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
+            LOG_D("app get TX%d Refactory", bypass_chn);
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -242,6 +261,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_bypass_state_t   bypass_state;
     hl_rf_bypass_value_t   bypass_value;
     hl_rf_bypass_string_t  bypass_string;
+    hl_rf_bypass_time_t    bypass_time;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -255,6 +275,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             rx_info.rf_chn   = rx_info.rf_state - 1;
             LOG_D("telink info(%02X)", rx_info.rf_state);
             hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
+            bypass_time.chn = rx_info.rf_chn;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &bypass_time.time, sizeof(bypass_time.time));
+            // hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &bypass_time, sizeof(bypass_time));
             break;
 
         case HL_RF_REFRESH_STATE_IND:

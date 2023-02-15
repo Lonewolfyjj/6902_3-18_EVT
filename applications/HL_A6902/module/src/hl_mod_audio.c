@@ -340,7 +340,7 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     }
     rtc_time    time;
     int         ret;
-    audio_time* timer = (audio_time*)timer_param;
+    hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
     
@@ -375,7 +375,7 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
     }
     rtc_time    time;
     int         ret;
-    audio_time* timer = (audio_time*)timer_param;
+    hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
     time.year   = timer->year;

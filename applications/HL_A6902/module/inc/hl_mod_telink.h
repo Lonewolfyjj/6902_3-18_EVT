@@ -85,10 +85,12 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_STATUS_LED_CMD = 0x2e,
     /// 透传TX增益信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_TX_GAIN_CMD = 0x2f,
-    /// 透传音效状态：类型hl_rf_bypass_state_t
+    /// 透传音效状态：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_SOUND_EFFECT_CMD = 0x30,
-    /// 透传恢复出厂设置状态：
-    HL_RF_BYPASS_XXX_CMD = 0x31,
+    /// 透传恢复出厂设置状态：类型hl_rf_channel_e
+    HL_RF_BYPASS_REFACTORY_CMD = 0x31,
+    /// 透传系统时间：类型hl_rf_bypass_time_t
+    HL_RF_BYPASS_TIME_CMD = 0x32,
 } HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
@@ -143,8 +145,12 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_STATUS_LED_IND = 0x2e,
     /// 返回TX增益信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_TX_GAIN_IND = 0x2f,
-    /// 返回音效状态：类型hl_rf_bypass_state_t
+    /// 返回音效状态：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_SOUND_EFFECT_IND = 0x30,
+    /// 返回恢复出厂设置状态：类型hl_rf_channel_e
+    HL_RF_BYPASS_REFACTORY_IND = 0x31,
+    /// 返回系统时间：类型hl_rf_bypass_time_t
+    HL_RF_BYPASS_TIME_IND = 0x32,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_onoff_e
@@ -250,6 +256,14 @@ typedef struct
     /// 透传RF版本号
     hl_rf_version_t rf_ver;
 } hl_rf_bypass_version_t;
+
+typedef struct
+{
+    /// 透传声道
+    hl_rf_channel_e chn;
+    /// 透传时间
+    hl_audio_time_t time;
+} hl_rf_bypass_time_t;
 
 typedef struct
 {
