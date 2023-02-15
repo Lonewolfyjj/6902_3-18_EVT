@@ -201,9 +201,10 @@ static void hl_top_icon_init(void)
     head_right_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     head_right_list->next = NULL;
 }
-
+static void get_chl(top_list_t* head);
 static void hl_top_icon_ref(uint8_t typ,top_list_t* head)
 {
+    uint8_t i = 0;
     top_list_t* node = head;
     if(ICON_POS_LIFT == typ){
         TOP_POS = LV_ALIGN_TOP_LEFT;        
@@ -226,7 +227,7 @@ static void hl_top_icon_ref(uint8_t typ,top_list_t* head)
             if(node->next->img_info->img_obj == NULL){
                 node->next->img_info->img_obj = hl_mod_creat_top_icon(node->next->img_info->img_src,lv_scr_act(),TOP_POS,TOP_OFFSET,0);
             }else{
-                lv_obj_del(node->next->img_info->img_obj);
+                lv_obj_del(node->next->img_info->img_obj);                
                 node->next->img_info->img_obj = hl_mod_creat_top_icon(node->next->img_info->img_src,lv_scr_act(),TOP_POS,TOP_OFFSET,0);
             }
         }
@@ -236,6 +237,7 @@ static void hl_top_icon_ref(uint8_t typ,top_list_t* head)
 
 static void hl_top_icon_add(img_info_t * img_info,uint8_t typ,top_list_t* head)
 {
+    uint8_t i = 0;
     uint8_t end_flag = 1;
     top_list_t* node = head,*node_list = NULL;
     node_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
@@ -254,7 +256,7 @@ static void hl_top_icon_add(img_info_t * img_info,uint8_t typ,top_list_t* head)
         }
         node = node->next;
     }
-    if(end_flag){
+    if(end_flag){        
         node->next = node_list;
     }
 display:   
@@ -266,7 +268,7 @@ static lv_obj_t* hl_top_icon_obj_get(hl_top_icon_t icon,top_list_t* head)
     top_list_t* node = head;
     while(node->next != NULL)
     {
-        if(node->next->img_info->default_pos = icon){
+        if(node->next->img_info->default_pos == icon){
             return node->next->img_info->img_obj;
         }
         node = node->next;
@@ -274,7 +276,7 @@ static lv_obj_t* hl_top_icon_obj_get(hl_top_icon_t icon,top_list_t* head)
     return NULL;
 }
 
-static void hl_top_icon_delete(uint8_t def_num,uint8_t typ,top_list_t* head)
+static uint8_t hl_top_icon_delete(uint8_t def_num,uint8_t typ,top_list_t* head)
 {
     top_list_t* node = head,*del_list;
     del_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
@@ -283,22 +285,25 @@ static void hl_top_icon_delete(uint8_t def_num,uint8_t typ,top_list_t* head)
         if(node->next->img_info->default_pos == def_num){
             del_list = node->next;
             node->next = node->next->next;            
-            break;
+            goto del;
         }
         node = node->next;
     }
+    return 1;
+del:
     lv_obj_del(del_list->img_info->img_obj);
     hl_top_icon_ref(typ,head);
     rt_free(del_list);
     rt_free(del);
+    return 0;
 }
+
 
 static void hl_top_list_clean(top_list_t* head)
 {
     top_list_t* node = head->next,*last_node;
     last_node = node->next;
-    while(last_node != NULL)
-    {
+    while(last_node != NULL){
         rt_free(node);
         node = last_node;
         last_node = last_node->next;
