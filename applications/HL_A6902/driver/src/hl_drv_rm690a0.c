@@ -320,29 +320,23 @@ static void framebuffer_free(void* base)
 // 显存缓存
 void hl_mod_lvgl_video_memory(hl_mod_lvgl_video_mem_t* video_mem_p)
 {
-    // uint32_t src_w = video_mem_p->x2 - video_mem_p->x1 + 1;
+    uint32_t src_w = video_mem_p->x2 - video_mem_p->x1 + 1;
     // uint32_t src_h = video_mem_p->y2 - video_mem_p->y1 + 1;
     uint32_t i;
     uint32_t j;
     uint8_t  byte;
-    // uint32_t src_index;
+    uint32_t src_index = 0;
     uint32_t dst_index;
 
     // if (video_mem_p->dst_len < (src_w * src_h * video_mem_p->format_byte)) {
     //     return;
     // }
     for (j = video_mem_p->y1; j <= video_mem_p->y2; j++) {
-        for (i = video_mem_p->x1; i <= video_mem_p->x2; i++) {
 
-            // src_index = (j * src_w + i) * video_mem_p->format_byte;
-            dst_index = (j * video_mem_p->hor_max + i) * video_mem_p->format_byte;
+        dst_index = (j * video_mem_p->hor_max + video_mem_p->x1) * video_mem_p->format_byte;
+        rt_memcpy(video_mem_p->dst + dst_index, video_mem_p->src + src_index, src_w * video_mem_p->format_byte);
 
-            for (byte = 0; byte < video_mem_p->format_byte; byte++) {
-                video_mem_p->dst[(uint32_t)byte + dst_index] =
-                    *video_mem_p->src;  //video_mem_p->src[(uint32_t)byte + src_index];
-                video_mem_p->src++;
-            }
-        }
+        src_index += src_w * video_mem_p->format_byte;
     }
 }
 static void hl_drv_vop_win_init(struct CRTC_WIN_STATE* win_config, struct VOP_POST_SCALE_INFO* post_scale)
