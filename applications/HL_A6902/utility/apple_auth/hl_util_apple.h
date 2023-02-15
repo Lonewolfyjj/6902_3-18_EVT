@@ -43,7 +43,7 @@ typedef enum _hl_apple_action_e_
 typedef struct _apple_func_handle_
 {
     /// 延时函数
-    void (*delay_usec)(uint16_t usec);
+    void (*delay_usec)(uint32_t usec);
     /// USB读数据函数
     int (*usb_read)(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
     /// USB写数据函数

@@ -15,7 +15,6 @@ uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 int hl_iap2_detect_packet_encode(uint8_t* write_data_addr)
 {
     if (write_data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -64,7 +63,7 @@ int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_
     packet_header->PacketSeqNum   = header_arg.ack_num + 1;
     packet_header->PacketAckNum   = header_arg.seq_num;
     packet_header->SessionIdentif = header_arg.session_id;
-    packet_header->HeaderCksum    = hl_checksum_calculation(packet_header, 0, PACKET_HEADER_SIZE);
+    packet_header->HeaderCksum    = hl_checksum_calculation((uint8_t*)packet_header, 0, PACKET_HEADER_SIZE);
 
     return PACKET_HEADER_SIZE + 1;
 }
@@ -99,7 +98,6 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, uint8_t payload_len)
 {
     if (packet_payload == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -124,7 +122,6 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
 int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -138,7 +135,6 @@ int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
 int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -149,7 +145,6 @@ int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -160,7 +155,6 @@ int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t message_len, uint16_t message_id)
 {
     if (packet_payload == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -174,7 +168,6 @@ int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t
 uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_t param_id, uint8_t* write_data)
 {
     if (write_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 

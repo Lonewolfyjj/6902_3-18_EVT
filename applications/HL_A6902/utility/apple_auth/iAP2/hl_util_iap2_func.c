@@ -385,7 +385,7 @@ int hl_iap2_identify_req_challenge(hl_util_apple_p apple)
 {
     int      ret        = 0;
     uint8_t  try_time   = 5;
-    uint8_t  len        = 0;
+    uint16_t len        = 0;
     uint16_t message_id = 0;
 
     // Request Authentication Challenge Response
@@ -395,7 +395,7 @@ int hl_iap2_identify_req_challenge(hl_util_apple_p apple)
     } while (try_time && 52 != ret);
 
     if (52 != ret) {
-        apple->log("\n[%s:%d] usb read challenge error!\n", __func__, __LINE__);
+        apple->log("\n[%s:%d] usb read challenge error!(%d)\n", __func__, __LINE__, ret);
         return -1;
     }
 
@@ -413,8 +413,6 @@ int hl_iap2_identify_req_challenge(hl_util_apple_p apple)
 
     apple->iap2.challenge_resp_data = &apple->iap2.recv_buffer[19];
     apple->iap2.challenge_req_len   = hl_iap2_ctrl_packet_get_param_len(apple->iap2.recv_buffer);
-    apple->log("\r\n%s:%d:->%d:%04x:%04x\r\n", __func__, __LINE__, ret, message_id,
-               SESSION_ID_REQUEST_AUTH_CHALLENG_RESP);
 
     return 0;
 }
@@ -436,8 +434,6 @@ int hl_iap2_identify_ack_challenge(hl_util_apple_p apple)
         apple->log("[%s:%d] ret val = %d\n", __func__, __LINE__, ret);
         return -1;
     }
-
-    apple->log("[OK]Finish hl_iap2_challange_response_process\n");
 
     // (2) Authentication Response
     ctrl_packet_len = PACKET_HEADER_SIZE + 1 + PACKET_CTRL_HEADER_SIZE + PACKET_PARAM_HEADER_SIZE
@@ -489,9 +485,9 @@ int hl_iap2_identify_succedd(hl_util_apple_p apple)
         return -5;
     }
 
-    int     ret      = 0;
-    uint8_t try_time = 5;
-    uint8_t len      = 0;
+    int      ret      = 0;
+    uint8_t  try_time = 5;
+    uint16_t len      = 0;
 
     // apple->log("[%s:%d]111111\n", __func__, __LINE__);
     do {
@@ -708,30 +704,27 @@ int hl_iap2_identify_identification_accepted(hl_util_apple_p apple)
     uint8_t  try_time   = 3;
     uint16_t len        = 0;
     uint16_t message_id = 0;
-    uint8_t  buf[128]   = { 0 };
 
     do {
-        ret = apple->usb_read(buf, IDENTIFY_FRAME_SIZE, TIMEOUT_US);
+        ret = apple->usb_read(apple->iap2.recv_buffer, IDENTIFY_FRAME_SIZE, TIMEOUT_US);
         try_time--;
     } while (try_time && IDENTIFY_FRAME_SIZE != ret);
 
     if (IDENTIFY_FRAME_SIZE != ret) {
-        apple->log("[%s:%d] usb read identify accept\n", __func__, __LINE__);
+        apple->log("[ERROR][%s:%d] usb read identify accept\n", __func__, __LINE__);
         return -1;
     }
 
     try_time = 5;
     do {
-        ret = hl_iap2_packet_header_decode(buf, &len, LINK_CONTROL_ACK, &apple->packet_arg);
-        // apple->log("[%d] 555\n", ret);
+        ret = hl_iap2_packet_header_decode(apple->iap2.recv_buffer, &len, LINK_CONTROL_ACK, &apple->packet_arg);
         try_time--;
     } while (try_time && ret);
 
-    message_id = hl_iap2_ctrl_packet_get_message_id(buf);
+    message_id = hl_iap2_ctrl_packet_get_message_id(apple->iap2.recv_buffer);
 
-    // apple->log("\r\n%s:%d:ret = %d |  message_id = %02X\r\n", __func__, __LINE__, ret, message_id);
     if (ret || SESSION_ID_IDEN_ACCEPTED != message_id) {
-        apple->log("[%s:%d] receive message id\n", __func__, __LINE__);
+        apple->log("[ERROR][%s:%d] receive message id\n", __func__, __LINE__);
         return -2;
     }
 
@@ -805,10 +798,10 @@ int hl_iap2_powerupdate_send_power(hl_util_apple_p apple)
 
 int hl_iap2_powerupdate_recv_update(hl_util_apple_p apple)
 {
-    int      result     = -1;
+    int      result     = 0;
     int      read_len   = 0;
     uint8_t  ret        = 0;
-    uint8_t  len        = 0;
+    uint16_t len        = 0;
     uint16_t param_id   = 0;
     uint16_t message_id = 0;
     uint8_t  count      = 0;
@@ -816,15 +809,19 @@ int hl_iap2_powerupdate_recv_update(hl_util_apple_p apple)
     count = POWERUPDATE_ID0 + POWERUPDATE_ID1 + POWERUPDATE_ID2 + POWERUPDATE_ID4 + POWERUPDATE_ID5 + POWERUPDATE_ID6;
 
     while (count--) {
+        apple->log("\n%s:%d 1111\n", __func__, __LINE__);
         read_len = apple->usb_read(apple->iap2.recv_buffer, POWERUPDATE_FRAME_SIZE, TIMEOUT_US);
-        apple->log("%s:%d:xxx USB Read Len = %d\n", __func__, __LINE__, read_len);
+        apple->log("%s:%d 2222\n", __func__, __LINE__);
         message_id = hl_iap2_ctrl_packet_get_message_id(apple->iap2.recv_buffer);
         param_id   = hl_iap2_ctrl_packet_get_param_id(apple->iap2.recv_buffer);
-        apple->log("%s:%d:xxx usb MessageID = %X\n", __func__, __LINE__, message_id);
-        apple->log("%s:%d:xxx usb ParamID = %04X\n\n", __func__, __LINE__, param_id);
+        apple->log("%s:%d:xxx usb MessageID = %04X\n", __func__, __LINE__, message_id);
+        apple->log("%s:%d:xxx usb ParamID = %04X\n", __func__, __LINE__, param_id);
         ret = hl_iap2_packet_header_decode(apple->iap2.recv_buffer, &len, LINK_CONTROL_ACK, &apple->packet_arg);
+        apple->log("%s:%d 3333\n", __func__, __LINE__);
         hl_iap2_link_send_ack(apple);
+        apple->log("%s:%d 4444\n\n", __func__, __LINE__);
     }
+    apple->log("%s:%d 5555\n", __func__, __LINE__);
 
     return result;
 }

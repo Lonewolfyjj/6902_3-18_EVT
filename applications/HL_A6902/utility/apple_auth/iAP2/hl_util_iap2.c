@@ -23,6 +23,7 @@ static int _hl_iap2_detect_process(hl_util_apple_p apple)
     switch (apple->iap2.detect_status) {
         case EM_HL_IAP2_STM_DETECT_SEND:
             result = hl_iap2_detect_send(apple);
+            apple->log("[Apple][Detect Message] Send!\n");
             if (!result) {
                 apple->iap2.detect_status = EM_HL_IAP2_STM_DETECT_RECV;
             } else {
@@ -245,20 +246,36 @@ static int _hl_iap2_power_update_process(hl_util_apple_p apple)
         return -1;
     }
 
+    int result = -1;
+
     switch (apple->iap2.powerupdate_status) {
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER:
-            hl_iap2_powerupdate_send_power(apple);
-            apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE;
+            result = hl_iap2_powerupdate_send_power(apple);
+            if (!result) {
+                apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE;
+            } else {
+                apple->log("[ERROR][%s:%d][%d] send power error!\n", __func__, __LINE__, result);
+                apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+            }
             break;
 
         case EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE:
-            hl_iap2_powerupdate_recv_update(apple);
-            apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE;
+            result = hl_iap2_powerupdate_recv_update(apple);
+            if (!result) {
+                apple->iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE;
+            } else {
+                apple->log("[ERROR][%s:%d][%d] recv power error!\n", __func__, __LINE__, result);
+                apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+            }
             break;
 
         case EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE:
 #if POWERSOURCEUPDATE_OPEN
-            hl_iap2_powerupdate_send_power_source(apple);
+            result = hl_iap2_powerupdate_send_power_source(apple);
+            if (result) {
+                apple->log("[ERROR][%s:%d][%d] send power source error!\n", __func__, __LINE__, result);
+                apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_FAILED;
+            }
 #endif
             apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
             break;
@@ -303,7 +320,7 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
     st_iap2_ea_packet_t* ptr_ea_packet = NULL;
 
     read_len = apple->usb_read(apple->iap2.recv_buffer, 27, TIMEOUT_US);
-    if(!read_len){
+    if (!read_len) {
         return 0;
     }
     // apple->log("%s:%d:xxx usb Read = %d\n", __func__, __LINE__, read_len);
