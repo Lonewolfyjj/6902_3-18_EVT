@@ -271,6 +271,8 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_VOL);
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CUR);
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_TEMP);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOH);
+    _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CYCLE);
 
     if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
         _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
@@ -321,7 +323,7 @@ static void _guage_state_poll()
     static uint8_t count = 0;
 
     if (count == 0) {
-        _guage_err_monitor();
+        // _guage_err_monitor();
         _guage_state_update();
         count = 500;
     } else {
