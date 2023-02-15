@@ -29,6 +29,7 @@
 
 // #define BUTTON_DOWN 1
 // #define BUTTON_UP   0
+static void hl_drv_tp_Init(void);
 
 static rt_size_t hl_drv_ztw523a_touchinfo(struct rt_touch_device *touch, void *buf, rt_size_t touch_num);
 static uint8_t 					 tp_flag 	 = 0; 
@@ -883,6 +884,35 @@ static int hl_drv_ztw523a_dev_init(void)
         return HL_FAILED;
     }
     return HL_SUCCESS;
+}
+
+// 检查当前芯片的寄存器状态
+rt_err_t hl_drv_ztw523a_dev_check_reg()
+{
+    uint16_t tmp = 0;
+    uint8_t  ret;
+
+    ret = hl_drv_ztw523a_read_data(0xcc00, (uint8_t*)&tmp, 2); /*读0xcc00地址的值,芯片的ID */
+    if (ret != HL_SUCCESS) {
+        LOG_E("fail to read chip code %d\n", tmp);
+        return HL_FAILED;
+    } else {
+        if (chip_code == tmp) {
+            return HL_FAILED;
+        } else if (tmp == 0xAA) {
+            LOG_E("tp err rstAA\n");
+            hl_drv_tp_Init();
+            return HL_SUCCESS;
+        } else if (tmp == 0xcc00) {
+            LOG_E("tp err rstCC\n");
+            hl_drv_tp_Init();
+            return HL_SUCCESS;
+        } else {
+            LOG_E("tp err rst%d\n", tmp);
+        }
+    }
+
+    return HL_FAILED;
 }
 
 rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos)
