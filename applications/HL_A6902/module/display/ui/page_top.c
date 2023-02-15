@@ -237,9 +237,7 @@ static void hl_top_icon_ref(uint8_t typ,top_list_t* head)
 
 static void hl_top_icon_add(img_info_t * img_info,uint8_t typ,top_list_t* head)
 {
-    uint8_t i = 0;
-    uint8_t end_flag = 1;
-    top_list_t* node = head,*node_list = NULL;
+    top_list_t* node = head,*node_list;
     node_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     node_list->img_info = img_info;
     node_list->next = NULL;
@@ -248,17 +246,18 @@ static void hl_top_icon_add(img_info_t * img_info,uint8_t typ,top_list_t* head)
         goto display;
     }
     while(node->next != NULL){
-        if(node->next->img_info->default_pos > node_list->img_info->default_pos){
+        if(node->next->img_info->default_pos > node_list->img_info->default_pos){            
             node_list->next = node->next;
             node->next = node_list;
-            end_flag = 0;
-            break;
+            goto display;
+        }else if(node->next->img_info->default_pos == node_list->img_info->default_pos){
+            node->next->img_info = node_list->img_info;
+            rt_free(node_list);
+            goto display;
         }
         node = node->next;
-    }
-    if(end_flag){        
-        node->next = node_list;
-    }
+    }      
+    node->next = node_list;
 display:   
     hl_top_icon_ref(typ,head);
 }
