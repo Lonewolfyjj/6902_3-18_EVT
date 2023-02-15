@@ -480,6 +480,16 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->sys_status.apple_auth_flag = data;
             flag->sys_status.apple_auth_flag   = 1;
         } break;
+        case SYSTIME_SET_VAL_CMD: {
+            hl_display_systime_s* data = (hl_display_systime_s*)ptr;
+            data_p->systime.year       = data->year;
+            data_p->systime.month      = data->month;
+            data_p->systime.hour       = data->hour;
+            data_p->systime.day        = data->day;
+            data_p->systime.min        = data->min;
+
+            flag->systime = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;

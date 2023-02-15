@@ -205,7 +205,7 @@ typedef struct _hl_display_systime_s
 {
     uint16_t year;
     uint8_t month;
-    uint8_t data;
+    uint8_t day;
     // 24小时机制
     uint8_t hour;
     uint8_t min;
@@ -360,6 +360,9 @@ typedef enum _hl_out_msg_e
 
     /// 系统时间设置 <hl_display_systime_s>
     SYSTIME_SET_VAL_IND,
+
+    /// 获取系统时间 <hl_display_systime_s>
+    SYSTIME_GET_VAL_IND,
 
     /// 自动关机模式设置 <uint16_t> 单位min  0：永不关机；非0：自动关机时间(单位为min)
     /// 目前原型自动关机只有15和30min两个选项
