@@ -19,6 +19,8 @@
 
 #include "hl_drv_cw2215.h"
 
+#include "hl_hal_gpio.h"
+
 #define DBG_SECTION_NAME "cw2215"
 #define DBG_LEVEL DBG_INFO
 #include "rtdbg.h"
@@ -741,10 +743,12 @@ int8_t hl_drv_cw2215_init(void)
         return CW2215_FUNC_RET_ERR;
     }
 
-    ret = init();
-    if (ret < 0) {
-        LOG_E("Guage init err!");
-        return CW2215_FUNC_RET_ERR;
+    if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
+        ret = init();
+        if (ret < 0) {
+            LOG_E("Guage init err!");
+            return CW2215_FUNC_RET_ERR;
+        }
     }
 
     LOG_D("Guage init success!");
