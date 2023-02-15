@@ -86,13 +86,13 @@
 #define CW2215_CONFIG_MODE_SLEEP 0xF0
 
 ///中断配置寄存器默认值，[6:4]为中断源使能[en_soc_int en_tmx_int en_tmn_int]，[2:0]为中断事件标志位[soc_int tmx_int tmn_int]
-#define CW2215_REG_GPIO_CONFIG_DEFAULT_VALUE 0x70
+#define CW2215_REG_GPIO_CONFIG_DEFAULT_VALUE 0x00
 ///0 ~ 0x7F。 0 ~ 0x64:SOC达到指定值中断，0x65~0x7F：SOC每变化1产生中断
-#define CW2215_GPIO_SOC_IRQ_DEFAULT_VALUE 0x65
+#define CW2215_GPIO_SOC_IRQ_DEFAULT_VALUE 0x00
 /// temp(℃) = -40 + VALUE / 2
-#define CW2215_REG_TEMP_MAX_DEFAULT_VALUE 170
+#define CW2215_REG_TEMP_MAX_DEFAULT_VALUE 0
 /// temp(℃) = -40 + VALUE / 2
-#define CW2215_REG_TEMP_MIN_DEFAULT_VALUE 60
+#define CW2215_REG_TEMP_MIN_DEFAULT_VALUE 0
 #define CW2215_IC_READY_MARK 0x0C
 
 #define CW2215_SLEEP_COUNTS 80
