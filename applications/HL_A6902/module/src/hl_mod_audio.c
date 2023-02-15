@@ -817,8 +817,13 @@ err0:
 // 录制内存释放
 static rt_err_t hl_mod_audio_record_param_deconfig(void)
 {
-    rt_ringbuffer_destroy(record_info.record_bypass_rb);
-    rt_ringbuffer_destroy(record_info.record_after_rb);
+    if (record_info.record_bypass_rb != NULL) {
+        rt_ringbuffer_destroy(record_info.record_bypass_rb);
+    }
+    if (record_info.record_after_rb != NULL) {
+        rt_ringbuffer_destroy(record_info.record_after_rb);
+    }    
+    
     return RT_EOK;
 }
 
