@@ -1583,7 +1583,7 @@ static int _set_color_orange(struct rt_i2c_bus_device* p_i2c_bus)
     hl_drv_aw2016a_output_current_st current_st;
 
     current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL3;
-    current_st.current  = 12;
+    current_st.current  = 14;
 
     ret = set_output_current(p_i2c_bus, &current_st);
     if (ret == AW2016A_FUNC_RET_ERR) {
@@ -1591,7 +1591,7 @@ static int _set_color_orange(struct rt_i2c_bus_device* p_i2c_bus)
     }
 
     current_st.led_chan = HL_DRV_AW2016A_LED_CHANNEL2;
-    current_st.current  = 1;
+    current_st.current  = 3;
 
     ret = set_output_current(p_i2c_bus, &current_st);
     if (ret == AW2016A_FUNC_RET_ERR) {
