@@ -46,6 +46,7 @@
 #include "hl_mod_wdog.h"
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
+#include "hl_hal_gpio.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -108,7 +109,10 @@ void hl_app_param_fun(void)
 #else
 void hl_app_param_loader(void)
 {
-
+    hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
+    // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
+    hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
+    hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
 }
 
 void hl_app_param_fun(void)
@@ -134,6 +138,7 @@ void hl_app_msg_thread(void* parameter)
         hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);        
         hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     }
+    // hl_app_param_fun();
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
@@ -211,9 +216,10 @@ void hl_app_mng_init(void)
 // 开机，初始化模块
 void hl_app_mng_powerOn(void)
 {
-    uint8_t value = 0;
-    int msc_open_flag;
-    uint8_t ret;
+    uint8_t              value = 0;
+    int                  msc_open_flag;
+    uint8_t              ret;
+    hl_rf_bypass_state_t bypass_state;
 
     LOG_I("power on");
     hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, NULL, 0);
@@ -222,7 +228,11 @@ void hl_app_mng_powerOn(void)
     hl_mod_telink_start();
 
     hl_mod_audio_init(&hl_app_mq);
-#if HL_IS_TX_DEVICE()    
+#if HL_IS_TX_DEVICE()
+    //开机同步数据
+    bypass_state.chn   = tx_info.rf_chn;
+    bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
+    hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
 #else
     ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
     if (ret == 1) {
@@ -264,6 +274,12 @@ void hl_app_mng_powerOff(void)
     uint8_t ret;
 
     LOG_I("power off");    
+    hl_util_nvram_param_save();
+#if HL_IS_TX_DEVICE()
+    hl_hal_gpio_low(GPIO_DC3V3_EN);
+#else
+    hl_hal_gpio_high(GPIO_CODEC_EN);
+#endif
     hl_mod_euc_stop();
     hl_mod_euc_deinit();
 
@@ -280,7 +296,6 @@ void hl_app_mng_powerOff(void)
         hl_mod_audio_deinit();
     } 
 #endif
-    hl_util_nvram_param_save();
     hl_mod_telink_stop();
     hl_mod_telink_deinit();
     hl_mod_input_deinit();

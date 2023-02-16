@@ -207,6 +207,9 @@ static uint8_t cap2uac_thread_flag = 0;
 /// cap2p2u线程标志
 static uint8_t cap2play2uac_thread_flag = 0;
 
+/// 初始化标志
+static uint8_t hl_mod_audio_init_flag = 0;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 
 #if HL_IS_TX_DEVICE()
@@ -1399,14 +1402,22 @@ static void hl_mod_audio_set_codec_gain(int gain, uint8_t ch, uint8_t sound_ch, 
     db_config.sound_ch = sound_ch;
     db_config.device   = device;
 
-    LOG_E("set gain (%d)", gain);
+    // LOG_E("set gain (%d)", gain);
 #if HL_IS_TX_DEVICE()
+    if(cap_info.card == NULL) {
+        LOG_E("cap card is NULL");
+        return -RT_ERROR;
+    }
     ret = rt_device_control(cap_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
 #else
+    if(play_info.card == NULL) {
+        LOG_E("play card is NULL");
+        return -RT_ERROR;
+    }
     ret = rt_device_control(play_info.card, RK_AUDIO_CTL_HL_SET_GAIN, &db_config);
 #endif
     if (ret != RT_EOK) {
-        LOG_E("fail to set gain\n");
+        LOG_E("fail to set gain");
         return -RT_ERROR;
     }
 }
@@ -1466,7 +1477,7 @@ static void hl_mod_audio_set_denoise(uint8_t denoise)
 #else
 
 // 设置RX的混音开关
-static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
+static rt_err_t hl_mod_audio_set_mix_switch(int32_t mix_switch)
 {
     int8_t ret = 0;
 
@@ -1475,6 +1486,8 @@ static void hl_mod_audio_set_mix_switch(int32_t mix_switch)
         LOG_E("fail to set mix switch");
         return -RT_ERROR;
     }
+
+    return RT_EOK;
 }
 
 #endif
@@ -2029,6 +2042,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
         goto err5;
     }
 
+    hl_mod_audio_init_flag = 1;
     return RT_EOK;
 
 err5:
@@ -2051,6 +2065,9 @@ err0:
 
 uint8_t hl_mod_audio_deinit(void)
 {
+    if (!hl_mod_audio_init_flag) {
+        return RT_ERROR;
+    }
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_record_switch(0);
 #endif
@@ -2320,10 +2337,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_rtc_get_param(ptr);
             break;
         case HL_AUDIO_SET_CAM_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] - 8), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] - 8), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_CAM_PGA_GAIN_L_CMD:
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
@@ -2332,10 +2349,10 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_CAM);
             break;
         case HL_AUDIO_SET_HP_GAIN_L_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 6), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_GAIN_R_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 6), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_R, HL_CODEC_DEVICE_HP);
             break;
         case HL_AUDIO_SET_HP_PGA_GAIN_L_CMD:
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_HP);

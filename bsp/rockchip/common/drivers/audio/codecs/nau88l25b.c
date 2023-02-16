@@ -529,7 +529,14 @@ static rt_err_t nau88l25b_codec_standby(struct nau88l25b_priv* nau88l25b)
 
 static rt_err_t nau88l25b_init(struct audio_codec* codec, struct AUDIO_INIT_CONFIG* config)
 {
-    rt_kprintf("nau88l25b_init\n");
+#if !HL_IS_TX_DEVICE()
+    rt_err_t ret;
+    struct nau88l25b_priv* nau88l25b = to_nau88l25b_priv(codec);
+
+    ret = nau88l25b_reg_init(nau88l25b);
+
+    rt_kprintf("nau88l25b_init ret =%d\n",ret);
+#endif
     return RT_EOK;
 }
 
@@ -644,10 +651,12 @@ int rt_hw_codec_nau88l25b_init(void)
         rt_kprintf("NAU88L25B write reset cmd failed\r\n");
         goto err;
     }
-
+    
+#if HL_IS_TX_DEVICE()
     if (nau88l25b->work_cnt <= 0)
         ret |= nau88l25b_reg_init(nau88l25b);
-    
+#endif
+
     if (ret == RT_EOK) {
         rt_kprintf("TAG: register codec nau88l25b success\n");
         return RT_EOK;

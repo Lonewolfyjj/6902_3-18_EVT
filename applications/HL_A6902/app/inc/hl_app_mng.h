@@ -67,6 +67,10 @@ typedef struct _tx_app_info_t
     uint8_t             denoise_class;
     /// 升级状态(hl_mod_upgrade_state)
     uint8_t             upgrade_state;
+    /// TX增益设置
+    int32_t              gain;
+    /// UAC的增益设置
+    int32_t              uac_gain;
     
     /// 无线状态
     hl_rf_state_e       rf_state;
@@ -139,6 +143,12 @@ typedef struct _rx_app_info_t
     /// 安全音轨左音量
     int32_t             safety_volume_l;
 
+    /// 监听口增益设置
+    int32_t              hp_gain;
+    /// 相机口增益设置
+    int32_t              cam_gain_l;
+    int32_t              cam_gain_r;
+
     /// 本地Mac地址
     uint8_t             local_mac[6];
     /// 配对Mac地址 tx1:[0 - 5] tx2:[6 - 11]
@@ -195,6 +205,23 @@ void hl_app_mng_powerOff(void);
  * </table>
  */
 void hl_app_mng_charger_entry(void *msg_q);
+
+/**
+ * 
+ * @brief 关机充电时确定是否关停设备
+ * @param [in] state 0：不关停 | 1：关停
+ * @date 2023-02-10
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-10      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_set_halt_state(uint8_t state);
 
 #endif /* __HL_APP_MNG_H__ */
 /*

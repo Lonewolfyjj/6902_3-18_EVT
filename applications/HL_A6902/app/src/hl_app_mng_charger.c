@@ -35,6 +35,8 @@
 #include "hl_mod_apple_auth.h"
 #include "hl_app_audio_msg_pro.h"
 #include "hl_mod_wdog.h"
+#include "hl_util_nvram.h"
+#include "hl_board_commom.h"
 
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
@@ -51,6 +53,7 @@ typedef enum _charger_powe_on_stm_e_
 /* variables -----------------------------------------------------------------*/
 static hl_charger_power_on_stm_e sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
 static uint8_t                   charger_alive                = 1;
+static int                       last_halt_state              = 0;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
@@ -58,7 +61,11 @@ static void _hl_app_mng_charger_power_on_stm()
     switch (sg_stm_charger_pwr_key_state) {
         case EM_CHARGER_POWER_ON_STM_IDLE:
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
-                hold_times = 50;
+#if HL_IS_TX_DEVICE()
+                hold_times = 150;
+#else
+                hold_times = 2;
+#endif
                 sg_stm_charger_pwr_key_state++;
             }
             break;
@@ -376,24 +383,43 @@ MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);
 static bool _hl_app_mng_check_power_on_state(void)
 {
     if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH
-        && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+        && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH ) {
+        // USB未接入 && POGO pin未接入 && 开关机按键未按下
         return true;
     } else {
+        // 如果USB || POGO未接入 && 开关机键按下 && HALT = 1
+        if(last_halt_state) {
+            if ((hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH || hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH)
+                && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+                    return true;
+                }
+        }
         return false;
     }
 }
 /* Exported functions --------------------------------------------------------*/
+void hl_app_mng_charger_set_halt_state(uint8_t state)
+{
+    if (state) {
+        hl_util_nvram_param_set_integer("HALT", 0);
+        hl_util_nvram_param_save();
+    }
+    last_halt_state = state;
+}
 void hl_app_mng_charger_entry(void* msg_q)
 {
-    struct rt_messagequeue* app_mq = msg_q;
-    mode_to_app_msg_t       msg    = { 0 };
+    struct rt_messagequeue* app_mq              = msg_q;
+    mode_to_app_msg_t       msg                 = { 0 };
 
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
+            // 关机
             if (_in_box_flag == false || _shut_down_flag == true) {
-                hl_app_mng_powerOn();
                 hl_app_mng_powerOff();
+                // while ((1));
+                rt_thread_mdelay(5000);
+                hl_board_reboot();
             }
         }
 

@@ -35,6 +35,8 @@ extern "C" {
 #include "drv_snor.h"
 #include "finsh.h"
 #include "hl_util_nvram.h"
+#include "hl_config.h"
+#include "hl_hal_gpio.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /// NVRAM的地址，具体值为setting.ini中nvran的 （区块地址*0x200）
@@ -278,6 +280,11 @@ uint8_t hl_board_nvram_init()
 void hl_board_reboot(void)
 {
     hl_util_nvram_param_save();
+#if HL_IS_TX_DEVICE()
+    hl_hal_gpio_low(GPIO_DC3V3_EN);
+#else
+    hl_hal_gpio_high(GPIO_CODEC_EN);
+#endif
     extern void rt_hw_cpu_reset(void);
     rt_hw_cpu_reset();
 }
