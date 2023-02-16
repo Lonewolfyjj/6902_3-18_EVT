@@ -59,6 +59,10 @@ typedef enum _hl_mod_appleauth_ctrl_ind
 
 typedef struct
 {
+    /// 线程初始化状态标志
+    uint8_t init_flag;
+    /// 线程启动状态标志
+    uint8_t start_flag;
     /// 线程运行状态标志
     rt_bool_t iap2_thread_flag;
     /// 线程运行状态标志

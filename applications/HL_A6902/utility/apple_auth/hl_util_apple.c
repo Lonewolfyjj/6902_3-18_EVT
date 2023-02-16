@@ -13,7 +13,7 @@ int hl_util_apple_oneshot(hl_util_apple_p apple, hl_apple_action_e action)
         case EM_HL_IAP2:
             result = hl_util_iap2_oneshot(apple);
             break;
-            
+
         case EM_HL_EAP:
             result = hl_util_eap_oneshot(apple);
             break;
@@ -35,6 +35,10 @@ int hl_util_apple_init(hl_util_apple_p apple, apple_func_handle handle)
         || (NULL == handle.iic_read) || (NULL == handle.iic_write)) {
         apple->log("[%s][line:%d]param(handle) is NULL!\n", __func__, __LINE__);
         return -2;
+    }
+    if (apple->init_flag) {
+        apple->log("[%s][line:%d]Apple Inited\r\n", __FUNCTION__, __LINE__);
+        return -3;
     }
 
     int result = 0;
@@ -68,18 +72,26 @@ int hl_util_apple_init(hl_util_apple_p apple, apple_func_handle handle)
         return -5;
     }
 
+    apple->init_flag = 1;
+
     return 0;
 }
 
 int hl_util_apple_deinit(hl_util_apple_p apple)
 {
+    if (!apple->init_flag) {
+        apple->log("[%s][line:%d]Not Init Apple, Deinit ERROR!", __FUNCTION__, __LINE__);
+        return -1;
+    }
+
     hl_util_iap2_deinit(apple);
 
     // 去初始化FIFO
     hl_util_fifo_deinit(&apple->fifo);
-
     // 释放内存资源
     rt_free(apple->fifo_buf);
+
+    apple->init_flag = 0;
 
     return 0;
 }

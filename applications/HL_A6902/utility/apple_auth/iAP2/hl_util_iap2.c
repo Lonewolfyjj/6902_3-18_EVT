@@ -354,9 +354,9 @@ static int _hl_iap2_ack_ctrl_process(hl_util_apple_p apple)
         case SESSION_ID_EA: {
             ptr_ea_packet = apple->iap2.recv_buffer;
             // apple->log("[Apple]Get EA Message!!!\n");
-            data_len = hl_eap_payload_decode(ptr_ea_packet, apple->eap_session_identifier, apple->recv_buf);
+            data_len = hl_eap_payload_decode(ptr_ea_packet, apple->eap_session_identifier, apple->eamsg_buf);
             if (data_len > 0) {
-                hl_util_fifo_write(&apple->fifo, apple->recv_buf, data_len);
+                hl_util_fifo_write(&apple->fifo, apple->eamsg_buf, data_len);
             }
         } break;
 
@@ -426,6 +426,10 @@ int hl_util_iap2_init(hl_util_apple_p apple)
         apple->log("[%s][line:%d]param(apple) is NULL!\n", __func__, __LINE__);
         return -1;
     }
+    if (apple->iap2.iap2_init_flag) {
+        apple->log("[%s][line:%d]iAP2 Inited\r\n", __FUNCTION__, __LINE__);
+        return -2;
+    }
 
     apple->packet_arg.seq_num    = 0x00;
     apple->packet_arg.ack_num    = 0x2B;
@@ -438,16 +442,24 @@ int hl_util_iap2_init(hl_util_apple_p apple)
         return -2;
     }
 
-    apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-    apple->iap2.retry_time  = 0;
+    apple->iap2.main_status    = EM_HL_IAP2_STM_MAIN_IDLE;
+    apple->iap2.retry_time     = 0;
+    apple->iap2.iap2_init_flag = 1;
 
     return 0;
 }
 
 int hl_util_iap2_deinit(hl_util_apple_p apple)
 {
+    if (!apple->iap2.iap2_init_flag) {
+        apple->log("[%s][line:%d]Not Init iAP2, Deinit ERROR!", __FUNCTION__, __LINE__);
+        return -1;
+    }
+
     free(apple->iap2.send_buffer);
     free(apple->iap2.recv_buffer);
+
+    apple->iap2.iap2_init_flag = 0;
 
     return 0;
 }

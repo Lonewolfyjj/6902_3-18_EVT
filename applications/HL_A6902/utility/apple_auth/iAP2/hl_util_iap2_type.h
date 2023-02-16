@@ -77,9 +77,11 @@ typedef enum _iap2_power_update_status_enum_
 
 typedef struct _hl_apple_iap2_t_
 {
-    volatile uint8_t* send_buffer;
-    volatile uint8_t* recv_buffer;
+    uint8_t* send_buffer;
+    uint8_t* recv_buffer;
 
+    /// 功能初始化状态标志位
+    uint8_t iap2_init_flag;
     /// 设备SN码
     char dev_sn[128];
 
@@ -91,11 +93,11 @@ typedef struct _hl_apple_iap2_t_
     // 重试次数
     uint8_t retry_time;
 
-    volatile hl_iap2_protocol_status_e     main_status;
-    volatile hl_iap2_detect_status_e       detect_status;
-    volatile hl_iap2_link_status_e         link_status;
-    volatile hl_iap2_identify_status_e     identify_status;
-    volatile hl_iap2_power_update_status_e powerupdate_status;
+    hl_iap2_protocol_status_e     main_status;
+    hl_iap2_detect_status_e       detect_status;
+    hl_iap2_link_status_e         link_status;
+    hl_iap2_identify_status_e     identify_status;
+    hl_iap2_power_update_status_e powerupdate_status;
 } hl_apple_iap2_t, *hl_apple_iap2_p;
 
 /* define --------------------------------------------------------------------*/

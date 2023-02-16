@@ -58,8 +58,10 @@ typedef struct _iap2_packet_header_arg_
 
 typedef struct _hl_util_apple_t_
 {
+    /// 初始化状态标志位
+    uint8_t init_flag;
     /// 数据缓冲区
-    uint8_t recv_buf[128];
+    uint8_t eamsg_buf[256];
     /// fifo缓冲区
     uint8_t* fifo_buf;
     /// fifo结构体

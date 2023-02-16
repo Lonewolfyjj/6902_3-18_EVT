@@ -40,6 +40,8 @@ typedef enum _iap2_ea_session_status_enum_
 
 typedef struct _hl_apple_eap_t_
 {
+    /// 功能初始化状态标志位
+    uint8_t eap_init_flag;
     /// hup结构体
     hl_util_hup_t hup;
     /// fifo结构体
