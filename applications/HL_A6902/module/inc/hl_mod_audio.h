@@ -120,7 +120,9 @@ typedef enum _hl_mod_audio_ctrl_cmd
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
     /// 获取RTC时间 参数<audio_time>
-    HL_AUDIO_RTC_TIME_CMD, 
+    HL_AUDIO_GET_RTC_TIME_CMD, 
+    /// 设置RTC时间 参数<audio_time>
+    HL_AUDIO_SET_RTC_TIME_CMD, 
     /// 设置相机接口的左通道增益 int(-103~24)
     HL_AUDIO_SET_CAM_GAIN_L_CMD,
     /// 设置相机接口的右通道增益 int(-103~24)

@@ -47,6 +47,9 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
             tx_info.upgrade_flag = 0;
             break;
+        case HL_UPGRADE_START_STATE:  /// 升级开始状态
+            tx_info.upgrade_flag = 1;
+            break;
         case HL_UPGRADE_UPGRADE_STATE:  /// 升级中状态
             tx_info.upgrade_flag = 1;
             break;
@@ -73,7 +76,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
     switch (upgrade_state) {
         case HL_UPGRADE_IDLE_STATE:  /// 空闲升级状态
             break;
-        case HL_UPGRADE_START_STATE:  /// 空闲升级状态
+        case HL_UPGRADE_START_STATE:  /// 开始升级状态
             status = HL_UPGRADE_STATUS_UPGRADE;
             LOG_D("HL_UPGRADE_STATUS_UPGRADE");
             hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);

@@ -1050,6 +1050,7 @@ static bool _upgrade_nuzip(void)
             return false;
         }
     } else {
+        s_upgrade.telink_state = HL_UPGRADE_SUCCEED_STATE;
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[1].name, s_pack_info.pack[1].hardversion);
     }
 
@@ -1070,12 +1071,13 @@ static bool _upgrade_nuzip(void)
             return false;
         }
         LOG_I("set name file (%s)to(%s) ", packname, HL_UPGRADE_FILE_NAME_RK);
-    } else {
+    } else {        
         ret = unlink(packname);
         if(ret < 0) {
             LOG_E("unlink error%s", packname);
             return false;
         }      
+        s_upgrade.ota_state = HL_UPGRADE_SUCCEED_STATE;
         LOG_I("delete file (%s) ", packname);
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
     }    
