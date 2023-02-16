@@ -2016,7 +2016,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #else
 #endif
 
-    rt_usbd_msc_switch(false);
+    rt_usbd_msc_switch(true);
 
     hl_mod_audio_rtc_init();
     hl_mod_audio_system_rtc_set();
@@ -2281,11 +2281,11 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
             if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on", __FUNCTION__, __LINE__);
+            } else {
                 rt_usbd_msc_switch(false);
                 LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
-            } else {
-                rt_usbd_msc_switch(true);
-                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);
             }
             break;           
 
@@ -2415,11 +2415,11 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
             if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);                
+            } else {
                 rt_usbd_msc_switch(false);
                 LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
-            } else {
-                rt_usbd_msc_switch(true);
-                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);
             }
             break;
         default:
