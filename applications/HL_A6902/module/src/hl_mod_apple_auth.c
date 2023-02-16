@@ -143,7 +143,7 @@ static int _hl_mod_apple_i2c_read(uint8_t reg_addr, uint8_t* read_data_addr, uin
         size = rt_i2c_transfer(s_apple.mfi_chip_iic, &msgs[0], 1);
         try_time--;
         if (!try_time) {
-            rt_kprintf("i2c read1 err!\n");
+            rt_kprintf("i2c[%02X] read1 err!\n", reg_addr);
             return 0;
         }
 #if LOG_APPLE_I2C_OPEN
@@ -229,7 +229,7 @@ static int _hl_mod_apple_i2c_write(uint8_t reg_addr, uint8_t* write_data_addr, u
         size = rt_i2c_transfer(s_apple.mfi_chip_iic, &msgs, 1);
         try_time--;
         if (!try_time) {
-            rt_kprintf("i2c write err!\n");
+            rt_kprintf("i2c[%02X] write err!\n", reg_addr);
             return RT_ERROR;
         }
 #if LOG_APPLE_I2C_OPEN
