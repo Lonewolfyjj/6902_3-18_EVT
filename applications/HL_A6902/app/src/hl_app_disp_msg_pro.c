@@ -154,7 +154,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_bypass_state_t      rf_bypass_state = { 0 };
     uint32_t                  ptr;
     hl_display_sound_module_e sound_module;
-    audio_time                time;
+    hl_audio_time_t           time;
     hl_display_systime_s      display_time;
 
     switch (p_msg->cmd) {
@@ -363,7 +363,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case SYSTIME_GET_VAL_IND:
 
-            hl_mod_audio_io_ctrl(HL_AUDIO_RTC_TIME_CMD, &time, sizeof(time));
+            hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &time, sizeof(time));
             display_time.year  = time.year;
             display_time.month = time.month;
             display_time.day   = time.day;
