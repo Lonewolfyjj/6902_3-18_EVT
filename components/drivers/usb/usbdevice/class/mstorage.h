@@ -53,5 +53,6 @@ struct request_sense_data
 typedef void (*mstorage_switch_cb_t)(uint8_t mstorage_state);
 void rt_usbd_msc_state_register(mstorage_switch_cb_t mstorage_cb_func);
 void rt_usbd_msc_disable(void);
+void rt_usbd_msc_switch(uint8_t mstorage_switch);
 
 #endif

@@ -2016,6 +2016,8 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #else
 #endif
 
+    rt_usbd_msc_switch(false);
+
     hl_mod_audio_rtc_init();
     hl_mod_audio_system_rtc_set();
 
@@ -2096,7 +2098,7 @@ uint8_t hl_mod_audio_deinit(void)
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_record_switch(0);
 #endif
-
+    
     // hl_mod_audio_codec_deconfig(&cap_info);
     // hl_mod_audio_codec_deconfig(&play_info);
 
@@ -2272,7 +2274,20 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
             hl_mod_audio_dfs_sd();
-            break;              
+            break;    
+        case HL_AUDIO_MSTORAGE_SWITCH_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_MSTORAGE_SWITCH_CMD parem error");
+                return -1;
+            }
+            if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(false);
+                LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
+            } else {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);
+            }
+            break;           
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
@@ -2394,6 +2409,19 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
             break;  
+        case HL_AUDIO_MSTORAGE_SWITCH_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_MSTORAGE_SWITCH_CMD parem error");
+                return -1;
+            }
+            if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(false);
+                LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
+            } else {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);
+            }
+            break;
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;
