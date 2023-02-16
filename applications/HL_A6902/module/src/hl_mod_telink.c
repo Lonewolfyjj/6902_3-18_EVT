@@ -510,8 +510,12 @@ static rt_err_t _hl_mod_telink_serial_deinit(void)
 uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 {
     if (NULL == input_msq) {
-        LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
+        LOG_E("[%s][line:%d]Input_Msq is NULL!!! \r\n", __FUNCTION__, __LINE__, input_msq);
         return 1;
+    }
+    if (s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Telink Inited\r\n", __FUNCTION__, __LINE__);
+        return 2;
     }
 
     rt_err_t result = RT_EOK;
@@ -552,19 +556,19 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     result = _hl_mod_telink_serial_init();
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 3;
     }
 
     // 置模块开关标志位
-    s_telink.module_flag = 1;
+    s_telink.init_flag = 1;
 
     return 0;
 }
 
 uint8_t hl_mod_telink_deinit(void)
 {
-    if (!s_telink.module_flag) {
-        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
+    if (!s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Not Init Telink Module, Deinit ERROR!", __FUNCTION__, __LINE__);
         return 1;
     }
 
@@ -574,7 +578,7 @@ uint8_t hl_mod_telink_deinit(void)
     result = _hl_mod_telink_serial_deinit();
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 2;
     }
 
     // 去初始化hup、fifo工具
@@ -582,13 +586,22 @@ uint8_t hl_mod_telink_deinit(void)
     hl_util_fifo_deinit(&s_telink.fifo);
 
     // 置模块开关标志位
-    s_telink.module_flag = 0;
+    s_telink.init_flag = 0;
 
     return 0;
 }
 
 uint8_t hl_mod_telink_start(void)
 {
+    if (s_telink.start_flag) {
+        LOG_E("[%s][line:%d]Telink Started\r\n", __FUNCTION__, __LINE__);
+        return 1;
+    }
+    if (!s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Telink Not Init, Can't Start Telink Mod!\r\n", __FUNCTION__, __LINE__);
+        return 2;
+    }
+
     rt_err_t result = RT_EOK;
 
     // 清空fifo等资源
@@ -599,15 +612,17 @@ uint8_t hl_mod_telink_start(void)
                                           TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 3;
     }
 
     // 启动Telink线程
     result = rt_thread_startup(s_telink.thread_id);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 4;
     }
+
+    s_telink.start_flag = 1;
 
     return 0;
 }
@@ -615,19 +630,20 @@ MSH_CMD_EXPORT(hl_mod_telink_start, telink start cmd);
 
 uint8_t hl_mod_telink_stop(void)
 {
-    rt_err_t result = RT_EOK;
-
-    if (!s_telink.module_flag) {
-        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
+    if (!s_telink.start_flag) {
+        LOG_E("[%s][line:%d]Telink Not Start, Can't Stop Telink Mod!\r\n", __FUNCTION__, __LINE__);
         return 1;
     }
+    rt_err_t result = RT_EOK;
 
     // 脱离Telink线程
     result = rt_thread_delete(s_telink.thread_id);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] delete faild!!! \r\n", __FUNCTION__, __LINE__);
-        return 1;
+        return 2;
     }
+
+    s_telink.start_flag = 0;
 
     return 0;
 }

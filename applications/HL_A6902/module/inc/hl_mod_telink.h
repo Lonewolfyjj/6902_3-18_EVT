@@ -269,8 +269,10 @@ typedef struct
 {
     /// 线程句柄
     rt_thread_t thread_id;
+    /// 模块初始化状态标志
+    uint8_t init_flag;
     /// 模块运行状态标志
-    uint8_t module_flag;
+    uint8_t start_flag;
     /// 线程运行状态标志
     rt_bool_t thread_flag;
     /// APP层消息队列
