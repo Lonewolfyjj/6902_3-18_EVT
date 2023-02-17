@@ -42,9 +42,9 @@
 
 #define LAB_ADD(X)  lab##X
 
-#define ROLLER_TIMEOUT    50
+#define ROLLER_TIMEOUT    70
 
-#define MENU_CRUNT_WIDE 220
+#define MENU_CRUNT_WIDE 240
 #define MENU_CRUNT_HIGH 80
 // #define ICON_NUMBER     6
 #define CENTRE_CHECK    1
@@ -110,7 +110,6 @@ static void menu_timer(lv_timer_t * timer)
     uint8_t center = lv_center_icon_get();
     pos = lv_icon_pos_get(center);
     if(pos == pos_bak){
-        rt_kprintf("Center = %d\n",center);
         lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);
         lv_obj_scroll_to_view(pic_obj[center], LV_ANIM_ON);
         lv_icon_alin_mode(center);     
@@ -135,10 +134,10 @@ static void lv_inon_zoom_set(uint8_t num)
 static void lv_icon_check(lv_coord_t current,lv_coord_t x)
 {
     uint8_t check_pos;
-    if(x < 110){
+    if(x < 107){
         check_pos = LIFT_CHECK;
     }
-    else if(x < 183){//0:lift 1:right
+    else if(x < 187){//0:lift 1:right
         check_pos = CENTRE_CHECK;
     }else{
         check_pos = RIGHT_CHECK;
@@ -239,6 +238,7 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata,    int8_t center
     lv_obj_set_flex_flow(cont_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(cont_row, LV_SCROLLBAR_MODE_OFF);
+    // lv_obj_clear_flag(cont_row,LV_OBJ_FLAG_SCROLL_MOMENTUM);
     for(i = 0; i <pic_num; i++){
         picdata[i].obj = lv_img_create(cont_row);
         lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
