@@ -304,15 +304,20 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
     uint8_t                   bat_soc_temp      = 50;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t                   turn_on_state;
+    hl_led_switch             led_ctrl;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
+            led_ctrl = SWITCH_OPEN;
+            hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
             hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
             _in_box_flag = true;
             dev_num      = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", dev_num);
         } break;
         case HL_OUT_BOX_IND: {
+            led_ctrl = SWITCH_CLOSE;
+            hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
             _in_box_flag = false;
             LOG_I("out box!");
             if (_shut_down_flag == false) {
@@ -499,6 +504,13 @@ void hl_app_mng_charger_entry(void* msg_q)
 {
     struct rt_messagequeue* app_mq = msg_q;
     mode_to_app_msg_t       msg    = { 0 };
+    hl_led_switch           led_ctrl;
+
+    // 在收纳盒中则关闭led
+    if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {
+        led_ctrl = SWITCH_OPEN;
+        hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
+    }
 
     while (charger_alive) {
         hl_mod_feed_dog();
