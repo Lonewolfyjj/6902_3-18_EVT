@@ -325,7 +325,7 @@ static lv_obj_t * lv_voice_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,r
 
 static lv_obj_t * lv_voice_line_out_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,rt_int16_t init_value,lv_coord_t x_offset,lv_coord_t y_offset)
 {
-    char buf[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    char buf[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_voice_label, LV_PART_MAIN);
     lv_snprintf(buf, sizeof(buf), "Output : %d", init_value);
