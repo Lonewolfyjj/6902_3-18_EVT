@@ -97,7 +97,7 @@ static lv_style_t style_power_label;
 
 static lv_obj_t *bat_icon, *bat_bar, *bat_label,*bat_charger_icon;
 
-static top_list_t* head_lift_list = NULL,*head_right_list = NULL;
+static top_list_t* head_left_list = NULL,*head_right_list = NULL;
 static int8_t TOP_POS,TOP_OUT_POS,TOP_OFFSET;
 
 static img_info_t stereo_icon = {.default_pos = HL_TOP_ICON_STEREO_MOD,.img_src = &Main_stereo,.img_obj = NULL },
@@ -196,8 +196,8 @@ static lv_obj_t * hl_mod_creat_top_icon(const void * img_src,lv_obj_t *align_obj
 
 static void hl_top_icon_init(void)
 {
-    head_lift_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
-    head_lift_list->next = NULL;
+    head_left_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
+    head_left_list->next = NULL;
     head_right_list = (top_list_t *)rt_malloc(sizeof(top_list_t));
     head_right_list->next = NULL;
 }
@@ -331,7 +331,7 @@ static void hl_add_top_icon(hl_top_icon_t icon)
                 stereo_icon.img_src = &Main_saft_track;
             }
             stereo_icon.img_obj = NULL;
-            hl_top_icon_add(&stereo_icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_add(&stereo_icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_NOISE:
             if(top_icon_sta.noise == 1){
@@ -340,7 +340,7 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             }
             top_icon_sta.noise = 1;
             noise_icon.img_obj = NULL;
-            hl_top_icon_add(&noise_icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_add(&noise_icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_LOCK:
             if(top_icon_sta.lock == 1){
@@ -349,7 +349,7 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             }
             top_icon_sta.lock = 1;
             lock_icon.img_obj = NULL;
-            hl_top_icon_add(&lock_icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_add(&lock_icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_APPLE:
             if(top_icon_sta.apple == 1){
@@ -358,7 +358,7 @@ static void hl_add_top_icon(hl_top_icon_t icon)
             }
             top_icon_sta.apple = 1;
             apple_icon.img_obj = NULL;
-            hl_top_icon_add(&apple_icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_add(&apple_icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_LINEOUT:
             if(top_icon_sta.lineout == 1){
@@ -412,7 +412,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
                 return ;
             }
             top_icon_sta.voice_mod = 0;
-            hl_top_icon_delete(HL_TOP_ICON_STEREO_MOD,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_delete(HL_TOP_ICON_STEREO_MOD,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_NOISE:
             if(top_icon_sta.noise == 0){
@@ -420,7 +420,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
                 return ;
             }
             top_icon_sta.noise = 0;
-            hl_top_icon_delete(icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_delete(icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_LOCK:
             if(top_icon_sta.lock == 0){
@@ -428,7 +428,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
                 return ;
             }
             top_icon_sta.lock = 0;
-            hl_top_icon_delete(icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_delete(icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_APPLE:
             if(top_icon_sta.apple == 0){
@@ -436,7 +436,7 @@ static void hl_delete_top_icon(hl_top_icon_t icon)
                 return ;
             }
             top_icon_sta.apple = 0;
-            hl_top_icon_delete(icon,ICON_POS_LIFT,head_lift_list);
+            hl_top_icon_delete(icon,ICON_POS_LIFT,head_left_list);
             break;
         case HL_TOP_ICON_LINEOUT:
             if(top_icon_sta.lineout == 0){
@@ -474,13 +474,13 @@ static lv_obj_t * hl_mod_icon_obj(hl_top_icon_t icon_typ)
         case HL_TOP_ICON_STEREO_MOD:        
         case HL_TOP_ICON_SINGLE_MOD:
         case HL_TOP_ICON_TRACK_MOD:
-            obj = hl_top_icon_obj_get(icon_typ,head_lift_list);
+            obj = hl_top_icon_obj_get(icon_typ,head_left_list);
             break;
         case HL_TOP_ICON_NOISE:
-            obj = hl_top_icon_obj_get(icon_typ,head_lift_list);
+            obj = hl_top_icon_obj_get(icon_typ,head_left_list);
             break;
         case HL_TOP_ICON_LOCK:
-            obj = hl_top_icon_obj_get(icon_typ,head_lift_list);
+            obj = hl_top_icon_obj_get(icon_typ,head_left_list);
             break;
         case HL_TOP_ICON_LINEOUT:
             obj = hl_top_icon_obj_get(icon_typ,head_right_list);
@@ -546,7 +546,7 @@ void hl_mod_top_ioctl(void* ctl_data)
             // hl_obj_delete(lv_scr_act(), false);
             lv_anim_del_all();
             lv_obj_clean(lv_scr_act());
-            // hl_top_list_clean(head_lift_list);
+            // hl_top_list_clean(head_left_list);
             // hl_top_list_clean(head_right_list);
             break;
         case HL_TOP_DELETE_STYLE:
