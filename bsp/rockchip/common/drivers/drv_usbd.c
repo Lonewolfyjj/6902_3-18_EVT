@@ -167,6 +167,7 @@ void HAL_PCDEx_BcdCallback(struct PCD_HANDLE *pcd, ePCD_bcdMsg msg)
         clk_enable_by_id(g_usbdDev.hclkGateID);
         clk_enable_by_id(g_usbdDev.utmiclkGateID);
         HAL_USB_PhyResume();
+        rt_thread_mdelay(2);
         usb_pcd_lowlevel_hw_init(pcd);
         RT_DEBUG_LOG(RT_DEBUG_USB, ("resume usb phy and ctrl\n"));
     }
