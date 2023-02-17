@@ -40,16 +40,16 @@
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 
-static bool    _rx_in_box_flag  = false;
-static bool    _tx1_in_box_flag = false;
-static bool    _tx2_in_box_flag = false;
-static uint8_t _dev_num;
+bool    _rx_in_box_flag  = false;
+bool    _tx1_in_box_flag = false;
+bool    _tx2_in_box_flag = false;
+uint8_t _dev_num;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 
 #else
-static void _display_in_box_state_set(void)
+void _display_in_box_state_set(void)
 {
     hl_display_box_charge_state display_box_charge_state;
 
