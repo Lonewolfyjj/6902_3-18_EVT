@@ -262,8 +262,7 @@ static void _pm_init_state_update(void)
 
 static void _guage_state_update()
 {
-    uint8_t     soc;
-    static bool flag = false;
+    uint8_t soc;
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -286,12 +285,7 @@ static void _guage_state_update()
     }
 
     if (_pm_mod.bat_info.soc.soc <= 3) {
-        if (flag == false) {
-            flag = true;
-            _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
-        }
-    } else if (_pm_mod.bat_info.soc.soc <= 100) {
-        flag = false;
+        _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
     }
 }
 
@@ -465,7 +459,7 @@ static void _hl_mod_pmwdg(void)
     if (power_ic_typ == HL_MOD_PM_CHARGER_SY6971) {
         pm_ioctl(SY_WRITE_CMD, &wdg_sy, 1);
     }
-    if(power_ic_typ == HL_MOD_PM_CHARGER_SGM41518){
+    if (power_ic_typ == HL_MOD_PM_CHARGER_SGM41518) {
         pm_ioctl(SGM_WRITE_CMD, &wdg_sgm, 1);
     }
 }
