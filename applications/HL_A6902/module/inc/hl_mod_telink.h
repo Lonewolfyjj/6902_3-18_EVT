@@ -91,6 +91,8 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_REFACTORY_CMD = 0x31,
     /// 透传系统时间：类型hl_rf_bypass_time_t
     HL_RF_BYPASS_TIME_CMD = 0x32,
+    /// 发送reboot重启Telink
+    HL_RF_REBOOT_CMD = 0xA5,
 } HL_ENUM8(hl_mod_telink_ctrl_cmd);
 
 typedef enum _hl_mod_telink_ctrl_ind
