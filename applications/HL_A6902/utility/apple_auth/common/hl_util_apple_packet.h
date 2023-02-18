@@ -1,5 +1,5 @@
 /**
- * @file hl_iap2_packet.h
+ * @file hl_util_apple_packet.h
  * @author lisonglin (songlin.li@hollyland-tech.com)
  * @brief 
  * @version 0.1
@@ -15,74 +15,18 @@
  * 
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HL_IAP2_PACKET_H
-#define _HL_IAP2_PACKET_H
+#ifndef __HL_UTIL_APPLE_PACKET_H__
+#define __HL_UTIL_APPLE_PACKET_H__
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include "hl_util_apple_type.h"
+#include "hl_util_apple_config.h"
 #include "hl_util_general_type.h"
 
 /* typedef -------------------------------------------------------------------*/
-
-typedef enum _iap2_protocol_status_enum_
-{
-    EM_HL_IAP2_STM_MAIN_IDLE,
-    EM_HL_IAP2_STM_MAIN_LINK,
-    EM_HL_IAP2_STM_MAIN_DETECT,
-    EM_HL_IAP2_STM_MAIN_IDENTIFY,
-    EM_HL_IAP2_STM_MAIN_POWER_UPDATE,
-    EM_HL_IAP2_STM_MAIN_EAP,
-    EM_HL_IAP2_STM_MAIN_SUCCEED,
-    EM_HL_IAP2_STM_MAIN_FAILED,
-} HL_ENUM8(hl_iap2_protocol_status_e);
-typedef enum _iap2_detect_status_enum_
-{
-    EM_HL_IAP2_STM_DETECT_SEND,
-    EM_HL_IAP2_STM_DETECT_RECV,
-} HL_ENUM8(hl_iap2_detect_status_e);
-
-typedef enum _iap2_link_status_enum_
-{
-    EM_HL_IAP2_STM_LINK_SEND_SYN,
-    EM_HL_IAP2_STM_LINK_RECV_SYN_ACK,
-    EM_HL_IAP2_STM_LINK_SEND_ACK = 3,
-} HL_ENUM8(hl_iap2_link_status_e);
-
-typedef enum _iap2_identify_status_enum_
-{
-    EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH,
-    EM_HL_IAP2_STM_IDENTIFY_ACK_AUTH,
-    EM_HL_IAP2_STM_IDENTIFY_REQ_CHALLENGE,
-    EM_HL_IAP2_STM_IDENTIFY_ACK_CHALLENGE,
-    EM_HL_IAP2_STM_IDENTIFY_SUCCEDD,
-    EM_HL_IAP2_STM_IDENTIFY_START_IDENTIFICATION,
-    EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_INFO,
-    EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED,
-} HL_ENUM8(hl_iap2_identify_status_e);
-
-typedef enum _iap2_power_update_status_enum_
-{
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER,
-    EM_HL_IAP2_STM_POWERUPDATE_RECV_POWER_UPDATE,
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER_SOURCE,
-    EM_HL_IAP2_STM_POWERUPDATE_SEND_ACK,
-} HL_ENUM8(hl_iap2_power_update_status_e);
-
-typedef enum _iap2_ea_session_status_enum_
-{
-    EM_HL_IAP2_STM_EA_SESSION,
-} HL_ENUM8(hl_iap2_ea_session_status_e);
-
-typedef struct _iap2_packet_header_arg_
-{
-    /// seq值
-    uint8_t seq_num;
-    /// ack值
-    uint8_t ack_num;
-    /// SessionId值
-    uint8_t session_id;
-} st_packet_header_arg;
 
 typedef struct _iap2_packet_header_
 {
@@ -125,6 +69,12 @@ typedef struct _iap2_sync_payload_
     ///
     uint8_t SessionVer1;
     ///
+    uint8_t SessionId2;
+    ///
+    uint8_t SessionType2;
+    ///
+    uint8_t SessionVer2;
+    ///
     uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_sync_payload_t;
 
@@ -156,6 +106,14 @@ typedef struct _iap2_ctrl_payload_
     uint8_t PayloadCksum;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_payload_t;
 
+typedef struct _iap2_ea_payload_
+{
+    ///
+    uint16_t EASessionIdentifier;
+    ///
+    uint8_t* EASessionData;
+} __attribute__((packed, aligned(1))) st_iap2_ea_payload_t;
+
 typedef struct _iap2_sync_packet_
 {
     ///
@@ -172,29 +130,23 @@ typedef struct _iap2_ctrl_packet_
     st_iap2_ctrl_payload_t ctrl_payload;
 } __attribute__((packed, aligned(1))) st_iap2_ctrl_packet_t;
 
+typedef struct _iap2_ea_packet_
+{
+    ///
+    st_iap2_packet_header_t packet_header;
+    ///
+    st_iap2_ea_payload_t ea_payload;
+} __attribute__((packed, aligned(1))) st_iap2_ea_packet_t;
+
 /* define --------------------------------------------------------------------*/
 
 #define EXCHANGE_HIGH_LOW_BYTE(x) ((uint16_t)((((x) >> 8) & 0xFF) | (((x)&0xFF) << 8)))
-
-#define SEND_BUFFER_SIZE 1024
-#define RECV_BUFFER_SIZE 1024
-#define TIMEOUT_US 1000
 
 #define LINK_CONTROL_SYN (1UL << (7))
 #define LINK_CONTROL_ACK (1UL << (6))
 #define LINK_CONTROL_EAK (1UL << (5))
 #define LINK_CONTROL_RST (1UL << (4))
 #define LINK_CONTROL_SLP (1UL << (3))
-
-#define IAP2_DEVICE_NAME "LARK 150 Pro"
-#define IAP2_MODEID "A6902"
-#define IAP2_MANUFATORY "Hollyland"
-#define IAP2_SERIAL_NAME "0123456789AB"
-#define IAP2_FIRMWAREVERSION "v1.0.0.1"
-#define IAP2_HARDWAREVERSION "v2.0.0.1"
-#define IAP2_PUID "0babaf959f694c97"
-#define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
-#define IAP2_HID_COMPONENT "HIDComponent"
 
 #define MESSAGE_ID_START_EAP 0xEA00
 #define MESSAGE_ID_STOP_EAP 0xEA01
@@ -241,9 +193,12 @@ typedef struct _iap2_ctrl_packet_
 #define SESSION_ID_CTRL 0x01
 #define SESSION_ID_EA 0x02
 
-#define LINK_SESSION1_ID 0x0A
+#define LINK_SESSION1_ID 0x01
 #define LINK_SESSION1_TYPE 0x00
 #define LINK_SESSION1_VER 0x01
+#define LINK_SESSION2_ID 0x02
+#define LINK_SESSION2_TYPE 0x02
+#define LINK_SESSION2_VER 0x01
 
 #define DETECT_FRAME_SIZE 6
 #define PACKET_HEADER_SIZE 8
@@ -299,6 +254,24 @@ int hl_iap2_detect_packet_encode(uint8_t* write_data_addr);
  * </table>
  */
 int hl_iap2_detect_packet_decode(uint8_t* read_data_addr);
+
+/**
+ * hl_apple_get_packet_len
+ * @brief 获取消息包整体长度
+ * @param [in] packet_header 包头指针
+ * @return uint16_t 成功 消息包整体长度 | 失败 <0
+ * @date 2023-02-13
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-13      <td>lisonglin     <td>新建
+ * </table>
+ */
+uint16_t hl_apple_get_packet_len(st_iap2_packet_header_t* packet_header);
 
 /**
  * hl_iap2_packet_header_encode
@@ -425,6 +398,26 @@ int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t
  * </table>
  */
 uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_t param_id, uint8_t* write_data);
+
+/**
+ * hl_eap_payload_decode
+ * @brief 解析EAP消息包并读出数据内容
+ * @param [in] packet_payload EAP消息包
+ * @param [in] easession_id EASessionId
+ * @param [in] data_addr 数据存放缓冲区
+ * @return uint16_t 成功 读取数据长度 | 失败 <0
+ * @date 2023-02-08
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-08      <td>lisonglin     <td>新建
+ * </table>
+ */
+uint16_t hl_eap_payload_decode(st_iap2_ea_packet_t* ea_packet, uint16_t easession_id, uint8_t* data_addr);
 
 #endif
 /*

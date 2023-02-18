@@ -75,6 +75,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_MKFS_DFS_CMD,   
     /// 检查文件系统（如果无法挂载就自动格式化）
     HL_AUDIO_CHECK_DFS_CMD,
+    /// 大容量开关(0=OFF, 1=ON) 默认ON
+    HL_AUDIO_MSTORAGE_SWITCH_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 
 typedef enum _hl_mod_audio_indicate
@@ -120,7 +122,9 @@ typedef enum _hl_mod_audio_ctrl_cmd
     /// 无
     HL_USB_MSTORAGE_DISABLE_CMD, 
     /// 获取RTC时间 参数<audio_time>
-    HL_AUDIO_RTC_TIME_CMD, 
+    HL_AUDIO_GET_RTC_TIME_CMD, 
+    /// 设置RTC时间 参数<audio_time>
+    HL_AUDIO_SET_RTC_TIME_CMD, 
     /// 设置相机接口的左通道增益 int(-103~24)
     HL_AUDIO_SET_CAM_GAIN_L_CMD,
     /// 设置相机接口的右通道增益 int(-103~24)
@@ -141,6 +145,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_MKFS_DFS_CMD,   
     /// 检查文件系统（如果无法挂载就自动格式化）
     HL_AUDIO_CHECK_DFS_CMD, 
+    /// 大容量开关(0=OFF, 1=ON) 默认ON
+    HL_AUDIO_MSTORAGE_SWITCH_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
 
@@ -170,22 +176,6 @@ typedef enum _hl_stream_mode_e
     HL_STREAM_CAP2PLAY_CAP2UAC,
 } HL_ENUM8(hl_stream_mode_e);
 
-#pragma pack(1)
-typedef struct audio_time_t
-{ 
-    /// 年
-    uint16_t year;
-    /// 月  
-    uint8_t month; 
-    /// 日  
-    uint8_t day; 
-    /// 时  
-    uint8_t hour;   
-    /// 分  
-    uint8_t minute;   
-    /// 秒  
-    uint8_t second;  
-} audio_time;
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

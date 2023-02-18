@@ -247,14 +247,13 @@ static rt_size_t win_usb_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_si
     winusb_device->ep_out->buffer = buffer;
     winusb_device->ep_out->request.buffer = buffer;
     winusb_device->ep_out->request.size = size;
-    winusb_device->ep_out->request.req_type = UIO_REQUEST_READ_FULL;
+    winusb_device->ep_out->request.req_type = UIO_REQUEST_READ_BEST;
     int ret = rt_usbd_io_request(((ufunction_t)dev->user_data)->device,winusb_device->ep_out,&winusb_device->ep_out->request);
-    // rt_kprintf("02 -- %d\r\n", ret);
-    if (rx_has_data) {
-        // rt_kprintf("read OK\r\n");
-        rx_has_data = 0;
-        return size;
-    }
+    // if (rx_has_data) {
+    //     // rt_kprintf("read OK\r\n");
+    //     rx_has_data = 0;
+    //     return size;
+    // }
     return RT_EOK;
 }
 static rt_size_t win_usb_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size)

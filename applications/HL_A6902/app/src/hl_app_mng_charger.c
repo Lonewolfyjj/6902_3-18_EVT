@@ -36,6 +36,7 @@
 #include "hl_app_audio_msg_pro.h"
 #include "hl_mod_wdog.h"
 #include "hl_util_nvram.h"
+#include "hl_board_commom.h"
 
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
@@ -52,6 +53,12 @@ typedef enum _charger_powe_on_stm_e_
 /* variables -----------------------------------------------------------------*/
 static hl_charger_power_on_stm_e sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_IDLE;
 static uint8_t                   charger_alive                = 1;
+static int                       last_halt_state              = 0;
+
+extern bool    _rx_in_box_flag;
+extern bool    _tx1_in_box_flag;
+extern bool    _tx2_in_box_flag;
+extern uint8_t _dev_num;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
@@ -59,7 +66,11 @@ static void _hl_app_mng_charger_power_on_stm()
     switch (sg_stm_charger_pwr_key_state) {
         case EM_CHARGER_POWER_ON_STM_IDLE:
             if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
-                hold_times = 50;
+#if HL_IS_TX_DEVICE()
+                hold_times = 150;
+#else
+                hold_times = 2;
+#endif
                 sg_stm_charger_pwr_key_state++;
             }
             break;
@@ -84,7 +95,7 @@ static void _hl_app_mng_charger_power_on_stm()
         case EM_CHARGER_POWER_ON_STM_PROCESS:
             LOG_D("charge process\r\n");
 #if HL_IS_TX_DEVICE()
-            tx_info.on_off_flag = 1;
+            tx_info.on_off_flag      = 1;
             hl_led_net_mode net_ctrl = LED_NET_MODE_RECONNECTION;
             // 告诉显示模块正常开机
             hl_mod_display_io_ctrl(LED_NET_MODLE_CMD, &net_ctrl, sizeof(net_ctrl));
@@ -135,7 +146,7 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         state = OUTBOX_OFFCHARGE_OFFPAGE;
     }
 
-    if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+    if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
         hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
     }
     if (rx_info.charge_flag == 1) {
@@ -158,11 +169,11 @@ static void _hl_app_mng_charger_pm_process(mode_to_app_msg_t* p_msg)
 #if HL_IS_TX_DEVICE()
             tx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(LED_BATTERY_VAL_CMD, &soc_temp, 1);
-            LOG_I("current soc:%d", tx_info.soc);
+            // LOG_I("current soc:%d", tx_info.soc);
 #else
             rx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(RX_BAT_VAL_VAL_CMD, &soc_temp, 1);
-            LOG_I("current soc:%d", rx_info.soc);
+            // LOG_I("current soc:%d", rx_info.soc);
 #endif
             break;
 
@@ -293,14 +304,20 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
     uint8_t                   bat_soc_temp      = 50;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t                   turn_on_state;
+    hl_led_switch             led_ctrl;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
+            led_ctrl = SWITCH_OPEN;
+            hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
             _in_box_flag = true;
             dev_num      = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", dev_num);
         } break;
         case HL_OUT_BOX_IND: {
+            led_ctrl = SWITCH_CLOSE;
+            hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
             _in_box_flag = false;
             LOG_I("out box!");
             if (_shut_down_flag == false) {
@@ -321,29 +338,47 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
             _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
         } break;
         default:
             break;
     }
 }
 #else
+
+extern void _display_in_box_state_set(void);
+
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 {
-    uint8_t dev_num;
     uint8_t bat_soc_temp = 50;
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t turn_on_state;
+    uint8_t tx1_bat_info_temp;
+    uint8_t tx2_bat_info_temp;
+    uint8_t box_bat_info_temp;
+    bool tx1_in_box_flag_temp;
+    bool tx2_in_box_flag_temp;
+    hl_mod_euc_charge_state_e tx1_charge_state_temp;
+    hl_mod_euc_charge_state_e tx2_charge_state_temp;
+    hl_mod_euc_charge_state_e box_charge_state_temp;
+    hl_mod_euc_box_lid_state_e box_lid_state_temp;
+    uint8_t temp;
 
     switch (p_msg->cmd) {
         case HL_IN_BOX_IND: {
+            _rx_in_box_flag = true;
+            hl_mod_pm_ctrl(HL_PM_POWER_UP_CMD, RT_NULL, 0);
             _in_box_flag = true;
-            dev_num = *(uint8_t*)p_msg->param.ptr;
-            LOG_I("in box! dev_num:%d", dev_num);
+            _dev_num = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("in box! dev_num:%d", _dev_num);
+            _display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
+            _rx_in_box_flag = false;
             _in_box_flag = false;
             LOG_I("out box!");
             if (_shut_down_flag == false) {
+                _display_in_box_state_set();
                 hl_app_mng_charger_goto_power_on();
             }
         } break;
@@ -351,9 +386,77 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
             bat_soc_temp = rx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
         } break;
+        case HL_TX1_BAT_INFO_UPDATE_IND: {  //更新tx1电池电量
+            tx1_bat_info_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("Tx1 bat soc update: %d", tx1_bat_info_temp);
+
+            hl_mod_display_io_ctrl(TX1_BAT_VAL_VAL_CMD, &tx1_bat_info_temp, sizeof(tx1_bat_info_temp));
+        } break;
+        case HL_TX2_BAT_INFO_UPDATE_IND: {  //更新tx2电池电量
+            tx2_bat_info_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("Tx2 bat soc update: %d", tx2_bat_info_temp);
+
+            hl_mod_display_io_ctrl(TX2_BAT_VAL_VAL_CMD, &tx2_bat_info_temp, sizeof(tx2_bat_info_temp));
+        } break;
+        case HL_BOX_BAT_INFO_UPDATE_IND: {  //更新box电池电量
+            box_bat_info_temp = *(uint8_t*)p_msg->param.ptr;
+            LOG_I("Box bat soc update: %d", box_bat_info_temp);
+
+            hl_mod_display_io_ctrl(CASE_BAT_VAL_VAL_CMD, &box_bat_info_temp, sizeof(box_bat_info_temp));
+        } break;
+        case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
+            tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
+            _tx1_in_box_flag = tx1_in_box_flag_temp;
+            _display_in_box_state_set();
+            LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
+        } break;
+        case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
+            tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
+            _tx2_in_box_flag = tx2_in_box_flag_temp;
+            _display_in_box_state_set();
+            LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
+        } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
             charge_state_temp = rx_info.charge_flag + 1;
             hl_mod_euc_ctrl(HL_SET_CHARGE_STATE_CMD, &charge_state_temp, sizeof(charge_state_temp));
+        } break;
+        case HL_TX1_CHARGE_STATE_IND: {  //更新Tx1的充电状态
+            tx1_charge_state_temp = *(hl_mod_euc_charge_state_e*)p_msg->param.ptr;
+            LOG_I("Tx1 charge state:%d", tx1_charge_state_temp);
+
+            if (tx1_charge_state_temp == HL_MOD_EUC_CHARGE_STATE_CHARGING) {
+                temp = 1;
+            } else {
+                temp = 0;
+            }
+            hl_mod_display_io_ctrl(TX1_CHARGE_STATUS_SWITCH_CMD, &temp, sizeof(temp));
+        } break;
+        case HL_TX2_CHARGE_STATE_IND: {  //更新Tx2的充电状态
+            tx2_charge_state_temp = *(hl_mod_euc_charge_state_e*)p_msg->param.ptr;
+            LOG_I("Tx2 charge state:%d", tx2_charge_state_temp);
+
+            if (tx2_charge_state_temp == HL_MOD_EUC_CHARGE_STATE_CHARGING) {
+                temp = 1;
+            } else {
+                temp = 0;
+            }
+            hl_mod_display_io_ctrl(TX2_CHARGE_STATUS_SWITCH_CMD, &temp, sizeof(temp));
+        } break;
+        case HL_BOX_CHARGE_STATE_IND: {  //更新Box的充电状态
+            box_charge_state_temp = *(hl_mod_euc_charge_state_e*)p_msg->param.ptr;
+            LOG_I("Box charge state:%d", box_charge_state_temp);
+
+            if (box_charge_state_temp == HL_MOD_EUC_CHARGE_STATE_CHARGING) {
+                temp = 1;
+            } else {
+                temp = 0;
+            }
+            hl_mod_display_io_ctrl(BOX_CHARGE_STATUS_SWITCH_CMD, &temp, sizeof(temp));
+        } break;
+        case HL_BOX_LID_STATE_UPDATE_IND: {  //更新Box开关盖状态
+            box_lid_state_temp = *(hl_mod_euc_box_lid_state_e*)p_msg->param.ptr;
+            LOG_I("Box lid state:%d", box_lid_state_temp);
+            hl_mod_display_io_ctrl(IN_BOX_CAP_STATE_SWITCH_CMD, &box_lid_state_temp, sizeof(box_lid_state_temp));
         } break;
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 0;
@@ -361,6 +464,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         } break;
         case HL_SHUT_DOWN_REQ_IND: {
             _shut_down_flag = true;
+            hl_mod_euc_ctrl(HL_SHUTDOWN_ACK_CMD, RT_NULL, 0);
         } break;
         default:
             break;
@@ -372,27 +476,52 @@ MSH_CMD_EXPORT(hl_app_mng_charger_goto_power_on, startup the device);
 
 static bool _hl_app_mng_check_power_on_state(void)
 {
-    // USB未接入 && POGO pin未接入 && 开关机按键未按下
     if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH
         && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+        // USB未接入 && POGO pin未接入 && 开关机按键未按下
         return true;
     } else {
+        // 如果USB || POGO未接入 && 开关机键按下 && HALT = 1
+        if (last_halt_state) {
+            if ((hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH || hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH)
+                && hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH) {
+                return true;
+            }
+        }
         return false;
     }
 }
 /* Exported functions --------------------------------------------------------*/
+void hl_app_mng_charger_set_halt_state(uint8_t state)
+{
+    if (state) {
+        hl_util_nvram_param_set_integer("HALT", 0);
+        hl_util_nvram_param_save();
+    }
+    last_halt_state = state;
+}
 void hl_app_mng_charger_entry(void* msg_q)
 {
-    struct rt_messagequeue* app_mq              = msg_q;
-    mode_to_app_msg_t       msg                 = { 0 };
+    struct rt_messagequeue* app_mq = msg_q;
+    mode_to_app_msg_t       msg    = { 0 };
+#if HL_IS_TX_DEVICE()
+    hl_led_switch           led_ctrl;
 
+    // 在收纳盒中则关闭led
+    if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {
+        led_ctrl = SWITCH_OPEN;
+        hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
+    }
+#endif
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
             // 关机
             if (_in_box_flag == false || _shut_down_flag == true) {
                 hl_app_mng_powerOff();
-                while ((1));
+                // while ((1));
+                rt_thread_mdelay(5000);
+                hl_board_reboot();
             }
         }
 

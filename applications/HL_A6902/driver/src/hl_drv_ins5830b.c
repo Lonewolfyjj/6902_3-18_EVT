@@ -185,7 +185,7 @@ int hl_drv_ins5830b_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
         ins_printf("ins5830b param err !\n");
         goto INIT_ERR;
     }
-    rtc_ptr.year  = rtc_p->year;
+    rtc_ptr.year  = rtc_p->year + 2000;
     rtc_ptr.month = rtc_p->month;
     rtc_ptr.day   = rtc_p->day;
     rtc_ptr.hour  = rtc_p->hour;
@@ -201,7 +201,7 @@ int hl_drv_ins5830b_io_ctrl(uint8_t cmd, void* ptr, uint8_t len)
             if (hl_drv_rtc_gettime(&rtc_ptr)) {
                 goto INIT_ERR;
             }
-            rtc_p->year = rtc_ptr.year; 
+            rtc_p->year = rtc_ptr.year - 2000; 
             rtc_p->month = rtc_ptr.month;
             rtc_p->day = rtc_ptr.day; 
             rtc_p->hour = rtc_ptr.hour; 
@@ -229,9 +229,9 @@ void rtc_ins5830b_test(int argc, char** argv)
         rtc_test.hour = atoi(argv[5]);
         rtc_test.minute = atoi(argv[6]);
         rtc_test.second = atoi(argv[7]);
-        hl_drv_ins5830b_io_ctrl(INS5830B_RTC_SET_TIME_CMD,&rtc_test,1);
+        hl_drv_ins5830b_io_ctrl(RTC_SET_TIME,&rtc_test,1);
     }else if(!strcmp("get", argv[1])){
-        hl_drv_ins5830b_io_ctrl(INS5830B_RTC_GET_TIME_CMD,&rtc_test,1);
+        hl_drv_ins5830b_io_ctrl(RTC_GET_TIME,&rtc_test,1);
         ins_printf("year  : %d\n",rtc_test.year);
         ins_printf("month : %d\n",rtc_test.month);
         ins_printf("day   : %d\n",rtc_test.day);

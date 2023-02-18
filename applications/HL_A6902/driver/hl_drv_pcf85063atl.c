@@ -177,14 +177,15 @@ uint8_t hl_drv_rtc_pcf85063_init()
     i2c_handle = (struct rt_i2c_bus_device*)rt_device_find(RTC_PCF85063_I2C_BUS_NAME);
     if (i2c_handle == RT_NULL) {
         rt_kprintf("RTC_PCF85063ATL  get i2c_handle  fail\n");
-        return -1;
+        return 1;
     }
 
-    // buf[0] = 0x58;
+    buf[0] = 0x58;
 
-    // if (write_reg(i2c_handle, RTC_PCF85063_Control_1, buf, 1)) {
-    //     rt_kprintf("RTC_PCF85063ATL  write_reg   fail\n");
-    // }
+    if (write_reg(i2c_handle, RTC_PCF85063_Control_1, buf, 1)) {
+        rt_kprintf("RTC_PCF85063ATL  write_reg   fail\n");
+        return 1;
+    }
 
     return 0;
 }
@@ -364,13 +365,13 @@ uint8_t hl_drv_rtc_pcf85063_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case RTC_GET_TIME:
             if (hl_get_rtc_time(ptr)) {
                 rt_kprintf("RTC_PCF85063ATL  read_regs   fail\n");
-                return -1;
+                return 1;
             }
             break;
         case RTC_SET_TIME:
             if (hl_set_rtc_time(ptr)) {
                 rt_kprintf("RTC_PCF85063ATL  RTC_SET_TIME   fail\n");
-                return -1;
+                return 1;
             }
             break;
         default:

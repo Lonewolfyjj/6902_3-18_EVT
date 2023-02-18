@@ -149,6 +149,10 @@ typedef struct _rx_app_info_t
     int32_t              cam_gain_l;
     int32_t              cam_gain_r;
 
+    /// TX1版本号
+    uint8_t             tx1_version[32];
+    /// TX2版本号
+    uint8_t             tx2_version[32];
     /// 本地Mac地址
     uint8_t             local_mac[6];
     /// 配对Mac地址 tx1:[0 - 5] tx2:[6 - 11]
@@ -205,6 +209,23 @@ void hl_app_mng_powerOff(void);
  * </table>
  */
 void hl_app_mng_charger_entry(void *msg_q);
+
+/**
+ * 
+ * @brief 关机充电时确定是否关停设备
+ * @param [in] state 0：不关停 | 1：关停
+ * @date 2023-02-10
+ * @author yangxianyun (rd52@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-10      <td>yangxianyun     <td>新建
+ * </table>
+ */
+void hl_app_mng_charger_set_halt_state(uint8_t state);
 
 #endif /* __HL_APP_MNG_H__ */
 /*
