@@ -1154,9 +1154,13 @@ static rt_err_t rk_dsp_control(struct rt_dsp_device *dsp, int cmd, void *arg)
                                 DSP_CMD_WORK, work);
         break;
     case RKDSP_CTL_DEQUEUE_WORK:
-        ret = rt_mb_recv(rkdsp->work_mb, &value, RT_WAITING_FOREVER);
-        if (ret)
+        ret = rt_mb_recv(rkdsp->work_mb, &value, 1000);
+        dsp_mbox_send_msg(dsp_dev->mboxReg, MBOX_CH_0, DSP_CMD_WORK_ACK, 0x5a5a);
+        if (ret) {
+            dsp_err("rt_mb_recv timeout %d\n", ret);
+            ret = RT_EOK;
             break;
+        }
 
         recv_work = (struct dsp_work *)value;
         if (recv_work != work)
