@@ -41,6 +41,13 @@
 #include "page_txgain.h"
 #include "hl_util_general_type.h"
 
+#define HL_TXGAIN_LEFTVOL_LOW               -18
+#define HL_TXGAIN_LEFTVOL_HIGH              18
+#define HL_TXGAIN_RIGHTVOL_LOW               -18
+#define HL_TXGAIN_RIGHTVOL_HIGH              18
+
+
+
 // 0 表示左 1表示 右
 static int16_t now_sound_channal = (int16_t)HL_TX_GAIN_CHECK_LEFT;
 
@@ -69,7 +76,11 @@ static void hl_mod_page_setup(void)
     txgain.txgain_choose = HL_TX_GAIN_CHOOSE_LEFT;
     txgain.left_volume   = data->tx1_gain_volume;
     txgain.right_volume  = data->tx2_gain_volume;
-
+    txgain.left_volume_min = HL_TXGAIN_LEFTVOL_LOW;
+    txgain.left_volume_max = HL_TXGAIN_LEFTVOL_HIGH;
+    txgain.right_volume_min = HL_TXGAIN_RIGHTVOL_LOW;
+    txgain.right_volume_max = HL_TXGAIN_RIGHTVOL_HIGH;
+    
     hl_mod_txgain_init(&txgain);
 }
 

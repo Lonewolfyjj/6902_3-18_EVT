@@ -289,8 +289,8 @@ void hl_mod_lineout_init(void * init_data)
     lab11 = lv_lab_creat_fun(btn_left,bar1,LV_ALIGN_OUT_TOP_LEFT,0,0,"左声道");
     lab21 = lv_lab_creat_fun(btn_right,bar2,LV_ALIGN_OUT_TOP_LEFT,0,0,"右声道");
 
-    lab12 = lv_value_lab_creat_fun(btn_left,bar1,bar1,LV_ALIGN_OUT_TOP_RIGHT,0,0);
-    lab22 = lv_value_lab_creat_fun(btn_right,bar2,bar2,LV_ALIGN_OUT_TOP_RIGHT,0,0);
+    lab12 = lv_value_lab_creat_fun(btn_left,bar1,bar1,LV_ALIGN_OUT_TOP_RIGHT,-5,0);
+    lab22 = lv_value_lab_creat_fun(btn_right,bar2,bar2,LV_ALIGN_OUT_TOP_RIGHT,-5,0);
 
     valid_obj[0] = btn_left;
     valid_obj[1] = btn_right;
