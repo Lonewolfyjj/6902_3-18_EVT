@@ -66,10 +66,18 @@ typedef struct __hl_lvgl_txgain_init_t
 {
     /// @brief 默认选中按钮
     hl_txgain_choose_t txgain_choose;
-    /// @brief 左声道音量 -40 - 60 db
+    /// @brief 左声道音量
     int16_t left_volume;
-    /// @brief 右声道音量 -40 - 60 db
+    /// @brief 左声道音量最小值
+    int16_t left_volume_min;
+    /// @brief 左声道音量最大值
+    int16_t left_volume_max;
+    /// @brief 右声道音量
     int16_t right_volume;
+    /// @brief 右声道音量最小值
+    int16_t right_volume_min;
+    /// @brief 右声道音量最大值
+    int16_t right_volume_max;
     /// @brief 事件回调函数
     hl_txgain_event_cb func_cb;
 }hl_lvgl_txgain_init_t;

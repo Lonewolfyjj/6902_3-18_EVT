@@ -100,13 +100,14 @@ static void lv_style_page4_init(void)
     lv_style_set_radius(&style_indicator, 0);
 }
 
-static lv_obj_t * lv_bar_creat_fun(lv_obj_t *align_obj,lv_event_cb_t event_cb,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,int32_t init_value)
+static lv_obj_t * lv_bar_creat_fun(lv_obj_t *align_obj,lv_event_cb_t event_cb,lv_coord_t x_offset,lv_coord_t y_offset,lv_coord_t width, lv_coord_t high,\
+                                    int16_t min,int16_t max,int32_t init_value)
 {
     lv_obj_t * bar = lv_bar_create(align_obj);
     lv_obj_add_style(bar, &style_back, LV_PART_MAIN);
     lv_obj_add_style(bar, &style_indicator, LV_PART_INDICATOR);
     lv_obj_set_size(bar, width, high);
-    lv_bar_set_range(bar,-40,60);
+    lv_bar_set_range(bar,min,max);
     lv_obj_add_event_cb(bar, event_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_align_to(bar,align_obj,LV_ALIGN_BOTTOM_LEFT,x_offset,y_offset);
     lv_bar_set_value(bar, init_value, LV_ANIM_ON);    
@@ -279,8 +280,8 @@ void hl_mod_lineout_init(void * init_data)
         btn_right = lv_btn_creat_fun(btn_right_cb,LV_ALIGN_BOTTOM_RIGHT,0,0,147,100,1);
     }    
 
-    bar1 = lv_bar_creat_fun(btn_left,btn_left_cb,-6,-12,135,32,ptr->left_volume);
-    bar2 = lv_bar_creat_fun(btn_right,btn_right_cb,-6,-12,135,32,ptr->right_volume);
+    bar1 = lv_bar_creat_fun(btn_left,btn_left_cb,-6,-12,135,32,ptr->left_volume_min,ptr->left_volume_max,ptr->left_volume);
+    bar2 = lv_bar_creat_fun(btn_right,btn_right_cb,-6,-12,135,32,ptr->right_volume_min,ptr->right_volume_max,ptr->right_volume);
 
     img1 = lv_img_creat_fun(bar1,LV_ALIGN_LEFT_MID,&Other_voice,8,0);
     img2 = lv_img_creat_fun(bar2,LV_ALIGN_LEFT_MID,&Other_voice,8,0);

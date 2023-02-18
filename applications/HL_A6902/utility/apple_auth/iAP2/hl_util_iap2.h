@@ -1,5 +1,5 @@
 /**
- * @file hl_iap2.h
+ * @file hl_util_iap2.h
  * @author lisonglin (songlin.li@hollyland-tech.com)
  * @brief IMF认证流程(嵌套状态机)
  * @version 0.1
@@ -15,48 +15,20 @@
  * 
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HL_IAP2_H
-#define _HL_IAP2_H
+#ifndef __HL_UTIL_IAP2_H__
+#define __HL_UTIL_IAP2_H__
 
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
-#include <string.h>
-#include "hl_util_iap2_packet.h"
 #include "hl_util_iap2_func.h"
 
 /* typedef -------------------------------------------------------------------*/
-
-typedef enum _iap_result_e
-{
-    /// 返回认证结果：成功
-    IAP2_SUCCEED = 0x00,
-    /// 返回认证结果：失败
-    IAP2_FAILED = 0x01,
-} iap2_result_e;
-
-typedef struct _iap2_func_handle_
-{
-    /// 延时函数
-    void (*delay_usec_func)(uint16_t usec);
-    /// USB读数据函数
-    int (*iap2_usb_read)(uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
-    /// USB写数据函数
-    int (*iap2_usb_write)(uint8_t* write_data_addr, uint16_t write_data_len);
-    /// I2C读数据函数
-    int (*iap2_iic_read)(uint8_t reg_addr, uint8_t* read_data_addr, uint16_t read_data_len, uint16_t timeout);
-    /// I2C写数据函数
-    int (*iap2_iic_write)(uint8_t reg_addr, uint8_t* write_data_addr, uint16_t write_data_len);
-    /// 打印函数
-    void (*iap2_printf)(const char *fmt, ...);
-} func_handle;
-
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
 /**
- * hl_iap2_process_main_oneshot
+ * hl_util_iap2_oneshot
  * @brief 循环执行嵌套状态机每个状态，完成苹果认证
  * @param [in] iap2 iap2句柄
  * @return int 成功 0 | 失败 非0
@@ -71,10 +43,10 @@ typedef struct _iap2_func_handle_
  * <tr><td>2022-09-01      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2);
+int hl_util_iap2_oneshot(hl_util_apple_p apple);
 
 /**
- * hl_iap2_protocol_init
+ * hl_util_iap2_init
  * @brief IAP2认证
  * @param [in] handle 函数指针句柄
  * @return int 成功 0 | 失败 非0
@@ -89,10 +61,10 @@ int hl_iap2_process_main_oneshot(st_iap2_protocol_p iap2);
  * <tr><td>2022-09-01      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle);
+int hl_util_iap2_init(hl_util_apple_p apple);
 
 /**
- * hl_iap2_protocol_deinit
+ * hl_util_iap2_deinit
  * @brief IAP2认证去初始化
  * @return int 成功 0 | 失败 非0
  * @date 2022-09-01
@@ -106,7 +78,7 @@ int hl_iap2_protocol_init(st_iap2_protocol_p iap2, func_handle handle);
  * <tr><td>2022-09-01      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_iap2_protocol_deinit(st_iap2_protocol_p iap2);
+int hl_util_iap2_deinit(hl_util_apple_p apple);
 
 #endif
 /*

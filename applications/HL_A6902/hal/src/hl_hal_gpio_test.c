@@ -27,6 +27,7 @@
 #include <rtdevice.h>
 #include "hl_hal_gpio.h"
 #include "hal_pinctrl.h"
+#include "iomux.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -87,38 +88,57 @@ MSH_CMD_EXPORT(hl_hal_gpio_test, gpio test cmd);
 
 void hl_hal_gpio_pwr_on(void)
 {
-
 #if HL_IS_TX_DEVICE()
-    // hl_hal_gpio_init(GPIO_EMMC_PWR_EN);
-    // hl_hal_gpio_init(GPIO_PWR_EN);
-    hl_hal_gpio_init(GPIO_DC3V3_EN);
-    // hl_hal_gpio_init(GPIO_2831P_EN);
-    // hl_hal_gpio_init(GPIO_RF_PWR_EN);
-    // hl_hal_gpio_init(GPIO_ALL_POWER);
+    // 设置I2S为高阻抗
+    hl_hal_gpio_init(I2S1_MCLK);
+    hl_hal_gpio_init(I2S1_SCLK);
+    hl_hal_gpio_init(I2S1_LCLK);
+    hl_hal_gpio_init(I2S1_DTATE);
+    hl_hal_gpio_init(I2S0_SCLK);
+    hl_hal_gpio_init(I2S0_LCLK);
+    hl_hal_gpio_init(I2S0_DTATE);
 
-    // hl_hal_gpio_high(GPIO_EMMC_PWR_EN);
-    // hl_hal_gpio_high(GPIO_PWR_EN);
+    rt_thread_mdelay(80);
+
+    hl_hal_gpio_init(GPIO_DC3V3_EN);
     hl_hal_gpio_high(GPIO_DC3V3_EN);
-    // hl_hal_gpio_high(GPIO_2831P_EN);
-    // hl_hal_gpio_high(GPIO_RF_PWR_EN);
-    // hl_hal_gpio_high(GPIO_ALL_POWER);
+
+    rt_thread_mdelay(10);
+
+    // 配置I2S(codec上电之后)
+#ifdef RT_USING_I2STDM1
+    i2s1_output_iomux_config();
+#endif
+#ifdef RT_USING_I2STDM
+    i2s0_input_iomux_config();
+#endif
+
     rt_kprintf("A6902 Tx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #else
+    // 设置I2S为高阻抗
+    hl_hal_gpio_init(I2S1_MCLK);
+    hl_hal_gpio_init(I2S1_SCLK);
+    hl_hal_gpio_init(I2S1_LCLK);
+    hl_hal_gpio_init(I2S1_DTATE);
+    hl_hal_gpio_init(I2S0_SCLK);
+    hl_hal_gpio_init(I2S0_LCLK);
+    hl_hal_gpio_init(I2S0_DTATE);
 
+    rt_thread_mdelay(80);
 
-
-    // hl_hal_gpio_init(GPIO_PWR_EN);
-    // hl_hal_gpio_init(GPIO_RF_PWR_EN);
-    // hl_hal_gpio_init(GPIO_ATS_PWR_EN);
-    // hl_hal_gpio_init(GPIO_AMP_EN);
-    // hl_hal_gpio_init(GPIO_ALL_POWER);
     hl_hal_gpio_init(GPIO_CODEC_EN);
-
-    // hl_hal_gpio_high(GPIO_RF_PWR_EN);
-    // hl_hal_gpio_high(GPIO_ATS_PWR_EN);
-    // hl_hal_gpio_low(GPIO_AMP_EN);
-    // hl_hal_gpio_high(GPIO_ALL_POWER);
     hl_hal_gpio_high(GPIO_CODEC_EN);
+
+    rt_thread_mdelay(10);
+
+    // 配置I2S(codec上电之后)
+#ifdef RT_USING_I2STDM1
+    i2s1_input_iomux_config();
+#endif
+#ifdef RT_USING_I2STDM
+    i2s0_output_iomux_config();
+#endif
+
 #if (A6902_RX_HL_EN || A6902_RX_HL_CH)
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);
 #endif

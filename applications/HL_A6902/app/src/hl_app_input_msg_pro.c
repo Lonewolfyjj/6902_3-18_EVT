@@ -81,7 +81,9 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
+        case HL_KEY_EVENT_DOUBLE:
             rf_bypass_state.chn   = tx_info.rf_chn;
+            // 支持手机外录设置状态为2
             rf_bypass_state.state = 2;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
             break;
@@ -96,9 +98,6 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
                 // hl_app_mng_powerOn();
                 tx_info.on_off_flag = 1;
             }
-            break;
-
-        case HL_KEY_EVENT_DOUBLE:
             break;
 
         case HL_KEY_EVENT_RELEASE:
@@ -125,6 +124,7 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_PRESS:
             break;
         case HL_KEY_EVENT_SHORT:
+        case HL_KEY_EVENT_DOUBLE:
             if (tx_info.denoise_flag == 0) {
                 denoise_switch       = HL_SWITCH_ON;
                 tx_info.denoise_flag = 1;
@@ -142,8 +142,6 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
             channel = 0;
             hl_mod_telink_ioctl(HL_RF_PAIR_START_CMD, &channel, sizeof(channel));
             LOG_D("send pair cmd!!! \r\n");
-            break;
-        case HL_KEY_EVENT_DOUBLE:
             break;
         case HL_KEY_EVENT_RELEASE:
             break;
@@ -169,6 +167,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             break;
 
         case HL_KEY_EVENT_SHORT:
+        case HL_KEY_EVENT_DOUBLE:
             if (tx_info.mstorage_plug == 1) {
                 LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
                 break;
@@ -210,9 +209,6 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
             break;
 
-        case HL_KEY_EVENT_DOUBLE:
-            break;
-
         case HL_KEY_EVENT_RELEASE:
             break;
 
@@ -228,10 +224,10 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.usb_plug      = 0;
         tx_info.uac_link_flag = 0;
-        if (tx_info.on_off_flag == 1) {
+        if ((tx_info.on_off_flag == 1)&&(tx_info.mstorage_plug == 1)) {
             hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
         }
-        tx_info.mstorage_plug = 0;        
+        tx_info.mstorage_plug = 0;
     } else {
         tx_info.usb_plug = 1;
     }
@@ -398,7 +394,6 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     usb_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
     hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
-    
 }
 
 /// 监听口状态处理

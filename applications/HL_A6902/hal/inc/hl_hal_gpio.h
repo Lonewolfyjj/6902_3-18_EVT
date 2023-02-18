@@ -65,6 +65,15 @@ typedef enum _hl_gpio_port_e
     /// (录制灯开关 0：ON 1： OFF)
     GPIO_REC_LED_EN,
 
+    /// (I2S引脚设置为高阻抗模式)
+    I2S1_MCLK,
+    I2S1_SCLK,
+    I2S1_LCLK,
+    I2S1_DTATE,
+    I2S0_SCLK,
+    I2S0_LCLK,
+    I2S0_DTATE,
+
     // GPIO 总数
     USER_GPIO_COUNT
 } hl_gpio_pin_e;
@@ -122,6 +131,15 @@ typedef enum _hl_gpio_port_e
     GPIO_OLED_SWIRE,
     /// (电源总开关，外部下拉，高电平有效)
     GPIO_ALL_POWER,
+
+    /// (I2S引脚设置为高阻抗模式)
+    I2S1_MCLK,
+    I2S1_SCLK,
+    I2S1_LCLK,
+    I2S1_DTATE,
+    I2S0_SCLK,
+    I2S0_LCLK,
+    I2S0_DTATE,
 
     // GPIO 总数
     USER_GPIO_COUNT

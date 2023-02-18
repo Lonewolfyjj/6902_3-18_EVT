@@ -22,7 +22,8 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <stdint.h>
-#include "hl_util_iap2.h"
+#include "hl_util_apple.h"
+#include "hl_util_apple_type.h"
 #include "hl_config.h"
 #include "stdbool.h"
 
@@ -58,16 +59,20 @@ typedef enum _hl_mod_appleauth_ctrl_ind
 
 typedef struct
 {
+    /// 线程初始化状态标志
+    uint8_t init_flag;
+    /// 线程启动状态标志
+    uint8_t start_flag;
     /// 线程运行状态标志
     rt_bool_t iap2_thread_flag;
     /// 线程运行状态标志
     rt_bool_t eap_thread_flag;
     /// APP层消息队列
     rt_mq_t* app_msq;
-    /// iap2 util功能句柄
-    st_iap2_protocol_p iap2_handle;
-    /// iap2 util功能句柄
-    func_handle iap2_func_handle;
+    /// apple功能句柄
+    hl_util_apple_t apple;
+    /// apple注册函数句柄
+    apple_func_handle func_handle;
     /// iap2 IIC chips
     struct rt_i2c_bus_device* mfi_chip_iic;
 } hl_mod_apple_auth_t;
