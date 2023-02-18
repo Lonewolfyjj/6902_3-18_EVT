@@ -43,7 +43,8 @@ typedef enum _hl_date_choose_t
     HL_DATE_MONTH,
     HL_DATE_DAY,
     HL_DATE_HOUR,
-    HL_DATE_MIN
+    HL_DATE_MIN,
+    HL_DATE_SEC
 }hl_date_choose_t;
 
 /// @brief 命令类型枚举
@@ -73,6 +74,8 @@ typedef struct _hl_lvgl_date_init_t
     int8_t hour;
     /// @brief 分钟
     int8_t min;
+    /// @brief 秒钟
+    int8_t sec;
     /// @brief 回调函数
     hl_date_event_cb func_cb;
 }hl_lvgl_date_init_t;
