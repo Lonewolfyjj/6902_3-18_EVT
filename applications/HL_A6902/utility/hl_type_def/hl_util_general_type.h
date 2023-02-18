@@ -19,12 +19,13 @@
  * <tr><td>2022-11-14     <td>v1.0     <td>luzhanghao     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __HL_UTIL_GENERAL_TYPE__
 #define __HL_UTIL_GENERAL_TYPE__
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 /* typedef -------------------------------------------------------------------*/
 #ifndef HL_ENUM8
 #define HL_ENUM8(EnumName) \
@@ -43,7 +44,7 @@ typedef enum _hl_switch_e
     /// 关闭
     HL_SWITCH_OFF = 0x00,
     /// 打开
-    HL_SWITCH_ON,  
+    HL_SWITCH_ON,
 } HL_ENUM8(hl_switch_e);
 
 typedef enum _hl_rf_state_e
@@ -84,6 +85,23 @@ typedef enum _hl_key_event_e
     /// 长按后释放
     HL_KEY_EVENT_RELEASE,
 } HL_ENUM8(hl_key_event_e);
+
+typedef struct _hl_audio_time_t_
+{
+    /// 年
+    uint16_t year;
+    /// 月
+    uint8_t month;
+    /// 日
+    uint8_t day;
+    /// 时
+    uint8_t hour;
+    /// 分
+    uint8_t minute;
+    /// 秒
+    uint8_t second;
+} __attribute__((packed, aligned(1))) hl_audio_time_t;
+
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

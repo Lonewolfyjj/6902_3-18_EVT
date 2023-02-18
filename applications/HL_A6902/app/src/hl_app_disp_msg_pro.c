@@ -154,10 +154,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_bypass_state_t      rf_bypass_state = { 0 };
     uint32_t                  ptr;
     hl_display_sound_module_e sound_module;
+    hl_audio_time_t           time;
+    hl_display_systime_s      display_time;
 
     switch (p_msg->cmd) {
         case RESTORE_SET_SWITCH_IND:
             // TBD: 恢复NVRAM的值并重启？
+            rf_bypass_chn = HL_RF_DOUBLE_CHANNEL;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_REFACTORY_CMD, &rf_bypass_chn, sizeof(rf_bypass_chn));
             LOG_D("RESTORE_SET_SWITCH_IND\r\n");
             break;
         case AUTO_RECORD_SWITCH_IND:
@@ -252,6 +256,9 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case VOICE_MODULE_VAL_IND:
             // ？？？
+            rf_bypass_value.chn = HL_RF_DOUBLE_CHANNEL;
+            rf_bypass_value.val = (uint8_t)p_msg->param.u32_param;
+            hl_mod_telink_ioctl(HL_RF_BYPASS_SOUND_EFFECT_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
             LOG_D("VOICE_MODULE_VAL_IND\r\n");
             break;
         case LOW_CUT_VAL_IND:
@@ -269,16 +276,16 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
-            ptr = p_msg->param.u32_param;            
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);   
-            rx_info.cam_gain_l = ptr;        
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
+            rx_info.cam_gain_l = ptr;
             hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
             ptr = p_msg->param.u32_param;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_r =  ptr;            
+            rx_info.cam_gain_r = ptr;
             hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
@@ -312,11 +319,11 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
             // TBD: SAFETRACK设置相机口音量
-            ptr =  p_msg->param.u32_param;
+            ptr = p_msg->param.u32_param;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_l =  ptr;
-            rx_info.cam_gain_r =  ptr;
+            rx_info.cam_gain_l = ptr;
+            rx_info.cam_gain_r = ptr;
             hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
             hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
             LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
@@ -358,6 +365,19 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case UPGRADE_SETTING_SWITCH_IND:
             // 开启升级的相关设置
             LOG_D("UPGRADE_SETTING_SWITCH_IND\r\n");
+            break;
+        case SYSTIME_GET_VAL_IND:
+
+            hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &time, sizeof(time));
+            display_time.year  = time.year;
+            display_time.month = time.month;
+            display_time.day   = time.day;
+            display_time.hour  = time.hour;
+            display_time.min   = time.minute;
+
+            hl_mod_display_io_ctrl(SYSTIME_SET_VAL_CMD, &display_time, sizeof(display_time));
+            
+            LOG_D("SYSTIME_GET_VAL_IND\r\n");
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

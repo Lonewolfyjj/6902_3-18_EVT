@@ -33,7 +33,7 @@
 
 #define AUTO_GOTO_HOME_TIMER 5000
 
-#define AUTO_SILDER_TRG_TIME 1000
+#define AUTO_SILDER_TRG_TIME 50
 
 /* Includes ------------------------------------------------------------------*/
 /* typedef -------------------------------------------------------------------*/

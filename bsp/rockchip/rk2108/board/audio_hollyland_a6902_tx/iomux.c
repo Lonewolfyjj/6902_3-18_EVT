@@ -133,12 +133,14 @@ void rt_hw_iomux_config(void)
     i2c1_m1_iomux_config();
 
     i2c2_m2_iomux_config();
-#ifdef RT_USING_I2STDM1
-    i2s1_output_iomux_config();
-#endif
-#ifdef RT_USING_I2STDM
-    i2s0_input_iomux_config();
-#endif
+
+    // 配置I2S(codec上电之后)
+// #ifdef RT_USING_I2STDM1
+//     i2s1_output_iomux_config();
+// #endif
+// #ifdef RT_USING_I2STDM
+//     i2s0_input_iomux_config();
+// #endif
 #ifdef RT_USING_AUDIOPWM
     audio_iomux_config();
 #endif

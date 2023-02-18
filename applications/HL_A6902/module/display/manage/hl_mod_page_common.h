@@ -169,6 +169,8 @@ typedef struct _hl_display_screen_s
     // 显示系统当前状态信息
     hl_display_status sys_status;
     hl_display_systime_s systime;
+    /// @brief  默认屏幕亮度
+    uint8_t scr_bl;
 }hl_display_screen_s;
 
 // 下发信息变更标志,如果多个页面都存在这个状态，那么不适用这个flag判断参数是否变更

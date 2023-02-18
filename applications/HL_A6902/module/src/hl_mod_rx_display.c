@@ -101,12 +101,20 @@ static void hl_mod_display_get_sn_version(void)
 
 static device_pose_t hl_mod_device_pose_val(void)
 {
-    euler_angle_t pose;
+    euler_angle_t        pose;
+    static device_pose_t last_pos_dir;
+
     hl_drv_qma6100p_io_ctrl(QMA6100_GET_EULWER_ANGLE, (void*)&pose, sizeof(euler_angle_t));
-    if (pose.z > 0) {
+    // LOG_D("pos%d", pose.z);
+
+    if (pose.z > 4500) {
+        last_pos_dir = DEVICE_REVERSE_POSE;
         return DEVICE_REVERSE_POSE;
-    } else {
+    } else if (pose.z < -4500) {
+        last_pos_dir = DEVICE_FORWARD_POSE;
         return DEVICE_FORWARD_POSE;
+    } else {
+        return last_pos_dir;
     }
 }
 
@@ -174,7 +182,10 @@ static void hl_mod_screen_rot_scan(void)
     if (hl_util_timeout_judge(&rot_scan_in)) {
 
         if (hl_mod_device_dir_get(&now_dir)) {
-
+            // 放入盒子内时，只会有一个方向
+            if (BOX_CHARGE_RX_NOT != data_ptr->in_box_state) {
+                now_dir = DEVICE_FORWARD_POSE;
+            }
             screen_ptr = lv_disp_get_default();
             if (now_dir == DEVICE_FORWARD_POSE) {
                 LOG_D("rot=%d \n", now_dir);
@@ -468,6 +479,16 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             uint8_t data                            = *(char*)ptr;
             data_p->sys_status.apple_auth_flag = data;
             flag->sys_status.apple_auth_flag   = 1;
+        } break;
+        case SYSTIME_SET_VAL_CMD: {
+            hl_display_systime_s* data = (hl_display_systime_s*)ptr;
+            data_p->systime.year       = data->year;
+            data_p->systime.month      = data->month;
+            data_p->systime.hour       = data->hour;
+            data_p->systime.day        = data->day;
+            data_p->systime.min        = data->min;
+
+            flag->systime = 1;
         } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
