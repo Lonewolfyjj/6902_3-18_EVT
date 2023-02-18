@@ -176,22 +176,6 @@ typedef enum _hl_stream_mode_e
     HL_STREAM_CAP2PLAY_CAP2UAC,
 } HL_ENUM8(hl_stream_mode_e);
 
-#pragma pack(1)
-typedef struct audio_time_t
-{ 
-    /// 年
-    uint16_t year;
-    /// 月  
-    uint8_t month; 
-    /// 日  
-    uint8_t day; 
-    /// 时  
-    uint8_t hour;   
-    /// 分  
-    uint8_t minute;   
-    /// 秒  
-    uint8_t second;  
-} audio_time;
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/

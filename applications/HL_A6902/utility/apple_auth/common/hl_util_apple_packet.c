@@ -1,5 +1,4 @@
-#include "hl_util_iap2_packet.h"
-// #include "rtthread.h"
+#include "hl_util_apple_packet.h"
 
 uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 {
@@ -16,7 +15,6 @@ uint8_t hl_checksum_calculation(uint8_t* buffer, uint16_t start, uint16_t len)
 int hl_iap2_detect_packet_encode(uint8_t* write_data_addr)
 {
     if (write_data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -43,6 +41,15 @@ int hl_iap2_detect_packet_decode(uint8_t* read_data_addr)
     return result;
 }
 
+uint16_t hl_apple_get_packet_len(st_iap2_packet_header_t* packet_header)
+{
+    if (NULL == packet_header) {
+        return -1;
+    }
+
+    return packet_header->PacketLength;
+}
+
 int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_t packet_len, uint8_t ctrl_byte,
                                  st_packet_header_arg header_arg)
 {
@@ -56,7 +63,7 @@ int hl_iap2_packet_header_encode(st_iap2_packet_header_t* packet_header, uint16_
     packet_header->PacketSeqNum   = header_arg.ack_num + 1;
     packet_header->PacketAckNum   = header_arg.seq_num;
     packet_header->SessionIdentif = header_arg.session_id;
-    packet_header->HeaderCksum    = hl_checksum_calculation(packet_header, 0, PACKET_HEADER_SIZE);
+    packet_header->HeaderCksum    = hl_checksum_calculation((uint8_t*)packet_header, 0, PACKET_HEADER_SIZE);
 
     return PACKET_HEADER_SIZE + 1;
 }
@@ -75,7 +82,8 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 
     if (!(ptr_header->ControlByte & ctrl_byte)) {
         return -2;
-    } else if (ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
+    } else if ((ptr_header->PacketAckNum != header_arg->ack_num)
+               && ptr_header->PacketAckNum != (header_arg->ack_num + 1)) {
         return -3;
     } else {
         *packet_len            = ptr_header->PacketLength;
@@ -90,7 +98,6 @@ int hl_iap2_packet_header_decode(uint8_t* packet_header, uint16_t* packet_len, u
 int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, uint8_t payload_len)
 {
     if (packet_payload == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -104,6 +111,9 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
     packet_payload->SessionId1                = LINK_SESSION1_ID;
     packet_payload->SessionType1              = LINK_SESSION1_TYPE;
     packet_payload->SessionVer1               = LINK_SESSION1_VER;
+    packet_payload->SessionId2                = LINK_SESSION2_ID;
+    packet_payload->SessionType2              = LINK_SESSION2_TYPE;
+    packet_payload->SessionVer2               = LINK_SESSION2_VER;
     packet_payload->PayloadCksum              = hl_checksum_calculation(packet_payload, 0, payload_len - 1);
 
     return payload_len;
@@ -112,7 +122,6 @@ int hl_iap2_packet_sync_payload_encode(st_iap2_sync_payload_t* packet_payload, u
 int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -126,7 +135,6 @@ int hl_iap2_ctrl_packet_get_message_id(uint8_t* data_addr)
 int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -137,7 +145,6 @@ int hl_iap2_ctrl_packet_get_param_len(uint8_t* data_addr)
 int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 {
     if (data_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -148,7 +155,6 @@ int hl_iap2_ctrl_packet_get_param_id(uint8_t* data_addr)
 int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t message_len, uint16_t message_id)
 {
     if (packet_payload == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -162,7 +168,6 @@ int hl_iap2_ctrl_payload_encode(st_iap2_ctrl_payload_t* packet_payload, uint16_t
 uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_t param_id, uint8_t* write_data)
 {
     if (write_addr == NULL) {
-        // printf("NULL Point\n");
         return -1;
     }
 
@@ -174,4 +179,25 @@ uint16_t hl_iap2_ctrl_add_param(uint8_t* write_addr, uint16_t param_len, uint16_
     }
 
     return param_len;
+}
+
+uint16_t hl_eap_payload_decode(st_iap2_ea_packet_t* ea_packet, uint16_t easession_id, uint8_t* data_addr)
+{
+    if (NULL == ea_packet) {
+        return -1;
+    }
+
+    uint16_t data_len = 0;
+
+    data_len = hl_apple_get_packet_len(&ea_packet->packet_header);
+
+    data_len = data_len - PACKET_HEADER_SIZE - 4;
+
+    if (ea_packet->ea_payload.EASessionIdentifier != easession_id) {
+        return -2;
+    }
+
+    memcpy(data_addr, ea_packet->ea_payload.EASessionData, data_len);
+
+    return data_len;
 }
