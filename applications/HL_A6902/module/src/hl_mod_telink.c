@@ -169,11 +169,11 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_RF_GET_LOCAL_MAC_IND:
-            LOG_I("\n\n[Telink Local MAC Addr]:");
+            rt_kprintf("\n\n[Telink Local MAC Addr]:");
             for (int i = 0; i < 6; i++) {
-                LOG_I("%02X ", hup_frame.data_addr[i]);
+                rt_kprintf("%02X ", hup_frame.data_addr[i]);
             }
-            LOG_I("\n\n");
+            rt_kprintf("\n\n");
             memcpy(s_rf_info.local_mac, (uint8_t*)hup_frame.data_addr, 6);
             app_msg_t.len       = sizeof(s_rf_info.local_mac);
             app_msg_t.param.ptr = s_rf_info.local_mac;
@@ -190,14 +190,14 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 #else
             memcpy(s_rf_info.remote_mac.tx1_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx1_mac, 6);
             memcpy(s_rf_info.remote_mac.tx2_mac, ((hl_rf_remote_mac_t*)hup_frame.data_addr)->tx2_mac, 6);
-            LOG_I("\n\nTelink Remote MAC Addr:\n[TX_L]: ");
+            rt_kprintf("\n\nTelink Remote MAC Addr:\n[TX_L]: ");
             for (int i = 0; i < 12; i++) {
-                LOG_I("%02X ", hup_frame.data_addr[i]);
+                rt_kprintf("%02X ", hup_frame.data_addr[i]);
                 if (i == 5) {
-                    LOG_I("\n[TX_R]: ");
+                    rt_kprintf("\n[TX_R]: ");
                 }
             }
-            LOG_I("\n\n\n");
+            rt_kprintf("\n\n\n");
 #endif
             app_msg_t.len       = sizeof(s_rf_info.remote_mac);
             app_msg_t.param.ptr = (uint8_t*)&s_rf_info.remote_mac;
@@ -762,9 +762,9 @@ void telink_set_remote_mac(int argc, char** argv)
 
     LOG_I("\nSet MAC:");
     for (int i = 0; i < 6; i++) {
-        LOG_I("%02X ", info.mac[i]);
+        rt_kprintf("%02X ", info.mac[i]);
     }
-    LOG_I("\n");
+    rt_kprintf("\n");
     hl_mod_telink_ioctl(HL_RF_SET_REMOTE_MAC_CMD, (uint8_t*)&info, sizeof(info));
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
