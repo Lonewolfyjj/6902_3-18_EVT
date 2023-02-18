@@ -122,6 +122,17 @@ typedef enum _play_uac_state_e
     HL_PLAY_UAC_ERR,
 } HL_ENUM8(play_uac_state_e);
 
+/// RTC设备枚举
+typedef enum _rtc_device_e
+{
+    /// NULL device
+    HL_RTC_NULL = 0,
+    /// PCF85063
+    HL_RTC_PCF85063,
+    /// INS5830B
+    HL_RTC_INS5830B,
+} HL_ENUM8(rtc_device_e);
+
 /* define --------------------------------------------------------------------*/
 #define HL_MOD_AUDIO_RATE (48000)
 /// 音频接口传输的是32bit数据，但实际处理的是24bit数据
@@ -159,9 +170,9 @@ static uint32_t s_record_bypass_size = 0;
 static uint32_t                  s_vu_en            = 0;
 #endif
 
-// 0 pcf  ;  1 ins
-static uint8_t now_rtc_type = 0;
-///  app层消息队列
+/// 0 pcf  ;  1 ins
+static rtc_device_e now_rtc_type = HL_RTC_NULL;
+/// app层消息队列
 rt_mq_t s_audio_to_app_mq = RT_NULL;
 /// 当前音频流模式
 volatile static hl_stream_mode_e s_stream_mode_cur = HL_STREAM_IDLE;
@@ -258,6 +269,39 @@ static int hl_mod_audio_system_rtc_set_default(void)
     return RT_EOK;
 }
 
+static void hl_mod_audio_rtc_init(void)
+{
+    now_rtc_type = HL_RTC_NULL;
+
+    if (hl_drv_rtc_pcf85063_init() == HL_SUCCESS) {
+        now_rtc_type = HL_RTC_PCF85063;
+        LOG_D("hl_drv_rtc_pcf85063_init OK");        
+    } else if (hl_drv_ins5830b_init() == HL_SUCCESS) {
+            now_rtc_type = HL_RTC_INS5830B;
+            LOG_D("hl_drv_ins5830b_init OK");
+        } else {
+                now_rtc_type = HL_RTC_NULL;
+                LOG_D("!!!!RTC_INIT ERROR");
+            } 
+}
+static rt_err_t hl_mod_audio_rtc(uint8_t cmd, void* ptr, uint16_t len)
+{
+    rt_err_t ret = RT_ERROR;
+
+    switch(now_rtc_type) {
+        case HL_RTC_PCF85063:
+            ret = hl_drv_rtc_pcf85063_io_ctrl(cmd, ptr, len);
+            break;
+        case HL_RTC_INS5830B:
+            ret = hl_drv_ins5830b_io_ctrl(cmd, ptr, len);
+            break;
+        default:
+            LOG_E("NULL RTC");
+            break;
+    }
+    return ret;
+}
+
 static int hl_mod_audio_system_rtc_set(void)
 {
     rtc_time time1;
@@ -266,12 +310,7 @@ static int hl_mod_audio_system_rtc_set(void)
 
     memset(&time1, 0, sizeof(rtc_time));
 
-    if (!now_rtc_type) {
-        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
-    } else {
-        ret = hl_drv_ins5830b_io_ctrl(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
-    }
-
+    ret = hl_mod_audio_rtc(RTC_GET_TIME, (void*)&time1, sizeof(rtc_time));
     if (ret != RT_EOK) {
         rt_kprintf("Set RTC device failed\n");
         hl_mod_audio_system_rtc_set_default();
@@ -311,11 +350,7 @@ static void hl_mod_audio_rtc_get(char* timer_name)
     int ret;
     memset(&time, 0, sizeof(rtc_time));
 
-    if (!now_rtc_type) {
-        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
-    } else {
-        ret = hl_drv_ins5830b_io_ctrl(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
-    }
+    ret = hl_mod_audio_rtc(RTC_GET_TIME, (void*)&time, sizeof(rtc_time));
 
     /* 时、分、秒 的校准 */
     time.hour   = (time.hour & 0x3f) % 24;
@@ -357,11 +392,7 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     timer->minute = time.minute;
     timer->second = time.second;
 
-    if (!now_rtc_type) {
-        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-    } else {
-        ret = hl_drv_ins5830b_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-    }
+    ret = hl_mod_audio_rtc(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
 
     rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour,
                time.minute, time.second);
@@ -390,13 +421,11 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
     time.minute = (time.minute & 0x7f) % 60;
     time.second = (time.second & 0x7f) % 60;
 
-    if (!now_rtc_type) {
-        ret = hl_drv_rtc_pcf85063_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-    } else {
-        ret = hl_drv_ins5830b_io_ctrl(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-    }
+    ret = hl_mod_audio_rtc(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
 
     LOG_I("set time 20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month, time.day, time.hour, time.minute, time.second);
+
+    hl_mod_audio_system_rtc_set();
 }
 
 #if HL_IS_TX_DEVICE()
@@ -817,8 +846,13 @@ err0:
 // 录制内存释放
 static rt_err_t hl_mod_audio_record_param_deconfig(void)
 {
-    rt_ringbuffer_destroy(record_info.record_bypass_rb);
-    rt_ringbuffer_destroy(record_info.record_after_rb);
+    if (record_info.record_bypass_rb != NULL) {
+        rt_ringbuffer_destroy(record_info.record_bypass_rb);
+    }
+    if (record_info.record_after_rb != NULL) {
+        rt_ringbuffer_destroy(record_info.record_after_rb);
+    }    
+    
     return RT_EOK;
 }
 
@@ -1982,16 +2016,9 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #else
 #endif
 
-    if (hl_drv_rtc_pcf85063_init() == RT_EOK) {
-        LOG_D("hl_drv_rtc_pcf85063_init OK");
-        now_rtc_type = 0;
-    } else if (hl_drv_ins5830b_init() == RT_EOK) {
-        now_rtc_type = 1;
-        LOG_D("hl_drv_ins5830b_init OK");
-    } else {
-        LOG_D("!!!!RTC_INIT ERROR");
-    }
+    rt_usbd_msc_switch(true);
 
+    hl_mod_audio_rtc_init();
     hl_mod_audio_system_rtc_set();
 
     ret = hl_mod_audio_param_config();
@@ -2071,7 +2098,7 @@ uint8_t hl_mod_audio_deinit(void)
 #if HL_IS_TX_DEVICE()
     hl_mod_audio_record_switch(0);
 #endif
-
+    
     // hl_mod_audio_codec_deconfig(&cap_info);
     // hl_mod_audio_codec_deconfig(&play_info);
 
@@ -2247,7 +2274,20 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
             hl_mod_audio_dfs_sd();
-            break;              
+            break;    
+        case HL_AUDIO_MSTORAGE_SWITCH_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_MSTORAGE_SWITCH_CMD parem error");
+                return -1;
+            }
+            if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on", __FUNCTION__, __LINE__);
+            } else {
+                rt_usbd_msc_switch(false);
+                LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
+            }
+            break;           
 
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!! \r\n", cmd);
@@ -2333,8 +2373,11 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             rt_usbd_msc_disable();
 #endif
             break;
-        case HL_AUDIO_RTC_TIME_CMD:
+        case HL_AUDIO_GET_RTC_TIME_CMD:
             hl_mod_audio_rtc_get_param(ptr);
+            break;
+        case HL_AUDIO_SET_RTC_TIME_CMD:
+            hl_mod_audio_rtc_set_param(ptr);            
             break;
         case HL_AUDIO_SET_CAM_GAIN_L_CMD:
             hl_mod_audio_set_codec_gain((((int*)ptr)[0] - 8), HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_L, HL_CODEC_DEVICE_CAM);
@@ -2366,6 +2409,19 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
             break;  
+        case HL_AUDIO_MSTORAGE_SWITCH_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_MSTORAGE_SWITCH_CMD parem error");
+                return -1;
+            }
+            if (((char*)ptr)[0] != 0) {
+                rt_usbd_msc_switch(true);
+                LOG_I("[%s][line:%d] msc on ", __FUNCTION__, __LINE__);                
+            } else {
+                rt_usbd_msc_switch(false);
+                LOG_I("[%s][line:%d] msc off ", __FUNCTION__, __LINE__);
+            }
+            break;
         default:
             LOG_E("audio_io_ctrl cmd(%d) error!!!", cmd);
             break;
@@ -2429,24 +2485,6 @@ int hl_mod_audio_test(int argc, char** argv)
             }
             hl_mod_audio_io_ctrl(cmd, &u32_data, size);
             break;
-#if HL_IS_TX_DEVICE()
-        case 0x05:
-            hl_mod_audio_rtc_get(NULL);
-            break;
-
-        case 0x06:
-            rt_usbd_msc_disable();  //hl_mod_audio_dfs();
-            break;
-        case 0x07:
-            hl_mod_audio_set_mute(1);
-            break;
-        case 0x08:
-            hl_mod_audio_set_mute(0);
-            break;
-        case 0x09:
-            hl_mod_audio_system_rtc_set();
-            break;
-#endif
         default:
             LOG_E("Bad <size> value '%s'", argv[3]);
             break;

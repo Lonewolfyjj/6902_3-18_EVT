@@ -59,6 +59,14 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_ATS_RESET
     {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
     {GPIO1_A5,  PIN_MODE_OUTPUT},           // GPIO_REC_LED_EN
+
+    {GPIO0_A4,  PIN_MODE_INPUT},           // I2S1_MCLK
+    {GPIO0_A6,  PIN_MODE_INPUT},           // I2S1_SCLK
+    {GPIO0_A7,  PIN_MODE_INPUT},           // I2S1_LCLK
+    {GPIO0_B0,  PIN_MODE_INPUT},           // I2S1_DTATE
+    {GPIO0_D3,  PIN_MODE_INPUT},           // I2S0_SCLK
+    {GPIO0_D4,  PIN_MODE_INPUT},           // I2S0_LCLK
+    {GPIO0_D5,  PIN_MODE_INPUT},           // I2S0_DTATE
 };
 #else
 // RX
@@ -87,6 +95,14 @@ static const hl_gpio_config_t gpio_config_table[USER_GPIO_COUNT] =
     {GPIO1_C7,  PIN_MODE_OUTPUT},           // GPIO_OLED_DCX
     {GPIO0_D5,  PIN_MODE_OUTPUT},           // GPIO_OLED_SWIRE
     {GPIO0_D7,  PIN_MODE_OUTPUT},           // GPIO_ALL_POWER
+
+    {GPIO0_A4,  PIN_MODE_INPUT},           // I2S1_MCLK
+    {GPIO0_A0,  PIN_MODE_INPUT},           // I2S1_SCLK
+    {GPIO0_A1,  PIN_MODE_INPUT},           // I2S1_LCLK
+    {GPIO0_A2,  PIN_MODE_INPUT},           // I2S1_DTATE
+    {GPIO0_D3,  PIN_MODE_INPUT},           // I2S0_SCLK
+    {GPIO0_D4,  PIN_MODE_INPUT},           // I2S0_LCLK
+    {GPIO0_D6,  PIN_MODE_INPUT},           // I2S0_DTATE
 };
 #endif
 
