@@ -157,8 +157,8 @@ static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const vo
     lv_obj_t* img = lv_img_create(align_obj);
     lv_img_set_src(img, src);
     lv_obj_align(img, align, x_offset, y_offset);
-    lv_img_set_zoom(img, 192);
-    lv_obj_set_height(img,16);
+    lv_img_set_zoom(img, 200);
+    lv_obj_set_height(img,18);
     lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
     return img;
 }
@@ -568,5 +568,5 @@ void hl_mod_top_init(void* init_data)
 
     bat_icon  = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar   = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
-    bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -3);
+    bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -2);
 }

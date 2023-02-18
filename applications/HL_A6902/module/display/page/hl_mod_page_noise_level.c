@@ -74,7 +74,11 @@ static void hl_mod_page_setup(void)
 
 static void hl_mod_page_exit(void)
 {
-    lv_menu_exit();
+    hl_lvgl_barset_ioctl_t ptr;
+
+    ptr.barset_value = HL_EXTI;
+
+    hl_mod_barset_ioctl(&ptr);
 }
 
 static void save_before_back(void)

@@ -36,6 +36,8 @@
 
 static hl_drv_usb_vendor_class_com_t* handle = NULL;
 
+static volatile rt_size_t read_len = 0;
+
 /* Private function(only *.c)  -----------------------------------------------*/
 
 static rt_err_t _hl_drv_usb_vendor_class_com_rx_ind(rt_device_t dev, rt_size_t size)
@@ -43,8 +45,10 @@ static rt_err_t _hl_drv_usb_vendor_class_com_rx_ind(rt_device_t dev, rt_size_t s
 
     // rt_kprintf("_hl_drv_usb_vendor_class_com_rx_ind size: %d \n", size);
     if (size) {
+        read_len = size;
         /*release the sem */
         rt_sem_release(handle->rx_notice);
+        // rt_kprintf("USB Free Sem...\n");
     }
 
     return RT_EOK;
@@ -94,15 +98,25 @@ uint8_t hl_drv_usb_vendor_class_com_init()
 
 uint8_t hl_drv_usb_vendor_class_com_read(uint8_t* data, uint8_t data_len, uint16_t timeout)
 {
+    rt_size_t len = 0;
+
     int size = rt_device_read(handle->device, 0, data, data_len);
+    // rt_kprintf("USB Wait Sem...\n");
     int ret  = rt_sem_take(handle->rx_notice, timeout);
+    len      = read_len;
+    read_len = 0;
+    // rt_kprintf("USB Read Data = %d|%d\r\n", len, ret);
+    // for (uint8_t a = 0; a < len; a++) {
+    //     rt_kprintf("%02X ", data[a]);
+    // }
+    // rt_kprintf("\n");
 
     if (ret != 0) {
-        rt_kprintf("read data error = %d\r\n", data_len);
+        // rt_kprintf("read data error = %d\r\n", data_len);
         return 0;
     }
 
-    return (uint8_t)size;
+    return (uint8_t)len;
 }
 
 uint8_t hl_drv_usb_vendor_class_com_ioctl(uint8_t cmd, uint8_t* data, uint16_t len)

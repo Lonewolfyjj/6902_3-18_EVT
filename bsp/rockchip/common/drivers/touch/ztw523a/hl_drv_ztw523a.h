@@ -156,6 +156,7 @@ struct _ts_zinitix_point_info touch_info;
 
 rt_err_t hl_drv_ztw523a_dev_read_info(struct ztw523a_ts_event* touch_pos);
 int hl_drv_ztw523a_botton_status(void);
+rt_err_t hl_drv_ztw523a_dev_check_reg();
 // void Tp_Init(void);
 // void tpd_touchinfo(void);
 

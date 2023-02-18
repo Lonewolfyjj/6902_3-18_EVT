@@ -44,6 +44,7 @@ typedef struct _hl_s_rf_info_t
     hl_rf_version_t        version;
     hl_rf_pair_info_t      mac;
     hl_rf_rssi_t           rssi;
+    hl_rf_bypass_time_t    time;
     hl_rf_bypass_version_t remote_version;
     hl_rf_bypass_state_t   mute;
     hl_rf_bypass_state_t   denoise;
@@ -58,6 +59,7 @@ typedef struct _hl_s_rf_info_t
     hl_rf_bypass_value_t   tx_gain;
     hl_rf_bypass_value_t   battery;
     hl_rf_bypass_value_t   auto_poweroff;
+    hl_rf_bypass_value_t   sound_effect;
 } hl_rf_info_t;
 
 typedef struct
@@ -257,6 +259,7 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr   = (uint8_t*)&s_rf_info.battery;
             break;
 
+        case HL_RF_BYPASS_REFACTORY_IND:
         case HL_RF_BYPASS_FORMAT_DISK_IND:
             app_msg_t.len             = sizeof(uint32_t);
             app_msg_t.param.u32_param = (uint32_t)hup_frame.data_addr[0];
@@ -303,6 +306,19 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             s_rf_info.tx_gain.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
             app_msg_t.len         = sizeof(s_rf_info.tx_gain);
             app_msg_t.param.ptr   = (uint8_t*)&s_rf_info.tx_gain;
+            break;
+
+        case HL_RF_BYPASS_SOUND_EFFECT_IND:
+            s_rf_info.sound_effect.chn = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->chn;
+            s_rf_info.sound_effect.val = ((hl_rf_bypass_value_t*)hup_frame.data_addr)->val;
+            app_msg_t.len              = sizeof(s_rf_info.sound_effect);
+            app_msg_t.param.ptr        = (uint8_t*)&s_rf_info.sound_effect;
+            break;
+
+        case HL_RF_BYPASS_TIME_IND:
+            rt_memcpy(&s_rf_info.time, (hl_rf_bypass_time_t*)&hup_frame.data_addr, sizeof(hl_rf_bypass_time_t));
+            app_msg_t.len       = sizeof(s_rf_info.time);
+            app_msg_t.param.ptr = (uint8_t*)&s_rf_info.time;
             break;
 
         default:
@@ -494,8 +510,12 @@ static rt_err_t _hl_mod_telink_serial_deinit(void)
 uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
 {
     if (NULL == input_msq) {
-        LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, input_msq);
+        LOG_E("[%s][line:%d]Input_Msq is NULL!!! \r\n", __FUNCTION__, __LINE__, input_msq);
         return 1;
+    }
+    if (s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Telink Inited\r\n", __FUNCTION__, __LINE__);
+        return 2;
     }
 
     rt_err_t result = RT_EOK;
@@ -536,19 +556,19 @@ uint8_t hl_mod_telink_init(rt_mq_t* input_msq)
     result = _hl_mod_telink_serial_init();
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 3;
     }
 
     // 置模块开关标志位
-    s_telink.module_flag = 1;
+    s_telink.init_flag = 1;
 
     return 0;
 }
 
 uint8_t hl_mod_telink_deinit(void)
 {
-    if (!s_telink.module_flag) {
-        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
+    if (!s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Not Init Telink Module, Deinit ERROR!", __FUNCTION__, __LINE__);
         return 1;
     }
 
@@ -558,7 +578,7 @@ uint8_t hl_mod_telink_deinit(void)
     result = _hl_mod_telink_serial_deinit();
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] result(%d)!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 2;
     }
 
     // 去初始化hup、fifo工具
@@ -566,13 +586,22 @@ uint8_t hl_mod_telink_deinit(void)
     hl_util_fifo_deinit(&s_telink.fifo);
 
     // 置模块开关标志位
-    s_telink.module_flag = 0;
+    s_telink.init_flag = 0;
 
     return 0;
 }
 
 uint8_t hl_mod_telink_start(void)
 {
+    if (s_telink.start_flag) {
+        LOG_E("[%s][line:%d]Telink Started\r\n", __FUNCTION__, __LINE__);
+        return 1;
+    }
+    if (!s_telink.init_flag) {
+        LOG_E("[%s][line:%d]Telink Not Init, Can't Start Telink Mod!\r\n", __FUNCTION__, __LINE__);
+        return 2;
+    }
+
     rt_err_t result = RT_EOK;
 
     // 清空fifo等资源
@@ -583,15 +612,17 @@ uint8_t hl_mod_telink_start(void)
                                           TELINK_THREAD_PRIORITY, TELINK_THREAD_TIMESLICE);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 3;
     }
 
     // 启动Telink线程
     result = rt_thread_startup(s_telink.thread_id);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] cmd(%d) unkown!!! \r\n", __FUNCTION__, __LINE__, result);
-        return 1;
+        return 4;
     }
+
+    s_telink.start_flag = 1;
 
     return 0;
 }
@@ -599,19 +630,20 @@ MSH_CMD_EXPORT(hl_mod_telink_start, telink start cmd);
 
 uint8_t hl_mod_telink_stop(void)
 {
-    rt_err_t result = RT_EOK;
-
-    if (!s_telink.module_flag) {
-        LOG_E("[%s]not init telink module,deinit error!", __FUNCTION__);
+    if (!s_telink.start_flag) {
+        LOG_E("[%s][line:%d]Telink Not Start, Can't Stop Telink Mod!\r\n", __FUNCTION__, __LINE__);
         return 1;
     }
+    rt_err_t result = RT_EOK;
 
     // 脱离Telink线程
     result = rt_thread_delete(s_telink.thread_id);
     if (RT_EOK != result) {
         LOG_E("[%s][line:%d] delete faild!!! \r\n", __FUNCTION__, __LINE__);
-        return 1;
+        return 2;
     }
+
+    s_telink.start_flag = 0;
 
     return 0;
 }

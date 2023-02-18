@@ -1,9 +1,9 @@
 /**
- * @file hl_mod_page_volume_bar_set.h
- * @author liujie (jie.liu@hollyland-tech.com)
- * @brief 
- * @version V1.0
- * @date 2022-12-20
+ * @file hl_util_eap.h
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * @brief 苹果APP的EA Session外部配件协议通信功能具体实现
+ * @version 1.0
+ * @date 2023-02-07
  * 
  * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
  * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
@@ -11,43 +11,52 @@
  * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
  * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
  * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
- * @copyright Copyright (c) 2022 hollyland
+ * @copyright Copyright (c) 2023 hollyland
  * 
  * @par 修改日志:
  * <table>
  * <tr><th>Date           <th>Version  <th>Author         <th>Description
- * <tr><td>2022-12-20     <td>v1.0     <td>liujie     <td>内容
+ * <tr><td>2023-02-07     <td>v1.0     <td>lisonglin     <td>内容
  * </table>
  * 
- */ 
+ */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HL_MOD_PAGE_VOLUME_BAR_SET_H__
-#define _HL_MOD_PAGE_VOLUME_BAR_SET_H__
-
-
-#include "rtdef.h"
-#include "hl_mod_display.h"
-
-#define MAX_LINEOUT_VOLUME 18
-#define MIN_LINEOUT_VOLUME -18
-
-#define AUTO_GOTO_HOME_TIMER 5000
-
-#define AUTO_SILDER_TRG_TIME 50
+#ifndef __HL_UTIL_EAP_H__
+#define __HL_UTIL_EAP_H__
 
 /* Includes ------------------------------------------------------------------*/
+#include "hl_util_eap_type.h"
+#include "hl_util_apple_packet.h"
+
 /* typedef -------------------------------------------------------------------*/
+
 /* define --------------------------------------------------------------------*/
-typedef void (*save_func)(void);
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-void hl_mod_page_volume_init(int16_t volume);
-void hl_mod_page_volume_exit(void);
-void hl_mod_page_volume_update(int16_t volume);
-void hl_mod_page_volume_loop(hl_out_msg_e msg, save_func func,int16_t left, int16_t right);
-int16_t hl_mod_page_volume_get(void);
-uint8_t hl_mod_page_volume_send(hl_out_msg_e msg_cmd,int16_t *get_data);
+
+int hl_util_eap_init(hl_util_apple_p apple);
+
+int hl_util_eap_deinit(hl_util_apple_p apple);
+
+/**
+ * hl_eap_process_oneshot
+ * @brief 接收并处理EA Session消息
+ * @param [in] iap2 iap2句柄
+ * @return int 成功 0 | 失败 非0
+ * @date 2023-02-07
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-07      <td>lisonglin     <td>新建
+ * </table>
+ */
+int hl_util_eap_oneshot(hl_util_apple_p apple);
+
 #endif
 /*
  * EOF
