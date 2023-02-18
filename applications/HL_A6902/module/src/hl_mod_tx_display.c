@@ -42,6 +42,7 @@
 typedef enum _hl_mod_display_state_e
 {
     HL_DISPLAY_IDLE,
+    HL_DISPLAY_IN_BOX,
     HL_DISPLAY_CHARGING,
     HL_DISPLAY_CHARGE_FULL,
     HL_DISPLAY_CHARGE_STOP,
@@ -69,6 +70,7 @@ typedef struct _hl_mod_display_st
     hl_mod_display_state_e display_state_1;
     hl_mod_display_state_e display_state_2;
     hl_led_net_mode        net_mode;
+    hl_led_switch          in_box_state;
     hl_led_switch          record_state;
     hl_led_switch          record_fault_state;
     hl_led_switch          denoise_state;
@@ -101,6 +103,7 @@ static void hl_mod_display_dump_info(void)
     LOG_I("display_state_1:%d", _display_mod.display_state_1);
     LOG_I("display_state_2:%d", _display_mod.display_state_2);
     LOG_I("net_mode:%d", _display_mod.net_mode);
+    LOG_I("in_box_state:%d", _display_mod.in_box_state);
     LOG_I("record_state:%d", _display_mod.record_state);
     LOG_I("record_fault_state:%d", _display_mod.record_fault_state);
     LOG_I("denoise_state:%d", _display_mod.denoise_state);
@@ -116,7 +119,9 @@ static void _display_state_check_1(void)
 {
     hl_mod_display_state_e state;
 
-    if (_display_mod.charging_led_count != 0 && _display_mod.charge_state == CHARGING) {
+    if (_display_mod.in_box_state == SWITCH_OPEN) {
+        state = HL_DISPLAY_IN_BOX;
+    } else if (_display_mod.charging_led_count != 0 && _display_mod.charge_state == CHARGING) {
         state = HL_DISPLAY_CHARGING;
         _display_mod.charging_led_count--;
     } else if (_display_mod.fault_state == SWITCH_OPEN) {
@@ -162,6 +167,10 @@ static void _display_update_1(void)
     hl_drv_aw2016a_led_ctrl_st led;
 
     switch (_display_mod.display_state_1) {
+        case HL_DISPLAY_IN_BOX: {
+            led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
+            led.color       = HL_DRV_AW2016A_COLOR_BLACK;
+        } break;
         case HL_DISPLAY_FAULT: {
             led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_RB_FAST;
             led.color       = HL_DRV_AW2016A_COLOR_WHITE;
@@ -225,7 +234,9 @@ static void _display_state_check_2(void)
 {
     hl_mod_display_state_e state;
 
-    if (_display_mod.record_fault_state == SWITCH_OPEN) {
+    if (_display_mod.in_box_state == SWITCH_OPEN) {
+        state = HL_DISPLAY_IN_BOX;
+    } else if (_display_mod.record_fault_state == SWITCH_OPEN) {
         state = HL_DISPLAY_RECORD_ERR;
     } else if (_display_mod.record_state == SWITCH_OPEN) {
         state = HL_DISPLAY_RECORD;
@@ -248,8 +259,11 @@ static void _display_update_2(void)
     }
 
     switch (_display_mod.display_state_2) {
+        case HL_DISPLAY_IN_BOX: {
+            hl_hal_gpio_low(GPIO_REC_LED_EN);
+        } break;
         case HL_DISPLAY_RECORD_ERR: {
-
+            // do nothing
         } break;
         case HL_DISPLAY_RECORD: {
             hl_hal_gpio_high(GPIO_REC_LED_EN);
@@ -312,14 +326,19 @@ static void _aw2016a_drv_status_check(void)
     hl_drv_aw2016a_chip_status_e chip_status;
 
     if (count == 0) {
-        ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_CHECK_CHIP_STATUS, &chip_status,
-                                  sizeof(chip_status));
-        if (ret == AW2016A_FUNC_RET_ERR || chip_status != 0) {
-            hl_drv_aw2016a_deinit();
-            ret = hl_drv_aw2016a_init();
-            if (ret == AW2016A_FUNC_RET_ERR) {
+        if (_display_mod.aw2016a_init_flag == true) {
+            ret = hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_CHECK_CHIP_STATUS, &chip_status,
+                                      sizeof(chip_status));
+            if (ret == AW2016A_FUNC_RET_ERR || chip_status != 0) {
                 _display_mod.aw2016a_init_flag = false;
-            } else {
+            }
+        } else {
+            ret = hl_drv_aw2016a_deinit();
+            if (ret == AW2016A_FUNC_RET_OK) {
+                ret = hl_drv_aw2016a_init();
+            }
+
+            if (ret == AW2016A_FUNC_RET_OK) {
                 _display_mod.aw2016a_init_flag     = true;
                 _display_mod.display_update_flag_1 = true;
             }
@@ -374,6 +393,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     _display_mod.display_update_flag_1 = false;
     _display_mod.display_update_flag_2 = false;
     _display_mod.net_mode              = LED_NET_MODE_ID_CNT;
+    _display_mod.in_box_state          = SWITCH_CLOSE;
     _display_mod.record_state          = SWITCH_CLOSE;
     _display_mod.record_fault_state    = SWITCH_CLOSE;
     _display_mod.denoise_state         = SWITCH_CLOSE;
@@ -548,6 +568,14 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             }
 
             _display_mod.record_fault_state = *(hl_led_switch*)ptr;
+        } break;
+        case LED_IN_BOX_SET_CMD: {
+            if (len != sizeof(hl_led_switch)) {
+                LOG_E("len err, ctrl arg need <hl_led_switch> type pointer!");
+                return HL_DISPLAY_FAILED;
+            }
+
+            _display_mod.in_box_state = *(hl_led_switch*)ptr;
         } break;
         default:
             break;

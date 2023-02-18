@@ -97,7 +97,7 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
             tx_bat.chn = tx_info.rf_state - 1;
             tx_bat.val = soc_temp;
             hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, &tx_bat, sizeof(tx_bat));
-            LOG_I("current soc:%d", tx_info.soc);
+            // LOG_I("current soc:%d", tx_info.soc);
             break;
 
         case HL_MAX_TEMP_ALERT_IND:
@@ -135,7 +135,7 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
             soc_temp = *(uint8_t*)p_msg->param.ptr;
             rx_info.soc = soc_temp;
             hl_mod_display_io_ctrl(RX_BAT_VAL_VAL_CMD, &soc_temp, 1);
-            LOG_I("current soc:%d", rx_info.soc);
+            // LOG_I("current soc:%d", rx_info.soc);
             break;
 
         case HL_MAX_TEMP_ALERT_IND:
