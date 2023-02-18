@@ -187,7 +187,7 @@ void hl_app_mng_init(void)
     rt_err_t    ret;
     rt_thread_t app_task_tid = RT_NULL;
 
-    ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], 128, sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
+    ret = rt_mq_init(&hl_app_mq, "AppMsg", &hl_app_msg_pool[0], sizeof(mode_to_app_msg_t), sizeof(hl_app_msg_pool), RT_IPC_FLAG_FIFO);
     if (ret != RT_EOK) {
         LOG_E("message queuecreate init err!!!");
         return;
