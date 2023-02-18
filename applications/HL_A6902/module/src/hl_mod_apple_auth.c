@@ -423,7 +423,7 @@ int hl_mod_apple_auth_start()
     }
 
     // 状态机状态初始化
-    s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_DETECT;
+    s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
 
     // 创建线程
     hl_mod_apple_auth_iap2_thread =
