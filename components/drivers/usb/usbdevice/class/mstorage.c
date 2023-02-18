@@ -204,7 +204,8 @@ static struct scsi_cmd cmd_data[] =
     {SCSI_REBOOT_LOADER,   _reboot_loader,   6,  FIXED,       0, DIR_NONE},
 };
 
-static mstorage_switch_cb_t	s_p_metorage_switch_cb; // 大容量状态回调函数指针
+static mstorage_switch_cb_t s_p_metorage_switch_cb;    // 大容量状态回调函数指针
+static bool                 s_metorage_switch = true;  // 大容量使能开关
 
 static void _send_status(ufunction_t func)
 {
@@ -1025,9 +1026,14 @@ static rt_err_t _function_enable(ufunction_t func)
     data = (struct mstorage*)func->user_data;
     temp = func;
 
+    if(s_metorage_switch == false) {
+        rt_kprintf("stop metorage enable \n");
+        return -RT_ERROR;
+    }
+
     if(s_p_metorage_switch_cb != NULL) {
         s_p_metorage_switch_cb(1);
-    }
+    }    
 
     data->disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
     if(data->disk == RT_NULL)
@@ -1161,7 +1167,7 @@ ufunction_t rt_usbd_function_mstorage_create(udevice_t device)
     int msc_open_flag;
     uint8_t ret;
 
-    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 0);
+    ret = hl_util_nvram_param_get_integer("MSC_OPEN", &msc_open_flag, 1);
     if (ret == 1) {
         rt_kprintf("nvram be used before not init\n");
         hl_board_nvram_init();
@@ -1249,4 +1255,8 @@ void rt_usbd_msc_disable(void)
     rt_kprintf("rt_usbd_msc_disable \n");
 }
 
+void rt_usbd_msc_switch(uint8_t mstorage_switch)
+{
+    s_metorage_switch = (bool)mstorage_switch;
+}
 #endif

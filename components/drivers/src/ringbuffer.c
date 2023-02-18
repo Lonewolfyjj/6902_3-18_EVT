@@ -352,10 +352,15 @@ RTM_EXPORT(rt_ringbuffer_create);
 
 void rt_ringbuffer_destroy(struct rt_ringbuffer *rb)
 {
-    RT_ASSERT(rb != RT_NULL);
+    // RT_ASSERT(rb != RT_NULL);
 
-    rt_free(rb->buffer_ptr);
-    rt_free(rb);
+    if (rb->buffer_ptr) {
+        rt_free(rb->buffer_ptr);
+    }
+
+    if (rb) {
+        rt_free(rb);
+    }
 }
 RTM_EXPORT(rt_ringbuffer_destroy);
 

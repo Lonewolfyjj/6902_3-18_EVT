@@ -99,11 +99,16 @@ static void page_twolineout_init()
 static void page_s_init(hl_display_screen_s* data, hl_display_screen_change_s* flag)
 {
     hl_lvgl_lineout_init_t lineout;
-    LOG_D("vol1=[%d]\n",data->tx1_line_out_volume);
-    lineout.lineout_choose = HL_LINEOUT_CHOOSE_LEFT;
-    lineout.left_volume    = data->tx1_line_out_volume;
-    lineout.right_volume   = data->tx2_line_out_volume;
-    lineout.func_cb        = hl_bar_test_cb;
+    LOG_D("vol1=[%d]\n", data->tx1_line_out_volume);
+    lineout.lineout_choose   = HL_LINEOUT_CHOOSE_LEFT;
+    lineout.left_volume      = data->tx1_line_out_volume;
+    lineout.right_volume     = data->tx2_line_out_volume;
+    lineout.func_cb          = hl_bar_test_cb;
+    lineout.left_volume_min  = MIN_LINEOUT_VOLUME;
+    lineout.left_volume_max  = MAX_LINEOUT_VOLUME;
+    lineout.right_volume_min = MIN_LINEOUT_VOLUME;
+    lineout.right_volume_max = MAX_LINEOUT_VOLUME;
+
     hl_mod_lineout_init(&lineout);
 }
 // 立体声反初始化

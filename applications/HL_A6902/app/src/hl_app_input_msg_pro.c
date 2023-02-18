@@ -224,7 +224,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.usb_plug      = 0;
         tx_info.uac_link_flag = 0;
-        if (tx_info.on_off_flag == 1) {
+        if ((tx_info.on_off_flag == 1)&&(tx_info.mstorage_plug == 1)) {
             hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
         }
         tx_info.mstorage_plug = 0;
