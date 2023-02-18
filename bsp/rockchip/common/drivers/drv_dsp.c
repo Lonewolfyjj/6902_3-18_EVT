@@ -92,7 +92,7 @@ extern const uint8_t dsp_fw[];
 #define WORK_QUEUE_PRIORITY           9
 
 /* RKDSP work os-mailbox config */
-#define WORK_MB_SIZE                  10
+#define WORK_MB_SIZE                  1
 #define WORK_MB_READY_VALUE           0xffffaaaa
 
 #ifdef RT_USING_DSP_TRACE
