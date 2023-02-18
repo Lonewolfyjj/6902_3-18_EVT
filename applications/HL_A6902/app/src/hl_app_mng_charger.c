@@ -504,6 +504,7 @@ void hl_app_mng_charger_entry(void* msg_q)
 {
     struct rt_messagequeue* app_mq = msg_q;
     mode_to_app_msg_t       msg    = { 0 };
+#if HL_IS_TX_DEVICE()
     hl_led_switch           led_ctrl;
 
     // 在收纳盒中则关闭led
@@ -511,7 +512,7 @@ void hl_app_mng_charger_entry(void* msg_q)
         led_ctrl = SWITCH_OPEN;
         hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
     }
-
+#endif
     while (charger_alive) {
         hl_mod_feed_dog();
         if (_hl_app_mng_check_power_on_state()) {
