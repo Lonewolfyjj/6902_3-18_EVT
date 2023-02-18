@@ -79,6 +79,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     hl_mod_euc_charge_state_e charge_state_temp = HL_MOD_EUC_CHARGE_STATE_CHARGING;
     uint8_t                   turn_on_state;
     hl_led_switch             led_ctrl;
+    uint8_t                   temp;
 
     hl_rf_work_mode_e telink_work_mode;
     hl_rf_pair_info_t telink_pair_info;
@@ -103,8 +104,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             led_ctrl = SWITCH_CLOSE;
             hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
 
-            telink_work_mode = HL_RF_FULL_POWER;
-            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+            hl_mod_telink_ioctl(HL_RF_REBOOT_CMD, &temp, 0);
+            // telink_work_mode = HL_RF_FULL_POWER;
+            // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = tx_info.soc;
@@ -204,8 +206,9 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("out box!");
             _rx_in_box_flag = false;
 
-            telink_work_mode = HL_RF_FULL_POWER;
-            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+            hl_mod_telink_ioctl(HL_RF_REBOOT_CMD, &temp, 0);
+            // telink_work_mode = HL_RF_FULL_POWER;
+            // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
             _display_in_box_state_set();
         } break;
