@@ -211,6 +211,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
             _display_in_box_state_set();
+            rt_thread_mdelay(500);
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
             bat_soc_temp = rx_info.soc;
