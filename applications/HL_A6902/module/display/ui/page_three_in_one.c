@@ -237,7 +237,7 @@ static void btn_right_cb(lv_event_t * e)
             lv_obj_add_style(lab3,&style_label_black,LV_PART_MAIN); 
             lv_obj_add_style(btn_right,&style_choose_main,LV_PART_MAIN);
             lv_obj_add_style(btn_r,&style_choose_lr_main,LV_PART_MAIN);            
-            lv_event_send(btn_left,LV_EVENT_CLICKED,lock);
+            lv_event_send(btn_right,LV_EVENT_CLICKED,lock);
             lv_event_send(btn_mid,LV_EVENT_CLICKED,lock);
         }else{
             lv_obj_remove_style(lab3,&style_label_white,LV_PART_MAIN);

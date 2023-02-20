@@ -655,7 +655,7 @@ void hl_mod_top_ioctl(void* ctl_data)
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
         case HL_TOP_ADD_ICON_CMD:
-            if(ptr->top_param == HL_TOP_ICON_LOCK || ptr->top_param == HL_TOP_ICON_UNLOCK || ptr->top_param == HL_TOP_ICON_LINEOUT || \
+            if(ptr->top_param == HL_TOP_ICON_UNLOCK || ptr->top_param == HL_TOP_ICON_LINEOUT || \
                 ptr->top_param == HL_TOP_ICON_TYPEC || ptr->top_param == HL_TOP_ICON_HEATSET){
                     hl_add_center_icon(ptr->top_param);
                 }else{

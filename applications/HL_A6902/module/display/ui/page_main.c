@@ -214,6 +214,7 @@ static lv_obj_t * lv_area_creat_fun(lv_align_t align,lv_coord_t x_offset,lv_coor
     lv_obj_set_scrollbar_mode(null_area, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_size(null_area,width,high);
     lv_obj_align(null_area,align,x_offset,y_offset);
+    lv_obj_move_background(null_area);
     return null_area;
 }
 
