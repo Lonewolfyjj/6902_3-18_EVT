@@ -48,7 +48,7 @@
 
 
 #if (!HL_IS_TX_DEVICE())
-
+#include "hl_mod_page_common.h"
 #if (HL_DISPLAY_SCREEN_HARDWARE)
 
 
@@ -279,6 +279,7 @@ INIT_APP_EXPORT(spi_cfg_init);
 int hl_mod_display_test_cmd(int argc, char** argv)
 {
     static mode_to_app_msg_t msg;
+    hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     if (argc == 1) {
         rt_kprintf("display_test \r\n");
@@ -305,6 +306,12 @@ int hl_mod_display_test_cmd(int argc, char** argv)
         hl_hal_gpio_low(GPIO_OLED_RST);
         rt_thread_mdelay(msg.cmd);
         hl_hal_gpio_high(GPIO_OLED_RST);
+    } else if (!strcmp(argv[1], "bl")) {
+        rt_kprintf("rm69310 bl\r\n");
+        msg.cmd = atoi(argv[2]);
+        // hl_drv_rm690a0_gpio_init();
+        hl_drv_rm690a0_io_ctrl(SET_MIPI_BACKLIGHT_CMD, &msg.cmd, 1);
+        data_ptr->scr_bl = msg.cmd;
     } else {
         rt_kprintf("wrong parameter, please type: oled_test \r\n");
     }

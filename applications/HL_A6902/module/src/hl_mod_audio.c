@@ -375,7 +375,7 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     }
     rtc_time    time;
     int         ret;
-    audio_time* timer = (audio_time*)timer_param;
+    hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
     
@@ -406,7 +406,7 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
     }
     rtc_time    time;
     int         ret;
-    audio_time* timer = (audio_time*)timer_param;
+    hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
     time.year   = timer->year;
@@ -2061,7 +2061,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 1024, 10, 5);
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 10, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {

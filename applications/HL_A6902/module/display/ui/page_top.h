@@ -36,7 +36,7 @@
 #include "lvgl.h"
 #include "stdio.h"
 
-/// @brief 顶部图标类型枚举
+/// @brief 顶部图标类型枚举，枚举顺序影响图标排序
 typedef enum _hl_top_icon_t
 {
     HL_TOP_ICON_STEREO_MOD = 0,
@@ -44,10 +44,10 @@ typedef enum _hl_top_icon_t
     HL_TOP_ICON_TRACK_MOD,
     HL_TOP_ICON_NOISE,
     HL_TOP_ICON_LOCK,
+    HL_TOP_ICON_APPLE,
     HL_TOP_ICON_LINEOUT,
     HL_TOP_ICON_TYPEC,
-    HL_TOP_ICON_HEATSET,
-    HL_TOP_ICON_APPLE,
+    HL_TOP_ICON_HEATSET,    
     HL_TOP_ICON_CNT,
 }hl_top_icon_t;
 

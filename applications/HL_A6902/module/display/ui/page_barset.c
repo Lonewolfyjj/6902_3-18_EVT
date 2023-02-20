@@ -52,7 +52,7 @@ static void slider_event_cb1(lv_event_t * e)
     char buf[8];
     lv_obj_t * slider = lv_event_get_target(e); 
     int32_t value = lv_slider_get_value(slider);    
-    lv_snprintf(buf, sizeof(buf), "%d", value);
+    lv_snprintf(buf, sizeof(buf), "%ld", value);
     lv_label_set_text(lab2, buf);
     hl_barset_func(value);
 }
@@ -70,7 +70,7 @@ static lv_obj_t * lv_slider_creat_fun(lv_obj_t *src_obj,lv_align_t align,lv_coor
 {
     lv_obj_t * slider = lv_slider_create(src_obj);    
     lv_obj_remove_style_all(slider);        /*Remove the styles coming from the theme*/
-    lv_obj_set_size(slider,282,48);
+    lv_obj_set_size(slider,268,48);
     lv_obj_add_style(slider, &style_back, LV_PART_MAIN);
     lv_obj_add_style(slider, &style_indicator, LV_PART_INDICATOR);
     lv_obj_add_event_cb(slider, event_cb, LV_EVENT_VALUE_CHANGED, NULL);//添加回调
@@ -174,7 +174,17 @@ void hl_mod_barset_init(void * init_data)
     slider1 = lv_slider_creat_fun(lv_scr_act(),LV_ALIGN_CENTER,0,30,ptr->range_min,ptr->range_max,ptr->init_value,slider_event_cb1);
     img1 = lv_img_creat_fun(slider1,ptr->src,LV_ALIGN_LEFT_MID,10,0);
     lab1 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_LEFT,0,-4,ptr->ptr);
-    lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,-6,-4,buf);
+    // lab2 = lv_lab_creat_fun(lv_scr_act(),slider1,LV_ALIGN_OUT_TOP_RIGHT,-8,-4,buf);
+
+
+    // rt_kprintf("testlx%d\n",  lv_obj_get_x(lab2));
+    // rt_kprintf("testly%d\n",  lv_obj_get_y(lab2));
+    lab2 = lv_label_create(lv_scr_act());
+    lv_obj_add_style(lab2, &style_label, LV_PART_MAIN);
+    // lv_obj_set_style_text_font(lab, &language, 0);
+    lv_label_set_text(lab2, buf);
+
+    lv_obj_set_pos(lab2, 244, 42);
 
     switch(ptr->icontyp){
         case HL_NO_ICON:

@@ -224,6 +224,8 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data)
 /*Return true is the touchpad is pressed*/
 static bool touchpad_is_pressed(void)
 {
+    // 每次都获取一下当前的状态
+    hl_drv_ztw523a_dev_check_reg();
 #ifdef RT_USING_FT3169
     /*Your code comes here*/
     hl_drv_touch_dev_read_info(&touch_pos);

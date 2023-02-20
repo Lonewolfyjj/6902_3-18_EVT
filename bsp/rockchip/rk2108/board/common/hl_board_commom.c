@@ -285,6 +285,7 @@ void hl_board_reboot(void)
 #else
     hl_hal_gpio_high(GPIO_CODEC_EN);
 #endif
+    rt_thread_mdelay(100);
     extern void rt_hw_cpu_reset(void);
     rt_hw_cpu_reset();
 }
