@@ -44,6 +44,7 @@ typedef enum _hl_top_icon_t
     HL_TOP_ICON_TRACK_MOD,
     HL_TOP_ICON_NOISE,
     HL_TOP_ICON_LOCK,
+    HL_TOP_ICON_UNLOCK,
     HL_TOP_ICON_APPLE,
     HL_TOP_ICON_LINEOUT,
     HL_TOP_ICON_TYPEC,
