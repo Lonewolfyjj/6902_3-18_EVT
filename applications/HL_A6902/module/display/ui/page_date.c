@@ -273,7 +273,7 @@ static void roller_month_cb(lv_event_t * e)
             lv_event_send(roller_day,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_hour,LV_EVENT_CLICKED,lock);
             lv_event_send(roller_sec,LV_EVENT_CLICKED,lock);
-            lv_get_cal_day_num(HL_DATE_MONTH,pos);
+            lv_get_cal_day_num(HL_DATE_MONTH,pos+1);
             hl_date_func(HL_DATE_MONTH,pos+1);
         }else{      
             lv_obj_set_style_bg_opa(roller_month, LV_OPA_TRANSP, LV_PART_MAIN);
