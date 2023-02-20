@@ -81,6 +81,32 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
 #endif
 }
 
+void hl_app_pm_timer_set(void)
+{
+    hl_mod_pm_cmd_e cmd;
+
+#if HL_IS_TX_DEVICE()
+    if (tx_info.usb_pogo_flag == true || tx_info.usb_plug == true
+        || tx_info.rf_state != HL_RF_UNCONNECT && tx_info.rf_state != HL_RF_PAIRING || tx_info.rec_flag == true) {
+        cmd = HL_PM_STOP_SHUTDOWN_TIMER_CMD;
+        LOG_I("stop No-Operation-Timer!");
+    } else {
+        cmd = HL_PM_START_SHUTDOWN_TIMER_CMD;
+        LOG_I("start No-Operation-Timer!");
+    }
+#else
+    if (rx_info.usb_pogo_flag == true || rx_info.usb_plug == true
+        || rx_info.rf_state != HL_RF_UNCONNECT && rx_info.rf_state != HL_RF_PAIRING) {
+        cmd = HL_PM_STOP_SHUTDOWN_TIMER_CMD;
+        LOG_I("stop No-Operation-Timer!");
+    } else {
+        cmd = HL_PM_START_SHUTDOWN_TIMER_CMD;
+        LOG_I("start No-Operation-Timer!");
+    }
+#endif
+
+    hl_mod_pm_ctrl(cmd, RT_NULL, 0);
+}
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
@@ -119,6 +145,11 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
             hl_board_reboot();
             break;
 
+        case HL_SHUTDOWN_TIMEOUT_IND:
+            LOG_I("No operation! power off");
+            hl_board_reboot();
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -154,6 +185,11 @@ void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_ULTRA_LOWPOWER_IND:
             LOG_I("extreme lowpower! need power off");
+            hl_board_reboot();
+            break;
+
+        case HL_SHUTDOWN_TIMEOUT_IND:
+            LOG_I("No operation! power off");
             hl_board_reboot();
             break;
 

@@ -45,6 +45,7 @@
  */
 void hl_app_pm_msg_pro(mode_to_app_msg_t *p_msg);
 
+void hl_app_pm_timer_set(void);
 #endif /* __HL_APP_PM_MSG_PRO_H__ */
 /*
  * EOF

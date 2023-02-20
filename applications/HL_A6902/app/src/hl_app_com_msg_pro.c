@@ -49,7 +49,7 @@ uint8_t _dev_num;
 #if HL_IS_TX_DEVICE()
 
 #else
-void _display_in_box_state_set(void)
+void hl_com_display_in_box_state_set(void)
 {
     hl_display_box_charge_state display_box_charge_state;
 
@@ -200,7 +200,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
             hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);
 
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
@@ -210,7 +210,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             // telink_work_mode = HL_RF_FULL_POWER;
             // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             rt_thread_mdelay(500);
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
@@ -238,13 +238,13 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
             tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx1_in_box_flag     = tx1_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
         } break;
         case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
             tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx2_in_box_flag     = tx2_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
         } break;
         case HL_SET_PAIR_MAC_TX1_REQ_IND: {  //请求设置tx1的mac地址来配对
