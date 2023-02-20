@@ -889,10 +889,9 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
         RT_DEBUG_LOG(RT_DEBUG_USB, ("ep_out reside %d\n", data->csw_response.data_reside));
         
         cmd = _find_cbw_command(cbw->cb[0]);
-        rt_kprintf("cbw(0x%x)\n", cbw->cb[0]);
         if(cmd == RT_NULL)
         {
-            rt_kprintf("can't find cbw command\n");
+            rt_kprintf("can't find cbw command(0x%02x)\n", cbw->cb[0]);
             goto exit;
         }        
 
