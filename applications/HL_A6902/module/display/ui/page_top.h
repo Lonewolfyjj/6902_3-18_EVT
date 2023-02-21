@@ -57,6 +57,7 @@ typedef enum _hl_top_cmd_t
 {
     HL_TOP_DELETE_ICON_CMD = 0,
     HL_TOP_ADD_ICON_CMD,
+    HL_TOP_INPUT_CMD,
     HL_TOP_BAT_VAL,
     HL_TOP_BAT_COLOR_GREEN,
     HL_TOP_BAT_CHARGER_HIDE,
