@@ -213,7 +213,7 @@ void hl_app_mng_init(void)
         LOG_E("thread create err!!!");
     }
 
-    rt_thread_mdelay(2000);
+    // rt_thread_mdelay(2000);
     hl_app_info(0, NULL);
 }
 
@@ -345,6 +345,19 @@ int hl_app_info(int argc, char** argv)
 INIT_APP_EXPORT(hl_app_mng_init);
 MSH_CMD_EXPORT(hl_app_info, show app info cmd);
 
+
+void hl_app_test_init(void)
+{
+    hl_mod_audio_init(&hl_app_mq);
+}
+
+void hl_app_test_deinit(void)
+{
+    hl_mod_audio_deinit();
+}
+
+MSH_CMD_EXPORT(hl_app_test_init, show app info cmd);
+MSH_CMD_EXPORT(hl_app_test_deinit, show app info cmd);
 /*
  * EOF
  */
