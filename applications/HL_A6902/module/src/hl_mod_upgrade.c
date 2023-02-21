@@ -1024,20 +1024,20 @@ static bool _upgrade_nuzip(void)
 
     if(s_upgrade.pack.file_fd < 0) {
         LOG_E("%s", packname);
-        return false;
+        goto err0;
     }
 
     /*pack upgrade file ---> info.json*/
     ret = _upgrade_nuzip_head_();
     if (ret != true){
         LOG_E("_upgrade_nuzip_head_ error");
-        return false;
+        goto err0;
     }
     
     ret = _upgrade_nuzip_json(s_upgrade.pack.type_len[2]);
     if (ret != true){
         LOG_E("_upgrade_nuzip_json error");
-        return false;
+        goto err0;
     }
 
     /*pack upgrade file  telink.bin*/
@@ -1047,7 +1047,7 @@ static bool _upgrade_nuzip(void)
         ret = _upgrade_nuzip_file(HL_UPGRADE_FILE_NAME_TELINK, s_upgrade.pack.type_len[1]);
         if (ret != true) {
             LOG_E("_upgrade_nuzip_file %s error", HL_UPGRADE_FILE_NAME_TELINK);
-            return false;
+            goto err0;
         }
     } else {
         s_upgrade.telink_state = HL_UPGRADE_SUCCEED_STATE;
@@ -1057,7 +1057,7 @@ static bool _upgrade_nuzip(void)
     ret = close(s_upgrade.pack.file_fd);
     if(ret < 0) {
         LOG_E("close error%s", packname);
-        return false;
+        goto err0;
     }
     LOG_I("close file (%s) ", packname);
 
@@ -1068,14 +1068,14 @@ static bool _upgrade_nuzip(void)
         ret = rename(packname, HL_UPGRADE_FILE_NAME_RK);
         if(ret < 0) {
             LOG_E("close error%s", packname);
-            return false;
+            goto err0;
         }
         LOG_I("set name file (%s)to(%s) ", packname, HL_UPGRADE_FILE_NAME_RK);
     } else {        
         ret = unlink(packname);
         if(ret < 0) {
             LOG_E("unlink error%s", packname);
-            return false;
+            goto err0;
         }      
         s_upgrade.ota_state = HL_UPGRADE_SUCCEED_STATE;
         LOG_I("delete file (%s) ", packname);
@@ -1085,6 +1085,11 @@ static bool _upgrade_nuzip(void)
     _upgrade_seek();
 
     return true;
+
+err0:
+    // error upgrade
+    _upgrade_send_msg(HL_UPGRADE_STATE_MSG, HL_UPGRADE_FAIL_STATE);
+    return false;
 }
 
 static void hl_mod_upgrade_end(hl_mod_upgrade_state upgrade_state)
@@ -1137,14 +1142,22 @@ static void hl_mod_upgrade_guard(void)
 
                 s_upgrade.count += 1;
             } else {
-                // if(s_upgrade.telink_state == HL_UPGRADE_FAIL_STATE){
-                //     unlink(HL_UPGRADE_FILE_NAME_TELINK);
-                // }
+                if(s_upgrade.telink_state != HL_UPGRADE_SUCCEED_STATE){
+                    unlink(HL_UPGRADE_FILE_NAME_TELINK);
+                }
+                if(s_upgrade.ota_state != HL_UPGRADE_SUCCEED_STATE){
+                    unlink(HL_UPGRADE_FILE_NAME_RK);
+                }
                 hl_mod_upgrade_end(HL_UPGRADE_FAIL_STATE);
                 break;
             }            
         } else if(guard_time > 300) {
-            unlink(HL_UPGRADE_FILE_NAME_TELINK);
+            if(s_upgrade.telink_state != HL_UPGRADE_SUCCEED_STATE){
+                unlink(HL_UPGRADE_FILE_NAME_TELINK);
+            }
+            if(s_upgrade.ota_state != HL_UPGRADE_SUCCEED_STATE){
+                unlink(HL_UPGRADE_FILE_NAME_RK);
+            }
             hl_mod_upgrade_end(HL_UPGRADE_FAIL_STATE);
             guard_time = 0;
             break;
