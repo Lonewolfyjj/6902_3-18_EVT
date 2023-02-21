@@ -41,7 +41,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "hl_mod_page_volume_bar_set.h"
-
+#include "page_language.h"
 
 
 LV_IMG_DECLARE(Other_voice);
@@ -55,14 +55,14 @@ LV_IMG_DECLARE(Other_mic_black);
 static void page_voc_bar_left_init()
 {
     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_mod_page_volume_init(data->tx1_line_out_volume);
 
     hl_lvgl_barset_init_t bar_test = {
         .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_STEREO_ICON,
         .init_value = hl_mod_page_volume_get(),
-        .ptr        = "左声道",
+        .ptr        = page_ptr->barset_page_prt->page_lineout_left,//"左声道",
         .range_max  = MAX_LINEOUT_VOLUME,
         .range_min  = MIN_LINEOUT_VOLUME,
         .src        = &Other_voice,

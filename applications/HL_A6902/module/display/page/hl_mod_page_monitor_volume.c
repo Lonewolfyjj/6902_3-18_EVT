@@ -43,6 +43,7 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_page_volume_bar_set.h"
+#include "page_language.h"
 
 LV_IMG_DECLARE(Other_mic_black);
 
@@ -50,6 +51,7 @@ LV_IMG_DECLARE(Other_mic_black);
 static void page_uac_out_init(void)
 {
     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     // 设置当前音量
     hl_mod_page_volume_init(data->monitor_volume);
 
@@ -57,7 +59,7 @@ static void page_uac_out_init(void)
         .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_NO_ICON,
         .init_value = hl_mod_page_volume_get(),
-        .ptr        = "监听音量",
+        .ptr        = page_ptr->barset_page_prt->page_monitor_volume->ptr_monitor,//"监听音量",
         .range_max  = MAX_LINEOUT_VOLUME,
         .range_min  = MIN_LINEOUT_VOLUME,
         .src        = &Other_mic_black,

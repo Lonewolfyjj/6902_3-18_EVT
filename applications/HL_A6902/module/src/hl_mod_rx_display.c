@@ -44,6 +44,7 @@
 #include "hl_drv_qma6100p.h"
 #include "hl_util_timeout.h"
 #include "hl_util_nvram.h"
+#include "page_language.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -503,6 +504,7 @@ static void hl_mod_display_task(void* param)
 {
     uint32_t wdg_reg = 0;
     static lv_style_t style;
+    hl_a6902_language_ptr_init(CHINESE);
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);

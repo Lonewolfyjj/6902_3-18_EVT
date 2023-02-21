@@ -3,21 +3,42 @@
 #define CHINESE_LANGUAGE_DEFINE(PTR)    Chinese_##PTR
 #define ENGLISH_LANGUAGE_DEFINE(PTR)    English_##PTR
 
+static a6902_language_typ_t* hl_a6902_language;
+
+static arc_language_ptr_t CHINESE_LANGUAGE_DEFINE(arc_ptr) = {
+    .ptr_paring = "配对中",
+};
+
+static arc_language_page_t CHINESE_LANGUAGE_DEFINE(arc_page) = {
+    .page_arc = &CHINESE_LANGUAGE_DEFINE(arc_ptr),
+};
+
+static moreone_language_ptr_t CHINESE_LANGUAGE_DEFINE(moreone_ptr) = {
+    .ptr_mute = "MUTE",
+    .ptr_noise = "降噪开关",
+    .ptr_off = "OFF",
+    .ptr_on = "ON",
+    .ptr_record = "录制开关",
+};
+
+static moreone_language_page_t CHINESE_LANGUAGE_DEFINE(moreone_page) = {
+    .page_moreone = &CHINESE_LANGUAGE_DEFINE(moreone_ptr),
+};
 
 static led_brightness_language_ptr_t CHINESE_LANGUAGE_DEFINE(led_brightness) = {
-    .ptr_lift = "正常",
+    .ptr_left = "正常",
     .ptr_right = "低亮",
     .ptr_top = "状态灯调节",
 };
 
 static monitor_set_language_ptr_t CHINESE_LANGUAGE_DEFINE(monitor_set) = {
-    .ptr_lift = "UAC输入",
+    .ptr_left = "UAC输入",
     .ptr_right = "TX输入",
     .ptr_top = "监听输入",
 };
 
 static sound_effect_language_ptr_t CHINESE_LANGUAGE_DEFINE(sound_effect) = {
-    .ptr_lift = "高保真",
+    .ptr_left = "高保真",
     .ptr_right = "人声增强",
     .ptr_top = "音效模式",
 };
@@ -30,7 +51,7 @@ static b_two_in_one_language_page_t CHINESE_LANGUAGE_DEFINE(b_two_in_one) = {
 
 
 static lineout_left_language_ptr_t CHINESE_LANGUAGE_DEFINE(lineout_left) = {
-    .ptr_lift = "左声道",
+    .ptr_left = "左声道",
     .ptr_single = "单声道",
     .ptr_stft = "安全音轨",
 };
@@ -95,6 +116,16 @@ static tx_config_language_ptr_t CHINESE_LANGUAGE_DEFINE(tx_config) = {
     .ptr_tx_gain = "TX增益",
 };
 
+static menu_config_language_ptr_t CHINESE_LANGUAGE_DEFINE(menu_ptr) = {
+    .ptr_common_config = "通用设置",
+    .ptr_high_true = "音效模式",
+    .ptr_monitor_config = "监听设置",
+    .ptr_noise_config = "降噪设置",
+    .ptr_single_voice = "单声道",
+    .ptr_tx_config = "TX设置",
+    .ptr_voice_config = "音量调节",
+};
+
 static volume_menu_language_ptr_t CHINESE_LANGUAGE_DEFINE(volume_menu) = {
     .ptr_monitor_voice = "监听音量",
     .ptr_uac_out = "UAC输出",
@@ -105,6 +136,7 @@ static menu_language_page_t CHINESE_LANGUAGE_DEFINE(menu) = {
     .page_sound_module = &CHINESE_LANGUAGE_DEFINE(sound_module),
     .page_tx_config = &CHINESE_LANGUAGE_DEFINE(tx_config),
     .page_volume_menu = &CHINESE_LANGUAGE_DEFINE(volume_menu),
+    .page_menu = &CHINESE_LANGUAGE_DEFINE(menu_ptr),
 };
 
 static format_language_ptr_t CHINESE_LANGUAGE_DEFINE(format) = {
@@ -141,6 +173,7 @@ static s_two_in_one_language_page_t CHINESE_LANGUAGE_DEFINE(s_two_in_one) = {
 
 static storage_language_ptr_t CHINESE_LANGUAGE_DEFINE(storage_ptr) = {
     .ptr_storage = "格式化",
+    .ptr_storage_use = "可用",
 };
 
 static storage_language_page_t CHINESE_LANGUAGE_DEFINE(storage_page) = {
@@ -148,14 +181,14 @@ static storage_language_page_t CHINESE_LANGUAGE_DEFINE(storage_page) = {
 };
 
 static auto_poweroff_language_ptr_t CHINESE_LANGUAGE_DEFINE(auto_poweroff) = {
-    .ptr_lift = "永不",
+    .ptr_left = "永不",
     .ptr_mid = "15min",
     .ptr_right = "30min",
     .ptr_top = "自动关机",
 };
 
 static low_cut_language_ptr_t CHINESE_LANGUAGE_DEFINE(low_cut) = {
-    .ptr_lift = "无低切",
+    .ptr_left = "无低切",
     .ptr_mid = "75HZ",
     .ptr_right = "150HZ",
     .ptr_top = "低切",
@@ -196,6 +229,8 @@ static upgrade_language_ptr_t CHINESE_LANGUAGE_DEFINE(upgrade_ptr) = {
     .ptr_reset_device = "请手动重启设备",
     .ptr_success = "升级成功",
     .ptr_upgrading = "设备升级中...",
+    .ptr_set_fail = "设置失败",
+    .ptr_set_success = "设置成功",
 };
 
 static upgrade_language_page_t CHINESE_LANGUAGE_DEFINE(upgrade_page) = {
@@ -215,7 +250,8 @@ static verson_language_page_t CHINESE_LANGUAGE_DEFINE(verson_page) = {
 
 
 static a6902_language_typ_t CHINESE_LANGUAGE_DEFINE(language) = {
-    .arc_page_ptr = NULL,
+    .arc_page_ptr = &CHINESE_LANGUAGE_DEFINE(arc_page),
+    .moreone_page_ptr = &CHINESE_LANGUAGE_DEFINE(moreone_page),
     .b_two_in_one_page_ptr = &CHINESE_LANGUAGE_DEFINE(b_two_in_one),
     .barset_page_prt = &CHINESE_LANGUAGE_DEFINE(barset),
     .lineout_page_ptr = &CHINESE_LANGUAGE_DEFINE(lineout_page),
@@ -236,22 +272,40 @@ static a6902_language_typ_t CHINESE_LANGUAGE_DEFINE(language) = {
 
 
 
+static arc_language_ptr_t ENGLISH_LANGUAGE_DEFINE(arc_ptr) = {
+    .ptr_paring = "配对中",
+};
 
+static arc_language_page_t ENGLISH_LANGUAGE_DEFINE(arc_page) = {
+    .page_arc = &ENGLISH_LANGUAGE_DEFINE(arc_ptr),
+};
+
+static moreone_language_ptr_t ENGLISH_LANGUAGE_DEFINE(moreone_ptr) = {
+    .ptr_mute = "MUTE",
+    .ptr_noise = "降噪开关",
+    .ptr_off = "OFF",
+    .ptr_on = "ON",
+    .ptr_record = "录制开关",
+};
+
+static moreone_language_page_t ENGLISH_LANGUAGE_DEFINE(moreone_page) = {
+    .page_moreone = &ENGLISH_LANGUAGE_DEFINE(moreone_ptr),
+};
 
 static led_brightness_language_ptr_t ENGLISH_LANGUAGE_DEFINE(led_brightness) = {
-    .ptr_lift = "正常",
+    .ptr_left = "正常",
     .ptr_right = "低亮",
     .ptr_top = "状态灯调节",
 };
 
 static monitor_set_language_ptr_t ENGLISH_LANGUAGE_DEFINE(monitor_set) = {
-    .ptr_lift = "UAC输入",
+    .ptr_left = "UAC输入",
     .ptr_right = "TX输入",
     .ptr_top = "监听输入",
 };
 
 static sound_effect_language_ptr_t ENGLISH_LANGUAGE_DEFINE(sound_effect) = {
-    .ptr_lift = "高保真",
+    .ptr_left = "高保真",
     .ptr_right = "人声增强",
     .ptr_top = "音效模式",
 };
@@ -264,7 +318,7 @@ static b_two_in_one_language_page_t ENGLISH_LANGUAGE_DEFINE(b_two_in_one) = {
 
 
 static lineout_left_language_ptr_t ENGLISH_LANGUAGE_DEFINE(lineout_left) = {
-    .ptr_lift = "左声道",
+    .ptr_left = "左声道",
     .ptr_single = "单声道",
     .ptr_stft = "安全音轨",
 };
@@ -329,6 +383,16 @@ static tx_config_language_ptr_t ENGLISH_LANGUAGE_DEFINE(tx_config) = {
     .ptr_tx_gain = "TX增益",
 };
 
+static menu_config_language_ptr_t ENGLISH_LANGUAGE_DEFINE(menu_ptr) = {
+    .ptr_common_config = "通用设置",
+    .ptr_high_true = "音效模式",
+    .ptr_monitor_config = "监听设置",
+    .ptr_noise_config = "降噪设置",
+    .ptr_single_voice = "单声道",
+    .ptr_tx_config = "TX设置",
+    .ptr_voice_config = "音量调节",
+};
+
 static volume_menu_language_ptr_t ENGLISH_LANGUAGE_DEFINE(volume_menu) = {
     .ptr_monitor_voice = "监听音量",
     .ptr_uac_out = "UAC输出",
@@ -339,6 +403,7 @@ static menu_language_page_t ENGLISH_LANGUAGE_DEFINE(menu) = {
     .page_sound_module = &ENGLISH_LANGUAGE_DEFINE(sound_module),
     .page_tx_config = &ENGLISH_LANGUAGE_DEFINE(tx_config),
     .page_volume_menu = &ENGLISH_LANGUAGE_DEFINE(volume_menu),
+    .page_menu = &ENGLISH_LANGUAGE_DEFINE(menu_ptr),
 };
 
 static format_language_ptr_t ENGLISH_LANGUAGE_DEFINE(format) = {
@@ -375,6 +440,7 @@ static s_two_in_one_language_page_t ENGLISH_LANGUAGE_DEFINE(s_two_in_one) = {
 
 static storage_language_ptr_t ENGLISH_LANGUAGE_DEFINE(storage_ptr) = {
     .ptr_storage = "格式化",
+    .ptr_storage_use = "可用",
 };
 
 static storage_language_page_t ENGLISH_LANGUAGE_DEFINE(storage_page) = {
@@ -382,14 +448,14 @@ static storage_language_page_t ENGLISH_LANGUAGE_DEFINE(storage_page) = {
 };
 
 static auto_poweroff_language_ptr_t ENGLISH_LANGUAGE_DEFINE(auto_poweroff) = {
-    .ptr_lift = "永不",
+    .ptr_left = "永不",
     .ptr_mid = "15min",
     .ptr_right = "30min",
     .ptr_top = "自动关机",
 };
 
 static low_cut_language_ptr_t ENGLISH_LANGUAGE_DEFINE(low_cut) = {
-    .ptr_lift = "无低切",
+    .ptr_left = "无低切",
     .ptr_mid = "75HZ",
     .ptr_right = "150HZ",
     .ptr_top = "低切",
@@ -430,6 +496,8 @@ static upgrade_language_ptr_t ENGLISH_LANGUAGE_DEFINE(upgrade_ptr) = {
     .ptr_reset_device = "请手动重启设备",
     .ptr_success = "升级成功",
     .ptr_upgrading = "设备升级中...",
+    .ptr_set_fail = "设置失败",
+    .ptr_set_success = "设置成功",
 };
 
 static upgrade_language_page_t ENGLISH_LANGUAGE_DEFINE(upgrade_page) = {
@@ -439,8 +507,8 @@ static upgrade_language_page_t ENGLISH_LANGUAGE_DEFINE(upgrade_page) = {
 static verson_language_ptr_t ENGLISH_LANGUAGE_DEFINE(verson_ptr) = {
     .ptr_firmware_info = "固件版本信息",
     .ptr_SN_num = "SN序列号",
-    .ptr_tx1_info = "TX1版本信息",
-    .ptr_tx2_info = "TX2版本信息",
+    .ptr_tx1_info = "TX1版本信息 ",
+    .ptr_tx2_info = "TX2版本信息 ",
 };
 
 static verson_language_page_t ENGLISH_LANGUAGE_DEFINE(verson_page) = {
@@ -449,7 +517,8 @@ static verson_language_page_t ENGLISH_LANGUAGE_DEFINE(verson_page) = {
 
 
 static a6902_language_typ_t ENGLISH_LANGUAGE_DEFINE(language) = {
-    .arc_page_ptr = NULL,
+    .arc_page_ptr = &ENGLISH_LANGUAGE_DEFINE(arc_page),
+    .moreone_page_ptr = &CHINESE_LANGUAGE_DEFINE(moreone_page),
     .b_two_in_one_page_ptr = &ENGLISH_LANGUAGE_DEFINE(b_two_in_one),
     .barset_page_prt = &ENGLISH_LANGUAGE_DEFINE(barset),
     .lineout_page_ptr = &ENGLISH_LANGUAGE_DEFINE(lineout_page),
@@ -462,13 +531,17 @@ static a6902_language_typ_t ENGLISH_LANGUAGE_DEFINE(language) = {
     .verson_page_ptr = &ENGLISH_LANGUAGE_DEFINE(verson_page),
 };
 
-void* hl_a6902_language_ptr_get(uint8_t language)
+void hl_a6902_language_ptr_init(uint8_t language)
 {
     if(language == CHINESE){
-        return &CHINESE_LANGUAGE_DEFINE(language);
+        hl_a6902_language = &CHINESE_LANGUAGE_DEFINE(language);
     }else{
-        return &ENGLISH_LANGUAGE_DEFINE(language);
+        hl_a6902_language = &ENGLISH_LANGUAGE_DEFINE(language);
     }
 }
 
 
+void* hl_a6902_language_ptr_get(void)
+{
+    return hl_a6902_language;
+}

@@ -32,7 +32,7 @@
  */
 #include "page_verson.h"
 #include "page_style_bit.h"
-
+#include "page_language.h"
 static lv_style_t style_label;
 static lv_style_t style_screen;
 static lv_style_t style_white_dot;
@@ -206,20 +206,23 @@ static lv_obj_t * lv_con_child_creat(lv_obj_t *src_obj,lv_coord_t x_size,lv_coor
 
 static void lv_page_1_init(lv_obj_t *con_obj,const char * text)
 {   
-    lab11 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"SN序列号",0);
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    lab11 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,page_ptr->verson_page_ptr->page_verson->ptr_SN_num,0);
     lab12 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text,1);
 }
 
 static void lv_page_2_init(lv_obj_t *con_obj,const char * text)
 {   
-    lab21 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,"固件版本信息",0);
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    lab21 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,-15,page_ptr->verson_page_ptr->page_verson->ptr_firmware_info,0);
     lab22 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,0,15,text,0);
 }
 
 static void lv_page_3_init(lv_obj_t *con_obj,const char * text1,const char * text2)
 {    
-    uint8_t buf1[32] = {"TX1版本信息 "};
-    uint8_t buf2[32] = {"TX2版本信息 "};
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    uint8_t buf1[32] = {page_ptr->verson_page_ptr->page_verson->ptr_tx1_info};
+    uint8_t buf2[32] = {page_ptr->verson_page_ptr->page_verson->ptr_tx2_info};
     strcat(buf1,text1);
     strcat(buf2,text2);
     lab31 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,-15,buf1,0);

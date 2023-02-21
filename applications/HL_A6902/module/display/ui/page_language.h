@@ -8,34 +8,45 @@
 #define ENGLISH     1
 typedef struct _arc_language_ptr_t
 {
-    ///等刘杰确认
+    char* ptr_paring;
 }arc_language_ptr_t;
 
 typedef struct _arc_language_page_t
 {
-    arc_language_ptr_t page_arc;
+    arc_language_ptr_t* page_arc;
 }arc_language_page_t;
 
+typedef struct _moreone_language_ptr_t
+{
+    char* ptr_on;
+    char* ptr_off;
+    char* ptr_record;
+    char* ptr_mute;
+    char* ptr_noise;
+}moreone_language_ptr_t;
 
-
+typedef struct _moreone_language_page_t
+{
+    moreone_language_ptr_t* page_moreone;
+}moreone_language_page_t;
 
 typedef struct _led_brightness_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_right;
     char* ptr_top;
 }led_brightness_language_ptr_t;
 
 typedef struct _monitor_set_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_right;
     char* ptr_top;
 }monitor_set_language_ptr_t;
 
 typedef struct _sound_effect_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_right;
     char* ptr_top;
 }sound_effect_language_ptr_t;
@@ -53,7 +64,7 @@ typedef struct _b_two_in_one_language_page_t
 
 typedef struct _lineout_left_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_single;
     char* ptr_stft;
 }lineout_left_language_ptr_t;
@@ -130,6 +141,17 @@ typedef struct _tx_config_language_ptr_t
     char* ptr_status_led;
 }tx_config_language_ptr_t;
 
+typedef struct _menu_config_language_ptr_t
+{
+    char* ptr_single_voice;
+    char* ptr_tx_config;
+    char* ptr_noise_config;
+    char* ptr_voice_config;
+    char* ptr_monitor_config;
+    char* ptr_high_true;
+    char* ptr_common_config;
+}menu_config_language_ptr_t;
+
 typedef struct _volume_menu_language_ptr_t
 {
     char* ptr_monitor_voice;
@@ -142,6 +164,7 @@ typedef struct _menu_language_page_t
     sound_module_language_ptr_t*  page_sound_module;
     tx_config_language_ptr_t*  page_tx_config;
     volume_menu_language_ptr_t*  page_volume_menu;
+    menu_config_language_ptr_t* page_menu;
 }menu_language_page_t;
 
 
@@ -189,6 +212,7 @@ typedef struct _s_two_in_one_language_page_t
 typedef struct _storage_language_ptr_t
 {
     char* ptr_storage;
+    char* ptr_storage_use;
 }storage_language_ptr_t;
 
 typedef struct _storage_language_page_t
@@ -201,7 +225,7 @@ typedef struct _storage_language_page_t
 
 typedef struct _auto_poweroff_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_mid;
     char* ptr_right;
     char* ptr_top;
@@ -209,7 +233,7 @@ typedef struct _auto_poweroff_language_ptr_t
 
 typedef struct _low_cut_language_ptr_t
 {
-    char* ptr_lift;
+    char* ptr_left;
     char* ptr_mid;
     char* ptr_right;
     char* ptr_top;
@@ -259,7 +283,9 @@ typedef struct _upgrade_language_ptr_t
 {
     char* ptr_upgrading;
     char* ptr_success;
+    char* ptr_set_success;
     char* ptr_fail;
+    char* ptr_set_fail;
     char* ptr_reset_device;
 }upgrade_language_ptr_t;
 
@@ -287,6 +313,7 @@ typedef struct _verson_language_page_t
 typedef struct _a6902_language_typ_t
 {
     arc_language_page_t* arc_page_ptr;
+    moreone_language_page_t* moreone_page_ptr;
     b_two_in_one_language_page_t* b_two_in_one_page_ptr;
     barset_language_page_t* barset_page_prt;
     lineout_language_page_t* lineout_page_ptr;
@@ -299,5 +326,11 @@ typedef struct _a6902_language_typ_t
     verson_language_page_t* verson_page_ptr;
 }a6902_language_typ_t;
 
+
+
+
+
+void* hl_a6902_language_ptr_get(void);
+void hl_a6902_language_ptr_init(uint8_t language);
 
 #endif
