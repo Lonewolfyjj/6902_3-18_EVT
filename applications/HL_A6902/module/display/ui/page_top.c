@@ -500,7 +500,7 @@ static void centert_icon_timer_cb(lv_timer_t * timer)
     if(center_icon_sta.unlock){
         center_icon_sta.unlock = 0;
         lv_obj_del(center_unlock);
-        hl_delete_top_icon(HL_TOP_ICON_LOCK);
+        // hl_delete_top_icon(HL_TOP_ICON_LOCK);
     }
     lv_timer_pause(timer);
 }
@@ -537,6 +537,7 @@ static void hl_add_center_icon(hl_top_icon_t icon)
             center_icon_sta.unlock = 1;
             lv_timer_reset(timer);
             lv_timer_resume(timer);
+            hl_delete_top_icon(HL_TOP_ICON_LOCK);
             center_unlock = lv_center_img_creat_fun(&Other_unlock,0,0);
             break;
         default:
@@ -704,6 +705,9 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_timer_del(timer);
             lv_anim_del_all();
             lv_obj_clean(lv_scr_act());
+            break;
+        case HL_TOP_CENTER_DEL:
+            hl_del_center_icon();
             break;
         case HL_TOP_DELETE_STYLE:
             lv_delete_style();

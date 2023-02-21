@@ -4,6 +4,8 @@
 #include "lvgl.h"
 #include "stdio.h"
 
+#define CHINESE     0
+#define ENGLISH     1
 typedef struct _arc_language_ptr_t
 {
     ///等刘杰确认
@@ -258,11 +260,12 @@ typedef struct _upgrade_language_ptr_t
     char* ptr_upgrading;
     char* ptr_success;
     char* ptr_fail;
+    char* ptr_reset_device;
 }upgrade_language_ptr_t;
 
 typedef struct _upgrade_language_page_t
 {
-    upgrade_language_ptr_t page_upgrade;
+    upgrade_language_ptr_t* page_upgrade;
 }upgrade_language_page_t;
 
 
@@ -277,7 +280,7 @@ typedef struct _verson_language_ptr_t
 
 typedef struct _verson_language_page_t
 {
-    verson_language_ptr_t page_verson;
+    verson_language_ptr_t* page_verson;
 }verson_language_page_t;
 
 
