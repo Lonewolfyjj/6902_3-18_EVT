@@ -1,3 +1,35 @@
+/**
+ * @file page_language.c
+ * @author dujunjie (junjie.du@hollyland-tech.com)
+ * @brief 
+ * @version 1.0
+ * @date 2023-02-21
+ * 
+ * ██╗  ██╗ ██████╗ ██╗     ██╗  ██╗   ██╗██╗      █████╗ ███╗   ██╗██████╗ 
+ * ██║  ██║██╔═══██╗██║     ██║  ╚██╗ ██╔╝██║     ██╔══██╗████╗  ██║██╔══██╗
+ * ███████║██║   ██║██║     ██║   ╚████╔╝ ██║     ███████║██╔██╗ ██║██║  ██║
+ * ██╔══██║██║   ██║██║     ██║    ╚██╔╝  ██║     ██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██║╚██████╔╝███████╗███████╗██║   ███████╗██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ * @copyright Copyright (c) 2023 hollyland
+ * 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date           <th>Version  <th>Author         <th>Description
+ * <tr><td>2023-02-21     <td>v1.0     <td>dujunjie       <td>初次发布
+ * </table>
+ * 
+ */ 
+/* Define to prevent recursive inclusion -------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
+/* typedef -------------------------------------------------------------------*/
+/* define --------------------------------------------------------------------*/
+/* variables -----------------------------------------------------------------*/
+/* Private function(only *.c)  -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/*
+ * EOF
+ */
 #include "page_language.h"
 
 #define CHINESE_LANGUAGE_DEFINE(PTR)    Chinese_##PTR
@@ -159,9 +191,9 @@ static pair_language_ptr_t CHINESE_LANGUAGE_DEFINE(pair) = {
 };
 
 static restore_language_ptr_t CHINESE_LANGUAGE_DEFINE(restore) = {
-    .prt_top = "取消",
+    .prt_top = "是否恢复出厂设置",
     .ptr_left = "确定",
-    .ptr_right = "是否恢复出厂设置",
+    .ptr_right = "取消",
 };
 
 static s_two_in_one_language_page_t CHINESE_LANGUAGE_DEFINE(s_two_in_one) = {
@@ -426,9 +458,9 @@ static pair_language_ptr_t ENGLISH_LANGUAGE_DEFINE(pair) = {
 };
 
 static restore_language_ptr_t ENGLISH_LANGUAGE_DEFINE(restore) = {
-    .prt_top = "取消",
+    .prt_top = "是否恢复出厂设置",
     .ptr_left = "确定",
-    .ptr_right = "是否恢复出厂设置",
+    .ptr_right = "取消",
 };
 
 static s_two_in_one_language_page_t ENGLISH_LANGUAGE_DEFINE(s_two_in_one) = {
