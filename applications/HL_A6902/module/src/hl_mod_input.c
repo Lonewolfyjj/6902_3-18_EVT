@@ -27,7 +27,9 @@
 #include "hl_util_timeout.h"
 #include "hl_util_general_type.h"
 
-
+#define DBG_SECTION_NAME "mod_in"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数
@@ -781,24 +783,24 @@ uint8_t hl_mod_input_init(void* msg_hander)
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
     if (hl_input_msg.msg_hander == NULL) {
-        HL_PRINT("msghander err!");
+        LOG_E("msghander err!");
         return HL_FAILED;
     }
 
     rt_memset(&hl_input_msg.msg, 0, sizeof(hl_input_msg.msg));
 
     if (HL_SUCCESS != hl_mod_input_key_init()) {
-        HL_PRINT("key init err!");
+        LOG_E("key init err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_init()) {
-        HL_PRINT("insert init err!");
+        LOG_E("insert init err!");
         return HL_FAILED;
     }
 #if !HL_IS_TX_DEVICE()
     if (HL_SUCCESS != hl_drv_knob_init()) {
-        HL_PRINT("knob init err!");
+        LOG_E("knob init err!");
         return HL_FAILED;
     }    
 #endif
@@ -820,7 +822,7 @@ uint8_t hl_mod_input_init(void* msg_hander)
         //     rt_thread_startup(input_tid);
         // }
     } else {
-        HL_PRINT("input thread init err!");
+        LOG_E("input thread init err!");
         return HL_FAILED;
     }
 
@@ -835,12 +837,12 @@ uint8_t hl_mod_input_deinit(void)
     }
 
     if (HL_SUCCESS != hl_mod_input_key_deinit()) {
-        HL_PRINT("key deinit err!");
+        LOG_E("key deinit err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_deinit()) {
-        HL_PRINT("insert deinit err!");
+        LOG_E("insert deinit err!");
         return HL_FAILED;
     }
 
@@ -851,6 +853,25 @@ uint8_t hl_mod_input_deinit(void)
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
 
     return HL_SUCCESS;
+}
+
+uint8_t hl_mod_input_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
+{
+    uint8_t i;
+
+    LOG_D("[line:%d] cmd(%d)", __LINE__, cmd);
+    switch (cmd) {
+        case HL_INPUT_RESET_CMD:  /// 刷新输入模块        
+            for (i = 0; i < HL_INPUT_INSERT; i++) {
+               insert_state[i].insert_cur_state = INSERT_STATE_IDLE;
+            }
+            break;
+        default:
+            LOG_E("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
+            break;
+    }
+
+    return 0;
 }
 /*
  * EOF

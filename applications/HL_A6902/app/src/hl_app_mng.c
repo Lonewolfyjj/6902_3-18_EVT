@@ -142,6 +142,7 @@ void hl_app_msg_thread(void* parameter)
 
     //退出charger app后重新通知pm上报一次电量和充电状态信息，因为第一次上报的信息在charger app中可能被清除了，没有处理
     hl_mod_pm_ctrl(HL_PM_BAT_INFO_UPDATE_CMD, RT_NULL, 0);
+    hl_mod_input_io_ctrl(HL_INPUT_RESET_CMD, RT_NULL, 0);
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
