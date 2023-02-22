@@ -265,23 +265,23 @@ static int rockchip_panel_send_mcu_cmds(struct display_state *state,
  * @param  state: display state.
  * @param  cmds: init command.
  */
-int rockchip_panel_get_dsi_id(struct display_state *state)
-{
-    rt_err_t ret = RT_EOK;
-    struct connector_state *conn_state = &state->conn_state;
-    char buffer[2] = { 0x51 };
-    struct rockchip_cmd_desc desc = {
-        { MIPI_DSI_DCS_READ, 0, 1 },
-        &buffer
-    };
+// int rockchip_panel_get_dsi_id(struct display_state *state)
+// {
+//     rt_err_t ret = RT_EOK;
+//     struct connector_state *conn_state = &state->conn_state;
+//     char buffer[2] = { 0x51 };
+//     struct rockchip_cmd_desc desc = {
+//         { MIPI_DSI_DCS_READ, 0, 1 },
+//         &buffer
+//     };
 
-    ret = conn_state->funcs->transfer(state, &desc);
-    if (ret)
-        return ret;
+//     ret = conn_state->funcs->transfer(state, &desc);
+//     if (ret)
+//         return ret;
 
-    rt_kprintf("%s %x\n", __func__, buffer[1]);
-    return RT_EOK;
-}
+//     rt_kprintf("%s %x\n", __func__, buffer[1]);
+//     return RT_EOK;
+// }
 
 /**
  * @brief  Send dsi command.

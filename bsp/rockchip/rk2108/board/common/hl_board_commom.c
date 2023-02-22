@@ -287,7 +287,7 @@ void hl_board_reboot(void)
 #endif
     rt_thread_mdelay(100);
     extern void rt_hw_cpu_reset(void);
-    // rt_hw_cpu_reset();
+    rt_hw_cpu_reset();
 }
 
 #ifdef __cplusplus
