@@ -81,8 +81,14 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
 #endif
 }
 
+static bool _use_no_operation_timer_flag = true;
+
 void hl_app_pm_timer_set(void)
 {
+    if (_use_no_operation_timer_flag == false) {
+        return;
+    }
+
     hl_mod_pm_cmd_e cmd;
 
 #if HL_IS_TX_DEVICE()
@@ -107,6 +113,15 @@ void hl_app_pm_timer_set(void)
 
     hl_mod_pm_ctrl(cmd, RT_NULL, 0);
 }
+
+static void hl_app_pm_close_no_operation_timer(void)
+{
+    _use_no_operation_timer_flag = false;
+    hl_mod_pm_ctrl(HL_PM_STOP_SHUTDOWN_TIMER_CMD, RT_NULL, 0);
+    LOG_I("close no-operation-timer");
+}
+
+MSH_CMD_EXPORT(hl_app_pm_close_no_operation_timer, close no operation timer);
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
 void hl_app_pm_msg_pro(mode_to_app_msg_t* p_msg)
