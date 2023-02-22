@@ -221,8 +221,8 @@ static auto_poweroff_language_ptr_t CHINESE_LANGUAGE_DEFINE(auto_poweroff) = {
 
 static low_cut_language_ptr_t CHINESE_LANGUAGE_DEFINE(low_cut) = {
     .ptr_left = "无低切",
-    .ptr_mid = "75HZ",
-    .ptr_right = "150HZ",
+    .ptr_mid = "75Hz",
+    .ptr_right = "150Hz",
     .ptr_top = "低切",
 };
 
@@ -488,8 +488,8 @@ static auto_poweroff_language_ptr_t ENGLISH_LANGUAGE_DEFINE(auto_poweroff) = {
 
 static low_cut_language_ptr_t ENGLISH_LANGUAGE_DEFINE(low_cut) = {
     .ptr_left = "无低切",
-    .ptr_mid = "75HZ",
-    .ptr_right = "150HZ",
+    .ptr_mid = "75Hz",
+    .ptr_right = "150Hz",
     .ptr_top = "低切",
 };
 
