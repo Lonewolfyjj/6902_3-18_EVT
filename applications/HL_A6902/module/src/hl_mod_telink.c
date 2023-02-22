@@ -407,9 +407,9 @@ static void hl_mod_telink_thread_entry(void* parameter)
         // 延时5ms
         rt_thread_mdelay(5);
 
-        // LED配对状态灯更新间隔1秒
+        // LED配对状态灯更新间隔3秒
         count++;
-        count %= 200;
+        count %= 600;
 
         // 更新配对状态
         if ((old_pair_info != new_pair_info) || (!count)) {
