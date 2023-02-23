@@ -33,6 +33,7 @@
 #ifndef _PAGE_LOCK_H
 #define _PAGE_LOCK_H
 
+#if 0
 #include "lvgl.h"
 #include "stdio.h"
 
@@ -111,5 +112,5 @@ typedef struct __hl_lvgl_lock_ioctl_t
  * </table>
  */
 void hl_mod_lock_ioctl(void * ctl_data);
-
+#endif
 #endif
