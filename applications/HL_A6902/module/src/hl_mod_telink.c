@@ -39,27 +39,28 @@
 /// 无线模块交互信息结构体
 typedef struct _hl_s_rf_info_t
 {
-    uint8_t                local_mac[6];
-    hl_rf_remote_mac_t     remote_mac;
-    hl_rf_version_t        version;
-    hl_rf_pair_info_t      mac;
-    hl_rf_rssi_t           rssi;
-    hl_rf_bypass_time_t    time;
-    hl_rf_bypass_version_t remote_version;
-    hl_rf_bypass_state_t   mute;
-    hl_rf_bypass_state_t   denoise;
-    hl_rf_bypass_state_t   low_cut;
-    hl_rf_bypass_state_t   record;
-    hl_rf_bypass_state_t   charge;
-    hl_rf_bypass_state_t   sound_mix;
-    hl_rf_bypass_state_t   auto_record;
-    hl_rf_bypass_state_t   record_protect;
-    hl_rf_bypass_value_t   status_led;
-    hl_rf_bypass_value_t   uac_gain;
-    hl_rf_bypass_value_t   tx_gain;
-    hl_rf_bypass_value_t   battery;
-    hl_rf_bypass_value_t   auto_poweroff;
-    hl_rf_bypass_value_t   sound_effect;
+    uint8_t                    local_mac[6];
+    hl_rf_remote_mac_t         remote_mac;
+    hl_rf_version_t            version;
+    hl_rf_pair_info_t          mac;
+    hl_rf_rssi_t               rssi;
+    hl_rf_bypass_time_t        time;
+    hl_rf_bypass_version_t     remote_version;
+    hl_rf_bypass_state_t       mute;
+    hl_rf_bypass_state_t       denoise;
+    hl_rf_bypass_state_t       low_cut;
+    hl_rf_bypass_state_t       record;
+    hl_rf_bypass_state_t       charge;
+    hl_rf_bypass_state_t       sound_mix;
+    hl_rf_bypass_state_t       auto_record;
+    hl_rf_bypass_state_t       record_protect;
+    hl_rf_bypass_value_t       status_led;
+    hl_rf_bypass_value_t       uac_gain;
+    hl_rf_bypass_value_t       tx_gain;
+    hl_rf_bypass_value_t       battery;
+    hl_rf_bypass_value_t       auto_poweroff;
+    hl_rf_bypass_value_t       sound_effect;
+    hl_rf_bypass_update_info_t update_info;
 } hl_rf_info_t;
 
 typedef struct
@@ -201,6 +202,17 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 #endif
             app_msg_t.len       = sizeof(s_rf_info.remote_mac);
             app_msg_t.param.ptr = (uint8_t*)&s_rf_info.remote_mac;
+            break;
+
+        case HL_RF_BYPASS_UPDATE_IND:
+            s_rf_info.update_info.chn     = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->chn;
+            s_rf_info.update_info.denoise = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->denoise;
+            s_rf_info.update_info.charge  = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->charge;
+            s_rf_info.update_info.battery = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->battery;
+            s_rf_info.update_info.record  = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->record;
+            s_rf_info.update_info.mute    = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->mute;
+            app_msg_t.len                 = sizeof(s_rf_info.update_info);
+            app_msg_t.param.ptr           = (uint8_t*)&s_rf_info.update_info;
             break;
 
         case HL_RF_BYPASS_MUTE_IND:

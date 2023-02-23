@@ -48,17 +48,18 @@
 void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
-    uint8_t               p_param;
-    uint8_t*              ptr;
-    hl_rf_channel_e       bypass_chn;
-    hl_rf_bypass_string_t bypass_string;
-    hl_rf_bypass_state_t  bypass_state;
-    hl_rf_bypass_value_t  bypass_value;
-    hl_switch_e           bypass_switch;
-    hl_rf_bypass_state_t* ptr_rf_state;
-    hl_rf_bypass_value_t* ptr_rf_value;
-    hl_rf_bypass_time_t*  ptr_rf_time;
-    uint32_t              u32_param;
+    uint8_t                    p_param;
+    uint8_t*                   ptr;
+    hl_rf_channel_e            bypass_chn;
+    hl_rf_bypass_string_t      bypass_string;
+    hl_rf_bypass_state_t       bypass_state;
+    hl_rf_bypass_value_t       bypass_value;
+    hl_switch_e                bypass_switch;
+    hl_rf_bypass_state_t*      ptr_rf_state;
+    hl_rf_bypass_value_t*      ptr_rf_value;
+    hl_rf_bypass_time_t*       ptr_rf_time;
+    uint32_t                   u32_param;
+    hl_rf_bypass_update_info_t bypass_info;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -75,25 +76,18 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 bypass_string.chn = tx_info.rf_chn;
                 bypass_state.chn  = tx_info.rf_chn;
                 bypass_value.chn  = tx_info.rf_chn;
+                bypass_info.chn   = tx_info.rf_chn;
                 // version
                 rt_memset(bypass_string.str, 0, sizeof(bypass_string.str));
                 rt_memcpy(bypass_string.str, A6902_VERSION, sizeof(A6902_VERSION));
                 hl_mod_telink_ioctl(HL_RF_BYPASS_VERSION_CMD, (uint8_t*)&bypass_string, sizeof(bypass_string));
-                // denoise
-                bypass_state.state = tx_info.denoise_flag;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, (uint8_t*)&bypass_state, sizeof(bypass_state));
-                // mute
-                bypass_state.state = tx_info.mute_flag;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, (uint8_t*)&bypass_state, sizeof(bypass_state));
-                // rec
-                bypass_state.state = tx_info.rec_flag;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, (uint8_t*)&bypass_state, sizeof(bypass_state));
-                // battery
-                bypass_value.val = tx_info.soc;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_BATTERY_CMD, (uint8_t*)&bypass_value, sizeof(bypass_value));
-                // 充电状态
-                bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
+                // 状态信息交互
+                bypass_info.mute    = tx_info.mute_flag;
+                bypass_info.denoise = tx_info.denoise_flag;
+                bypass_info.charge  = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
+                bypass_info.battery = tx_info.soc;
+                bypass_info.record  = tx_info.rec_flag;
+                hl_mod_telink_ioctl(HL_RF_BYPASS_UPDATE_CMD, (uint8_t*)&bypass_info, sizeof(bypass_info));
             }
             hl_app_disp_state_led_set();
             LOG_D("telink info(%02X)", tx_info.rf_state);
@@ -252,16 +246,17 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 {
     // hl_led_mode     led_ctrl;
-    uint8_t                tx1_rssi;
-    uint8_t                tx2_rssi;
-    uint8_t*               ptr;
-    hl_rf_bypass_state_t*  ptr_rf_state;
-    hl_rf_bypass_value_t*  ptr_rf_value;
-    hl_rf_bypass_string_t* ptr_rf_string;
-    hl_rf_bypass_state_t   bypass_state;
-    hl_rf_bypass_value_t   bypass_value;
-    hl_rf_bypass_string_t  bypass_string;
-    hl_rf_bypass_time_t    bypass_time;
+    uint8_t                     tx1_rssi;
+    uint8_t                     tx2_rssi;
+    uint8_t*                    ptr;
+    hl_rf_bypass_state_t*       ptr_rf_state;
+    hl_rf_bypass_value_t*       ptr_rf_value;
+    hl_rf_bypass_string_t*      ptr_rf_string;
+    hl_rf_bypass_update_info_t* ptr_rf_info;
+    hl_rf_bypass_state_t        bypass_state;
+    hl_rf_bypass_value_t        bypass_value;
+    hl_rf_bypass_string_t       bypass_string;
+    hl_rf_bypass_time_t         bypass_time;
 
     // LOG_D("hl_app_rf_msg_pro get telink msg(%d)!!! \r\n", p_msg->cmd);
     switch (p_msg->cmd) {
@@ -305,6 +300,25 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 LOG_E("telink version receive error\n");
             }
             LOG_D("app get TX%d Version(%s)", ptr_rf_string->chn, ptr_rf_string->str);
+            break;
+
+        case HL_RF_BYPASS_UPDATE_IND:
+            ptr_rf_info = (hl_rf_bypass_update_info_t*)p_msg->param.ptr;
+            if (HL_RF_LEFT_CHANNEL == ptr_rf_info->chn) {
+                rx_info.tx1_mute = ptr_rf_info->mute;
+                hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &rx_info.tx1_mute, 1);
+                hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
+                hl_mod_display_io_ctrl(TX1_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_info->charge, 1);
+                hl_mod_display_io_ctrl(TX1_BAT_VAL_VAL_CMD, &ptr_rf_info->battery, sizeof(ptr_rf_info->battery));
+            } else if (HL_RF_RIGHT_CHANNEL == ptr_rf_info->chn) {
+                rx_info.tx2_mute = ptr_rf_info->mute;
+                hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &rx_info.tx2_mute, 1);
+                hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
+                hl_mod_display_io_ctrl(TX2_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_info->charge, 1);
+                hl_mod_display_io_ctrl(TX2_BAT_VAL_VAL_CMD, &ptr_rf_info->battery, sizeof(ptr_rf_info->battery));
+            } else {
+                LOG_E("telink update_info receive error");
+            }
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -365,10 +379,6 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 }
                 LOG_D("app get TX%d Record(%d)", ptr_rf_state->chn, ptr_rf_state->state);
             }
-            break;
-
-        case HL_RF_BYPASS_SETTING_IND:
-            LOG_D("app get setting indicate");
             break;
 
         case HL_RF_BYPASS_BATTERY_IND:
