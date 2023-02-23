@@ -36,7 +36,7 @@
 #include "rtdef.h"
 #include "hl_config.h"
 #include "stdbool.h"
-// #include "hl_test_pre.h"
+#include "hl_util_general_type.h"
 
 
 
@@ -99,6 +99,12 @@ typedef enum _input_mod_msg_cmd_e
     MSG_COMB_L_R_VOL,    
 } input_mod_msg_cmd_e;
 #endif
+
+typedef enum _hl_mod_input_ctrl_cmd
+{
+    /// 刷新输入模块的按键状态。 参数<无>
+    HL_INPUT_RESET_CMD = 0x00,
+} hl_mod_input_ctrl_cmd;
 
 /**
  * 
