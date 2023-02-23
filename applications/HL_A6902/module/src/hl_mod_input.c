@@ -236,14 +236,14 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     hl_input_msg.msg.cmd             = msg_cmd;
     hl_input_msg.msg.len             = 0;
     hl_input_msg.msg.param.u32_param = param;
-
+#if HL_IS_TX_DEVICE()
     if (key_msg_send_flag) {
         if (msg_cmd == MSG_TX_PWR_KEY || msg_cmd == MSG_TX_PAIR_KEY || msg_cmd == MSG_TX_REC_KEY) {
             HL_PRINT("donot send key msg:%d\n",msg_cmd);
             return;
         }
     }
-    
+#endif
     res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
         HL_PRINT("INPUT_MODE msgq full\n");
