@@ -67,7 +67,9 @@ static hl_timeout_t rot_scan_in;
 static hl_timeout_t sensor_debance;
 static lv_style_t lay_style;
 static rt_thread_t display_tid = RT_NULL;
-
+static lv_timer_t * timer;
+static lv_style_t style;
+static lv_obj_t* obj;
 static void hl_mod_screen_rot_scan(void);
 
 // 在nvrma获取sn和rx版本号
@@ -508,12 +510,20 @@ static lv_obj_t* hl_mod_creat_lay(void)
     lv_obj_move_foreground(obj);
     return obj;
 }
+
+static void screen_timer(lv_timer_t * timer)
+{
+    rt_kprintf("reset screen\n");
+    hl_drv_rm690a0_deinit();
+    hl_drv_rm690a0_init();
+    obj = hl_mod_creat_lay();
+    lv_obj_del_delayed(obj,50);
+    lv_timer_reset(timer);
+}
 // RX
 static void hl_mod_display_task(void* param)
 {
-    uint32_t wdg_reg = 0,clock = 0;
-    static lv_style_t style;
-    static lv_obj_t* obj;
+    uint32_t wdg_reg = 0;    
     hl_a6902_language_ptr_init(CHINESE);
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
@@ -534,16 +544,10 @@ static void hl_mod_display_task(void* param)
     }else{
         rt_kprintf("\nUnknow reset ,reg = %X\n",wdg_reg);
     }
-    clock = rt_tick_get();
+    timer = lv_timer_create(screen_timer, 1000,  NULL);
+    lv_timer_set_repeat_count(timer, -1);
     while (1) {
-        // if((rt_tick_get() - clock) > 1000 || (rt_tick_get() - clock) > 10000){
-        //     if(hl_mipi_screen_sta()){
-        //         obj = hl_mod_creat_lay();
-        //         lv_obj_del_delayed(obj,50);
-        //     }
-        //     clock = rt_tick_get();
-        // }
-        // else if(hl_mipi_screen_sta_get()){
+
             hl_mod_screen_rot_scan();
             hl_mod_display_upgrade_enter();
             hl_mod_outbox_offcharge_scan();
@@ -551,10 +555,10 @@ static void hl_mod_display_task(void* param)
 
             hl_mod_page_screen_lowbritness_scan();
             PageManager_Running();
-            // rt_thread_mdelay(RTHEAD_DELAY_TIME);
-            // lv_task_handler();
-            // rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
-        // }
+
+        if(hl_mipi_screen_sta()){
+            lv_timer_reset(timer);
+        }
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);       
     }

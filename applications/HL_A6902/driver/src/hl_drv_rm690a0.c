@@ -66,8 +66,10 @@ typedef struct _hl_drv_mipi_screen
     uint32_t mipi_data_len;
 } hl_drv_mipi_screen;
 static uint8_t screen_sta = 1;
-static struct display_state state_b;
+
 static hl_drv_mipi_screen mipi_screen;
+
+uint8_t tmp_screen[126 * 294 * 2];
 /* Private function(only *.c)  -----------------------------------------------*/
 
 // #if HL_SCREEN_IS_BIG_ENDIAN  1
@@ -485,10 +487,12 @@ uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start,
     return ret;
 }
 #endif 
+
+
 uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
 {
     uint8_t ret = RT_ERROR;
-
+    uint32_t i;
     hl_mod_lvgl_video_memory(video_mem_p);
     mipi_screen.win_config->winId = 0;
     mipi_screen.win_config->winEn = 1;
@@ -516,7 +520,7 @@ uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
             rt_kprintf("rt_display_sync_hook time out\n");
     }
 #endif
-
+    
     return ret;
 }
 
@@ -620,13 +624,25 @@ uint8_t hl_drv_rm690a0_deinit(void)
     return ret;
 }
 
+
+static void hl_mod_display_taskdd(void* param)
+{
+    uint8_t js = 0,jd = 1;
+    while(1){
+        js = rt_pin_read(GPIO1_C0);
+        if(js != jd){
+            rt_kprintf("%d\n",js);
+            jd = js;
+        }
+    }
+}
 uint8_t hl_drv_rm690a0_init(void)
 {
     uint8_t ret = RT_NULL;
     int path = 0;
     struct display_state *state;
-
-    hl_drv_rm690a0_gpio_init();
+    rt_pin_mode(GPIO1_C0,PIN_MODE_INPUT);
+    hl_drv_rm690a0_gpio_init();    
 
     mipi_screen.g_display_dev = rt_device_find("lcd");
 
@@ -700,58 +716,39 @@ uint8_t hl_drv_rm690a0_init(void)
     // BUF长度计算：
     mipi_screen.mipi_data_len = (uint32_t)MIPI_OLED_WIDTH*MIPI_OLED_HEIGHT*(uint32_t)get_color_format_byte(MIPI_OLED_DATA_FMT);
 
-    // memcpy(&state_b,state,sizeof(struct display_state));
-
-    // state_b.panel_state.funcs->prepare(&state_b);
-
     return RT_EOK;
 }
 
-// extern int rockchip_panel_get_dsi_id(struct display_state *state);
 
-// uint8_t hl_mipi_screen_sta_get(void)
-// {
-//     return screen_sta;
-// }
-
-// uint8_t hl_mipi_screen_sta(void)
-// {
-//     static uint8_t err = 0;
-//     if(rockchip_panel_get_dsi_id(&state_b) != BRIGHTNESS_DEFAULT_VALUE){
-//         err++;
-//     }
-//     if(err > 2){
-//         err = 0;
-//         screen_sta = 0;
-//         // hl_drv_rm690a0_deinit();
-//         // hl_drv_rm690a0_init();
-//         screen_sta = 1;
-//         return 1;
-//     }
-//     return 0;
-// }
+uint8_t hl_mipi_screen_sta(void)
+{
+    static uint8_t js = 0,jd = 1;
+    js = rt_pin_read(GPIO1_C0);
+    if(js != jd){
+        jd = js;
+        return 1;
+    }else{
+        return 0;
+    }
+}
 
 
-// void a690a0_test(int argc, char** argv)
-// {
-//     uint8_t ret;
-//     uint8_t buf[10];    
-//     if (!strcmp("reset", argv[1])) {
-//         hl_hal_gpio_low(GPIO_OLED_RST);
-//         rt_thread_mdelay(10);
-//         hl_hal_gpio_high(GPIO_OLED_RST);
-//     }
-//     else if(!strcmp("get", argv[1])){     
-//         ret = rockchip_panel_get_dsi_id(&state_b);   
-//         rt_kprintf("Read data : %X\n",ret);
-//     } 
-//     else if(!strcmp("init", argv[1])){     
-//         hl_drv_rm690a0_deinit();
-//         hl_drv_rm690a0_init();
-//     }  
-// }
+void a690a0_test(int argc, char** argv)
+{
+    uint8_t ret;
+    uint8_t buf[10];    
+    if (!strcmp("reset", argv[1])) {
+        hl_hal_gpio_low(GPIO_OLED_RST);
+        rt_thread_mdelay(10);
+        hl_hal_gpio_high(GPIO_OLED_RST);
+    }
+    else if(!strcmp("init", argv[1])){     
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+    }  
+}
 
-// MSH_CMD_EXPORT(a690a0_test, run a690a0_test);
+MSH_CMD_EXPORT(a690a0_test, run a690a0_test);
 
 
 
