@@ -249,8 +249,15 @@ void hl_drv_rm690a0_otherpin_init(void)
     rt_pin_write(GPIO1_C4, PIN_HIGH);
 }
 
+static void screen_irq_fun(void *args)
+{
+    screen_sta = 1;
+}
+
 static void hl_drv_rm690a0_gpio_init(void)
 {
+    rt_pin_attach_irq(GPIO1_C0,PIN_IRQ_MODE_FALLING,screen_irq_fun,RT_NULL);
+    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);
     // rt_thread_mdelay(50);
     hl_drv_rm690a0_hardware_rst();
     rt_thread_mdelay(50);
@@ -625,23 +632,13 @@ uint8_t hl_drv_rm690a0_deinit(void)
 }
 
 
-static void hl_mod_display_taskdd(void* param)
-{
-    uint8_t js = 0,jd = 1;
-    while(1){
-        js = rt_pin_read(GPIO1_C0);
-        if(js != jd){
-            rt_kprintf("%d\n",js);
-            jd = js;
-        }
-    }
-}
+
 uint8_t hl_drv_rm690a0_init(void)
 {
     uint8_t ret = RT_NULL;
     int path = 0;
     struct display_state *state;
-    rt_pin_mode(GPIO1_C0,PIN_MODE_INPUT);
+    
     hl_drv_rm690a0_gpio_init();    
 
     mipi_screen.g_display_dev = rt_device_find("lcd");
@@ -708,8 +705,7 @@ uint8_t hl_drv_rm690a0_init(void)
     if (mipi_screen.post_scale == RT_NULL) {
         rt_kprintf("mipi init err 7!\r\n");
         return RT_ERROR;
-    }
-    
+    }    
 
     hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
 
@@ -720,18 +716,15 @@ uint8_t hl_drv_rm690a0_init(void)
 }
 
 
-uint8_t hl_mipi_screen_sta(void)
+uint8_t hl_get_mipi_screen_sta(void)
 {
-    static uint8_t js = 0,jd = 1;
-    js = rt_pin_read(GPIO1_C0);
-    if(js != jd){
-        jd = js;
-        return 1;
-    }else{
-        return 0;
-    }
+    return screen_sta;
 }
 
+void hl_set_mipi_screen_sta(uint8_t data)
+{
+    screen_sta = data;
+}
 
 void a690a0_test(int argc, char** argv)
 {

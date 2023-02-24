@@ -513,12 +513,16 @@ static lv_obj_t* hl_mod_creat_lay(void)
 
 static void screen_timer(lv_timer_t * timer)
 {
-    rt_kprintf("reset screen\n");
-    hl_drv_rm690a0_deinit();
-    hl_drv_rm690a0_init();
-    obj = hl_mod_creat_lay();
-    lv_obj_del_delayed(obj,50);
-    lv_timer_reset(timer);
+    if(hl_get_mipi_screen_sta()){
+        hl_set_mipi_screen_sta(0);
+    }else{
+        rt_kprintf("reset screen\n");
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+        obj = hl_mod_creat_lay();
+        lv_obj_del_delayed(obj,50);
+        lv_timer_reset(timer);
+    }    
 }
 // RX
 static void hl_mod_display_task(void* param)
@@ -556,9 +560,6 @@ static void hl_mod_display_task(void* param)
             hl_mod_page_screen_lowbritness_scan();
             PageManager_Running();
 
-        if(hl_mipi_screen_sta()){
-            lv_timer_reset(timer);
-        }
         lv_task_handler();
         rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);       
     }
