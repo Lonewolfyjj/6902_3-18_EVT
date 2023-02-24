@@ -62,7 +62,7 @@ static void page_voc_bar_left_init()
         .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_STEREO_ICON,
         .init_value = hl_mod_page_volume_get(),
-        .ptr        = page_ptr->barset_page_prt->page_lineout_right,//"右声道",
+        .ptr        = page_ptr->barset_page_prt->page_lineout_right->ptr_right,//"右声道",
         .range_max  = MAX_LINEOUT_VOLUME,
         .range_min  = MIN_LINEOUT_VOLUME,
         .src        = &Other_voice,

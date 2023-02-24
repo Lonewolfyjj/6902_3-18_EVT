@@ -221,12 +221,16 @@ static void lv_page_2_init(lv_obj_t *con_obj,const char * text)
 static void lv_page_3_init(lv_obj_t *con_obj,const char * text1,const char * text2)
 {    
     a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
-    uint8_t buf1[32] = {page_ptr->verson_page_ptr->page_verson->ptr_tx1_info};
-    uint8_t buf2[32] = {page_ptr->verson_page_ptr->page_verson->ptr_tx2_info};
+    uint8_t buf1[64];
+    uint8_t buf2[64];
+    rt_memset(buf1,0x00,64);
+    rt_memset(buf2,0x00,64);
+    strcat(buf1,page_ptr->verson_page_ptr->page_verson->ptr_tx1_info);
+    strcat(buf2,page_ptr->verson_page_ptr->page_verson->ptr_tx2_info);
     strcat(buf1,text1);
     strcat(buf2,text2);
-    lab31 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,-15,buf1,0);
-    lab32 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,15,buf2,0);
+    lab31 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,-15,buf1,1);
+    lab32 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_CENTER,-10,15,buf2,1);
 }
 
 // static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
