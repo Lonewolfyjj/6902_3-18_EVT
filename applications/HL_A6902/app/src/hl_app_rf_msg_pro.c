@@ -28,6 +28,7 @@
 #include "hl_util_general_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_app_audio_msg_pro.h"
 #include "hl_mod_display.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_euc.h"
@@ -283,6 +284,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_REFRESH_STATE_IND:
             rx_info.rf_state = *(hl_rf_state_e*)p_msg->param.ptr;
             rx_info.rf_chn   = rx_info.rf_state - 1;
+            hl_app_audio_switch();
             break;
 
         case HL_RF_RSSI_IND:

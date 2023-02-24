@@ -91,7 +91,10 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (tx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
+                tx_info.on_off_flag = 0;
+                // hl_app_audio_switch();                
                 hl_util_nvram_param_set_integer("HALT", 1);
+                hl_mod_audio_deinit();
                 hl_mod_display_deinit();
                 hl_board_reboot();
             } else {
@@ -243,12 +246,20 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.ex_mic_plug = 0;
         mic_select          = HL_MIC_EXTERNAL;
+        hl_app_audio_switch();
+        hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+        hl_app_audio_stream_updata();    
     } else {
         tx_info.ex_mic_plug = 1;
         mic_select          = HL_MIC_INTERNAL;
+        hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+        hl_app_audio_stream_updata();    
+        hl_app_audio_switch();
     }
-    hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
-    hl_app_audio_stream_updata();
+    
+
+    
+    
 }
 
 /// POGO VBUS的状态处理
@@ -292,7 +303,10 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (rx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
+                rx_info.on_off_flag = 0;
+                hl_app_audio_switch();                
                 hl_util_nvram_param_set_integer("HALT", 1);
+                hl_mod_audio_deinit();
                 hl_board_reboot();
             } else {
                 // hl_app_mng_powerOn();
@@ -413,6 +427,8 @@ static void hl_app_rx_hp_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
     hp_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &hp_state, 1);
+
+    hl_app_audio_switch();
 }
 
 /// 相机口状态处理
@@ -430,6 +446,8 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(LINE_OUT_IN_SWITCH_CMD, &cam_plug_state, 1);
     cam_plug_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
+
+    hl_app_audio_switch();
 }
 
 /// POGO VBUS的状态处理
@@ -498,7 +516,6 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
         case MSG_RX_OK_VOL:
             hl_app_rx_knob_key_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_OK_VOL:(%d) \r\n", p_msg->param.u32_param);
-
             break;
 
         case MSG_RX_A_VOL:
