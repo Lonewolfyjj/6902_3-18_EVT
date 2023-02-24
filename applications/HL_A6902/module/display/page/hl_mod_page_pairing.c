@@ -65,6 +65,8 @@ static void hl_mod_page_loop(void)
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
+    hl_mod_page_backlight_update();
+
     if (flag->rf_net_connect) {
 
         rf_net_connect = data_ptr->rf_net_connect;
