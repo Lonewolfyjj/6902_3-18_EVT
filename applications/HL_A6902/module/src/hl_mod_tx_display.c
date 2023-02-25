@@ -575,7 +575,8 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
                 return HL_DISPLAY_FAILED;
             }
 
-            _display_mod.in_box_state = *(hl_led_switch*)ptr;
+            _display_mod.charging_led_count = 0;
+            _display_mod.in_box_state       = *(hl_led_switch*)ptr;
         } break;
         default:
             break;
