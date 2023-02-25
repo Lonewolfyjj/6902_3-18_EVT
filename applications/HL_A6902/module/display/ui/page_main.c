@@ -1126,16 +1126,21 @@ void hl_mod_main_ioctl(void * ctl_data)
 
         case HL_CHANGE_DELETE_TX1:
             // hl_obj_delete(area_tx1,true);
+            LOG_E("del1 test\n");
             if(area_tx1 == RT_NULL){
                 LOG_E("area_tx1 is null\n");
             }
+
+            
             lv_obj_del(area_tx1);
             rt_thread_mdelay(10); 
             lv_ptr_set_null(1);
+            LOG_E("del2 test\n");
         break;
         case HL_CHANGE_DELETE_DOUBLE:
             // hl_obj_delete(area_tx1,true);
             // hl_obj_delete(area_tx2,true);
+            LOG_E("del3 test\n");
             if(area_tx1 == RT_NULL){
                 LOG_E("area_tx1 is null\n");
             }
@@ -1143,19 +1148,23 @@ void hl_mod_main_ioctl(void * ctl_data)
                 LOG_E("area_tx2 is null\n");
             }
             lv_obj_del(area_tx1);
+            LOG_E("del4 test\n");
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
             lv_ptr_set_null(1);
             lv_ptr_set_null(2);
+            LOG_E("del5 test\n");
         break;
         case HL_CHANGE_DELETE_TX2:
             // hl_obj_delete(area_tx2,true);
+            LOG_E("del6 test\n");
             if(area_tx2 == RT_NULL){
                 LOG_E("area_tx2 is null\n");
             }
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
             lv_ptr_set_null(2);
+            LOG_E("del7 test\n");
             break;
         case HL_CHANGE_DELETE_STYLE:
             lv_delete_style();
