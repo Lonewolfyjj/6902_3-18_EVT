@@ -44,6 +44,7 @@ typedef enum _hl_top_icon_t
     HL_TOP_ICON_TRACK_MOD,
     HL_TOP_ICON_NOISE,
     HL_TOP_ICON_LOCK,
+    HL_TOP_ICON_UNLOCK,
     HL_TOP_ICON_APPLE,
     HL_TOP_ICON_LINEOUT,
     HL_TOP_ICON_TYPEC,
@@ -56,6 +57,7 @@ typedef enum _hl_top_cmd_t
 {
     HL_TOP_DELETE_ICON_CMD = 0,
     HL_TOP_ADD_ICON_CMD,
+    HL_TOP_INPUT_CMD,
     HL_TOP_BAT_VAL,
     HL_TOP_BAT_COLOR_GREEN,
     HL_TOP_BAT_CHARGER_HIDE,
@@ -64,7 +66,8 @@ typedef enum _hl_top_cmd_t
     HL_TOP_BAT_COLOR_RED,
     HL_TOP_GET_ICON_OBJ_CMD,
     HL_TOP_DELETE_STYLE,
-    HL_TOP_ALL_DEL
+    HL_TOP_ALL_DEL,
+    HL_TOP_CENTER_DEL,
 }hl_top_cmd_t;
 
 /// @brief 控制结构体

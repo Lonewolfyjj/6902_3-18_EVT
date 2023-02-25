@@ -205,28 +205,28 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX1_RECORD_STATE_SWITCH_IND\r\n");
+            LOG_D("TX1_RECORD_STATE_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX2_RECORD_STATE_SWITCH_IND:
             // TBD: 透传通道给TX2发出录制开始/关闭
             rf_bypass_state.chn   = HL_RF_RIGHT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX2_RECORD_STATE_SWITCH_IND\r\n");
+            LOG_D("TX2_RECORD_STATE_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX1_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX1发出MUTE使能/失能
             rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX1_MUTE_SWITCH_SWITCH_IND\r\n");
+            LOG_D("TX1_MUTE_SWITCH_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX2_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX2发出MUTE使能/失能
             rf_bypass_state.chn   = HL_RF_RIGHT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX2_MUTE_SWITCH_SWITCH_IND\r\n");
+            LOG_D("TX2_MUTE_SWITCH_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX1_GAIN_VAL_IND:
             // : 透传通道给TX1发出codec增益配置

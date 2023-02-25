@@ -40,12 +40,14 @@
 #include "lv_port_indev.h"
 #include "page_arc.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static void hl_mod_page_setup(void)
 {
     hl_lvgl_arc_init_t init;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
 
-    init.ptr = "配对中";
+    init.ptr = page_ptr->arc_page_ptr->page_arc->ptr_paring;//"配对中";
 
     hl_mod_arc_init(&init);
 }

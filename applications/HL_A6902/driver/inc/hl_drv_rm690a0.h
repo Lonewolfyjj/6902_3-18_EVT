@@ -90,6 +90,8 @@ uint8_t hl_drv_rm690a0_deinit(void);
 // uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start, uint16_t y_end, const uint8_t* p_pic);
 uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p);
 uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len);
+uint8_t hl_get_mipi_screen_sta(void);
+void hl_set_mipi_screen_sta(uint8_t data);
 #endif
 
 #endif /*__HL_DRV_MIPI_RM690A0__H_*/

@@ -41,6 +41,7 @@
 #include "page_test.h"
 #include "page_upgrade.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static uint8_t                 update_state   = 0;
 static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
@@ -87,11 +88,12 @@ static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
 
 static void hl_mod_page_setup(void)
 {
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
         .func_cb             = hl_resetfactory_test_cb,
-        .ptr_lift            = "确定",
-        .ptr_right           = "取消",
-        .ptr_top             = "是否开启升级",
+        .ptr_lift            = page_ptr->s_two_in_one_page_ptr->page_open_msc->ptr_left,//"确定",
+        .ptr_right           = page_ptr->s_two_in_one_page_ptr->page_open_msc->ptr_right,//"取消",
+        .ptr_top             = page_ptr->s_two_in_one_page_ptr->page_open_msc->prt_top,//"是否开启升级",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
@@ -114,6 +116,7 @@ static void hl_mod_page_exit(void)
 static void hl_mod_page_loop(void)
 {
     hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     // OK按键
     uint8_t ok_btn = hl_mod_get_knob_okkey_val();
     // 返回按键
@@ -156,10 +159,10 @@ static void hl_mod_page_loop(void)
             rt_kprintf("save ret = %d\r\n", ret);
             if (ret == 0) {
                 ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
-                ioctl.ptr           = "设置成功";
+                ioctl.ptr           = page_ptr->upgrade_page_ptr->page_upgrade->ptr_set_success;//"设置成功";
             } else {
                 ioctl.upgrade_ioctl = HL_UPGRADE_FAIL_CMD;
-                ioctl.ptr           = "设置失败";
+                ioctl.ptr           = page_ptr->upgrade_page_ptr->page_upgrade->ptr_set_fail;//"设置失败";
             }
 
             hl_mod_lvgl_upgrade_ioctl(&ioctl);
