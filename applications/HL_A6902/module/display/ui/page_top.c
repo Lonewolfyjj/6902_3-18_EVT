@@ -31,6 +31,7 @@
  * EOF
  */
 #include "page_top.h"
+#include "page_main.h"
 #include "page_style_bit.h"
 #include <rtthread.h>
 
@@ -142,13 +143,12 @@ static lv_style_t style_power_bar_white_indicator, style_power_bar_green_indicat
     style_power_bar_red_indicator;
 static lv_style_t  style_power_label;
 static lv_timer_t* timer;
-static lv_obj_t *  bat_icon, *bat_bar, *bat_label, *bat_charger_icon;
-static lv_obj_t *  center_heatset, *center_line_out, *center_lock, *center_unlock, *center_usb_c;
-static top_list_t *head_left_list = NULL, *head_right_list = NULL;
+static lv_obj_t *  bat_icon = RT_NULL, *bat_bar = RT_NULL, *bat_label = RT_NULL, *bat_charger_icon = RT_NULL;
+static lv_obj_t *  center_heatset = RT_NULL, *center_line_out = RT_NULL, *center_lock = RT_NULL, *center_unlock = RT_NULL, *center_usb_c = RT_NULL;
+static top_list_t *head_left_list = RT_NULL, *head_right_list = RT_NULL;
 static int8_t      TOP_POS, TOP_OUT_POS, TOP_OFFSET;
 
 static lv_obj_t* area     = RT_NULL;
-static lv_obj_t *img_lock = RT_NULL, *img_unlock = RT_NULL;
 
 static img_info_t stereo_icon = { .default_pos = HL_TOP_ICON_STEREO_MOD, .img_src = &Main_stereo, .img_obj = NULL },
                   noise_icon  = { .default_pos = HL_TOP_ICON_NOISE, .img_src = &Main_noise, .img_obj = NULL },
@@ -389,6 +389,18 @@ static void hl_top_list_clean(top_list_t* head)
         node      = last_node;
         last_node = last_node->next;
     }
+}
+
+static void hl_del_ptr_null(void)
+{
+    bat_icon = RT_NULL;
+    bat_bar = RT_NULL;
+    bat_label = RT_NULL;
+    bat_charger_icon = RT_NULL;
+    center_line_out = RT_NULL;
+    center_lock = RT_NULL;
+    center_unlock = RT_NULL;
+    center_usb_c = RT_NULL;
 }
 
 static void hl_add_top_icon(hl_top_icon_t icon)
@@ -851,6 +863,10 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_timer_del(timer);
             lv_anim_del_all();
             lv_obj_clean(lv_scr_act());
+            rt_thread_mdelay(10);
+            hl_del_ptr_null();
+            lv_ptr_set_null(1);
+            lv_ptr_set_null(2);
             break;
         case HL_TOP_CENTER_DEL:
             hl_del_center_icon();
