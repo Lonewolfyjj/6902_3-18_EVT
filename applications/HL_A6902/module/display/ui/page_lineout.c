@@ -32,7 +32,7 @@
  */
 #include "page_lineout.h"
 #include "page_style_bit.h"
-
+#include "page_language.h"
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
 
@@ -261,6 +261,7 @@ void hl_mod_lineout_ioctl(void * ctl_data)
 void hl_mod_lineout_init(void * init_data)
 {
     hl_lvgl_lineout_init_t * ptr = (hl_lvgl_lineout_init_t *)init_data;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_lineout_func = ptr->func_cb;
     if (!page_style_bit.page_lineout) {
         page_style_bit.page_lineout = 1;
@@ -287,8 +288,8 @@ void hl_mod_lineout_init(void * init_data)
     img2 = lv_img_creat_fun(bar2,LV_ALIGN_LEFT_MID,&Other_voice,8,0);
     img3 = lv_img_creat_fun(lv_scr_act(),LV_ALIGN_TOP_LEFT,&Main_stereo,6,5);
 
-    lab11 = lv_lab_creat_fun(btn_left,bar1,LV_ALIGN_OUT_TOP_LEFT,0,0,"左声道");
-    lab21 = lv_lab_creat_fun(btn_right,bar2,LV_ALIGN_OUT_TOP_LEFT,0,0,"右声道");
+    lab11 = lv_lab_creat_fun(btn_left,bar1,LV_ALIGN_OUT_TOP_LEFT,0,0,page_ptr->lineout_page_ptr->page_lineout->ptr_left);//"左声道");
+    lab21 = lv_lab_creat_fun(btn_right,bar2,LV_ALIGN_OUT_TOP_LEFT,0,0,page_ptr->lineout_page_ptr->page_lineout->ptr_right);//"右声道");
 
     lab12 = lv_value_lab_creat_fun(btn_left,bar1,bar1,LV_ALIGN_OUT_TOP_RIGHT,-5,0);
     lab22 = lv_value_lab_creat_fun(btn_right,bar2,bar2,LV_ALIGN_OUT_TOP_RIGHT,-5,0);

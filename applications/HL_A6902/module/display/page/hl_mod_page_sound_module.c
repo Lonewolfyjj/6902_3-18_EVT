@@ -34,6 +34,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -87,14 +88,12 @@ static void page_10_test_cb(uint32_t current)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
-
-    
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
 
     menu_data_t pic_list[MENU_ICON_NUM] = {
-        ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, "单声道"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_stereo, "立体声"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_saft_track, "安全音轨"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, page_ptr->menu_page_ptr->page_sound_module->ptr_single_voice),//"单声道"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_stereo, page_ptr->menu_page_ptr->page_sound_module->ptr_stereo),//"立体声"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_saft_track, page_ptr->menu_page_ptr->page_sound_module->ptr_saft_track),//"安全音轨"),
     };
 // 当前状态居中
         switch (data_ptr->now_sound_module) {

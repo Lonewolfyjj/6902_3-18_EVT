@@ -205,28 +205,28 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX1_RECORD_STATE_SWITCH_IND\r\n");
+            LOG_D("TX1_RECORD_STATE_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX2_RECORD_STATE_SWITCH_IND:
             // TBD: 透传通道给TX2发出录制开始/关闭
             rf_bypass_state.chn   = HL_RF_RIGHT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX2_RECORD_STATE_SWITCH_IND\r\n");
+            LOG_D("TX2_RECORD_STATE_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX1_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX1发出MUTE使能/失能
             rf_bypass_state.chn   = HL_RF_LEFT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX1_MUTE_SWITCH_SWITCH_IND\r\n");
+            LOG_D("TX1_MUTE_SWITCH_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX2_MUTE_SWITCH_SWITCH_IND:
             // 透传通道给TX2发出MUTE使能/失能
             rf_bypass_state.chn   = HL_RF_RIGHT_CHANNEL;
             rf_bypass_state.state = (uint8_t)p_msg->param.u32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_MUTE_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
-            LOG_D("TX2_MUTE_SWITCH_SWITCH_IND\r\n");
+            LOG_D("TX2_MUTE_SWITCH_SWITCH_IND %d\r\n",rf_bypass_state.state);
             break;
         case TX1_GAIN_VAL_IND:
             // : 透传通道给TX1发出codec增益配置
@@ -276,14 +276,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
-            ptr = p_msg->param.u32_param;
+            ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
             hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
-            ptr = p_msg->param.u32_param;
+            ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_r = ptr;
             hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
@@ -308,7 +308,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case MONO_LINE_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置相机口音量
-            ptr = p_msg->param.u32_param;
+            ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
@@ -319,7 +319,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
             // TBD: SAFETRACK设置相机口音量
-            ptr = p_msg->param.u32_param;
+            ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;

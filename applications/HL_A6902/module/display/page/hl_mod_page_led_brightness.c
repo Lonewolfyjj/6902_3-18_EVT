@@ -39,6 +39,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 //亮度调节界面
 LV_IMG_DECLARE(Other_led_high_black);  // 11
@@ -112,7 +113,7 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_s*         data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl;
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     LOG_D("led_britness=%d\n", data_ptr->led_britness);
 
     switch (data_ptr->led_britness) {
@@ -136,9 +137,9 @@ static void hl_mod_page_setup(void)
         .src12               = &Other_led_high_white,
         .src21               = &Other_led_low_black,
         .src22               = &Other_led_low_white,
-        .ptr_lift            = "正常",
-        .ptr_right           = "低亮",
-        .ptr_top             = "状态灯调节",
+        .ptr_lift            = page_ptr->b_two_in_one_page_ptr->page_led->ptr_left,//"正常",
+        .ptr_right           = page_ptr->b_two_in_one_page_ptr->page_led->ptr_right,//"低亮",
+        .ptr_top             = page_ptr->b_two_in_one_page_ptr->page_led->ptr_top,//"状态灯调节",
         .b_two_in_one_choose = display_choose,
     };
     hl_mod_b_two_in_one_init(&two_in_one_test);

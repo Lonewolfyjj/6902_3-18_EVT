@@ -27,10 +27,12 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_board_commom.h"
-
+#include "hl_mod_input.h"
 #include "hl_mod_euc.h"
 #include "hl_mod_display.h"
 #include "hl_mod_telink.h"
+#include "hl_mod_audio.h"
+#include "hl_app_disp_msg_pro.h"
 
 #define DBG_SECTION_NAME "app_com"
 #define DBG_LEVEL DBG_LOG
@@ -49,7 +51,7 @@ uint8_t _dev_num;
 #if HL_IS_TX_DEVICE()
 
 #else
-void _display_in_box_state_set(void)
+void hl_com_display_in_box_state_set(void)
 {
     hl_display_box_charge_state display_box_charge_state;
 
@@ -70,6 +72,30 @@ void _display_in_box_state_set(void)
 #endif
 /* Exported functions --------------------------------------------------------*/
 #if HL_IS_TX_DEVICE()
+
+void hl_app_tx_in_box_reset(void)
+{
+    uint8_t record_switch;
+    uint8_t mute_switch;
+    uint8_t denoise_switch;
+
+    //关闭录制LED, 关闭录制（会保存录制文件）
+    tx_info.rec_flag = 0;
+    record_switch = HL_SWITCH_OFF;
+    hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, sizeof(record_switch));
+
+    //关闭降噪，关闭降噪LED
+    tx_info.denoise_flag = 0;
+    denoise_switch       = HL_SWITCH_OFF;
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, sizeof(denoise_switch));
+
+    //Mute关闭，关闭MuteLED
+    tx_info.mute_flag = 0;
+    mute_switch = HL_SWITCH_OFF;
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &mute_switch, sizeof(mute_switch));
+
+}
+
 void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 {
     uint8_t                   bat_soc_temp     = 50;
@@ -80,6 +106,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t                   turn_on_state;
     hl_led_switch             led_ctrl;
     uint8_t                   temp;
+    uint8_t                   _all_key_ctrl_close;
 
     hl_rf_work_mode_e telink_work_mode;
     hl_rf_pair_info_t telink_pair_info;
@@ -92,19 +119,29 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             led_ctrl = SWITCH_OPEN;
             hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
 
+            hl_app_tx_in_box_reset();   //TX入盒，功能复位
+
             telink_work_mode = HL_RF_LOW_POWER;
             hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
             hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
             hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);
+
+            _all_key_ctrl_close = 1;    //关闭按键的使用
+            hl_mod_input_io_ctrl(CLOSE_KEY_MSG_SEND_CMD, &_all_key_ctrl_close, sizeof(_all_key_ctrl_close));
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
+
+            hl_app_disp_state_led_set();
 
             led_ctrl = SWITCH_CLOSE;
             hl_mod_display_io_ctrl(LED_IN_BOX_SET_CMD, &led_ctrl, sizeof(led_ctrl));
 
             hl_mod_telink_ioctl(HL_RF_REBOOT_CMD, &temp, 0);
+
+            _all_key_ctrl_close = 0;    //开启按键的使用
+            hl_mod_input_io_ctrl(CLOSE_KEY_MSG_SEND_CMD, &_all_key_ctrl_close, sizeof(_all_key_ctrl_close));
             // telink_work_mode = HL_RF_FULL_POWER;
             // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
@@ -200,7 +237,7 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
             hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);
 
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
             LOG_I("out box!");
@@ -210,7 +247,8 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             // telink_work_mode = HL_RF_FULL_POWER;
             // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
 
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
+            rt_thread_mdelay(500);
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
             bat_soc_temp = rx_info.soc;
@@ -237,13 +275,13 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
             tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx1_in_box_flag     = tx1_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
         } break;
         case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
             tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx2_in_box_flag     = tx2_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
         } break;
         case HL_SET_PAIR_MAC_TX1_REQ_IND: {  //请求设置tx1的mac地址来配对

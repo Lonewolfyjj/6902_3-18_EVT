@@ -42,6 +42,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
 static hl_s_two_in_one_check_t display_choose = HL_S_TWO_ONE_CHECK_LEFT;
@@ -78,11 +79,12 @@ static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 
 static void hl_mod_page_setup(void)
 {
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
         .func_cb             = hl_pair_test_cb,
-        .ptr_lift            = "确定",
-        .ptr_right           = "取消",
-        .ptr_top             = "是否进入配对",
+        .ptr_lift            = page_ptr->s_two_in_one_page_ptr->page_pair->ptr_left,//"确定",
+        .ptr_right           = page_ptr->s_two_in_one_page_ptr->page_pair->ptr_right,//"取消",
+        .ptr_top             = page_ptr->s_two_in_one_page_ptr->page_pair->prt_top,//"是否进入配对",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
     hl_mod_s_two_in_one_init(&s_two_in_one_test);

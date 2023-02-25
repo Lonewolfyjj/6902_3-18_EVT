@@ -53,6 +53,13 @@ LV_IMG_DECLARE(Other_line_out);  //
 LV_IMG_DECLARE(Other_heatset);   //
 LV_IMG_DECLARE(Other_usb_c);     //
 
+LV_IMG_DECLARE(Other_lock);    //锁屏
+LV_IMG_DECLARE(Other_unlock);  //解锁
+
+LV_IMG_DECLARE(Other_line_out);  //
+LV_IMG_DECLARE(Other_heatset);   //
+LV_IMG_DECLARE(Other_usb_c);     //
+
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
 
@@ -169,6 +176,8 @@ static void lv_lock_style_init(void)
     lv_style_set_outline_width(&style_area_main, 0);
     lv_style_set_radius(&style_area_main, 0);
 }
+
+static void hl_delete_top_icon(hl_top_icon_t icon);
 
 static void lv_style_page_top_init(void)
 {
@@ -792,6 +801,9 @@ void hl_mod_top_ioctl(void* ctl_data)
     char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
+        case HL_TOP_INPUT_CMD:
+            hl_add_center_icon(ptr->top_param);
+            break;
         case HL_TOP_ADD_ICON_CMD:
             hl_add_top_icon(ptr->top_param);
             break;
@@ -839,8 +851,9 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_timer_del(timer);
             lv_anim_del_all();
             lv_obj_clean(lv_scr_act());
-            // hl_top_list_clean(head_left_list);
-            // hl_top_list_clean(head_right_list);
+            break;
+        case HL_TOP_CENTER_DEL:
+            hl_del_center_icon();
             break;
         case HL_TOP_DELETE_STYLE:
             lv_delete_style();
@@ -871,15 +884,8 @@ void hl_mod_top_init(void* init_data)
         page_style_bit.page_top = 1;
         hl_top_icon_init();
         lv_style_page_top_init();
-        lv_lock_style_init();
     }
 
-    page_lock_cb = ptr->lock_event_cb;
-    area         = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, LV_VER_RES_MAX, LV_HOR_RES_MAX);
-
-    timer = lv_timer_create(centert_icon_timer_cb, ICON_HOLD_TIME, NULL);
-    lv_timer_set_repeat_count(timer, -1);
-    lv_timer_pause(timer);
     bat_icon         = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar          = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
     bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -2);

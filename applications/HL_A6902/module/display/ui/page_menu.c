@@ -127,7 +127,7 @@ static void lv_inon_zoom_set(uint8_t num)
     lv_area_t tmp_t;
     lv_obj_get_coords(pic_obj[num], &tmp_t);//复制子对象
     img_obj_xcoor[num] = tmp_t.x1 + lv_area_get_width(&tmp_t) / 2;//获取对象Y方向中心轴坐标
-    zoom = ICON_ZOOM_SET(256 - LV_ABS(img_obj_xcoor[num] - 147));
+    zoom = ICON_ZOOM_SET(256 - (LV_ABS(img_obj_xcoor[num] - 147) * 2));
     lv_img_set_zoom(pic_obj[num],zoom);
 }
 

@@ -44,6 +44,7 @@
 #include "hl_drv_qma6100p.h"
 #include "hl_util_timeout.h"
 #include "hl_util_nvram.h"
+#include "page_language.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG
@@ -64,9 +65,11 @@ static hl_timeout_t rot_scan_in;
 
 // gsensor消抖时间
 static hl_timeout_t sensor_debance;
-
+static lv_style_t lay_style;
 static rt_thread_t display_tid = RT_NULL;
-
+static lv_timer_t * timer;
+static lv_style_t style;
+static lv_obj_t* obj;
 static void hl_mod_screen_rot_scan(void);
 
 // 在nvrma获取sn和rx版本号
@@ -498,15 +501,42 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
     return res;
 }
 
+static lv_obj_t* hl_mod_creat_lay(void)
+{
+    lv_obj_t* obj = lv_obj_create(lv_scr_act());
+    lv_obj_add_style(obj,&lay_style,0);
+    lv_obj_center(obj);
+    lv_obj_set_size(obj,126,294);
+    lv_obj_move_foreground(obj);
+    return obj;
+}
+
+static void screen_timer(lv_timer_t * timer)
+{
+    if(hl_get_mipi_screen_sta()){
+        hl_set_mipi_screen_sta(0);
+    }else{
+        rt_kprintf("reset screen\n");
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+        obj = hl_mod_creat_lay();
+        lv_obj_del_delayed(obj,50);
+        lv_timer_reset(timer);
+    }    
+}
 // RX
 static void hl_mod_display_task(void* param)
 {
-    uint32_t wdg_reg = 0;
-    static lv_style_t style;
+    uint32_t wdg_reg = 0;    
+    hl_a6902_language_ptr_init(CHINESE);
     lv_style_init(&style);
     lv_style_set_bg_color(&style, lv_color_black());
     lv_style_set_border_width(&style, 0);
     lv_obj_add_style(lv_scr_act(), &style, 0);
+
+    lv_style_init(&lay_style);
+    lv_style_set_bg_color(&lay_style, lv_color_black());
+    lv_style_set_bg_opa(&lay_style,LV_OPA_10);
     wdg_reg = *(uint32_t*)(0x40050304);
     if(wdg_reg == 0){
         rt_kprintf("\nDevice normal reset ,reg= %X\n",wdg_reg);
@@ -518,17 +548,20 @@ static void hl_mod_display_task(void* param)
     }else{
         rt_kprintf("\nUnknow reset ,reg = %X\n",wdg_reg);
     }
+    timer = lv_timer_create(screen_timer, 1000,  NULL);
+    lv_timer_set_repeat_count(timer, -1);
     while (1) {
-        hl_mod_screen_rot_scan();
-        hl_mod_display_upgrade_enter();
-        hl_mod_outbox_offcharge_scan();
-        hl_mod_page_goto_box_scan();
 
-        hl_mod_page_screen_lowbritness_scan();
-        PageManager_Running();
-        // rt_thread_mdelay(RTHEAD_DELAY_TIME);
+            hl_mod_screen_rot_scan();
+            hl_mod_display_upgrade_enter();
+            hl_mod_outbox_offcharge_scan();
+            hl_mod_page_goto_box_scan();
+
+            hl_mod_page_screen_lowbritness_scan();
+            PageManager_Running();
+
         lv_task_handler();
-        rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);
+        rt_thread_mdelay(LV_DISP_DEF_REFR_PERIOD);       
     }
 }
 

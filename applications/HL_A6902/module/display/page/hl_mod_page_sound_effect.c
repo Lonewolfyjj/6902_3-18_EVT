@@ -40,7 +40,7 @@
 #include "hl_mod_page.h"
 #include "lv_port_indev.h"
 #include "page_test.h"
-
+#include "page_language.h"
 #include "hl_util_general_type.h"
 
 //音效模式界面
@@ -136,7 +136,7 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_s*         data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl;
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     LOG_D("voiceeffect=%d\n", data_ptr->voice_module);
 
     switch (data_ptr->voice_module) {
@@ -160,9 +160,9 @@ static void hl_mod_page_setup(void)
         .src12               = &Other_high_true_white,
         .src21               = &Other_sound_black,
         .src22               = &Other_sound_white,
-        .ptr_lift            = "高保真",
-        .ptr_right           = "人声增强",
-        .ptr_top             = "音效模式",
+        .ptr_lift            = page_ptr->b_two_in_one_page_ptr->page_sound->ptr_left,//"高保真",
+        .ptr_right           = page_ptr->b_two_in_one_page_ptr->page_sound->ptr_right,//"人声增强",
+        .ptr_top             = page_ptr->b_two_in_one_page_ptr->page_sound->ptr_top,//"音效模式",
         .b_two_in_one_choose = display_choose,
     };
     hl_mod_b_two_in_one_init(&two_in_one_test);

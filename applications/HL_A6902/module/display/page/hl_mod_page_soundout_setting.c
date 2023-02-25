@@ -40,6 +40,7 @@
 #include "page_test.h"
 #include "page_upgrade.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static int16_t                knob_choose;
 static hl_two_in_one_choose_t display_choose;
@@ -74,6 +75,7 @@ static void hl_soundout_setting_reboot_page(void)
 {
     hl_lvgl_upgrade_ioctl_t    ioctrl;
     hl_lvgl_two_in_one_ioctl_t two_in_one_test_ctl;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
 
     // if (goto_reboot_dialog_flag == 1) {
         // 删除
@@ -81,7 +83,7 @@ static void hl_soundout_setting_reboot_page(void)
         hl_mod_two_in_one_ioctl(&two_in_one_test_ctl);
 
         ioctrl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
-        ioctrl.ptr           = "设置成功";
+        ioctrl.ptr           = page_ptr->upgrade_page_ptr->page_upgrade->ptr_set_success;//"设置成功";
         hl_mod_lvgl_upgrade_ioctl(&ioctrl);
     // }
 }
@@ -89,7 +91,7 @@ static void hl_soundout_setting_reboot_page(void)
 static void hl_autorecode_test_cb(hl_two_in_one_check_t event_num)
 {
     uint32_t                   value    = 0;
-    hl_display_screen_s*       data_ptr = hl_mod_page_get_screen_data_ptr();
+    hl_display_screen_s*       data_ptr = hl_mod_page_get_screen_data_ptr();    
     hl_lvgl_two_in_one_ioctl_t two_in_one_test_ctl;
 
     LOG_E("event_num=%d\n", event_num);
@@ -125,7 +127,7 @@ static void hl_autorecode_test_cb(hl_two_in_one_check_t event_num)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     switch (data_ptr->sys_status.soundout_setting) {
         case 1:
             display_choose = HL_TWO_ONE_CHOOSE_LEFT;
@@ -141,9 +143,9 @@ static void hl_mod_page_setup(void)
 
     hl_lvgl_two_in_one_init_t two_in_one_test = {
         .func_cb           = hl_autorecode_test_cb,
-        .ptr_lift          = "ON",
-        .ptr_right         = "OFF",
-        .ptr_top           = "外放设置",
+        .ptr_lift          = page_ptr->two_in_one_page_ptr->page_soundout_seting->ptr_left,//"ON",
+        .ptr_right         = page_ptr->two_in_one_page_ptr->page_soundout_seting->ptr_right,//"OFF",
+        .ptr_top           = page_ptr->two_in_one_page_ptr->page_soundout_seting->prt_top,//"外放设置",
         .two_in_one_choose = display_choose,
     };
     hl_mod_two_in_one_init(&two_in_one_test);

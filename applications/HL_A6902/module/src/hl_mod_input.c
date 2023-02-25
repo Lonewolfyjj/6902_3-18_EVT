@@ -28,7 +28,9 @@
 #include "hl_util_general_type.h"
 #include "string.h"
 
-
+#define DBG_SECTION_NAME "mod_in"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数
@@ -790,24 +792,24 @@ uint8_t hl_mod_input_init(void* msg_hander)
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
     if (hl_input_msg.msg_hander == NULL) {
-        HL_PRINT("msghander err!");
+        LOG_E("msghander err!");
         return HL_FAILED;
     }
 
     rt_memset(&hl_input_msg.msg, 0, sizeof(hl_input_msg.msg));
 
     if (HL_SUCCESS != hl_mod_input_key_init()) {
-        HL_PRINT("key init err!");
+        LOG_E("key init err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_init()) {
-        HL_PRINT("insert init err!");
+        LOG_E("insert init err!");
         return HL_FAILED;
     }
 #if !HL_IS_TX_DEVICE()
     if (HL_SUCCESS != hl_drv_knob_init()) {
-        HL_PRINT("knob init err!");
+        LOG_E("knob init err!");
         return HL_FAILED;
     }
 #else
@@ -831,7 +833,7 @@ uint8_t hl_mod_input_init(void* msg_hander)
         //     rt_thread_startup(input_tid);
         // }
     } else {
-        HL_PRINT("input thread init err!");
+        LOG_E("input thread init err!");
         return HL_FAILED;
     }
 
@@ -846,12 +848,12 @@ uint8_t hl_mod_input_deinit(void)
     }
 
     if (HL_SUCCESS != hl_mod_input_key_deinit()) {
-        HL_PRINT("key deinit err!");
+        LOG_E("key deinit err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_deinit()) {
-        HL_PRINT("insert deinit err!");
+        LOG_E("insert deinit err!");
         return HL_FAILED;
     }
 
