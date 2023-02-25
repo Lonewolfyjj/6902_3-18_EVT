@@ -59,19 +59,19 @@ LV_IMG_DECLARE(Main_charging);//充电图标
 #define ANIMAtION_TIME_DOWN  400
 #define ANIMAtION_TIME_UP    50
 
-static lv_obj_t * area_tx1,*area_tx2;
-static lv_obj_t * voice_bar_tx1,*voice_bar_tx2;
-static lv_obj_t * power_bar_tx1,*power_bar_tx2;
-static lv_obj_t * voice_img_tx1,*voice_img_tx2;
-static lv_obj_t * voice_mute_img_tx1,*voice_mute_img_tx2;
-static lv_obj_t * power_img_tx1,*power_img_tx2;
-static lv_obj_t * voice_lab_tx1,*voice_lab_tx2,*voice_lab_tx3;
-static lv_obj_t * voice_bar_top_tx1,*voice_bar_top_tx2;
-static lv_obj_t * device_lab_tx1,*device_lab_tx2;
-static lv_obj_t * video_dot_tx1,*video_dot_tx2;
-static lv_obj_t * tx1_signal_obj[5];
-static lv_obj_t * tx2_signal_obj[5];
-static lv_obj_t * imgftx1,*imgftx2;
+static lv_obj_t * area_tx1 = RT_NULL,*area_tx2 = RT_NULL;
+static lv_obj_t * voice_bar_tx1 = RT_NULL,*voice_bar_tx2 = RT_NULL;
+static lv_obj_t * power_bar_tx1 = RT_NULL,*power_bar_tx2 = RT_NULL;
+static lv_obj_t * voice_img_tx1 = RT_NULL,*voice_img_tx2 = RT_NULL;
+static lv_obj_t * voice_mute_img_tx1 = RT_NULL,*voice_mute_img_tx2 = RT_NULL;
+static lv_obj_t * power_img_tx1 = RT_NULL,*power_img_tx2 = RT_NULL;
+static lv_obj_t * voice_lab_tx1 = RT_NULL,*voice_lab_tx2 = RT_NULL,*voice_lab_tx11 = RT_NULL,*voice_lab_tx22 = RT_NULL;
+static lv_obj_t * voice_bar_top_tx1 = RT_NULL,*voice_bar_top_tx2 = RT_NULL;
+static lv_obj_t * device_lab_tx1 = RT_NULL,*device_lab_tx2 = RT_NULL;
+static lv_obj_t * video_dot_tx1 = RT_NULL,*video_dot_tx2 = RT_NULL;
+static lv_obj_t * tx1_signal_obj[5] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
+static lv_obj_t * tx2_signal_obj[5] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
+static lv_obj_t * imgftx1 = RT_NULL,*imgftx2 = RT_NULL;
 
 static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
 static int16_t tx1_value_max;
@@ -508,6 +508,48 @@ static void lv_signal_hide_set(uint8_t signal_group,uint8_t hide_num)
 //         }        
 //     }
 // }
+
+void lv_ptr_set_null(uint8_t typ)
+{
+    if(typ == 1){
+        area_tx1 = RT_NULL;
+        voice_bar_tx1 = RT_NULL;
+        power_bar_tx1 = RT_NULL;
+        voice_img_tx1 = RT_NULL;
+        voice_mute_img_tx1 = RT_NULL;
+        power_img_tx1 = RT_NULL;
+        voice_lab_tx1 = RT_NULL;
+        voice_lab_tx11 = RT_NULL;
+        voice_bar_top_tx1 = RT_NULL;
+        device_lab_tx1 = RT_NULL;
+        video_dot_tx1 = RT_NULL;
+        imgftx1 = RT_NULL;
+        tx1_signal_obj[0] = RT_NULL;
+        tx1_signal_obj[1] = RT_NULL;
+        tx1_signal_obj[2] = RT_NULL;
+        tx1_signal_obj[3] = RT_NULL;
+        tx1_signal_obj[4] = RT_NULL;
+    }else{
+        area_tx2 = RT_NULL;
+        voice_bar_tx2 = RT_NULL;
+        power_bar_tx2 = RT_NULL;
+        voice_img_tx2 = RT_NULL;
+        voice_mute_img_tx2 = RT_NULL;
+        power_img_tx2 = RT_NULL;
+        voice_lab_tx2 = RT_NULL;
+        voice_lab_tx22 = RT_NULL;
+        voice_bar_top_tx2 = RT_NULL;
+        device_lab_tx2 = RT_NULL;
+        video_dot_tx2 = RT_NULL;
+        imgftx2 = RT_NULL;
+        tx2_signal_obj[0] = RT_NULL;
+        tx2_signal_obj[1] = RT_NULL;
+        tx2_signal_obj[2] = RT_NULL;
+        tx2_signal_obj[3] = RT_NULL;
+        tx2_signal_obj[4] = RT_NULL;
+    }
+}
+
 static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const void * src,lv_coord_t x_offset,lv_coord_t y_offset)
 {
     lv_obj_t* img = lv_img_create(align_obj);
@@ -521,102 +563,256 @@ static lv_obj_t * lv_img_creat_fun(lv_obj_t *align_obj,lv_align_t align,const vo
 
 static void lv_signal_tx1_set(int16_t signal)
 {    
-    tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_0,8,-4,256,0);
-    tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_1,8,-4,256,0);
-    tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_2,8,-4,256,0);
-    tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_3,8,-4,256,0);
-    tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_4,8,-4,256,0);
-
+    if(tx1_signal_obj[0] == RT_NULL){
+        tx1_signal_obj[0] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_0,8,-4,256,0);
+    }else{
+        LOG_E("tx1_signal_obj[0] is not null\n");
+    }
+    if(tx1_signal_obj[1] == RT_NULL){
+        tx1_signal_obj[1] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_1,8,-4,256,0);
+    }else{
+        LOG_E("tx1_signal_obj[1] is not null\n");
+    }
+    if(tx1_signal_obj[2] == RT_NULL){
+        tx1_signal_obj[2] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_2,8,-4,256,0);
+    }else{
+        LOG_E("tx1_signal_obj[2] is not null\n");
+    }
+    if(tx1_signal_obj[3] == RT_NULL){
+        tx1_signal_obj[3] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_3,8,-4,256,0);
+    }else{
+        LOG_E("tx1_signal_obj[3] is not null\n");
+    }
+    if(tx1_signal_obj[4] == RT_NULL){
+        tx1_signal_obj[4] = lv_signal_img_creat_fun(area_tx1,device_lab_tx1,&Main_signal_4,8,-4,256,0);
+    }else{
+        LOG_E("tx1_signal_obj[4] is not null\n");
+    }
     lv_signal_hide_set(1,signal);
 }
 
 static void lv_signal_tx2_set(int16_t signal)
 {    
-    tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_0,8,-4,256,0);
-    tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_1,8,-4,256,0);
-    tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_2,8,-4,256,0);
-    tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_3,8,-4,256,0);
-    tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_4,8,-4,256,0);
-
+    if(tx2_signal_obj[0] == RT_NULL){
+        tx2_signal_obj[0] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_0,8,-4,256,0);
+    }else{
+        LOG_E("tx2_signal_obj[0] is not null\n");
+    }
+    if(tx2_signal_obj[1] == RT_NULL){
+        tx2_signal_obj[1] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_1,8,-4,256,0);
+    }else{
+        LOG_E("tx2_signal_obj[1] is not null\n");
+    }
+    if(tx2_signal_obj[2] == RT_NULL){
+        tx2_signal_obj[2] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_2,8,-4,256,0);
+    }else{
+        LOG_E("tx2_signal_obj[2] is not null\n");
+    }
+    if(tx2_signal_obj[3] == RT_NULL){
+        tx2_signal_obj[3] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_3,8,-4,256,0);
+    }else{
+        LOG_E("tx2_signal_obj[3] is not null\n");
+    }
+    if(tx2_signal_obj[4] == RT_NULL){
+        tx2_signal_obj[4] = lv_signal_img_creat_fun(area_tx2,device_lab_tx2,&Main_signal_4,8,-4,256,0);
+    }else{
+        LOG_E("tx2_signal_obj[4] is not null\n");
+    }
+    
     lv_signal_hide_set(2,signal);
 }
 
 static void lv_display_tx1(device_data_t * init_data)
 {
-    area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn,-14,6,256);
-    voice_mute_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn_mute,-14,6,256);
+    if(area_tx1 == RT_NULL){
+        area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
+    }else{
+        LOG_E("area_tx1 is not null\n");
+    }
+    if(voice_img_tx1 == RT_NULL){
+        voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn,-14,6,256);
+    }else{
+        LOG_E("voice_img_tx1 is not null\n");
+    }
+    if(voice_mute_img_tx1 == RT_NULL){
+        voice_mute_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn_mute,-14,6,256);
+    }else{
+        LOG_E("voice_mute_img_tx1 is not null\n");
+    }
 
     lv_set_video_hide_cb(voice_mute_img_tx1,1);
     lv_set_video_hide_cb(voice_img_tx1,0);
     lv_obj_move_foreground(voice_img_tx1);
 
-    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
-    imgftx1       = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -2);
-    voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
-    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
-    
-    voice_bar_top_tx1 = lv_voice_ltopbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
+    if(power_img_tx1 == RT_NULL){
+        power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
+    }else{
+        LOG_E("power_img_tx1 is not null\n");
+    }
+    if(imgftx1 == RT_NULL){
+        imgftx1 = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -2);
+    }else{
+        LOG_E("imgftx1 is not null\n");
+    }
+    if(voice_bar_tx1 == RT_NULL){
+        voice_bar_tx1 = lv_voice_lbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
+    }else{
+        LOG_E("voice_bar_tx1 is not null\n");
+    }
+    if(power_bar_tx1 == RT_NULL){
+        power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_data->electric);
+    }else{
+        LOG_E("power_bar_tx1 is not null\n");
+    }
+    if(voice_bar_top_tx1 == RT_NULL){
+        voice_bar_top_tx1 = lv_voice_ltopbar_creat_fun(area_tx1,voice_img_tx1,4,0,251,14,init_data->volume);
+    }else{
+        LOG_E("voice_bar_top_tx1 is not null\n");
+    }
 
     tx1_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx1,voice_bar_tx1,tx1_value_start,ANIMAtION_TIME_DOWN);
     lv_topbar_anim_init(&animation_top_tx1,voice_bar_top_tx1,tx1_value_start,ANIMAtION_TOP_TIME_DOWN);
 
-
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_data->tx_gain,0,0);
+    if(voice_lab_tx1 == RT_NULL){
+        voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_data->tx_gain,0,0);
+    }else{
+        LOG_E("voice_lab_tx1 is not null\n");
+    }
+    
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
-    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
-
-    voice_lab_tx3 = lv_voice_line_out_lab_creat_fun(area_tx1,voice_bar_tx1,init_data->line_out_value,0,-4);
+    if(device_lab_tx1 == RT_NULL){
+        device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
+    }else{
+        LOG_E("device_lab_tx1 is not null\n");
+    }
+    if(voice_lab_tx11 == RT_NULL){
+        voice_lab_tx11 = lv_voice_line_out_lab_creat_fun(area_tx1,voice_bar_tx1,init_data->line_out_value,0,-4);
+    }else{
+        LOG_E("voice_lab_tx11 is not null\n");
+    }    
 
     lv_signal_tx1_set(init_data->signal);
 
-    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_data->record);
+    if(video_dot_tx1 == RT_NULL){
+        video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_data->record);
+    }else{
+        LOG_E("video_dot_tx1 is not null\n");
+    }     
 }
 
 static void lv_display_tx2(device_data_t * init_data)
 {
-    area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn,-14,6,256);
-    voice_mute_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn_mute,-14,6,256);
+    if(area_tx2 == RT_NULL){
+        area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,282,94);
+    }else{
+        LOG_E("area_tx2 is not null\n");
+    }  
+    if(voice_img_tx2 == RT_NULL){
+        voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn,-14,6,256);
+    }else{
+        LOG_E("voice_img_tx2 is not null\n");
+    }
+    if(voice_mute_img_tx2 == RT_NULL){
+        voice_mute_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn_mute,-14,6,256);
+    }else{
+        LOG_E("voice_mute_img_tx2 is not null\n");
+    }
 
     lv_set_video_hide_cb(voice_mute_img_tx2,1);
     lv_set_video_hide_cb(voice_img_tx2,0);
     lv_obj_move_foreground(voice_img_tx2);
 
-    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
-    imgftx2       = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -2);
-
-    voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
-    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
-    
-    voice_bar_top_tx2 = lv_voice_ltopbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
+    if(power_img_tx2 == RT_NULL){
+        power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
+    }else{
+        LOG_E("power_img_tx2 is not null\n");
+    }
+    if(imgftx2 == RT_NULL){
+        imgftx2 = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -2);
+    }else{
+        LOG_E("imgftx2 is not null\n");
+    }
+    if(voice_bar_tx2 == RT_NULL){
+        voice_bar_tx2 = lv_voice_lbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
+    }else{
+        LOG_E("voice_bar_tx2 is not null\n");
+    }
+    if(power_bar_tx2 == RT_NULL){
+        power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_data->electric);
+    }else{
+        LOG_E("power_bar_tx2 is not null\n");
+    }
+    if(voice_bar_top_tx2 == RT_NULL){
+        voice_bar_top_tx2 = lv_voice_ltopbar_creat_fun(area_tx2,voice_img_tx2,4,0,251,14,init_data->volume);
+    }else{
+        LOG_E("voice_bar_top_tx2 is not null\n");
+    }
 
     tx2_value_start = init_data->volume;
     lv_bar_anim_init(&animation_tx2,voice_bar_tx2,tx2_value_start,ANIMAtION_TIME_DOWN);
     lv_topbar_anim_init(&animation_top_tx2,voice_bar_top_tx2,tx2_value_start,ANIMAtION_TOP_TIME_DOWN);
 
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_data->tx_gain,0,0);
+    if(voice_lab_tx2 == RT_NULL){
+        voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_data->tx_gain,0,0);
+    }else{
+        LOG_E("voice_lab_tx2 is not null\n");
+    }
+    
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0);
-    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
-
-    voice_lab_tx3 = lv_voice_line_out_lab_creat_fun(area_tx2,voice_bar_tx2,init_data->line_out_value,0,-4);
-
+    if(device_lab_tx2 == RT_NULL){
+        device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
+    }else{
+        LOG_E("device_lab_tx2 is not null\n");
+    }
+    if(voice_lab_tx22 == RT_NULL){
+        voice_lab_tx22 = lv_voice_line_out_lab_creat_fun(area_tx2,voice_bar_tx2,init_data->line_out_value,0,-4);
+    }else{
+        LOG_E("voice_lab_tx22 is not null\n");
+    }
     lv_signal_tx2_set(init_data->signal);
-
-    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_data->record);
+    if(video_dot_tx2 == RT_NULL){
+        video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_data->record);
+    }else{
+        LOG_E("video_dot_tx2 is not null\n");
+    }    
 }
 
 static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
 {
     //设备框
-    area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,138,94);
-    area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,150,-6,138,94);
+    if(area_tx1 == RT_NULL){
+        area_tx1 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,6,-6,138,94);
+    }else{
+        LOG_E("area_tx1 is not null\n");
+    } 
+    if(area_tx2 == RT_NULL){
+        area_tx2 = lv_area_creat_fun(LV_ALIGN_BOTTOM_LEFT,150,-6,138,94);
+    }else{
+        LOG_E("area_tx2 is not null\n");
+    }   
+    
     //音量喇叭图片
-    voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn,-14,6,256);
-    voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn,-14,6,256);
-    voice_mute_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn_mute,-14,6,256);
-    voice_mute_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn_mute,-14,6,256);
+    if(voice_img_tx1 == RT_NULL){
+        voice_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn,-14,6,256);
+    }else{
+        LOG_E("voice_img_tx1 is not null\n");
+    } 
+    if(voice_img_tx2 == RT_NULL){
+        voice_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn,-14,6,256);
+    }else{
+        LOG_E("voice_img_tx2 is not null\n");
+    } 
+    if(voice_mute_img_tx1 == RT_NULL){
+        voice_mute_img_tx1 = lv_voice_img_creat_fun(area_tx1,&Main_horn_mute,-14,6,256);
+    }else{
+        LOG_E("voice_mute_img_tx1 is not null\n");
+    } 
+    if(voice_mute_img_tx2 == RT_NULL){
+        voice_mute_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn_mute,-14,6,256);
+    }else{
+        LOG_E("voice_mute_img_tx2 is not null\n");
+    }
 
     lv_set_video_hide_cb(voice_mute_img_tx1,1);
     lv_set_video_hide_cb(voice_img_tx1,0);
@@ -627,16 +823,48 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
     lv_obj_move_foreground(voice_img_tx2);
 
     //电池图标图片
-    power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
-    power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
-    imgftx1       = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -2);
-    imgftx2       = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -2);
-    //音量大小进度条
-    voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
-    voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
+    if(power_img_tx1 == RT_NULL){
+        power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
+    }else{
+        LOG_E("power_img_tx1 is not null\n");
+    } 
+    if(power_img_tx2 == RT_NULL){
+        power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
+    }else{
+        LOG_E("power_img_tx2 is not null\n");
+    } 
+    if(imgftx1 == RT_NULL){
+        imgftx1 = lv_img_creat_fun(power_img_tx1, LV_ALIGN_CENTER, &Main_charging, -2, -2);
+    }else{
+        LOG_E("imgftx1 is not null\n");
+    } 
+    if(imgftx2 == RT_NULL){
+        imgftx2 = lv_img_creat_fun(power_img_tx2, LV_ALIGN_CENTER, &Main_charging, -2, -2);
+    }else{
+        LOG_E("imgftx2 is not null\n");
+    }   
 
-    voice_bar_top_tx1 = lv_voice_stopbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
-    voice_bar_top_tx2 = lv_voice_stopbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
+    //音量大小进度条
+    if(voice_bar_tx1 == RT_NULL){
+        voice_bar_tx1 = lv_voice_sbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
+    }else{
+        LOG_E("voice_bar_tx1 is not null\n");
+    } 
+    if(voice_bar_tx2 == RT_NULL){
+        voice_bar_tx2 = lv_voice_sbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
+    }else{
+        LOG_E("voice_bar_tx2 is not null\n");
+    } 
+    if(voice_bar_top_tx1 == RT_NULL){
+        voice_bar_top_tx1 = lv_voice_stopbar_creat_fun(area_tx1,voice_img_tx1,4,0,105,20,init_tx1->volume);
+    }else{
+        LOG_E("voice_bar_top_tx1 is not null\n");
+    } 
+    if(voice_bar_top_tx2 == RT_NULL){
+        voice_bar_top_tx2 = lv_voice_stopbar_creat_fun(area_tx2,voice_img_tx2,4,0,105,20,init_tx2->volume);
+    }else{
+        LOG_E("voice_bar_top_tx2 is not null\n");
+    } 
 
     tx1_value_start = init_tx1->volume;
     tx2_value_start = init_tx2->volume;
@@ -648,24 +876,59 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
 
 
     //电池电量进度条
-    power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
-    power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
+    if(power_bar_tx1 == RT_NULL){
+        power_bar_tx1 = lv_power_bar_creat_fun(power_img_tx1,3,0,25,14,init_tx1->electric);
+    }else{
+        LOG_E("power_bar_tx1 is not null\n");
+    } 
+    if(power_bar_tx2 == RT_NULL){
+        power_bar_tx2 = lv_power_bar_creat_fun(power_img_tx2,3,0,25,14,init_tx2->electric);
+    }else{
+        LOG_E("power_bar_tx2 is not null\n");
+    } 
+
     //音量大小文本
-    voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,0,0);
-    voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,0,0);   
+    if(voice_lab_tx1 == RT_NULL){
+        voice_lab_tx1 = lv_voice_lab_creat_fun(area_tx1,voice_bar_tx1,init_tx1->tx_gain,0,0);
+    }else{
+        LOG_E("voice_lab_tx1 is not null\n");
+    }
+    if(voice_lab_tx2 == RT_NULL){
+        voice_lab_tx2 = lv_voice_lab_creat_fun(area_tx2,voice_bar_tx2,init_tx2->tx_gain,0,0);   
+    }else{
+        LOG_E("voice_lab_tx2 is not null\n");
+    }
+        
     //电池电量大小文本
     // power_lab_tx1 = lv_power_lab_creat_fun(area_tx1,power_img_tx1,power_bar_tx1,0,0);
     // power_lab_tx2 = lv_power_lab_creat_fun(area_tx2,power_img_tx2,power_bar_tx2,0,0); 
     //设备文本
-    device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
-    device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
+    if(device_lab_tx1 == RT_NULL){
+        device_lab_tx1 = lv_device_lab_creat_fun(area_tx1,-10,-5,"1");
+    }else{
+        LOG_E("device_lab_tx1 is not null\n");
+    }
+    if(device_lab_tx2 == RT_NULL){
+        device_lab_tx2 = lv_device_lab_creat_fun(area_tx2,-10,-5,"2");
+    }else{
+        LOG_E("device_lab_tx2 is not null\n");
+    }
+
     //信号图标
     lv_signal_tx1_set(init_tx1->signal);
     lv_signal_tx2_set(init_tx2->signal);
 
     //录制状态红点
-    video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_tx1->record);
-    video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_tx2->record);
+    if(video_dot_tx1 == RT_NULL){
+        video_dot_tx1 = lv_video_dot_creat_fun(area_tx1,22,2,init_tx1->record);
+    }else{
+        LOG_E("video_dot_tx1 is not null\n");
+    }
+    if(video_dot_tx2 == RT_NULL){
+        video_dot_tx2 = lv_video_dot_creat_fun(area_tx2,22,2,init_tx2->record);
+    }else{
+        LOG_E("video_dot_tx2 is not null\n");
+    }
 }
 
 static void lv_delete_style(void)
@@ -697,20 +960,36 @@ static void lv_display_mod_change(hl_lvgl_main_init_t * ctl_data)
     switch(main_init.display_tx_device){
         case HL_CHANGE_TX1_DEVICE:
             // hl_obj_delete(area_tx1,true);
+            if(area_tx1 == RT_NULL){
+                LOG_E("area_tx1 is null\n");
+            }
             lv_obj_del(area_tx1);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(1);
             break;
         case HL_CHANGE_TX2_DEVICE:
             // hl_obj_delete(area_tx2,true);
+            if(area_tx2 == RT_NULL){
+                LOG_E("area_tx2 is null\n");
+            }
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(2);
             break;
         case HL_DISPLAY_DOUBLE:
             // hl_obj_delete(area_tx1,true);
             // hl_obj_delete(area_tx2,true);
+            if(area_tx1 == RT_NULL){
+                LOG_E("area_tx1 is null\n");
+            }
+            if(area_tx2 == RT_NULL){
+                LOG_E("area_tx2 is null\n");
+            }
             lv_obj_del(area_tx1);
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(1);
+            lv_ptr_set_null(2);
             break;
         default:
             break;
@@ -847,20 +1126,36 @@ void hl_mod_main_ioctl(void * ctl_data)
 
         case HL_CHANGE_DELETE_TX1:
             // hl_obj_delete(area_tx1,true);
+            if(area_tx1 == RT_NULL){
+                LOG_E("area_tx1 is null\n");
+            }
             lv_obj_del(area_tx1);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(1);
         break;
         case HL_CHANGE_DELETE_DOUBLE:
             // hl_obj_delete(area_tx1,true);
             // hl_obj_delete(area_tx2,true);
+            if(area_tx1 == RT_NULL){
+                LOG_E("area_tx1 is null\n");
+            }
+            if(area_tx2 == RT_NULL){
+                LOG_E("area_tx2 is null\n");
+            }
             lv_obj_del(area_tx1);
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(1);
+            lv_ptr_set_null(2);
         break;
         case HL_CHANGE_DELETE_TX2:
             // hl_obj_delete(area_tx2,true);
+            if(area_tx2 == RT_NULL){
+                LOG_E("area_tx2 is null\n");
+            }
             lv_obj_del(area_tx2);
             rt_thread_mdelay(10); 
+            lv_ptr_set_null(2);
             break;
         case HL_CHANGE_DELETE_STYLE:
             lv_delete_style();
