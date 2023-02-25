@@ -142,7 +142,8 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_CONNECTED;
     } else if (_display_mod.net_mode == LED_NET_MODE_RECONNECTION) {
         state = HL_DISPLAY_RECONNECT;
-    } else if (_display_mod.bat_soc >= 95 && _display_mod.charge_state != NOT_CHARGE) {  //此处开始是关机的情况
+    } else if ((_display_mod.bat_soc >= 95 && _display_mod.charge_state != NOT_CHARGE)
+               || _display_mod.charge_state == FULL_CHARGE) {  //此处开始是关机的情况
         state = HL_DISPLAY_CHARGE_FULL;
     } else if (_display_mod.charge_state == NOT_CHARGE) {
         state = HL_DISPLAY_CHARGE_STOP;
