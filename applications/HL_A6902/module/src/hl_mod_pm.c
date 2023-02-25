@@ -68,6 +68,8 @@ typedef struct _hl_mod_pm_st
     uint8_t                  vbus_p_state;
     bool                     charge_full_timeout_flag;
     struct rt_timer          charge_full_timer;
+    struct rt_timer          shutdown_timer;
+    uint32_t                 shutdown_timeout;
     rt_mq_t                  msg_hd;
     rt_thread_t              pm_thread;
     int                      thread_exit_flag;
@@ -131,10 +133,15 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static void _timer_timeout_handle(void* arg)
+static void _charge_full_timer_timeout_handle(void* arg)
 {
     LOG_I("pm timeout");
     _pm_mod.charge_full_timeout_flag = true;
+}
+
+static void _shutdown_timer_timeout_handle(void* arg)
+{
+    _mod_msg_send(HL_SHUTDOWN_TIMEOUT_IND, NULL, 0);
 }
 
 static void _guage_gpio_irq_handle(void* args)
@@ -546,8 +553,13 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         _pm_mod.guage_init_flag = true;
     }
 
-    rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _timer_timeout_handle, RT_NULL, 1000 * 60 * 5,
+    rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _charge_full_timer_timeout_handle, RT_NULL, 1000 * 60 * 5,
                   RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
+
+    _pm_mod.shutdown_timeout = 1000 * 60 * 15;
+
+    rt_timer_init(&(_pm_mod.shutdown_timer), "pm_timer", _shutdown_timer_timeout_handle, RT_NULL,
+                  _pm_mod.shutdown_timeout, RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
 #if 0
     _guage_gpio_irq_init();
 #endif
@@ -619,6 +631,8 @@ int hl_mod_pm_start(void)
 #endif
     _pm_mod.thread_exit_flag = 0;
 
+    rt_timer_start(&(_pm_mod.shutdown_timer));
+
     _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
         LOG_E("pm thread create failed");
@@ -650,6 +664,8 @@ int hl_mod_pm_stop(void)
     _guage_gpio_irq_enable(false);
 #endif
     _pm_mod.thread_exit_flag = 1;
+
+    rt_timer_stop(&(_pm_mod.shutdown_timer));
 
     LOG_I("wait pm thread exit");
 
@@ -686,6 +702,16 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_PM_SET_VBUS_P_STATE_CMD: {
             _pm_mod.vbus_p_state = *((uint8_t*)arg);
+        } break;
+        case HL_PM_SET_SHUTDOWN_TIMEOUT_CMD: {
+            _pm_mod.shutdown_timeout = *((uint32_t*)arg);
+            rt_timer_control(&(_pm_mod.shutdown_timer), RT_TIMER_CTRL_SET_TIME, &(_pm_mod.shutdown_timeout));
+        } break;
+        case HL_PM_START_SHUTDOWN_TIMER_CMD: {
+            rt_timer_start(&(_pm_mod.shutdown_timer));
+        } break;
+        case HL_PM_STOP_SHUTDOWN_TIMER_CMD: {
+            rt_timer_stop(&(_pm_mod.shutdown_timer));
         } break;
         default:
             break;

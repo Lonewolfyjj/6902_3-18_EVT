@@ -46,6 +46,12 @@ typedef enum _hl_mod_pm_cmd_e
     HL_PM_SET_VBUS_C_STATE_CMD,
     /// 设置VBUS_P的插入状态，参数为<uint8_t *>(1:连接 0：未连接)
     HL_PM_SET_VBUS_P_STATE_CMD,
+    /// 设置关机定时器超时时间，参数为<uint32_t *>
+    HL_PM_SET_SHUTDOWN_TIMEOUT_CMD,
+    /// 开启关机定时器，无参数
+    HL_PM_START_SHUTDOWN_TIMER_CMD,
+    /// 停止关机定时器，无参数
+    HL_PM_STOP_SHUTDOWN_TIMER_CMD,
 } hl_mod_pm_cmd_e;
 
 typedef enum _hl_mod_pm_ind_e
@@ -60,6 +66,8 @@ typedef enum _hl_mod_pm_ind_e
     HL_CHARGE_STATE_IND,
     /// 通知 app 当前处于极低电量状态，无参数
     HL_ULTRA_LOWPOWER_IND,
+    /// 通知 app 无操作定时器超时，无参数
+    HL_SHUTDOWN_TIMEOUT_IND,
 } hl_mod_pm_ind_e;
 
 typedef enum _hl_mod_pm_charge_state_e

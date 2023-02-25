@@ -28,6 +28,7 @@
 #include "hl_util_general_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_app_pm_msg_pro.h"
 #include "hl_mod_display.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_euc.h"
@@ -96,6 +97,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
             }
             hl_app_disp_state_led_set();
+            hl_app_pm_timer_set();
             LOG_D("telink info(%02X)", tx_info.rf_state);
             break;
 
@@ -139,6 +141,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 tx_info.rec_flag = bypass_switch;
                 hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
                 hl_app_disp_state_led_set();
+                hl_app_pm_timer_set();
             }
             LOG_I("app get TX%d Record Switch(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
@@ -276,6 +279,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("telink info(%02X)", rx_info.rf_state);
             hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             bypass_time.chn = rx_info.rf_chn;
+            hl_app_pm_timer_set();
             // hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &bypass_time.time, sizeof(bypass_time.time));
             // hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &bypass_time, sizeof(bypass_time));
             break;

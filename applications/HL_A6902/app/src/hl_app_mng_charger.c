@@ -346,7 +346,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 }
 #else
 
-extern void _display_in_box_state_set(void);
+extern void hl_com_display_in_box_state_set(void);
 
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 {
@@ -371,14 +371,14 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
             _in_box_flag = true;
             _dev_num = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", _dev_num);
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
             _rx_in_box_flag = false;
             _in_box_flag = false;
             LOG_I("out box!");
             if (_shut_down_flag == false) {
-                _display_in_box_state_set();
+                hl_com_display_in_box_state_set();
                 hl_app_mng_charger_goto_power_on();
             }
         } break;
@@ -407,13 +407,13 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
             tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx1_in_box_flag = tx1_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
         } break;
         case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
             tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx2_in_box_flag = tx2_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
