@@ -53,12 +53,6 @@ LV_IMG_DECLARE(Other_line_out);  //
 LV_IMG_DECLARE(Other_heatset);   //
 LV_IMG_DECLARE(Other_usb_c);     //
 
-LV_IMG_DECLARE(Other_lock);    //锁屏
-LV_IMG_DECLARE(Other_unlock);  //解锁
-
-LV_IMG_DECLARE(Other_line_out);  //
-LV_IMG_DECLARE(Other_heatset);   //
-LV_IMG_DECLARE(Other_usb_c);     //
 
 #define ICON_POS_LIFT 0
 #define ICON_POS_RIGHT 1
@@ -884,8 +878,15 @@ void hl_mod_top_init(void* init_data)
         page_style_bit.page_top = 1;
         hl_top_icon_init();
         lv_style_page_top_init();
+        lv_lock_style_init();
     }
 
+    page_lock_cb = ptr->lock_event_cb;
+    area         = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, LV_VER_RES_MAX, LV_HOR_RES_MAX);
+
+    timer = lv_timer_create(centert_icon_timer_cb, ICON_HOLD_TIME, NULL);
+    lv_timer_set_repeat_count(timer, -1);
+    lv_timer_pause(timer);
     bat_icon         = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar          = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
     bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -2);
