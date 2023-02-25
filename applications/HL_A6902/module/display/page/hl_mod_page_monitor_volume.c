@@ -60,8 +60,8 @@ static void page_uac_out_init(void)
         .icontyp    = HL_NO_ICON,
         .init_value = hl_mod_page_volume_get(),
         .ptr        = page_ptr->barset_page_prt->page_monitor_volume->ptr_monitor,//"监听音量",
-        .range_max  = MAX_LINEOUT_VOLUME,
-        .range_min  = MIN_LINEOUT_VOLUME,
+        .range_max  = MAX_MONITOR_VOLUME,
+        .range_min  = MIN_MONITOR_VOLUME,
         .src        = &Other_mic_black,
     };
     hl_mod_barset_init(&bar_test);
@@ -87,7 +87,7 @@ static void save_before_back(void)
 
 static void hl_mod_page_loop(void)
 {
-    hl_mod_page_volume_loop(MONITOR_VOLUME_VAL_IND, save_before_back,MIN_LINEOUT_VOLUME,MAX_LINEOUT_VOLUME);
+    hl_mod_page_volume_loop(MONITOR_VOLUME_VAL_IND, save_before_back,MIN_MONITOR_VOLUME,MAX_MONITOR_VOLUME);
 }
 
 PAGE_DEC(PAGE_MONITOR_VOLUME_SET)
