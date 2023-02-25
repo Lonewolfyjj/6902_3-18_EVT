@@ -49,7 +49,7 @@ typedef struct _tx_app_info_t
     uint8_t             rec_flag:1;
     /// 降噪标志(1:打开降噪 0:关闭降噪)
     uint8_t             denoise_flag:1;
-    /// 充电标志(1:充电中 0:不充电 2：充满)
+    /// 充电标志(1:充电中 0:不充电 2：充满 3:完全充满)
     uint8_t             charge_flag:2;
     /// 升级标志(0:空闲 1：升级中 2：升级成功 3：升级失败)
     uint8_t             upgrade_flag:2;
@@ -102,7 +102,7 @@ typedef struct _rx_app_info_t
     uint8_t             hp_spk_plug:1;
     /// 耳机监听接口状态(1:连接 0：未连接)
     uint8_t             cam_spk_plug:1;
-    /// 充电标志(1:充电中 0:不充电 2：充满)
+    /// 充电标志(1:充电中 0:不充电 2：充满 3:完全充满)
     uint8_t             charge_flag:2;
 
     /// MUTE标志(1:MUTE 0:正常)

@@ -69,7 +69,11 @@ static void _hl_app_mng_charger_power_on_stm()
 #if HL_IS_TX_DEVICE()
                 hold_times = 150;
 #else
-                hold_times = 2;
+                if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_LOW) {
+                    hold_times = 150;
+                } else {
+                    hold_times = 2;
+                }
 #endif
                 sg_stm_charger_pwr_key_state++;
             }
@@ -128,7 +132,11 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         LOG_D("charge done!");
         tx_info.charge_flag = 2;
         state               = FULL_CHARGE;
-    }
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        tx_info.charge_flag = 3;
+        state               = FULL_CHARGE;
+    } 
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, sizeof(state));
 #else
     uint8_t state = 0;
@@ -143,6 +151,10 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
     } else if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
         LOG_D("charge done!");
         rx_info.charge_flag = 2;
+        state = OUTBOX_OFFCHARGE_OFFPAGE;
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        rx_info.charge_flag = 3;
         state = OUTBOX_OFFCHARGE_OFFPAGE;
     }
 
@@ -505,7 +517,7 @@ void hl_app_mng_charger_entry(void* msg_q)
     struct rt_messagequeue* app_mq = msg_q;
     mode_to_app_msg_t       msg    = { 0 };
 #if HL_IS_TX_DEVICE()
-    hl_led_switch           led_ctrl;
+    hl_led_switch led_ctrl;
 
     // 在收纳盒中则关闭led
     if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {

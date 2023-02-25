@@ -76,6 +76,7 @@ typedef enum _hl_mod_pm_charge_state_e
     HL_CHARGE_STATE_NO_CHARGE,
     HL_CHARGE_STATE_CHARGING,
     HL_CHARGE_STATE_CHARGE_DONE,
+    HL_CHARGE_STATE_CHARGE_FULL_DONE,
 } hl_mod_pm_charge_state_e;
 
 /* define --------------------------------------------------------------------*/
