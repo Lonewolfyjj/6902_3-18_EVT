@@ -179,7 +179,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
             // }
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
- 
+
             // 保存本地。。。
             LOG_D("app get TX%d Gain Value(%d)(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val, tx_info.gain);
             break;
@@ -262,11 +262,11 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     // hl_led_mode     led_ctrl;
     uint8_t                     tx1_rssi;
     uint8_t                     tx2_rssi;
-    uint8_t*                    ptr;
-    hl_rf_bypass_state_t*       ptr_rf_state;
-    hl_rf_bypass_value_t*       ptr_rf_value;
-    hl_rf_bypass_string_t*      ptr_rf_string;
-    hl_rf_bypass_update_info_t* ptr_rf_info;
+    uint8_t*                    ptr           = NULL;
+    hl_rf_bypass_state_t*       ptr_rf_state  = NULL;
+    hl_rf_bypass_value_t*       ptr_rf_value  = NULL;
+    hl_rf_bypass_string_t*      ptr_rf_string = NULL;
+    hl_rf_bypass_update_info_t* ptr_rf_info   = NULL;
     hl_rf_bypass_state_t        bypass_state;
     hl_rf_bypass_value_t        bypass_value;
     hl_rf_bypass_string_t       bypass_string;
