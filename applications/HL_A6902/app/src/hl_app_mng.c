@@ -142,6 +142,7 @@ void hl_app_msg_thread(void* parameter)
 
     //退出charger app后重新通知pm上报一次电量和充电状态信息，因为第一次上报的信息在charger app中可能被清除了，没有处理
     hl_mod_pm_ctrl(HL_PM_BAT_INFO_UPDATE_CMD, RT_NULL, 0);
+    hl_mod_input_io_ctrl(HL_INPUT_RESET_CMD, RT_NULL, 0);
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
@@ -213,7 +214,7 @@ void hl_app_mng_init(void)
         LOG_E("thread create err!!!");
     }
 
-    rt_thread_mdelay(2000);
+    // rt_thread_mdelay(2000);
     hl_app_info(0, NULL);
 }
 
@@ -345,6 +346,19 @@ int hl_app_info(int argc, char** argv)
 INIT_APP_EXPORT(hl_app_mng_init);
 MSH_CMD_EXPORT(hl_app_info, show app info cmd);
 
+
+void hl_app_test_init(void)
+{
+    hl_mod_audio_init(&hl_app_mq);
+}
+
+void hl_app_test_deinit(void)
+{
+    hl_mod_audio_deinit();
+}
+
+MSH_CMD_EXPORT(hl_app_test_init, show app info cmd);
+MSH_CMD_EXPORT(hl_app_test_deinit, show app info cmd);
 /*
  * EOF
  */

@@ -100,6 +100,12 @@ typedef enum _input_mod_msg_cmd_e
 } input_mod_msg_cmd_e;
 #endif
 
+typedef enum _hl_mod_input_ctrl_cmd
+{
+    /// 刷新输入模块的按键状态。 参数<无>
+    HL_INPUT_RESET_CMD = 0x00,
+} hl_mod_input_ctrl_cmd;
+
 /**
  * 
  * @brief 输入模块初始化
@@ -139,6 +145,24 @@ uint8_t hl_mod_input_init(void* msg_hander);
  */
 uint8_t hl_mod_input_deinit(void);
 
-//uint8_t hl_mod_input_io_ctrl(uint8_t cmd, void* ptr, uint16_t len);
+/**
+ * 
+ * @brief input config
+ * @param [in] cmd 命令
+ * @param [in] ptr 参数指针
+ * @param [in] len 参数长度
+ * @return uint8_t 0:succeed  1:error
+ * @date 2023-02-20
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-20      <td>lixiang     <td>新建
+ * </table>
+ */
+uint8_t hl_mod_input_io_ctrl(uint8_t cmd, void* ptr, uint16_t len);
 
 #endif /* __HL_MOD_INPUT_H__ */
