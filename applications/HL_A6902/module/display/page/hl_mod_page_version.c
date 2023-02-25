@@ -108,8 +108,8 @@ static void hl_mod_page_setup(void)
 
     if (flag->tx2_ver) {
 
-        flag->tx1_ver      = 0;
-        data.hl_verson_tx2 = data_ptr->tx1_ver;
+        flag->tx2_ver      = 0;
+        data.hl_verson_tx2 = data_ptr->tx2_ver;
 
     }
 

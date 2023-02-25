@@ -913,7 +913,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_main_ioctl(&data2);
         LOG_D("mute2=%d", now->sys_status.tx2_mute_switch);
     }
-
+    
     if (flag->tx2_bat_val || flag->sys_status.tx2_charge_status) {
         hl_mod_home_tx2_bat_update(now);
         hl_mod_display_mux_take();
@@ -922,18 +922,20 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
         LOG_D("update bat tx2 %d,%d", now->sys_status.tx2_charge_status, now->tx2_bat_val);
     }
-
+    
     if (flag->tx2_signal) {
+        // LOG_D("testl4");
         hl_mod_display_mux_take();
-        flag->tx2_bat_val        = 0;
+        flag->tx2_signal        = 0;
         data2.cmd                = HL_CHANGE_TX2_SIGNAL;
         data2.tx_device_2.signal = hl_mod_page_signal_deal(now->tx2_signal);
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
     }
-
+   
     //vu值
     if (flag->tx2_vu) {
+        // LOG_D("testl5");
         hl_mod_display_mux_take();
         flag->tx2_vu             = 0;
         data2.cmd                = HL_CHANGE_TX2_VOL;
@@ -941,7 +943,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
     }
-
+    
     if (flag->sys_status.tx2_record_state) {
         hl_mod_display_mux_take();
         flag->sys_status.tx2_record_state = 0;
@@ -949,6 +951,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         data2.tx_device_2.record          = (hl_record_status_t)now->sys_status.tx2_record_state;
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
+        // LOG_D("testl2");
     }
 }
 
