@@ -30,6 +30,7 @@
 /*
  * EOF
  */
+#if 0
 #include "page_lock.h"
 #include "page_style_bit.h"
 
@@ -429,3 +430,4 @@ void page_lock_test_ctl(int argc, char** argv)
 }
 
 MSH_CMD_EXPORT(page_lock_test_ctl, run page_lock_test_ctl);
+#endif

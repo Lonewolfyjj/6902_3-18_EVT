@@ -449,7 +449,15 @@ int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right,
     return 0;
 }
 
-
+// 运行屏幕亮度更新的函数，相关旋钮和返回键的操作都不执行
+void hl_mod_page_backlight_update(void)
+{
+    // OK按键
+    hl_mod_get_knob_okkey_val();
+    // 返回按键
+    hl_mod_keypad_touchkey_read();
+    hl_mod_get_rx_knob_val();
+}
 
 void hl_mod_page_event_btn_init(lv_event_cb_t event_cb)
 {

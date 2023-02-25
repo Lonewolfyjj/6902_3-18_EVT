@@ -36,7 +36,7 @@
 #include "rtdef.h"
 #include "hl_config.h"
 #include "stdbool.h"
-// #include "hl_test_pre.h"
+#include "hl_util_general_type.h"
 
 
 
@@ -104,8 +104,11 @@ typedef enum _hl_mod_input_ctrl_cmd
 {
     /// 刷新输入模块的按键状态。 参数<无>
     HL_INPUT_RESET_CMD = 0x00,
+#if HL_IS_TX_DEVICE()
+    /// 开关按键的消息发送：<uint8_t> :1-表示当前关闭消息 0-表示打开当前消息
+    CLOSE_KEY_MSG_SEND_CMD,
+#endif
 } hl_mod_input_ctrl_cmd;
-
 /**
  * 
  * @brief 输入模块初始化
