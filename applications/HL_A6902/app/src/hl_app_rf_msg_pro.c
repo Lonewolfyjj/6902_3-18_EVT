@@ -57,9 +57,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_bypass_state_t       bypass_state;
     hl_rf_bypass_value_t       bypass_value;
     hl_switch_e                bypass_switch;
-    hl_rf_bypass_state_t*      ptr_rf_state;
-    hl_rf_bypass_value_t*      ptr_rf_value;
-    hl_rf_bypass_time_t*       ptr_rf_time;
+    hl_rf_bypass_state_t*      ptr_rf_state = NULL;
+    hl_rf_bypass_value_t*      ptr_rf_value = NULL;
+    hl_rf_bypass_time_t*       ptr_rf_time  = NULL;
     uint32_t                   u32_param;
     hl_rf_bypass_update_info_t bypass_info;
 
@@ -326,7 +326,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_info->mute, 1);
                 hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
                 hl_mod_display_io_ctrl(TX1_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_info->charge, 1);
-                if (1 == ptr_rf_state->state) {
+                if (1 == ptr_rf_info->record) {
                     hl_mod_display_io_ctrl(TX1_RECORD_STATE_SWITCH_CMD, &ptr_rf_info->record, 1);
                 }
             } else if (HL_RF_RIGHT_CHANNEL == ptr_rf_info->chn) {
@@ -335,7 +335,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_info->mute, 1);
                 hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
                 hl_mod_display_io_ctrl(TX2_CHARGE_STATUS_SWITCH_CMD, &ptr_rf_info->charge, 1);
-                if (1 == ptr_rf_state->state) {
+                if (1 == ptr_rf_info->record) {
                     hl_mod_display_io_ctrl(TX2_RECORD_STATE_SWITCH_CMD, &ptr_rf_info->record, 1);
                 }
             } else {

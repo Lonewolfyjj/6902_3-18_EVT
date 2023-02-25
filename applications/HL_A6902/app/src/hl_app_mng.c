@@ -81,6 +81,9 @@ void hl_app_param_loader(void)
     hl_util_nvram_param_get_integer("DENOISE_PROTECT_OPEN", &tx_info.denoise_protect_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_AUTO_OPEN", &tx_info.denoise_auto_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_CLASS", &tx_info.denoise_class, 0);
+
+    hl_util_nvram_param_get_integer("TX_GAIN", &tx_info.gain, 0);
+    hl_util_nvram_param_get_integer("TX_UAC_GAIN", &tx_info.uac_gain, 0);
 }
 
 void hl_app_param_fun(void)
@@ -114,10 +117,45 @@ void          hl_app_param_loader(void)
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
     hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
     hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
+    
+    
 }
 
 void hl_app_param_fun(void)
 {
+    uint8_t param = 0;
+
+    // 读取TX的配置 发送配置给屏幕
+    hl_util_nvram_param_get_integer("MUTE_OPEN", &param, 0);
+    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 0);
+
+    hl_util_nvram_param_get_integer("REC_PROTECT_OPEN", &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 0);
+
+    hl_util_nvram_param_get_integer("REC_AUTO_OPEN", &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+
+    hl_util_nvram_param_get_integer("TX_GAIN", &param, 0);
+    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 0);
+    hl_util_nvram_param_get_integer("TX_GAIN2", &param, 0);
+    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 0);
+    
+    hl_util_nvram_param_get_integer("TX_UAC_GAIN", &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+
+    param = rx_info.cam_gain_l/2;
+    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
+
+    param = rx_info.cam_gain_r/2;
+    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+
+    param = rx_info.hp_gain/2;
+    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 0);
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
+    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
 }
 #endif
 /* Exported functions --------------------------------------------------------*/
@@ -138,7 +176,7 @@ void hl_app_msg_thread(void* parameter)
         hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);
         hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     }
-    // hl_app_param_fun();
+    hl_app_param_fun();
 
     //退出charger app后重新通知pm上报一次电量和充电状态信息，因为第一次上报的信息在charger app中可能被清除了，没有处理
     hl_mod_pm_ctrl(HL_PM_BAT_INFO_UPDATE_CMD, RT_NULL, 0);
