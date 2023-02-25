@@ -639,6 +639,11 @@ static void lv_display_tx1(device_data_t * init_data)
     }else{
         LOG_E("voice_mute_img_tx1 is not null\n");
     }
+
+    lv_set_video_hide_cb(voice_mute_img_tx1,1);
+    lv_set_video_hide_cb(voice_img_tx1,0);
+    lv_obj_move_foreground(voice_img_tx1);
+
     if(power_img_tx1 == RT_NULL){
         power_img_tx1 = lv_power_img_creat_fun(area_tx1,7,-10,256);
     }else{
@@ -713,6 +718,11 @@ static void lv_display_tx2(device_data_t * init_data)
     }else{
         LOG_E("voice_mute_img_tx2 is not null\n");
     }
+
+    lv_set_video_hide_cb(voice_mute_img_tx2,1);
+    lv_set_video_hide_cb(voice_img_tx2,0);
+    lv_obj_move_foreground(voice_img_tx2);
+
     if(power_img_tx2 == RT_NULL){
         power_img_tx2 = lv_power_img_creat_fun(area_tx2,7,-10,256);
     }else{
@@ -802,7 +812,15 @@ static void lv_display_double(device_data_t * init_tx1,device_data_t * init_tx2)
         voice_mute_img_tx2 = lv_voice_img_creat_fun(area_tx2,&Main_horn_mute,-14,6,256);
     }else{
         LOG_E("voice_mute_img_tx2 is not null\n");
-    } 
+    }
+
+    lv_set_video_hide_cb(voice_mute_img_tx1,1);
+    lv_set_video_hide_cb(voice_img_tx1,0);
+    lv_obj_move_foreground(voice_img_tx1);
+
+    lv_set_video_hide_cb(voice_mute_img_tx2,1);
+    lv_set_video_hide_cb(voice_img_tx2,0);
+    lv_obj_move_foreground(voice_img_tx2);
 
     //电池图标图片
     if(power_img_tx1 == RT_NULL){

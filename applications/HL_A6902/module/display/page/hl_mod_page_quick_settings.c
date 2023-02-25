@@ -45,8 +45,8 @@
 #include "hl_util_general_type.h"
 #include "page_lineout.h"
 
-#define MAX_LINEOUT_VOLUME 18
-#define MIN_LINEOUT_VOLUME -18
+#define MAX_LINEOUT_VOLUME 10
+#define MIN_LINEOUT_VOLUME -10
 
 // 0 表示左 1表示 右
 static int16_t now_sound_channal = (int16_t)HL_LINEOUT_CHOOSE_LEFT;

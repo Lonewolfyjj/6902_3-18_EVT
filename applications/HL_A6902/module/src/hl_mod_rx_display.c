@@ -552,7 +552,7 @@ static void hl_mod_display_task(void* param)
     lv_timer_set_repeat_count(timer, -1);
     while (1) {
 
-            hl_mod_screen_rot_scan();
+            // hl_mod_screen_rot_scan();
             hl_mod_display_upgrade_enter();
             hl_mod_outbox_offcharge_scan();
             hl_mod_page_goto_box_scan();
