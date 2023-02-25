@@ -507,8 +507,11 @@ static bool _hl_app_mng_check_power_on_state(void)
 void hl_app_mng_charger_set_halt_state(uint8_t state)
 {
     if (state) {
+        hl_hal_gpio_init(GPIO_ALL_POWER);
+        hl_hal_gpio_high(GPIO_ALL_POWER);
         hl_util_nvram_param_set_integer("HALT", 0);
         hl_util_nvram_param_save();
+        hl_hal_gpio_low(GPIO_ALL_POWER);
     }
     last_halt_state = state;
 }
