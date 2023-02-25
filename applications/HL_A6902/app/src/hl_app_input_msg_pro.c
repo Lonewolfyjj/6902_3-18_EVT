@@ -28,6 +28,7 @@
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
 #include "hl_app_audio_msg_pro.h"
+#include "hl_app_pm_msg_pro.h"
 #include "hl_mod_input.h"
 #include "hl_mod_display.h"
 #include "hl_mod_audio.h"
@@ -82,7 +83,7 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
 
         case HL_KEY_EVENT_SHORT:
         case HL_KEY_EVENT_DOUBLE:
-            rf_bypass_state.chn   = tx_info.rf_chn;
+            rf_bypass_state.chn = tx_info.rf_chn;
             // 支持手机外录设置状态为2
             rf_bypass_state.state = 2;
             hl_mod_telink_ioctl(HL_RF_BYPASS_RECORD_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
@@ -91,7 +92,10 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (tx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
+                tx_info.on_off_flag = 0;
+                // hl_app_audio_switch();                
                 hl_util_nvram_param_set_integer("HALT", 1);
+                hl_mod_audio_deinit();
                 hl_mod_display_deinit();
                 hl_board_reboot();
             } else {
@@ -188,6 +192,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             }
             hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
             hl_app_disp_state_led_set();
+            hl_app_pm_timer_set();
 
             rf_bypass_state.chn   = tx_info.rf_state - 1;
             rf_bypass_state.state = tx_info.rec_flag;
@@ -224,7 +229,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.usb_plug      = 0;
         tx_info.uac_link_flag = 0;
-        if ((tx_info.on_off_flag == 1)&&(tx_info.mstorage_plug == 1)) {
+        if ((tx_info.on_off_flag == 1) && (tx_info.mstorage_plug == 1)) {
             hl_mod_audio_io_ctrl(HL_USB_MSTORAGE_DISABLE_CMD, NULL, 0);
         }
         tx_info.mstorage_plug = 0;
@@ -233,6 +238,7 @@ static void hl_app_tx_usb_plug_pro(uint32_t value)
     }
     hl_app_audio_stream_updata();
     hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
+    hl_app_pm_timer_set();
 }
 
 /// 外置mic状态处理
@@ -243,12 +249,20 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
     if (value == 0) {
         tx_info.ex_mic_plug = 0;
         mic_select          = HL_MIC_EXTERNAL;
+        hl_app_audio_switch();
+        hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+        hl_app_audio_stream_updata();    
     } else {
         tx_info.ex_mic_plug = 1;
         mic_select          = HL_MIC_INTERNAL;
+        hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
+        hl_app_audio_stream_updata();    
+        hl_app_audio_switch();
     }
-    hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
-    hl_app_audio_stream_updata();
+    
+
+    
+    
 }
 
 /// POGO VBUS的状态处理
@@ -265,6 +279,8 @@ static void hl_app_tx_pogo_vbus_plug_pro(uint32_t value)
 
         hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
     }
+
+    hl_app_pm_timer_set();
 }
 
 #else
@@ -292,7 +308,10 @@ static void hl_app_rx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (rx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
+                rx_info.on_off_flag = 0;
+                hl_app_audio_switch();                
                 hl_util_nvram_param_set_integer("HALT", 1);
+                hl_mod_audio_deinit();
                 hl_board_reboot();
             } else {
                 // hl_app_mng_powerOn();
@@ -394,6 +413,7 @@ static void hl_app_rx_usb_plug_pro(uint32_t value)
     usb_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &usb_state, 1);
     hl_mod_pm_ctrl(HL_PM_SET_VBUS_C_STATE_CMD, &(value), sizeof(uint8_t));
+    hl_app_pm_timer_set();
 }
 
 /// 监听口状态处理
@@ -413,6 +433,8 @@ static void hl_app_rx_hp_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(MONITOR_IN_SWITCH_CMD, &hp_state, 1);
     hp_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &hp_state, 1);
+
+    hl_app_audio_switch();
 }
 
 /// 相机口状态处理
@@ -430,6 +452,8 @@ static void hl_app_rx_cam_plug_pro(uint32_t value)
     hl_mod_display_io_ctrl(LINE_OUT_IN_SWITCH_CMD, &cam_plug_state, 1);
     cam_plug_state = 1;
     hl_mod_display_io_ctrl(SCREEN_OFF_STATUS_SWITCH_CMD, &cam_plug_state, 1);
+
+    hl_app_audio_switch();
 }
 
 /// POGO VBUS的状态处理
@@ -446,6 +470,8 @@ static void hl_app_rx_pogo_vbus_plug_pro(uint32_t value)
 
         hl_mod_pm_ctrl(HL_PM_SET_VBUS_P_STATE_CMD, &(value), sizeof(uint8_t));
     }
+
+    hl_app_pm_timer_set();
 }
 
 #endif
@@ -498,7 +524,6 @@ void hl_app_input_msg_pro(mode_to_app_msg_t* p_msg)
         case MSG_RX_OK_VOL:
             hl_app_rx_knob_key_pro(p_msg->param.u32_param);
             LOG_D("MSG_RX_OK_VOL:(%d) \r\n", p_msg->param.u32_param);
-
             break;
 
         case MSG_RX_A_VOL:

@@ -60,14 +60,16 @@ typedef struct _hl_mod_pm_st
     bool                     init_flag;
     bool                     guage_init_flag;
     bool                     start_flag;
-    bool                     update_flag;
     bool                     interrupt_update_flag;
     hl_mod_pm_charger_e      charger;
+    bool                     charger_charge_terminate_flag;
     hl_mod_pm_charge_state_e charge_state;
     uint8_t                  vbus_c_state;
     uint8_t                  vbus_p_state;
     bool                     charge_full_timeout_flag;
     struct rt_timer          charge_full_timer;
+    struct rt_timer          shutdown_timer;
+    uint32_t                 shutdown_timeout;
     rt_mq_t                  msg_hd;
     rt_thread_t              pm_thread;
     int                      thread_exit_flag;
@@ -85,11 +87,14 @@ typedef enum _hl_mod_pm_bat_info_e
 } hl_mod_pm_bat_info_e;
 
 /* define --------------------------------------------------------------------*/
+
+#define MAX_CHARGE_TEMP 60
+#define MIN_CHARGE_TEMP 0
+
 /* variables -----------------------------------------------------------------*/
 
 static hl_mod_pm_st _pm_mod = { .init_flag             = false,
                                 .start_flag            = false,
-                                .update_flag           = false,
                                 .interrupt_update_flag = false,
                                 .msg_hd                = NULL,
                                 .pm_thread             = NULL,
@@ -131,10 +136,15 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
     return HL_MOD_PM_FUNC_RET_OK;
 }
 
-static void _timer_timeout_handle(void* arg)
+static void _charge_full_timer_timeout_handle(void* arg)
 {
-    LOG_I("pm timeout");
+    LOG_I("pm charge timeout");
     _pm_mod.charge_full_timeout_flag = true;
+}
+
+static void _shutdown_timer_timeout_handle(void* arg)
+{
+    _mod_msg_send(HL_SHUTDOWN_TIMEOUT_IND, NULL, 0);
 }
 
 static void _guage_gpio_irq_handle(void* args)
@@ -325,7 +335,7 @@ static void _guage_state_poll()
     }
 }
 
-static void _charge_state_update(void)
+static void _charger_charge_state_update(void)
 {
     HL_SY_INPUT_PARAM_T      sy6971_param;
     HL_SGM_INPUT_PARAM_T     sgm_param;
@@ -341,7 +351,7 @@ static void _charge_state_update(void)
             charge_state = HL_CHARGE_STATE_CHARGING;
         } else if (sy6971_param.param == 2) {
             charge_state = HL_CHARGE_STATE_CHARGING;
-        } else {
+        } else if (sy6971_param.param == 3) {
             charge_state = HL_CHARGE_STATE_CHARGE_DONE;
         }
     } else if (_pm_mod.charger == HL_MOD_PM_CHARGER_SGM41518) {
@@ -354,25 +364,32 @@ static void _charge_state_update(void)
             charge_state = HL_CHARGE_STATE_CHARGING;
         } else if (sgm_param.param == 2) {
             charge_state = HL_CHARGE_STATE_CHARGING;
-        } else {
+        } else if (sgm_param.param == 3) {
             charge_state = HL_CHARGE_STATE_CHARGE_DONE;
         }
     } else {
         return;
     }
 
-    if (charge_state != _pm_mod.charge_state) {
-        _pm_mod.charge_state = charge_state;
-        _mod_msg_send(HL_CHARGE_STATE_IND, &(_pm_mod.charge_state), sizeof(_pm_mod.charge_state));
+    if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
+        if (_pm_mod.charger_charge_terminate_flag == false) {
+            _pm_mod.charger_charge_terminate_flag = true;
+            LOG_I("charger charge terminate!");
+        }
+    } else {
+        if (_pm_mod.charger_charge_terminate_flag == true) {
+            _pm_mod.charger_charge_terminate_flag = false;
+            LOG_I("charger charge not terminate!");
+        }
     }
 }
 
-static void _charge_state_poll(void)
+static void _charger_charge_state_poll(void)
 {
     static uint8_t count = 0;
 
     if (count == 0) {
-        _charge_state_update();
+        _charger_charge_state_update();
         count = 100;
     } else {
         count--;
@@ -402,12 +419,24 @@ static void _charge_state_judge(void)
 
     if (_pm_mod.vbus_c_state == 1 || _pm_mod.vbus_p_state == 1) {
         if (_pm_mod.charge_full_timeout_flag == true) {
-            charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+            charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
         } else {
-            charge_state = HL_CHARGE_STATE_CHARGING;
+            if (_pm_mod.charger_charge_terminate_flag == true) {
+                if (_pm_mod.bat_info.soc.soc != 100) {
+                    // 重新初始化电量计
+                }
+                charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
+            } else {
+                if (_pm_mod.bat_info.soc.soc >= 95) {
+                    charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+                } else {
+                    charge_state = HL_CHARGE_STATE_CHARGING;
+                }
+            }
         }
     } else {
-        charge_state = HL_CHARGE_STATE_NO_CHARGE;
+        charge_state                          = HL_CHARGE_STATE_NO_CHARGE;
+        _pm_mod.charger_charge_terminate_flag = false;
     }
 
     if (charge_state != _pm_mod.charge_state) {
@@ -419,30 +448,22 @@ static void _charge_state_judge(void)
 
 static void _charge_full_timer_set(void)
 {
-    static bool    flag = false;
-    static uint8_t soc  = 255;
+    static bool flag = false;
 
-    if (soc != _pm_mod.bat_info.soc.soc) {
-        if (soc != 99 && _pm_mod.bat_info.soc.soc == 100) {
-            flag                             = true;
-            _pm_mod.charge_full_timeout_flag = true;
-        } else {
-            flag = false;
-        }
-        soc = _pm_mod.bat_info.soc.soc;
-    }
-
-    if (_pm_mod.bat_info.soc.soc >= 98 && _pm_mod.charge_state == HL_CHARGE_STATE_CHARGING) {
+    if (_pm_mod.vbus_p_state == 1
+        && (_pm_mod.guage_init_flag == false
+            || (_pm_mod.bat_info.temp.temp > MIN_CHARGE_TEMP && _pm_mod.bat_info.temp.temp < MAX_CHARGE_TEMP))) {
         if (flag == false) {
+            flag = true;
             rt_timer_start(&(_pm_mod.charge_full_timer));
             _pm_mod.charge_full_timeout_flag = false;
-            flag                             = true;
         }
-    } else if (_pm_mod.bat_info.soc.soc < 98
-               || (_pm_mod.charge_state == HL_CHARGE_STATE_NO_CHARGE && _pm_mod.bat_info.soc.soc != 100)) {
-        flag                             = false;
-        _pm_mod.charge_full_timeout_flag = false;
-        rt_timer_stop(&(_pm_mod.charge_full_timer));
+    } else {
+        if (flag == true) {
+            flag = false;
+            rt_timer_stop(&(_pm_mod.charge_full_timer));
+            _pm_mod.charge_full_timeout_flag = false;
+        }
     }
 }
 
@@ -494,10 +515,9 @@ static void _pm_thread_entry(void* arg)
 #else
         _guage_state_poll();
 #endif
-#if 0
-        _charge_state_poll();
-        _charger_fault_state_poll();
-#endif
+
+        _charger_charge_state_poll();
+        // _charger_fault_state_poll();
         _charge_state_judge();
         _charge_full_timer_set();
 
@@ -546,8 +566,13 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         _pm_mod.guage_init_flag = true;
     }
 
-    rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _timer_timeout_handle, RT_NULL, 1000 * 60 * 5,
-                  RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
+    rt_timer_init(&(_pm_mod.charge_full_timer), "pm_timer", _charge_full_timer_timeout_handle, RT_NULL,
+                  1000 * 60 * 60 * 4, RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
+
+    _pm_mod.shutdown_timeout = 1000 * 60 * 15;
+
+    rt_timer_init(&(_pm_mod.shutdown_timer), "pm_timer", _shutdown_timer_timeout_handle, RT_NULL,
+                  _pm_mod.shutdown_timeout, RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);
 #if 0
     _guage_gpio_irq_init();
 #endif
@@ -576,11 +601,12 @@ int hl_mod_pm_deinit(void)
     rt_timer_detach(&(_pm_mod.charge_full_timer));
 #if 0
     _guage_gpio_irq_deinit();
-#endif
+
     ret = hl_drv_cw2215_deinit();
     if (ret == CW2215_FUNC_RET_ERR) {
         return HL_MOD_PM_FUNC_RET_ERR;
     }
+#endif
 
     _pm_mod.msg_hd = NULL;
 
@@ -608,16 +634,18 @@ int hl_mod_pm_start(void)
         }
     }
 
-    _pm_mod.interrupt_update_flag    = false;
-    _pm_mod.update_flag              = false;
-    _pm_mod.charge_state             = HL_CHARGE_STATE_UNKNOWN;
-    _pm_mod.vbus_c_state             = 0;
-    _pm_mod.vbus_p_state             = 0;
-    _pm_mod.charge_full_timeout_flag = false;
+    _pm_mod.interrupt_update_flag         = false;
+    _pm_mod.charge_state                  = HL_CHARGE_STATE_UNKNOWN;
+    _pm_mod.vbus_c_state                  = 0;
+    _pm_mod.vbus_p_state                  = 0;
+    _pm_mod.charge_full_timeout_flag      = false;
+    _pm_mod.charger_charge_terminate_flag = false;
 #if 0
     _guage_gpio_irq_enable(true);
 #endif
     _pm_mod.thread_exit_flag = 0;
+
+    rt_timer_start(&(_pm_mod.shutdown_timer));
 
     _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
@@ -650,6 +678,8 @@ int hl_mod_pm_stop(void)
     _guage_gpio_irq_enable(false);
 #endif
     _pm_mod.thread_exit_flag = 1;
+
+    rt_timer_stop(&(_pm_mod.shutdown_timer));
 
     LOG_I("wait pm thread exit");
 
@@ -686,6 +716,16 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_PM_SET_VBUS_P_STATE_CMD: {
             _pm_mod.vbus_p_state = *((uint8_t*)arg);
+        } break;
+        case HL_PM_SET_SHUTDOWN_TIMEOUT_CMD: {
+            _pm_mod.shutdown_timeout = *((uint32_t*)arg);
+            rt_timer_control(&(_pm_mod.shutdown_timer), RT_TIMER_CTRL_SET_TIME, &(_pm_mod.shutdown_timeout));
+        } break;
+        case HL_PM_START_SHUTDOWN_TIMER_CMD: {
+            rt_timer_start(&(_pm_mod.shutdown_timer));
+        } break;
+        case HL_PM_STOP_SHUTDOWN_TIMER_CMD: {
+            rt_timer_stop(&(_pm_mod.shutdown_timer));
         } break;
         default:
             break;

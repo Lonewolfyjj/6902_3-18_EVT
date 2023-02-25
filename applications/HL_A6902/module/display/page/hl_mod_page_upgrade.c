@@ -69,6 +69,8 @@ static void hl_mod_page_loop(void)
     if (status == 1) {
         return;
     }
+    
+    hl_mod_page_backlight_update();
 
     switch (data_ptr->upgrade_status) {
         case HL_UPGRADE_STATUS_NORMAL:

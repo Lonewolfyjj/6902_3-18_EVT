@@ -59,6 +59,22 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg);
  */
 void hl_app_audio_stream_updata(void);
 
+/**
+ * 
+ * @brief codec状态更新(判断当前状态是否关闭codec)
+ * @date 2023-02-23
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-23      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_audio_switch(void);
+
 #endif /* __HL_APP_AUDIO_MSG_PRO_H__ */
 /*
  * EOF
