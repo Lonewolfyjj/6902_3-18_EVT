@@ -266,6 +266,8 @@ void hl_app_mng_powerOn(void)
         value = 1;
     } else if (rx_info.charge_flag == 2) {
         value = 0;
+    } else if (rx_info.charge_flag == 3) {
+        value = 0;
     }
     LOG_D("rx_info.charge_flag=%d ", rx_info.charge_flag);
     hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &value, 1);

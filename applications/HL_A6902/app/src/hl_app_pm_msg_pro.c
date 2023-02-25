@@ -58,7 +58,12 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         LOG_D("charge done!");
         tx_info.charge_flag = 2;
         state               = 2;
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        tx_info.charge_flag = 3;
+        state               = 2;
     }
+
     bypass_state.chn   = tx_info.rf_chn;
     bypass_state.state = tx_info.charge_flag == 1 ? HL_RF_ON : HL_RF_OFF;
     hl_mod_telink_ioctl(HL_RF_BYPASS_CHARGE_CMD, &bypass_state, sizeof(bypass_state));
@@ -76,7 +81,12 @@ void hl_app_pm_charge_pro(hl_mod_pm_charge_state_e charge_state)
         LOG_D("charge done!");
         rx_info.charge_flag = 2;
         state               = 2;
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        rx_info.charge_flag = 3;
+        state               = 2;
     }
+
     hl_mod_display_io_ctrl(RX_CHARGE_STATUS_SWITCH_CMD, &state, 1);
 #endif
 }
