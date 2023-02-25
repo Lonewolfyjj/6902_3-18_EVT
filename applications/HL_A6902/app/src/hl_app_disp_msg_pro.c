@@ -233,6 +233,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             rf_bypass_value.chn = HL_RF_LEFT_CHANNEL;
             rf_bypass_value.val = (int8_t)p_msg->param.s32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_TX_GAIN_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
+            hl_util_nvram_param_set_integer("TX_GAIN", rf_bypass_value.val);
             LOG_D("TX1_GAIN_VAL_IND\r\n");
             break;
         case TX2_GAIN_VAL_IND:
@@ -240,6 +241,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             rf_bypass_value.chn = HL_RF_RIGHT_CHANNEL;
             rf_bypass_value.val = (int8_t)p_msg->param.s32_param;
             hl_mod_telink_ioctl(HL_RF_BYPASS_TX_GAIN_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
+            hl_util_nvram_param_set_integer("TX_GAIN2", rf_bypass_value.val);
             LOG_D("TX2_GAIN_VAL_IND\r\n");
             break;
         case TX1_FS_FORMAT_VAL_IND:
