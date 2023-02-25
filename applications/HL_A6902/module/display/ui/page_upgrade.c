@@ -33,7 +33,7 @@
 #include "page_upgrade.h"
 #include "language.h"
 #include "page_style_bit.h"
-
+#include "page_language.h"
 LV_IMG_DECLARE(Other_upgrade_fail);//
 LV_IMG_DECLARE(Other_upgrade_success);//
 
@@ -120,19 +120,21 @@ static lv_obj_t * lv_img_creat_fun(lv_obj_t *src_obj,const void * src,lv_align_t
 void hl_mod_lvgl_upgrade_init(void * init_data)
 {
     hl_lvgl_upgrade_init_t * ptr = (hl_lvgl_upgrade_init_t *)init_data;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     if (!page_style_bit.page_upgrade) {
         page_style_bit.page_upgrade = 1;
         lv_style_barset_init();
     }
        
     bar = lv_bar_creat_fun(lv_scr_act(),lv_scr_act(),LV_ALIGN_CENTER,0,20,ptr->upgrade_progress);
-    lab = lv_lab_creat_fun(lv_scr_act(),bar,LV_ALIGN_OUT_TOP_MID,0,-20,"设备升级中...");
+    lab = lv_lab_creat_fun(lv_scr_act(),bar,LV_ALIGN_OUT_TOP_MID,0,-20,page_ptr->upgrade_page_ptr->page_upgrade->ptr_upgrading);
 }
 
 
 void hl_mod_lvgl_upgrade_ioctl(void * ctl_data)
 {
     hl_lvgl_upgrade_ioctl_t * ptr = (hl_lvgl_upgrade_ioctl_t *)ctl_data; 
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     switch(ptr->upgrade_ioctl){
         case HL_UPGRADE_PARAM_CMD:
             lv_bar_set_value(bar, ptr->upgrade_progress, LV_ANIM_ON);
@@ -140,12 +142,12 @@ void hl_mod_lvgl_upgrade_ioctl(void * ctl_data)
         case HL_UPGRADE_SUCCESS_CMD:
             img = lv_img_creat_fun(lv_scr_act(),&Other_upgrade_success,LV_ALIGN_TOP_MID,0,8);
             lab1 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,8,ptr->ptr);
-            lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,36,"请手动重启设备");
+            lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,36,page_ptr->upgrade_page_ptr->page_upgrade->ptr_reset_device);
             break;
         case HL_UPGRADE_FAIL_CMD:
             img = lv_img_creat_fun(lv_scr_act(),&Other_upgrade_fail,LV_ALIGN_TOP_MID,0,8);
             lab1 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,8,ptr->ptr);
-            lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,36,"请手动重启设备");
+            lab2 = lv_lab_creat_fun(lv_scr_act(),img,LV_ALIGN_OUT_BOTTOM_MID,0,36,page_ptr->upgrade_page_ptr->page_upgrade->ptr_reset_device);
             break;
         case HL_UPGRADE_CLEAR_CMD:
             // hl_obj_delete(lv_scr_act(),false);

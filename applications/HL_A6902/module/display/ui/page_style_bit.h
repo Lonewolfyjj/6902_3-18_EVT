@@ -3,7 +3,7 @@
 #define __PAGE_STYLE_BIT_H__
 
 #include "stdio.h"
-
+#include "rtdbg.h"
 
 typedef struct _hl_page_style_bit
 {

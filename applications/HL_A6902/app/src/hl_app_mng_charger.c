@@ -69,7 +69,11 @@ static void _hl_app_mng_charger_power_on_stm()
 #if HL_IS_TX_DEVICE()
                 hold_times = 150;
 #else
-                hold_times = 2;
+                if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_LOW) {
+                    hold_times = 150;
+                } else {
+                    hold_times = 2;
+                }
 #endif
                 sg_stm_charger_pwr_key_state++;
             }
@@ -128,7 +132,11 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         LOG_D("charge done!");
         tx_info.charge_flag = 2;
         state               = FULL_CHARGE;
-    }
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        tx_info.charge_flag = 3;
+        state               = FULL_CHARGE;
+    } 
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, sizeof(state));
 #else
     uint8_t state = 0;
@@ -143,6 +151,10 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
     } else if (charge_state == HL_CHARGE_STATE_CHARGE_DONE) {
         LOG_D("charge done!");
         rx_info.charge_flag = 2;
+        state = OUTBOX_OFFCHARGE_OFFPAGE;
+    } else if (charge_state == HL_CHARGE_STATE_CHARGE_FULL_DONE) {
+        LOG_D("charge full done!");
+        rx_info.charge_flag = 3;
         state = OUTBOX_OFFCHARGE_OFFPAGE;
     }
 
@@ -346,7 +358,7 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 }
 #else
 
-extern void _display_in_box_state_set(void);
+extern void hl_com_display_in_box_state_set(void);
 
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
 {
@@ -371,14 +383,14 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
             _in_box_flag = true;
             _dev_num = *(uint8_t*)p_msg->param.ptr;
             LOG_I("in box! dev_num:%d", _dev_num);
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
         } break;
         case HL_OUT_BOX_IND: {
             _rx_in_box_flag = false;
             _in_box_flag = false;
             LOG_I("out box!");
             if (_shut_down_flag == false) {
-                _display_in_box_state_set();
+                hl_com_display_in_box_state_set();
                 hl_app_mng_charger_goto_power_on();
             }
         } break;
@@ -407,13 +419,13 @@ static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
         case HL_TX1_IN_BOX_STATE_IND: {  //更新Tx1在盒状态
             tx1_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx1_in_box_flag = tx1_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx1 in box state:%d", tx1_in_box_flag_temp);
         } break;
         case HL_TX2_IN_BOX_STATE_IND: {  //更新Tx2在盒状态
             tx2_in_box_flag_temp = *(bool*)p_msg->param.ptr;
             _tx2_in_box_flag = tx2_in_box_flag_temp;
-            _display_in_box_state_set();
+            hl_com_display_in_box_state_set();
             LOG_I("Tx2 in box state:%d", tx2_in_box_flag_temp);
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
@@ -495,8 +507,11 @@ static bool _hl_app_mng_check_power_on_state(void)
 void hl_app_mng_charger_set_halt_state(uint8_t state)
 {
     if (state) {
+        hl_hal_gpio_init(GPIO_ALL_POWER);
+        hl_hal_gpio_high(GPIO_ALL_POWER);
         hl_util_nvram_param_set_integer("HALT", 0);
         hl_util_nvram_param_save();
+        hl_hal_gpio_low(GPIO_ALL_POWER);
     }
     last_halt_state = state;
 }
@@ -505,7 +520,7 @@ void hl_app_mng_charger_entry(void* msg_q)
     struct rt_messagequeue* app_mq = msg_q;
     mode_to_app_msg_t       msg    = { 0 };
 #if HL_IS_TX_DEVICE()
-    hl_led_switch           led_ctrl;
+    hl_led_switch led_ctrl;
 
     // 在收纳盒中则关闭led
     if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {
@@ -520,7 +535,7 @@ void hl_app_mng_charger_entry(void* msg_q)
             if (_in_box_flag == false || _shut_down_flag == true) {
                 hl_app_mng_powerOff();
                 // while ((1));
-                rt_thread_mdelay(5000);
+                rt_thread_mdelay(3000);
                 hl_board_reboot();
             }
         }
