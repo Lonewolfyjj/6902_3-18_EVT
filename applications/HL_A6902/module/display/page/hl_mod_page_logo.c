@@ -41,7 +41,7 @@
 #include "hl_util_general_type.h"
 
 // logo页面定时器
-#define LOGO_PAGE_RUNTIME 3000
+#define LOGO_PAGE_RUNTIME 2000
 
 hl_screenofftime_t logo_page_timer;
 LV_IMG_DECLARE(logo);   // LOGO页面
