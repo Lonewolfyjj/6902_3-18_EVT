@@ -40,6 +40,7 @@
 #include "lv_port_indev.h"
 #include "page_test.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
 static hl_s_two_in_one_check_t display_choose = HL_S_TWO_ONE_CHECK_LEFT;
@@ -89,18 +90,18 @@ static void hl_pair_test_cb(hl_s_two_in_one_check_t event_num)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
         .func_cb             = hl_pair_test_cb,
-        .ptr_lift            = "取消",
-        .ptr_right           = "确定",
+        .ptr_lift            = page_ptr->s_two_in_one_page_ptr->page_format->ptr_left,//"取消",
+        .ptr_right           = page_ptr->s_two_in_one_page_ptr->page_format->ptr_right,//"确定",
         .ptr_top             = "",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
     if (!flag->channel_format_flag) {
-        s_two_in_one_test.ptr_top = "是否格式化TX1";
+        s_two_in_one_test.ptr_top = page_ptr->s_two_in_one_page_ptr->page_format->prt_top1;//"是否格式化TX1";
     } else {
-        s_two_in_one_test.ptr_top = "是否格式化TX2";
+        s_two_in_one_test.ptr_top = page_ptr->s_two_in_one_page_ptr->page_format->prt_top2;//"是否格式化TX2";
     }
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
 }

@@ -54,8 +54,8 @@
 static event_cb func_cb;
 static uint8_t ICON_NUMBER = 0,ICON_START_STATUS,ICON_END_STATUS;
 static lv_obj_t *cont_row = NULL;
-static lv_obj_t *lab_obj[MAX_MENU_NUMBER];
-static lv_obj_t *pic_obj[MAX_MENU_NUMBER];
+static lv_obj_t *lab_obj[MAX_MENU_NUMBER] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
+static lv_obj_t *pic_obj[MAX_MENU_NUMBER] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
 static int img_obj_xcoor[MAX_MENU_NUMBER];
 static lv_style_t screen_style;
 static lv_style_t style_label;
@@ -127,7 +127,7 @@ static void lv_inon_zoom_set(uint8_t num)
     lv_area_t tmp_t;
     lv_obj_get_coords(pic_obj[num], &tmp_t);//复制子对象
     img_obj_xcoor[num] = tmp_t.x1 + lv_area_get_width(&tmp_t) / 2;//获取对象Y方向中心轴坐标
-    zoom = ICON_ZOOM_SET(256 - LV_ABS(img_obj_xcoor[num] - 147));
+    zoom = ICON_ZOOM_SET(256 - (LV_ABS(img_obj_xcoor[num] - 147) * 2));
     lv_img_set_zoom(pic_obj[num],zoom);
 }
 
@@ -240,9 +240,26 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata,    int8_t center
     lv_obj_set_scrollbar_mode(cont_row, LV_SCROLLBAR_MODE_OFF);
     // lv_obj_clear_flag(cont_row,LV_OBJ_FLAG_SCROLL_MOMENTUM);
     for(i = 0; i <pic_num; i++){
-        picdata[i].obj = lv_img_create(cont_row);
-        lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
-        picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,15,1,picdata[i].ptr);
+        if(picdata[i].obj == RT_NULL){
+            picdata[i].obj = lv_img_create(cont_row);
+            if(picdata[i].obj == RT_NULL){
+                LOG_E("img_obj[%d] creat fail\n",i);
+            }else{
+                lv_img_set_src(picdata[i].obj,picdata[i].pic_src);
+            }
+        }else{
+            LOG_E("img_obj[%d] is not null\n",i);
+        }        
+        
+        if(picdata[i].lab == RT_NULL){
+            picdata[i].lab = lv_lab_creat_fun(lv_scr_act(),cont_row,LV_ALIGN_OUT_BOTTOM_MID,0,15,1,picdata[i].ptr);
+            if(picdata[i].lab == RT_NULL){
+                LOG_E("lab_obj[%d] creat fail\n",i);
+            }
+        }else{
+            LOG_E("lab_obj[%d] is not null\n",i);
+        }
+        
     }
     lv_obj_scroll_to_view(lv_obj_get_child(cont_row, center), LV_ANIM_OFF);
     lv_obj_clear_flag(picdata[0].lab,LV_OBJ_FLAG_HIDDEN);
@@ -251,9 +268,22 @@ static void lv_icon_list_init(int pic_num,menu_data_t *picdata,    int8_t center
 
 void lv_menu_exit(void)
 {  
+    uint8_t i;
+    for(i = 0;i < ICON_NUMBER;i++){
+        if(pic_obj[i] == RT_NULL){
+             LOG_E("img_obj[%d] is null\n",i);
+        }
+        if(lab_obj[i] == RT_NULL){
+            LOG_E("lab_obj[%d] is null\n",i);
+        }
+    }
     lv_timer_del(timer);
     lv_obj_clean(lv_scr_act());
     rt_thread_mdelay(10);
+    for(i = 0;i < ICON_NUMBER;i++){
+        pic_obj[i] = RT_NULL;
+        lab_obj[i] = RT_NULL;
+    }
 }
 
 void page_menu_init(menu_data_t *data,uint8_t menu_num,event_cb func,int8_t center)

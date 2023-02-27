@@ -9,6 +9,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static int16_t                knob_choose;
 static hl_two_in_one_choose_t display_choose;
@@ -72,7 +73,7 @@ static void hl_recodeprotect_test_cb(hl_two_in_one_check_t event_num)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     switch (data_ptr->sys_status.auto_record_portect) {
         case 1:
             display_choose = HL_TWO_ONE_CHOOSE_LEFT;
@@ -87,9 +88,9 @@ static void hl_mod_page_setup(void)
     knob_choose                               = (int16_t)display_choose;
     hl_lvgl_two_in_one_init_t two_in_one_test = {
         .func_cb           = hl_recodeprotect_test_cb,
-        .ptr_lift          = "ON",
-        .ptr_right         = "OFF",
-        .ptr_top           = "录制保护",
+        .ptr_lift          = page_ptr->two_in_one_page_ptr->page_record_protect->ptr_left,//"ON",
+        .ptr_right         = page_ptr->two_in_one_page_ptr->page_record_protect->ptr_right,//"OFF",
+        .ptr_top           = page_ptr->two_in_one_page_ptr->page_record_protect->prt_top,//"录制保护",
         .two_in_one_choose = display_choose,
     };
     hl_mod_two_in_one_init(&two_in_one_test);

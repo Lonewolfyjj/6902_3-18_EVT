@@ -43,7 +43,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
-
+#include "page_language.h"
 #define MENU_ICON_NUM 2
 
 static int8_t menu_center_icon = 0;
@@ -72,11 +72,11 @@ static void page_11_test_cb(uint32_t current)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     menu_data_t pic_list[MENU_ICON_NUM] = {
-        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_voice, "监听音量"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_voice, page_ptr->menu_page_ptr->page_volume_menu->ptr_monitor_voice),//"监听音量"),
         // ADD_IMG_DATA(NULL, NULL, &Menu_uac_in, "UAC输入"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_uac_out, "UAC输出"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_uac_out, page_ptr->menu_page_ptr->page_volume_menu->ptr_uac_out),//"UAC输出"),
     };
     // 如果是下一级菜单，就默认显示最左边图标
     if (flag->menu_defaut) {

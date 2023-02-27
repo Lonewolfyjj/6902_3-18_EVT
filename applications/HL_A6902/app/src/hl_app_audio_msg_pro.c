@@ -27,6 +27,7 @@
 #include "hl_util_msg_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_audio_msg_pro.h"
+#include "hl_app_pm_msg_pro.h"
 #include "hl_mod_audio.h"
 #include "hl_mod_display.h"
 #include "hl_mod_upgrade.h"
@@ -58,6 +59,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
         tx_info.rec_flag = 0;
         hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &record_switch, 1);
         hl_mod_display_io_ctrl(LED_RECORD_STATE_CMD, &record_led_ctrl, sizeof(record_led_ctrl));
+        hl_app_pm_timer_set();
     }
 }
 

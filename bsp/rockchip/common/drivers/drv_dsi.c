@@ -444,7 +444,14 @@ static rt_err_t rockchip_dsi_transfer(struct display_state *state, struct rockch
     if (mode->flags & DSI_MODE_LPM)
         HAL_DSI_MsgLpModeConfig(conn_state->hw_base);
 
-    ret = HAL_DSI_SendPacket(conn_state->hw_base, desc->header.data_type,
+    // if (desc->header.data_type == MIPI_DSI_DCS_READ){
+    //     rt_kprintf("desc->header.data_type %d\n",desc->header.data_type);
+    //     rt_kprintf("conn_state->hw_base %X\n",conn_state->hw_base);
+    //     ret = HAL_DSI_ReadPacket(conn_state->hw_base, desc->header.data_type,
+    //                          desc->header.payload_length, desc->payload);
+    // }
+    // else
+        ret = HAL_DSI_SendPacket(conn_state->hw_base, desc->header.data_type,
                              desc->header.payload_length, desc->payload);
 
     if (ret == HAL_OK)

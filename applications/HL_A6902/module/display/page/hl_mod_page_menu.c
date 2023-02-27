@@ -33,6 +33,8 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
+
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
@@ -96,16 +98,17 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
     hl_display_screen_s*        data_ptr = hl_mod_page_get_screen_data_ptr();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     LV_LOG_USER("PAGE_MAIN_MENU\n");
+    
     menu_data_t pic_list[MENU_ICON_NUM] = {
-        ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, "单声道"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_tx_config, "TX设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_noise_config, "降噪设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_voice_config, "音量调节"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_config, "监听设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_high_true, "音效模式"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_common_config, "通用设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, page_ptr->menu_page_ptr->page_menu->ptr_single_voice),//"单声道"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_tx_config, page_ptr->menu_page_ptr->page_menu->ptr_tx_config),//"TX设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_noise_config, page_ptr->menu_page_ptr->page_menu->ptr_noise_config),//"降噪设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_voice_config, page_ptr->menu_page_ptr->page_menu->ptr_voice_config),//"音量调节"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_monitor_config, page_ptr->menu_page_ptr->page_menu->ptr_monitor_config),//"监听设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_high_true, page_ptr->menu_page_ptr->page_menu->ptr_high_true),//"音效模式"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_common_config, page_ptr->menu_page_ptr->page_menu->ptr_common_config),//"通用设置"),
     };
 
     switch (data_ptr->now_sound_module) {
@@ -113,19 +116,19 @@ static void hl_mod_page_setup(void)
             pic_list[0].lab     = NULL;
             pic_list[0].obj     = NULL;
             pic_list[0].pic_src = &Menu_single_voice;
-            pic_list[0].ptr     = "单声道";
+            pic_list[0].ptr     = page_ptr->menu_page_ptr->page_sound_module->ptr_single_voice;//"单声道";
             break;
         case STEREO:
             pic_list[0].lab     = NULL;
             pic_list[0].obj     = NULL;
             pic_list[0].pic_src = &Menu_stereo;
-            pic_list[0].ptr     = "立体声";
+            pic_list[0].ptr     = page_ptr->menu_page_ptr->page_sound_module->ptr_stereo;//"立体声";
             break;
         case SAFE_TRACK:
             pic_list[0].lab     = NULL;
             pic_list[0].obj     = NULL;
             pic_list[0].pic_src = &Menu_saft_track;
-            pic_list[0].ptr     = "安全音轨";
+            pic_list[0].ptr     = page_ptr->menu_page_ptr->page_sound_module->ptr_saft_track;//"安全音轨";
             break;
         default:
             break;
