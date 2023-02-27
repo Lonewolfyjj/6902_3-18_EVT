@@ -300,7 +300,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
             result = rt_mq_send(s_apple.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             // 判断消息队列上传结果
             if (RT_EOK != result) {
-                LOG_I("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
+                LOG_E("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
             }
         }
         rt_thread_mdelay(10);
@@ -336,7 +336,7 @@ static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
             result = rt_mq_send(s_apple.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             // 判断消息队列上传结果
             if (RT_EOK != result) {
-                LOG_I("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
+                LOG_E("[%s][line:%d](%d)mq_send failed!!! \r\n", __func__, __LINE__, result);
             }
         }
         rt_thread_mdelay(10);

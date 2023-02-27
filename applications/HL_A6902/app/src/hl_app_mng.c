@@ -117,8 +117,6 @@ void          hl_app_param_loader(void)
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
     hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
     hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
-    
-    
 }
 
 void hl_app_param_fun(void)
@@ -140,19 +138,19 @@ void hl_app_param_fun(void)
     hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 0);
     hl_util_nvram_param_get_integer("TX_GAIN2", &param, 0);
     hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 0);
-    
+
     hl_util_nvram_param_get_integer("TX_UAC_GAIN", &param, 0);
     hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
 
-    param = rx_info.cam_gain_l/2;
+    param = rx_info.cam_gain_l / 2;
     hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
 
-    param = rx_info.cam_gain_r/2;
+    param = rx_info.cam_gain_r / 2;
     hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
 
-    param = rx_info.hp_gain/2;
+    param = rx_info.hp_gain / 2;
     hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
@@ -286,12 +284,15 @@ void hl_app_mng_powerOn(void)
 
     LOG_D("msc_open_flag = %d ,ret = %d ", msc_open_flag, ret);
     if (msc_open_flag == 1) {
-        hl_mod_audio_deinit();//hl_mod_audio_init(&hl_app_mq);
-    } 
+        hl_mod_audio_deinit();  //hl_mod_audio_init(&hl_app_mq);
+    }
 
     hl_mod_apple_auth_init(&hl_app_mq);
+    if (rx_info.usb_pogo_flag) {
+        hl_mod_apple_auth_start();
+    }
 #endif
-    
+
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
@@ -385,7 +386,6 @@ int hl_app_info(int argc, char** argv)
 
 INIT_APP_EXPORT(hl_app_mng_init);
 MSH_CMD_EXPORT(hl_app_info, show app info cmd);
-
 
 void hl_app_test_init(void)
 {
