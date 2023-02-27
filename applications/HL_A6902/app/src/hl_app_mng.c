@@ -248,10 +248,11 @@ void hl_app_mng_powerOn(void)
     if (msc_open_flag == 1) {
         hl_mod_audio_deinit();//hl_mod_audio_init(&hl_app_mq);
     } 
-#endif
-    
+
     hl_mod_apple_auth_init(&hl_app_mq);
     hl_mod_apple_auth_start();
+#endif
+    
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();    
 
