@@ -32,7 +32,7 @@
  */
 #include "page_storage.h"
 #include "page_style_bit.h"
-
+#include "page_language.h"
 #define  CHICK_STA_LIFT 0
 #define  CHICK_STA_RIGHT 1
 
@@ -302,13 +302,13 @@ void hl_mod_storage_ioctl(void * ctl_data)
 void hl_mod_storage_init(void * init_data)
 {    
     hl_lvgl_storage_init_t * ptr = (hl_lvgl_storage_init_t *)init_data;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_storage_func = ptr->func_cb;
     if (!page_style_bit.page_storage) {
         page_style_bit.page_storage = 1;
         lv_style_page4_init();
     }
     
-
     con1 = lv_con_creat_fun(LV_ALIGN_LEFT_MID,0,0,144,126);
     con2 = lv_con_creat_fun(LV_ALIGN_RIGHT_MID,0,0,144,126);
     
@@ -318,8 +318,8 @@ void hl_mod_storage_init(void * init_data)
         btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,1);
         btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,0);
 
-        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_BLACK);
-        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_WHITE);
+        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,page_ptr->storage_page_ptr->page_storage->ptr_storage,LAB_COLOR_BLACK);
+        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,page_ptr->storage_page_ptr->page_storage->ptr_storage,LAB_COLOR_WHITE);
     }
     if(ptr->storage_choose == HL_STORAGE_CHOOSE_RIGHT){
         btn_left_cnt = 0;
@@ -327,8 +327,8 @@ void hl_mod_storage_init(void * init_data)
         btn_left = lv_btn_creat_fun(lv_scr_act(),btn_left_cb,-75,-10,132,42,0);
         btn_right = lv_btn_creat_fun(lv_scr_act(),btn_right_cb,75,-10,132,42,1);
 
-        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_WHITE);
-        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,"格式化",LAB_COLOR_BLACK);
+        lab13 = lv_lab_creat_fun(btn_left,btn_left,LV_ALIGN_CENTER,0,0,page_ptr->storage_page_ptr->page_storage->ptr_storage,LAB_COLOR_WHITE);
+        lab23 = lv_lab_creat_fun(btn_right,btn_right,LV_ALIGN_CENTER,0,0,page_ptr->storage_page_ptr->page_storage->ptr_storage,LAB_COLOR_BLACK);
     }    
 
     bar1 = lv_bar_creat_fun(con1,0,13,132,25,ptr->used_tx1);

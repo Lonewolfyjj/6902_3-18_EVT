@@ -88,6 +88,10 @@ MSH_CMD_EXPORT(hl_hal_gpio_test, gpio test cmd);
 
 void hl_hal_gpio_pwr_on(void)
 {
+    // 打开总电源
+    hl_hal_gpio_init(GPIO_ALL_POWER);
+    hl_hal_gpio_high(GPIO_ALL_POWER);
+
 #if HL_IS_TX_DEVICE()
     // 设置I2S为高阻抗
     hl_hal_gpio_init(I2S1_MCLK);
@@ -113,8 +117,10 @@ void hl_hal_gpio_pwr_on(void)
     i2s0_input_iomux_config();
 #endif
 
+    hl_hal_gpio_init(GPIO_ALL_POWER);
+    hl_hal_gpio_high(GPIO_ALL_POWER);
     rt_kprintf("A6902 Tx Device Ver:%s enable power!\r\n", A6902_VERSION);
-#else
+#else   
     // 设置I2S为高阻抗
     hl_hal_gpio_init(I2S1_MCLK);
     hl_hal_gpio_init(I2S1_SCLK);
@@ -137,7 +143,7 @@ void hl_hal_gpio_pwr_on(void)
 #endif
 #ifdef RT_USING_I2STDM
     i2s0_output_iomux_config();
-#endif
+#endif   
 
 #if (A6902_RX_HL_EN || A6902_RX_HL_CH)
     rt_kprintf("A6902 Rx Device Ver:%s enable power!\r\n", A6902_VERSION);

@@ -40,7 +40,7 @@
 #include "lv_port_indev.h"
 #include "page_upgrade.h"
 #include "hl_util_general_type.h"
-
+#include "page_language.h"
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
@@ -64,10 +64,13 @@ static void hl_mod_page_loop(void)
     hl_display_screen_s*        data_ptr        = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag            = hl_mod_page_get_screen_change_flag();
     hl_lvgl_upgrade_ioctl_t     ioctrl;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     static uint8_t status = 0;
     if (status == 1) {
         return;
     }
+    
+    hl_mod_page_backlight_update();
 
     switch (data_ptr->upgrade_status) {
         case HL_UPGRADE_STATUS_NORMAL:
@@ -88,7 +91,7 @@ static void hl_mod_page_loop(void)
 
             ioctrl.upgrade_ioctl = HL_UPGRADE_CLEAR_CMD;
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
-            ioctrl.ptr           = "升级成功";
+            ioctrl.ptr           = page_ptr->upgrade_page_ptr->page_upgrade->ptr_success;//"升级成功";
             ioctrl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
             hl_mod_lvgl_upgrade_ioctl(&ioctrl);
             if (!status) {

@@ -252,6 +252,7 @@ void hl_mod_indev_val_get(mode_to_app_msg_t* p_msg);
 uint8_t hl_mod_get_knob_okkey_val(void);
 int8_t hl_mod_get_rx_knob_val(void);
 void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum);
+void hl_mod_page_backlight_update(void);
 
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num);
 int16_t hl_mod_knob_select_val_get(int16_t* ptr);

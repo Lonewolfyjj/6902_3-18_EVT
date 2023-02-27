@@ -65,9 +65,11 @@ typedef struct _hl_drv_mipi_screen
     struct rt_device_graphic_info dgi;
     uint32_t mipi_data_len;
 } hl_drv_mipi_screen;
-
+static uint8_t screen_sta = 1;
 
 static hl_drv_mipi_screen mipi_screen;
+
+uint8_t tmp_screen[126 * 294 * 2];
 /* Private function(only *.c)  -----------------------------------------------*/
 
 // #if HL_SCREEN_IS_BIG_ENDIAN  1
@@ -247,19 +249,26 @@ void hl_drv_rm690a0_otherpin_init(void)
     rt_pin_write(GPIO1_C4, PIN_HIGH);
 }
 
+static void screen_irq_fun(void *args)
+{
+    screen_sta = 1;
+}
+
 static void hl_drv_rm690a0_gpio_init(void)
 {
-    rt_thread_mdelay(100);
+    rt_pin_attach_irq(GPIO1_C0,PIN_IRQ_MODE_FALLING,screen_irq_fun,RT_NULL);
+    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);
+    // rt_thread_mdelay(50);
     hl_drv_rm690a0_hardware_rst();
-    rt_thread_mdelay(100);
+    rt_thread_mdelay(50);
     hl_drv_rm690a0_otherpin_init();
 }
 
 static void hl_drv_rm690a0_hardware_rst(void)
 {
-    rt_thread_mdelay(100);
+    rt_thread_mdelay(50);
     hl_hal_gpio_low(GPIO_OLED_RST);
-    rt_thread_mdelay(400);
+    rt_thread_mdelay(20);
     hl_hal_gpio_high(GPIO_OLED_RST);
 }
 
@@ -485,10 +494,12 @@ uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start,
     return ret;
 }
 #endif 
+
+
 uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
 {
     uint8_t ret = RT_ERROR;
-
+    uint32_t i;
     hl_mod_lvgl_video_memory(video_mem_p);
     mipi_screen.win_config->winId = 0;
     mipi_screen.win_config->winEn = 1;
@@ -516,7 +527,7 @@ uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
             rt_kprintf("rt_display_sync_hook time out\n");
     }
 #endif
-
+    
     return ret;
 }
 
@@ -590,7 +601,6 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
 uint8_t hl_drv_rm690a0_deinit(void)
 {
     uint8_t ret = RT_ERROR;
-
     if (mipi_screen.g_display_dev == RT_NULL) {
         rt_kprintf("mipi drv deinit err!\r\n");
         return RT_ERROR;
@@ -621,13 +631,15 @@ uint8_t hl_drv_rm690a0_deinit(void)
     return ret;
 }
 
+
+
 uint8_t hl_drv_rm690a0_init(void)
 {
     uint8_t ret = RT_NULL;
     int path = 0;
     struct display_state *state;
-
-    hl_drv_rm690a0_gpio_init();
+    
+    hl_drv_rm690a0_gpio_init();    
 
     mipi_screen.g_display_dev = rt_device_find("lcd");
 
@@ -644,6 +656,7 @@ uint8_t hl_drv_rm690a0_init(void)
     }
 
     state = (struct display_state *)mipi_screen.g_display_dev->user_data;
+
     mipi_screen.dgi = state->graphic_info;
 
     mipi_screen.dgi.bits_per_pixel = 16;
@@ -692,17 +705,46 @@ uint8_t hl_drv_rm690a0_init(void)
     if (mipi_screen.post_scale == RT_NULL) {
         rt_kprintf("mipi init err 7!\r\n");
         return RT_ERROR;
-    }
-    
+    }    
 
     hl_drv_vop_win_init(mipi_screen.win_config, mipi_screen.post_scale);
 
     // BUF长度计算：
     mipi_screen.mipi_data_len = (uint32_t)MIPI_OLED_WIDTH*MIPI_OLED_HEIGHT*(uint32_t)get_color_format_byte(MIPI_OLED_DATA_FMT);
 
-
     return RT_EOK;
 }
+
+
+uint8_t hl_get_mipi_screen_sta(void)
+{
+    return screen_sta;
+}
+
+void hl_set_mipi_screen_sta(uint8_t data)
+{
+    screen_sta = data;
+}
+
+void a690a0_test(int argc, char** argv)
+{
+    uint8_t ret;
+    uint8_t buf[10];    
+    if (!strcmp("reset", argv[1])) {
+        hl_hal_gpio_low(GPIO_OLED_RST);
+        rt_thread_mdelay(10);
+        hl_hal_gpio_high(GPIO_OLED_RST);
+    }
+    else if(!strcmp("init", argv[1])){     
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+    }  
+}
+
+MSH_CMD_EXPORT(a690a0_test, run a690a0_test);
+
+
+
 #endif /* (!HL_IS_TX_DEVICE()) */
        /*
  * EOF

@@ -28,6 +28,8 @@
 #include "hl_util_general_type.h"
 #include "hl_app_mng.h"
 #include "hl_app_disp_msg_pro.h"
+#include "hl_app_pm_msg_pro.h"
+#include "hl_app_audio_msg_pro.h"
 #include "hl_mod_display.h"
 #include "hl_mod_telink.h"
 #include "hl_mod_euc.h"
@@ -90,6 +92,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_telink_ioctl(HL_RF_BYPASS_UPDATE_CMD, (uint8_t*)&bypass_info, sizeof(bypass_info));
             }
             hl_app_disp_state_led_set();
+            hl_app_pm_timer_set();
             LOG_D("telink info(%02X)", tx_info.rf_state);
             break;
 
@@ -133,6 +136,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 tx_info.rec_flag = bypass_switch;
                 hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
                 hl_app_disp_state_led_set();
+                hl_app_pm_timer_set();
             }
             LOG_I("app get TX%d Record Switch(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
@@ -164,10 +168,20 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_TX_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
-            tx_info.gain = (int)ptr_rf_value->val;
+            tx_info.gain = (int8_t)ptr_rf_value->val;
+            tx_info.gain = tx_info.gain * 2;
+            // if (tx_info.gain > 0) {
+            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
+            // } else if (tx_info.gain < 0) {
+            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
+            // } else {
+            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
+            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
+            // }
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
+
             // 保存本地。。。
-            LOG_D("app get TX%d Gain Value(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
+            LOG_D("app get TX%d Gain Value(%d)(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val, tx_info.gain);
             break;
 
         case HL_RF_BYPASS_FORMAT_DISK_IND:
@@ -271,6 +285,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("telink info(%02X)", rx_info.rf_state);
             hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             bypass_time.chn = rx_info.rf_chn;
+            hl_app_pm_timer_set();
             // hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &bypass_time.time, sizeof(bypass_time.time));
             // hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &bypass_time, sizeof(bypass_time));
             break;
@@ -278,6 +293,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_REFRESH_STATE_IND:
             rx_info.rf_state = *(hl_rf_state_e*)p_msg->param.ptr;
             rx_info.rf_chn   = rx_info.rf_state - 1;
+            hl_app_audio_switch();
             break;
 
         case HL_RF_RSSI_IND:

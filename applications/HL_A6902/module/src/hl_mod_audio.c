@@ -2193,7 +2193,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_ALL);
+            hl_mod_audio_set_gain(((int*)ptr)[0]+10, HL_AUDIO_CHANNEL_ALL);
             break;
         case HL_AUDIO_SET_GAIN_L_CMD:
             if (ptr == NULL) {
@@ -2265,7 +2265,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_VOLUME, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_SET_MIC_PGA_GAIN_CMD:
-            hl_mod_audio_set_codec_gain(((int*)ptr)[0], HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
+            hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 3), HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_MKFS_DFS_CMD:
             hl_mod_audio_mkfs_dfs_root();

@@ -166,6 +166,7 @@ typedef enum _hl_mod_euc_charge_state_e
     HL_MOD_EUC_CHARGE_STATE_NO_CHARGE = 1,
     HL_MOD_EUC_CHARGE_STATE_CHARGING,
     HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL,
+    HL_MOD_EUC_CHARGE_STATE_CHARGE_FULL_DONE,
 } hl_mod_euc_charge_state_e;
 
 typedef struct _hl_mod_euc_rtc_st
