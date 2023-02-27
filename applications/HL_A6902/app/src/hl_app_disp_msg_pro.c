@@ -190,6 +190,11 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             // TBD: 透传通道给TX1发出降噪
             rf_bypass_value.chn = HL_RF_LEFT_CHANNEL;
             rf_bypass_value.val = (uint8_t)p_msg->param.u32_param;
+            if (rf_bypass_value.val) {
+                rf_bypass_value.val = 0xFF;
+            } else {
+                rf_bypass_value.val = 0x00;
+            }
             hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
             LOG_D("TX1_NOISE_SWITCH_IND\r\n");
             break;
@@ -197,6 +202,11 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             // TBD: 透传通道给TX2发出降噪
             rf_bypass_value.chn = HL_RF_RIGHT_CHANNEL;
             rf_bypass_value.val = (uint8_t)p_msg->param.u32_param;
+            if (rf_bypass_value.val) {
+                rf_bypass_value.val = 0xFF;
+            } else {
+                rf_bypass_value.val = 0x00;
+            }
             hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
             LOG_D("TX2_NOISE_SWITCH_IND\r\n");
             break;
