@@ -28,8 +28,11 @@
 #include "rtdef.h"
 #include "hl_mod_display.h"
 
-#define MAX_LINEOUT_VOLUME 18
-#define MIN_LINEOUT_VOLUME -18
+#define MAX_LINEOUT_VOLUME 10
+#define MIN_LINEOUT_VOLUME -10
+
+#define MAX_MONITOR_VOLUME 8
+#define MIN_MONITOR_VOLUME -8
 
 #define AUTO_GOTO_HOME_TIMER 5000
 

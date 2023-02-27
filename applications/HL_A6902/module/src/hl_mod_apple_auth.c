@@ -305,6 +305,7 @@ static void hl_mod_apple_auth_iap2_thread_entry(void* parameter)
         }
         rt_thread_mdelay(10);
     }
+    
 }
 
 /**

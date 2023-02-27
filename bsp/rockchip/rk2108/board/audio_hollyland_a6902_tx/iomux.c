@@ -90,18 +90,25 @@ void sdio_iomux_config(void)
                          PIN_CONFIG_MUX_FUNC4);
 
     HAL_PINCTRL_SetIOMUX(GPIO_BANK0,
-                         GPIO_PIN_C5,   // SDIO_D3
+                         GPIO_PIN_C5,  // SDIO_D3
                          PIN_CONFIG_MUX_FUNC3);
+    // HAL_PINCTRL_SetParam(GPIO_BANK0,
+    //                      GPIO_PIN_C0
+    //                      ,  //  PIN_CONFIG_PUL_UP |
+    //                      PIN_CONFIG_DRV_LEVEL4);
+    HAL_PINCTRL_SetParam(GPIO_BANK0,
+                         GPIO_PIN_C1,  // SDIO_CMD
+                         PIN_CONFIG_PUL_UP | PIN_CONFIG_DRV_LEVEL1);
 
     HAL_PINCTRL_SetParam(GPIO_BANK0,
-                         GPIO_PIN_C1 |  // SDIO_CMD
                          GPIO_PIN_C2 |  // SDIO_D0
                          GPIO_PIN_C3 |  // SDIO_D1
                          GPIO_PIN_C4 |  // SDIO_D2
                          GPIO_PIN_C5,   // SDIO_D3
                          PIN_CONFIG_PUL_UP |
-                         PIN_CONFIG_DRV_LEVEL1);
-    HAL_PINCTRL_SetParam(GPIO_BANK0, GPIO_PIN_A3, PIN_CONFIG_PUL_UP); //Emmc_Reset
+                         PIN_CONFIG_DRV_LEVEL0);
+
+    HAL_PINCTRL_SetParam(GPIO_BANK0, GPIO_PIN_A3, PIN_CONFIG_PUL_UP);  //Emmc_Reset
     HAL_GPIO_SetPinDirection(GPIO0, GPIO_PIN_A3, GPIO_OUT);
     HAL_GPIO_SetPinLevel(GPIO0, GPIO_PIN_A3, GPIO_HIGH);
 }

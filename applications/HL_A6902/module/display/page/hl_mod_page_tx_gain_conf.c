@@ -41,10 +41,10 @@
 #include "page_txgain.h"
 #include "hl_util_general_type.h"
 
-#define HL_TXGAIN_LEFTVOL_LOW               -18
-#define HL_TXGAIN_LEFTVOL_HIGH              18
-#define HL_TXGAIN_RIGHTVOL_LOW               -18
-#define HL_TXGAIN_RIGHTVOL_HIGH              18
+#define HL_TXGAIN_LEFTVOL_LOW               -10
+#define HL_TXGAIN_LEFTVOL_HIGH              10
+#define HL_TXGAIN_RIGHTVOL_LOW               -10
+#define HL_TXGAIN_RIGHTVOL_HIGH              10
 
 
 

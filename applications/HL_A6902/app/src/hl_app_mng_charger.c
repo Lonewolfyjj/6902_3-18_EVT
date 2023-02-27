@@ -535,7 +535,7 @@ void hl_app_mng_charger_entry(void* msg_q)
             if (_in_box_flag == false || _shut_down_flag == true) {
                 hl_app_mng_powerOff();
                 // while ((1));
-                rt_thread_mdelay(5000);
+                rt_thread_mdelay(3000);
                 hl_board_reboot();
             }
         }

@@ -133,6 +133,7 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_telink_stop();
             // hl_mod_telink_deinit();
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
+            hl_app_upgrade_state(HL_UPGRADE_START_STATE); // 改变升级状态
             break;
         case HL_UPGRADE_STATE_MSG:  /// 获取升级状态
             hl_app_upgrade_state(p_msg->param.u32_param);
@@ -159,6 +160,7 @@ void hl_app_upgrade_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_telink_stop();   
             // hl_mod_telink_deinit();        
             hl_mod_upgrade_io_ctrl(HL_UPGRADE_START_CMD, NULL, 0);
+            hl_app_upgrade_state(HL_UPGRADE_START_STATE); // 改变升级状态
             break;
         case HL_UPGRADE_STATE_MSG:  /// 获取升级状态
             hl_app_upgrade_state(p_msg->param.u32_param);

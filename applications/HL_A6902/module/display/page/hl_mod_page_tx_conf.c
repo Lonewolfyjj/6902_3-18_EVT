@@ -39,7 +39,7 @@
 #include "hl_mod_page.h"
 #include "hl_util_general_type.h"
 #include "page_menu.h"
-
+#include "page_language.h"
 #define MENU_ICON_NUM 7
 
 static int8_t menu_center_icon = 0;
@@ -72,15 +72,16 @@ static void page_8_test_cb(uint32_t current)
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
-    // LV_LOG_USER("PAGE_TX_CONF_MENU\n");
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    // LV_LOG_USER("PAGE_TX_CONF_MENU\n");    
     menu_data_t pic_list[MENU_ICON_NUM] = {
-        ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,"TX增益"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,"低切"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,"自动录制"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,"录制保护"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_storage,"存储"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,"自动关机"),
-        ADD_IMG_DATA(NULL,NULL,&Menu_status_led,"状态灯调节"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_tx_gain,page_ptr->menu_page_ptr->page_tx_config->ptr_tx_gain),//"TX增益"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_low_qie,page_ptr->menu_page_ptr->page_tx_config->ptr_low_qie),//"低切"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_auto_recording,page_ptr->menu_page_ptr->page_tx_config->ptr_auto_recording),//"自动录制"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_recording_protection,page_ptr->menu_page_ptr->page_tx_config->ptr_recording_protection),//"录制保护"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_storage,page_ptr->menu_page_ptr->page_tx_config->ptr_storage),//"存储"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_auto_poweroff,page_ptr->menu_page_ptr->page_tx_config->ptr_auto_poweroff),//"自动关机"),
+        ADD_IMG_DATA(NULL,NULL,&Menu_status_led,page_ptr->menu_page_ptr->page_tx_config->ptr_status_led),//"状态灯调节"),
     };
     // 如果是当前页面是下一级菜单，就默认居中最左边图标；如果是当前页面下一级返回的，就默认居中上一次的图标
     if (flag->menu_defaut) {

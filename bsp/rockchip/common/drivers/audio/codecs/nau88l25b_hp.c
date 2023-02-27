@@ -565,11 +565,10 @@ static rt_err_t nau88l25b_config(struct audio_codec* codec, eAUDIO_streamType st
 static rt_err_t nau88l25b_start(struct audio_codec* codec, eAUDIO_streamType stream)
 {
     struct nau88l25b_priv* nau88l25b = to_nau88l25bhp_priv(codec);
-    //rt_kprintf("111\n");
     rt_mutex_take(&lock, RT_WAITING_FOREVER);
     nau88l25b->work_cnt++;
     rt_mutex_release(&lock);
-    //rt_kprintf("222\n");
+    rt_kprintf("nau88l25b hp start\n");
     return RT_EOK;
 }
 
@@ -578,17 +577,16 @@ static rt_err_t nau88l25b_stop(struct audio_codec* codec, eAUDIO_streamType stre
     struct nau88l25b_priv* nau88l25b = to_nau88l25bhp_priv(codec);
     rt_err_t               ret       = RT_EOK;
 
-    //rt_kprintf("333\n");
     rt_mutex_take(&lock, RT_WAITING_FOREVER);
     if (nau88l25b->work_cnt)
         nau88l25b->work_cnt--;
     rt_mutex_release(&lock);
-    //rt_kprintf("444\n");
     if (nau88l25b->work_cnt <= 0)
         nau88l25b_codec_standby(nau88l25b);
     if (stream == AUDIO_STREAM_PLAYBACK)
         es_pa_ctl(0);
 
+    rt_kprintf("nau88l25b hp stop\n");
     return ret;
 }
 

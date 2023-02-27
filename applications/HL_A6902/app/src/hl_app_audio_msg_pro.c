@@ -80,6 +80,32 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             break;
     }
 }
+
+void hl_app_audio_switch(void)
+{
+    static uint8_t audio_mic_switch = 1;
+    int32_t audio_gain = -128;
+
+    // 设置外置麦的开关
+    if(audio_mic_switch == 1) {
+        if((tx_info.on_off_flag == 0)||(tx_info.ex_mic_plug == 0)) {
+            audio_gain = -128;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+            audio_mic_switch = 0;
+        }
+    } else {
+        if((tx_info.on_off_flag == 1)&&(tx_info.ex_mic_plug == 1)) {
+            if(tx_info.gain < 0) {
+                audio_gain = tx_info.gain;
+            } else {
+                audio_gain = 0;
+            }            
+            rt_thread_mdelay(200);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+            audio_mic_switch = 1;
+        }
+    }
+}
 #else
 /// 大容量状态处理
 static void hl_app_rx_mstorage_plug_pro(uint32_t value)
@@ -124,6 +150,45 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
     }
+}
+
+void hl_app_audio_switch(void)
+{
+    static uint8_t audio_cam_switch = 1;
+    static uint8_t audio_hp_switch = 1;
+    int32_t audio_gain = -128;
+
+    // 设置cam的开关
+    if(audio_cam_switch == 1) {
+        if((rx_info.on_off_flag == 0)||(rx_info.cam_spk_plug == 0)||((rx_info.rf_state != HL_RF_L_CONNECT)&&(rx_info.rf_state != HL_RF_R_CONNECT)&&(rx_info.rf_state != HL_RF_LR_CONNECT))) {
+            audio_gain = -128;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &audio_gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &audio_gain, 4);
+            audio_cam_switch = 0;
+        }
+    } else {
+        if((rx_info.on_off_flag == 1)&&(rx_info.cam_spk_plug == 1)&&((rx_info.rf_state == HL_RF_L_CONNECT)||(rx_info.rf_state == HL_RF_R_CONNECT)||(rx_info.rf_state == HL_RF_LR_CONNECT))) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+            audio_cam_switch = 1;
+        }
+    }
+
+    // 设置hp的开关
+    if(audio_hp_switch == 1) {
+        if((rx_info.on_off_flag == 0)||(rx_info.hp_spk_plug == 0)||((rx_info.rf_state != HL_RF_L_CONNECT)&&(rx_info.rf_state != HL_RF_R_CONNECT)&&(rx_info.rf_state != HL_RF_LR_CONNECT))) {
+            audio_gain = -128;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &audio_gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &audio_gain, 4);
+            audio_hp_switch = 0;
+        }
+    } else {
+        if((rx_info.on_off_flag == 1)&&(rx_info.hp_spk_plug == 1)&&((rx_info.rf_state == HL_RF_L_CONNECT)||(rx_info.rf_state == HL_RF_R_CONNECT)||(rx_info.rf_state == HL_RF_LR_CONNECT))) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
+            audio_hp_switch = 1;
+        }
+    }    
 }
 #endif
 

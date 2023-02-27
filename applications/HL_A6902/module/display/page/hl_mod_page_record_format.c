@@ -42,6 +42,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 #define TX_TIME_REMAINING_PERCENT(hour) \
     (uint8_t)((((float)STROGE_MAX_USED_TIME - (float)hour) * (float)100) / (float)STROGE_MAX_USED_TIME)
@@ -92,7 +93,8 @@ static void hl_storage_test_cb(hl_storage_check_t event_num)
 
 static void tx_time_remaining_update(char* str, uint8_t remain_hour)
 {
-    rt_sprintf(str, "%dh可用", remain_hour);
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    rt_sprintf(str, "%dh%s", remain_hour,page_ptr->storage_page_ptr->page_storage->ptr_storage_use);
 }
 // 实时更新当前使用量
 // static void hl_stroge_used_update();
@@ -118,8 +120,8 @@ static void hl_mod_page_setup(void)
 {
     uint8_t              data1;
     uint8_t              data2;
-    char                 time1_remaining[16];
-    char                 time2_remaining[16];
+    char                 time1_remaining[32];
+    char                 time2_remaining[32];
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     data1 = data_ptr->tx1_remained_record_time;

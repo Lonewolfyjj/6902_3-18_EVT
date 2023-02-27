@@ -108,8 +108,8 @@ static void hl_mod_page_setup(void)
 
     if (flag->tx2_ver) {
 
-        flag->tx1_ver      = 0;
-        data.hl_verson_tx2 = data_ptr->tx1_ver;
+        flag->tx2_ver      = 0;
+        data.hl_verson_tx2 = data_ptr->tx2_ver;
 
     }
 
@@ -144,6 +144,9 @@ static void hl_mod_page_loop(void)
 {
     // 返回按键
     hl_mod_menu_backbtn_scan();
+
+    // OK按键
+    hl_mod_get_knob_okkey_val();
 
     // 旋钮选择
     if (hl_mod_knob_select_val_change(&now_choose, 0, 2, false)) {

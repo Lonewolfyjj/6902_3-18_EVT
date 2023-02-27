@@ -26,8 +26,11 @@
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
 #include "hl_util_general_type.h"
+#include "string.h"
 
-
+#define DBG_SECTION_NAME "mod_in"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
 /* define --------------------------------------------------------------------*/
 
 /// 消抖时间单位：系统时间节拍数
@@ -179,6 +182,7 @@ typedef struct _hl_input_mod_t
 } hl_input_msg_t;
 
 #if HL_IS_TX_DEVICE()
+static uint8_t key_msg_send_flag = 0;
 
 static hl_gpio_pin_e hl_keys_map[HL_INPUT_KEYS]       = { GPIO_PWR_KEY, GPIO_PAIR_KEY, GPIO_REC_KEY };
 static key_param_s   hl_keys_param_map[HL_INPUT_KEYS] = { {1000}, {3000}, {3000} };
@@ -234,12 +238,19 @@ static void hl_mod_input_send_msg(uint8_t msg_cmd, uint32_t param)
     hl_input_msg.msg.cmd             = msg_cmd;
     hl_input_msg.msg.len             = 0;
     hl_input_msg.msg.param.u32_param = param;
-
+#if HL_IS_TX_DEVICE()
+    if (key_msg_send_flag) {
+        if (msg_cmd == MSG_TX_PWR_KEY || msg_cmd == MSG_TX_PAIR_KEY || msg_cmd == MSG_TX_REC_KEY) {
+            HL_PRINT("donot send key msg:%d\n",msg_cmd);
+            return;
+        }
+    }
+#endif
     res = rt_mq_send(hl_input_msg.msg_hander, (void*)(&hl_input_msg.msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
-        HL_PRINT("INPUT_MODE msgq full");
+        HL_PRINT("INPUT_MODE msgq full\n");
     } else if (res == -RT_ERROR) {
-        HL_PRINT("INPUT_MODE msgq err");
+        HL_PRINT("INPUT_MODE msgq err\n");
     }
 }
 
@@ -781,26 +792,28 @@ uint8_t hl_mod_input_init(void* msg_hander)
     rt_memset((uint8_t*)hl_input_keys, 0, HL_INPUT_KEYS * sizeof(hl_input_key_s));
     hl_input_msg.msg_hander = (rt_mq_t)msg_hander;
     if (hl_input_msg.msg_hander == NULL) {
-        HL_PRINT("msghander err!");
+        LOG_E("msghander err!");
         return HL_FAILED;
     }
 
     rt_memset(&hl_input_msg.msg, 0, sizeof(hl_input_msg.msg));
 
     if (HL_SUCCESS != hl_mod_input_key_init()) {
-        HL_PRINT("key init err!");
+        LOG_E("key init err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_init()) {
-        HL_PRINT("insert init err!");
+        LOG_E("insert init err!");
         return HL_FAILED;
     }
 #if !HL_IS_TX_DEVICE()
     if (HL_SUCCESS != hl_drv_knob_init()) {
-        HL_PRINT("knob init err!");
+        LOG_E("knob init err!");
         return HL_FAILED;
-    }    
+    }
+#else
+    key_msg_send_flag = 0;
 #endif
     input_tid = rt_thread_create("input_thread", \
                                 hl_mod_input_task, \
@@ -820,7 +833,7 @@ uint8_t hl_mod_input_init(void* msg_hander)
         //     rt_thread_startup(input_tid);
         // }
     } else {
-        HL_PRINT("input thread init err!");
+        LOG_E("input thread init err!");
         return HL_FAILED;
     }
 
@@ -835,12 +848,12 @@ uint8_t hl_mod_input_deinit(void)
     }
 
     if (HL_SUCCESS != hl_mod_input_key_deinit()) {
-        HL_PRINT("key deinit err!");
+        LOG_E("key deinit err!");
         return HL_FAILED;
     }
 
     if (HL_SUCCESS != hl_mod_input_insert_deinit()) {
-        HL_PRINT("insert deinit err!");
+        LOG_E("insert deinit err!");
         return HL_FAILED;
     }
 
@@ -852,6 +865,54 @@ uint8_t hl_mod_input_deinit(void)
 
     return HL_SUCCESS;
 }
+
+uint8_t hl_mod_input_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
+{
+    uint8_t i;
+
+    LOG_D("[line:%d] cmd(%d)", __LINE__, cmd);
+    switch (cmd) {
+        case HL_INPUT_RESET_CMD:  /// 刷新输入模块        
+            for (i = 0; i < HL_INPUT_INSERT; i++) {
+               insert_state[i].insert_cur_state = INSERT_STATE_IDLE;
+            }
+            break;
+#if HL_IS_TX_DEVICE()
+        case CLOSE_KEY_MSG_SEND_CMD: {
+
+            key_msg_send_flag = *(uint8_t*)ptr;
+        } break;
+#endif
+        default:
+            LOG_E("[%s][line:%d] cmd(%d) error!!! \r\n", __FILE__, __LINE__, cmd);
+            break;
+    }
+
+    return 0;
+}
+
+int hl_mod_input_io_ctrl_cmd(int argc, char** argv)
+{
+    uint8_t cmd;
+    uint8_t len;
+    uint8_t data;
+    uint8_t ret;
+
+    if (argc == 1) {
+        rt_kprintf("err \r\n");
+    } else if (!strcmp(argv[1], "cmd")) {
+        cmd  = atoi(argv[2]);
+        data = atoi(argv[3]);
+        len  = atoi(argv[4]);
+
+        ret = hl_mod_input_io_ctrl(cmd, (void*)&data, len);
+        rt_kprintf("ret=%d\r\n", ret);
+    } else {
+        rt_kprintf("input mode ioctrl\r\n");
+    }
+    return RT_EOK;
+}
+MSH_CMD_EXPORT(hl_mod_input_io_ctrl_cmd, input test);
 /*
  * EOF
  */

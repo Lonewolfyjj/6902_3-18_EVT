@@ -663,7 +663,9 @@ static rt_err_t _ep_in_handler(ufunction_t func, rt_size_t size)
                 }
                 else
                 {
-                    rt_usbd_ep_set_stall(func->device, data->ep_in);                    
+                    /* FIXME: Disable the operation or the disk cannot work. */
+                    // rt_usbd_ep_set_stall(func->device, data->ep_in);
+                    // rt_kprintf("warning:in stall path but not stall\n");                  
                 }
                 data->csw_response.data_reside = 0;
             }
@@ -889,7 +891,7 @@ static rt_err_t _ep_out_handler(ufunction_t func, rt_size_t size)
         cmd = _find_cbw_command(cbw->cb[0]);
         if(cmd == RT_NULL)
         {
-            rt_kprintf("can't find cbw command\n");
+            rt_kprintf("can't find cbw command(0x%02x)\n", cbw->cb[0]);
             goto exit;
         }        
 

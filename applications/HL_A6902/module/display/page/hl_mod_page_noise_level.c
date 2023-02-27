@@ -43,6 +43,7 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_page_volume_bar_set.h"
+#include "page_language.h"
 
 //1-7 一共7个档位
 #define MAX_LEVEL       7
@@ -56,7 +57,7 @@ LV_IMG_DECLARE(Other_noise);
 static void hl_mod_page_setup(void)
 {
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
-
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
         // 设置当前音量
     hl_mod_page_volume_init(data_ptr->tx_noise_level);
 
@@ -64,7 +65,7 @@ static void hl_mod_page_setup(void)
         .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_NO_ICON,
         .init_value = hl_mod_page_volume_get(),
-        .ptr        = "降噪调节",
+        .ptr        = page_ptr->barset_page_prt->page_noise_level->ptr_noise,//"降噪调节",
         .range_max  = MAX_LEVEL,
         .range_min  = MIN_LEVEL,
         .src        = &Other_noise,

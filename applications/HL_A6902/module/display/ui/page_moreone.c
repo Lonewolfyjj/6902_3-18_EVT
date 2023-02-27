@@ -32,7 +32,7 @@
  */
 #include "page_moreone.h"
 #include "page_style_bit.h"
-
+#include "page_language.h"
 #define MAX_OBJ_NUMBER     7
 
 #define  LAB_COLOR_WHITE    0
@@ -439,6 +439,7 @@ static lv_obj_t * lv_con_child_creat(lv_obj_t *src_obj,lv_coord_t x_size,lv_coor
 
 static void lv_page_1_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
 {   
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_1 = 1;
         btn_right_1 = 0;
@@ -447,8 +448,8 @@ static void lv_page_1_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,108,72,0);
         btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
 
-        lab11 = lv_lab_creat_fun(btn11,btn11,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_BLACK);
-        lab12 = lv_lab_creat_fun(btn12,btn12,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_WHITE);
+        lab11 = lv_lab_creat_fun(btn11,btn11,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_BLACK);
+        lab12 = lv_lab_creat_fun(btn12,btn12,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_WHITE);
     }
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_1 = 0;
@@ -458,15 +459,16 @@ static void lv_page_1_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn12 = lv_btn_creat_fun(con_obj,btn11,LV_ALIGN_OUT_RIGHT_MID,btn12_cb,0,0,108,72,1);
         btn1_r = lv_btn_lr_creat_fun(con_obj,btn12,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
         
-        lab11 = lv_lab_creat_fun(btn11,btn11,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_WHITE);
-        lab12 = lv_lab_creat_fun(btn12,btn12,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_BLACK);
+        lab11 = lv_lab_creat_fun(btn11,btn11,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_WHITE);
+        lab12 = lv_lab_creat_fun(btn12,btn12,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_BLACK);
     }
     
-    lab13 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"录制开关",LAB_COLOR_WHITE);
+    lab13 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,page_ptr->moreone_page_ptr->page_moreone->ptr_record,LAB_COLOR_WHITE);
 }
 
 static void lv_page_2_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
 {   
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_2 = 1;
         btn_right_2 = 0;
@@ -475,8 +477,8 @@ static void lv_page_2_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,108,72,0);
         btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
 
-        lab21 = lv_lab_creat_fun(btn21,btn21,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_BLACK);
-        lab22 = lv_lab_creat_fun(btn22,btn22,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_WHITE);
+        lab21 = lv_lab_creat_fun(btn21,btn21,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_BLACK);
+        lab22 = lv_lab_creat_fun(btn22,btn22,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_WHITE);
     }
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_2 = 0;
@@ -486,15 +488,16 @@ static void lv_page_2_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn22 = lv_btn_creat_fun(con_obj,btn21,LV_ALIGN_OUT_RIGHT_MID,btn22_cb,0,0,108,72,1);
         btn2_r = lv_btn_lr_creat_fun(con_obj,btn22,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
 
-        lab21 = lv_lab_creat_fun(btn21,btn21,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_WHITE);
-        lab22 = lv_lab_creat_fun(btn22,btn22,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_BLACK);
+        lab21 = lv_lab_creat_fun(btn21,btn21,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_WHITE);
+        lab22 = lv_lab_creat_fun(btn22,btn22,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_BLACK);
     }
 
-    lab23 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"MUTE",LAB_COLOR_WHITE);
+    lab23 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,page_ptr->moreone_page_ptr->page_moreone->ptr_mute,LAB_COLOR_WHITE);
 }
 
 static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
 {    
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     if(opt == HL_MOREONE_CHOOSE_LEFT){
         btn_left_3 = 1;
         btn_right_3 = 0;
@@ -503,8 +506,8 @@ static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,108,72,0);
         btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,0);
 
-        lab31 = lv_lab_creat_fun(btn31,btn31,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_BLACK);
-        lab32 = lv_lab_creat_fun(btn32,btn32,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_WHITE);
+        lab31 = lv_lab_creat_fun(btn31,btn31,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_BLACK);
+        lab32 = lv_lab_creat_fun(btn32,btn32,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_WHITE);
     } 
     if(opt == HL_MOREONE_CHOOSE_RIGHT){
         btn_left_3 = 0;
@@ -514,11 +517,11 @@ static void lv_page_3_init(lv_obj_t *con_obj,hl_moreone_choose_t opt)
         btn32 = lv_btn_creat_fun(con_obj,btn31,LV_ALIGN_OUT_RIGHT_MID,btn32_cb,0,0,108,72,1);
         btn3_r = lv_btn_lr_creat_fun(con_obj,btn32,LV_ALIGN_OUT_RIGHT_MID,-10,0,15,72,1);
 
-        lab31 = lv_lab_creat_fun(btn31,btn31,LV_ALIGN_CENTER,0,0,"ON",LAB_COLOR_WHITE);
-        lab32 = lv_lab_creat_fun(btn32,btn32,LV_ALIGN_CENTER,0,0,"OFF",LAB_COLOR_BLACK);
+        lab31 = lv_lab_creat_fun(btn31,btn31,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_on,LAB_COLOR_WHITE);
+        lab32 = lv_lab_creat_fun(btn32,btn32,LV_ALIGN_CENTER,0,0,page_ptr->moreone_page_ptr->page_moreone->ptr_off,LAB_COLOR_BLACK);
     }    
     
-    lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,"降噪开关",LAB_COLOR_WHITE);
+    lab33 = lv_lab_creat_fun(con_obj,con_obj,LV_ALIGN_TOP_MID,-10,-10,page_ptr->moreone_page_ptr->page_moreone->ptr_noise,LAB_COLOR_WHITE);
 }
 
 // static void hl_obj_delete(lv_obj_t *obj,bool obj_typ)
