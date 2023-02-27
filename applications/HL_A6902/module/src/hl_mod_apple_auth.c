@@ -344,6 +344,117 @@ static void hl_mod_apple_auth_eap_thread_entry(void* parameter)
     s_apple.eap_start_flag = 0;
 }
 
+/**
+ * _hl_mod_apple_auth_start
+ * @brief 启动已初始化的线程，循环执行MFI认证、EAP通信、电源管理
+ * @return int 成功 0 | 失败 非0
+ * @date 2023-02-27
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-27      <td>lisonglin     <td>新建
+ * </table>
+ */
+static int _hl_mod_apple_auth_start()
+{
+    if (!s_apple.init_flag) {
+        LOG_E("[%s][line:%d]AppleAuth Not Init, Can't Start AppleAuth Mod!\r\n", __FUNCTION__, __LINE__);
+        return 2;
+    }
+
+    // iAP2
+    if (!s_apple.iap2_start_flag) {
+        // 状态机状态初始化
+        s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+        // 创建线程
+        hl_mod_apple_auth_iap2_thread =
+            rt_thread_create("apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
+                             IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
+        if (RT_NULL == hl_mod_apple_auth_iap2_thread) {
+            LOG_I("hl_mod_apple_auth_iap2_thread create faild!\n");
+            return 3;
+        }
+        // 启动线程
+        rt_thread_startup(hl_mod_apple_auth_iap2_thread);
+        // 设置线程状态标志位
+        s_apple.iap2_start_flag = 1;
+    } else {
+        LOG_E("[%s][line:%d]AppleAuth iAP2 Started\r\n", __FUNCTION__, __LINE__);
+    }
+
+    // EAP
+    if (!s_apple.eap_start_flag) {
+        // 创建线程
+        hl_mod_apple_auth_eap_thread =
+            rt_thread_create("apple_auth_eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL, EAP_THREAD_STACK_SIZE,
+                             EAP_THREAD_PRIORITY, EAP_THREAD_TIMESLICE);
+        if (RT_NULL == hl_mod_apple_auth_eap_thread) {
+            LOG_I("hl_mod_apple_auth_eap_thread create faild!\n");
+            return 4;
+        }
+        // 启动线程
+        rt_thread_startup(hl_mod_apple_auth_eap_thread);
+        // 设置线程状态标志位
+        s_apple.eap_start_flag = 1;
+    } else {
+        LOG_E("[%s][line:%d]AppleAuth EAP Started\r\n", __FUNCTION__, __LINE__);
+    }
+
+    return 0;
+}
+
+/**
+ * _hl_mod_apple_auth_stop
+ * @brief 关闭线程
+ * @return int 成功 0 | 失败 非0
+ * @date 2023-02-27
+ * @author lisonglin (songlin.li@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-27      <td>lisonglin     <td>新建
+ * </table>
+ */
+static int _hl_mod_apple_auth_stop()
+{
+    rt_err_t result = 0;
+    int      ret    = 0;
+
+    if ((s_apple.iap2_start_flag) && (RT_NULL != hl_mod_apple_auth_iap2_thread)) {
+        s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+        // 脱离Telink线程
+        result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
+        if (RT_EOK != result) {
+            LOG_I("[%s][line:%d]hl_mod_apple_auth_iap2_thread delete faild!!! \r\n", __func__, __LINE__);
+            ret |= 1;
+        }
+        s_apple.iap2_start_flag = 0;
+    } else {
+        LOG_E("[%s][line:%d]AppleAuth iAP2 Stop!\r\n", __FUNCTION__, __LINE__);
+    }
+
+    if ((s_apple.eap_start_flag) && (RT_NULL != hl_mod_apple_auth_eap_thread)) {
+        // 脱离Telink线程
+        result = rt_thread_delete(hl_mod_apple_auth_eap_thread);
+        if (RT_EOK != result) {
+            LOG_I("[%s][line:%d]hl_mod_apple_auth_eap_thread delete faild!!! \r\n", __func__, __LINE__);
+            ret |= 1;
+        }
+        s_apple.eap_start_flag = 0;
+    } else {
+        LOG_E("[%s][line:%d]AppleAuth EAP Stop!\r\n", __FUNCTION__, __LINE__);
+    }
+
+    return ret;
+}
+
 int hl_mod_apple_auth_init(rt_mq_t* input_msq)
 {
     if (NULL == input_msq) {
@@ -394,6 +505,9 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq)
     // 置模块开关标志位
     s_apple.init_flag = 1;
 
+    // 开启线程
+    _hl_mod_apple_auth_start();
+
     return 0;
 }
 
@@ -404,6 +518,9 @@ int hl_mod_apple_auth_deinit()
         return 1;
     }
 
+    // 关闭线程
+    _hl_mod_apple_auth_stop();
+
     hl_drv_usb_vendor_class_com_deinit();
     hl_util_apple_deinit(&s_apple.apple);
 
@@ -413,108 +530,25 @@ int hl_mod_apple_auth_deinit()
     return 0;
 }
 
-int hl_mod_apple_auth_start()
-{
-    if (!s_apple.init_flag) {
-        LOG_E("[%s][line:%d]AppleAuth Not Init, Can't Start AppleAuth Mod!\r\n", __FUNCTION__, __LINE__);
-        return 2;
-    }
-
-    // iAP2
-    if (!s_apple.iap2_start_flag) {
-        // 状态机状态初始化
-        s_apple.apple.iap2.main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
-        s_apple.apple.iap2.detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
-        s_apple.apple.iap2.link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
-        s_apple.apple.iap2.identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
-        s_apple.apple.iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
-        s_apple.apple.iap2.retry_time         = 3;
-        s_apple.apple.packet_arg.seq_num      = 0x00;
-        s_apple.apple.packet_arg.ack_num      = 0x2B;
-        s_apple.apple.packet_arg.session_id   = 0x00;
-        // 创建线程
-        hl_mod_apple_auth_iap2_thread =
-            rt_thread_create("apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
-                             IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
-        if (RT_NULL == hl_mod_apple_auth_iap2_thread) {
-            LOG_I("hl_mod_apple_auth_iap2_thread create faild!\n");
-            return 3;
-        }
-        // 启动线程
-        rt_thread_startup(hl_mod_apple_auth_iap2_thread);
-        // 设置线程状态标志位
-        s_apple.iap2_start_flag = 1;
-    } else {
-        LOG_E("[%s][line:%d]AppleAuth iAP2 Started\r\n", __FUNCTION__, __LINE__);
-    }
-
-    // EAP
-    if (!s_apple.eap_start_flag) {
-        // 创建线程
-        hl_mod_apple_auth_eap_thread =
-            rt_thread_create("apple_auth_eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL, EAP_THREAD_STACK_SIZE,
-                             EAP_THREAD_PRIORITY, EAP_THREAD_TIMESLICE);
-        if (RT_NULL == hl_mod_apple_auth_eap_thread) {
-            LOG_I("hl_mod_apple_auth_eap_thread create faild!\n");
-            return 4;
-        }
-        // 启动线程
-        rt_thread_startup(hl_mod_apple_auth_eap_thread);
-        // 设置线程状态标志位
-        s_apple.eap_start_flag = 1;
-    } else {
-        LOG_E("[%s][line:%d]AppleAuth EAP Started\r\n", __FUNCTION__, __LINE__);
-    }
-
-    return 0;
-}
-MSH_CMD_EXPORT(hl_mod_apple_auth_start, apple start cmd);
-
-int hl_mod_apple_auth_stop()
-{
-    rt_err_t result = 0;
-    int      ret    = 0;
-
-    if ((s_apple.iap2_start_flag) && (RT_NULL != hl_mod_apple_auth_iap2_thread)) {
-        s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
-        // 脱离Telink线程
-        result = rt_thread_delete(hl_mod_apple_auth_iap2_thread);
-        if (RT_EOK != result) {
-            LOG_I("[%s][line:%d]hl_mod_apple_auth_iap2_thread delete faild!!! \r\n", __func__, __LINE__);
-            ret |= 1;
-        }
-        s_apple.iap2_start_flag = 0;
-    } else {
-        LOG_E("[%s][line:%d]AppleAuth iAP2 Stop!\r\n", __FUNCTION__, __LINE__);
-    }
-
-    if ((s_apple.eap_start_flag) && (RT_NULL != hl_mod_apple_auth_eap_thread)) {
-        // 脱离Telink线程
-        result = rt_thread_delete(hl_mod_apple_auth_eap_thread);
-        if (RT_EOK != result) {
-            LOG_I("[%s][line:%d]hl_mod_apple_auth_eap_thread delete faild!!! \r\n", __func__, __LINE__);
-            ret |= 1;
-        }
-        s_apple.eap_start_flag = 0;
-    } else {
-        LOG_E("[%s][line:%d]AppleAuth EAP Stop!\r\n", __FUNCTION__, __LINE__);
-    }
-
-    return ret;
-}
-MSH_CMD_EXPORT(hl_mod_apple_auth_stop, apple stop cmd);
-
 uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
 {
     switch (cmd) {
         case HL_APPLE_AUTH_START_CMD:
             LOG_I("\n\n\n*********iAP2 START*********\n\n\n");
-            hl_mod_apple_auth_start();
+            s_apple.apple.iap2.main_status        = EM_HL_IAP2_STM_MAIN_DETECT;
+            s_apple.apple.iap2.detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
+            s_apple.apple.iap2.link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
+            s_apple.apple.iap2.identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
+            s_apple.apple.iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
+            s_apple.apple.iap2.retry_time         = 3;
+            s_apple.apple.packet_arg.seq_num      = 0x00;
+            s_apple.apple.packet_arg.ack_num      = 0x2B;
+            s_apple.apple.packet_arg.session_id   = 0x00;
             break;
 
         case HL_APPLE_AUTH_STOP_CMD:
             LOG_I("\n\n\n*********iAP2 STOP*********\n\n\n");
-            hl_mod_apple_auth_stop();
+            s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
             break;
 
         default:

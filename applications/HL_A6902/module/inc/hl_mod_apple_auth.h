@@ -116,40 +116,6 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq);
 int hl_mod_apple_auth_deinit();
 
 /**
- * hl_mod_apple_auth_start
- * @brief 启动已初始化的线程，循环执行MFI认证、EAP通信、电源管理
- * @return int 成功 0 | 失败 非0
- * @date 2022-09-02
- * @author lisonglin (songlin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-02      <td>lisonglin     <td>新建
- * </table>
- */
-int hl_mod_apple_auth_start();
-
-/**
- * hl_mod_apple_auth_stop
- * @brief 停止线程
- * @return int 成功 0 | 失败 非0
- * @date 2022-09-02
- * @author lisonglin (songlin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-02      <td>lisonglin     <td>新建
- * </table>
- */
-int hl_mod_apple_auth_stop();
-
-/**
  * hl_mod_appleauth_ioctl
  * @brief 通过命令控制AppleAuth模块
  * @param [in] cmd 命令
