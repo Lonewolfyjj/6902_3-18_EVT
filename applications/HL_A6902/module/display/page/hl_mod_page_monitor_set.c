@@ -42,6 +42,7 @@
 #include "page_test.h"
 #include "page_menu.h"
 #include "hl_util_general_type.h"
+#include "page_language.h"
 
 static int16_t                 knob_choose;
 static hl_b_two_in_one_check_t display_choose;
@@ -134,6 +135,7 @@ static void hl_mod_page_setup(void)
 {
     hl_display_screen_s*         data_ptr = hl_mod_page_get_screen_data_ptr();
     hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl;
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
 
     LOG_D("monitorset=%d\n", data_ptr->monitor_category);
 
@@ -158,9 +160,9 @@ static void hl_mod_page_setup(void)
         .src12 = &Other_monitor_uac_white,
         .src21 = &Other_monitor_tx_black,
         .src22 = &Other_monitor_tx_white,
-        .ptr_lift = "UAC输入",
-        .ptr_right = "TX输入",
-        .ptr_top = "监听设置",
+        .ptr_lift = page_ptr->b_two_in_one_page_ptr->page_monitor->ptr_left,//"UAC输入",
+        .ptr_right = page_ptr->b_two_in_one_page_ptr->page_monitor->ptr_right,//"TX输入",
+        .ptr_top = page_ptr->b_two_in_one_page_ptr->page_monitor->ptr_top,//"监听设置",
         .b_two_in_one_choose = display_choose,
     };
     hl_mod_b_two_in_one_init(&two_in_one_test);

@@ -570,6 +570,7 @@ void rt_free(void *rmem)
     {
         rt_kprintf("to free a bad data block:\n");
         rt_kprintf("mem: 0x%08x, used flag: %d, magic code: 0x%04x\n", mem, mem->used, mem->magic);
+        return;
     }
     RT_ASSERT(mem->used);
     RT_ASSERT(mem->magic == HEAP_MAGIC);

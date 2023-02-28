@@ -208,4 +208,5 @@ void hl_mod_main_ioctl(void * ctl_data);
  */
 void hl_mod_main_init(void * init_data);
 
+void lv_ptr_set_null(uint8_t typ);
 #endif

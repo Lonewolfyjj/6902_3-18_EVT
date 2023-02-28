@@ -27,6 +27,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
+#include "hl_config.h"
 
 /* typedef -------------------------------------------------------------------*/
 /* define --------------------------------------------------------------------*/
@@ -60,12 +61,12 @@
 #define TIMEOUT_US 1000
 
 // 厂商识别信息
-#define IAP2_DEVICE_NAME "LARK 150 Pro"
-#define IAP2_MODEID "A6902"
-#define IAP2_MANUFATORY "Hollyland"
+#define IAP2_DEVICE_NAME "Wireless microphone"
+#define IAP2_MODEID "LARK 150 Pro"
+#define IAP2_MANUFATORY "Shenzhen Hollyland technology Co.,LTD"
 #define IAP2_SERIAL_NAME "0123456789AB"
-#define IAP2_FIRMWAREVERSION "v1.0.0.1"
-#define IAP2_HARDWAREVERSION "v2.0.0.1"
+#define IAP2_FIRMWAREVERSION A6902_VERSION
+#define IAP2_HARDWAREVERSION "v1.0.0.38"
 #define IAP2_PUID "0babaf959f694c97"
 #define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
 #define IAP2_HID_COMPONENT "HIDComponent"

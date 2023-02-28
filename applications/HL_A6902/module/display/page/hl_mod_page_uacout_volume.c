@@ -42,13 +42,14 @@
 #include "page_test.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_page_volume_bar_set.h"
-
+#include "page_language.h"
 LV_IMG_DECLARE(Other_mic_black);
 
 //UAC输入音量设置界面
 static void page_uac_out_init(void)
 {
     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
+    a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     // 设置当前音量
     hl_mod_page_volume_init(data->uac_out_volume);
 
@@ -56,7 +57,7 @@ static void page_uac_out_init(void)
         .func_cb    = hl_mod_page_volume_update,
         .icontyp    = HL_NO_ICON,
         .init_value = hl_mod_page_volume_get(),
-        .ptr        = "UAC输出音量",
+        .ptr        = page_ptr->barset_page_prt->page_uacout_volume->ptr_uacout,//"UAC输出音量",
         .range_max  = MAX_LINEOUT_VOLUME,
         .range_min  = MIN_LINEOUT_VOLUME,
         .src        = &Other_mic_black,
