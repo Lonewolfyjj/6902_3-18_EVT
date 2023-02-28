@@ -555,7 +555,6 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             _display_mod.led_brightness = *(uint8_t*)ptr;
 
             hl_util_nvram_param_set_integer("LED_BRIGHTNESS", _display_mod.led_brightness);
-            hl_util_nvram_param_save();
 
             ret = _set_brightness();
             if (ret == HL_DISPLAY_FAILED) {
