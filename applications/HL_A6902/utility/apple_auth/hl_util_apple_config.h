@@ -37,14 +37,16 @@
 /// (PowerUpdate)可设置参数<DeviceBatteryWillChargeIfPowerIsPresent>
 #define POWERUPDATE_ID1 0
 /// (PowerUpdate)可设置参数<AccessoryPowerMode>
-#define POWERUPDATE_ID2 1
+#define POWERUPDATE_ID2 0
 /// (PowerUpdate)可设置参数<IsExternalChargerConnected>
-#define POWERUPDATE_ID4 1
+#define POWERUPDATE_ID4 0
 /// (PowerUpdate)可设置参数<BatteryChargingState>
 #define POWERUPDATE_ID5 0
 /// (PowerUpdate)可设置参数<BatteryChargeLevel>
 #define POWERUPDATE_ID6 0
 
+/// 发送PowerUpdate消息
+#define POWERUPDATE_OPEN 0
 /// 发送PowerSourceUpdate消息
 #define POWERSOURCEUPDATE_OPEN 0
 
@@ -62,7 +64,7 @@
 
 // 厂商识别信息
 #define IAP2_DEVICE_NAME "Wireless microphone"
-#define IAP2_MODEID "LARK 150 Pro"
+#define IAP2_MODEID "Lark Max"
 #define IAP2_MANUFATORY "Shenzhen Hollyland technology Co.,LTD"
 #define IAP2_SERIAL_NAME "0123456789AB"
 #define IAP2_FIRMWAREVERSION A6902_VERSION

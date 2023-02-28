@@ -548,7 +548,11 @@ uint8_t hl_mod_appleauth_ioctl(hl_mod_appleauth_ctrl_cmd cmd)
 
         case HL_APPLE_AUTH_STOP_CMD:
             LOG_I("\n\n\n*********iAP2 STOP*********\n\n\n");
-            s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
+            s_apple.apple.iap2.main_status        = EM_HL_IAP2_STM_MAIN_IDLE;
+            s_apple.apple.iap2.detect_status      = EM_HL_IAP2_STM_DETECT_SEND;
+            s_apple.apple.iap2.link_status        = EM_HL_IAP2_STM_LINK_SEND_SYN;
+            s_apple.apple.iap2.identify_status    = EM_HL_IAP2_STM_IDENTIFY_REQ_AUTH;
+            s_apple.apple.iap2.powerupdate_status = EM_HL_IAP2_STM_POWERUPDATE_SEND_POWER;
             break;
 
         default:
