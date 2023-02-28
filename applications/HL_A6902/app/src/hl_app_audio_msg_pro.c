@@ -87,21 +87,16 @@ void hl_app_audio_switch(void)
     int32_t audio_gain = -128;
 
     LOG_I("hl_app_audio_switch ====(%d)(%d)(%d)", audio_mic_switch, tx_info.ex_mic_plug ,tx_info.uac_link_flag);
-    
+
     if (tx_info.ex_mic_plug != 0) {
         if(audio_mic_switch == 1) {
             return;
         }
         audio_gain = 0;
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_gain, 4);
-
-        if(tx_info.gain < 0) {
-            audio_gain = tx_info.gain;
-        } else {
-            audio_gain = 0;
-        }                        
+                           
         rt_thread_mdelay(200);
-        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);  
+        hl_app_audio_gain(tx_info.gain);
 
         audio_mic_switch = 1;
     } else if(tx_info.uac_link_flag != 0) {
@@ -111,8 +106,7 @@ void hl_app_audio_switch(void)
         audio_gain = -128;
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
 
-        audio_gain = tx_info.uac_gain;
-        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_gain, 4);
+        hl_app_audio_gain_uac(tx_info.uac_gain);
 
         audio_mic_switch = 2;
     } else {
@@ -122,8 +116,7 @@ void hl_app_audio_switch(void)
         audio_gain = -128;
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
 
-        audio_gain = tx_info.gain + 10;
-        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_gain, 4);
+        hl_app_audio_gain(tx_info.gain);
 
         audio_mic_switch = 3;
     }    

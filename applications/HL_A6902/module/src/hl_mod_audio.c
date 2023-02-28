@@ -1436,7 +1436,7 @@ static void hl_mod_audio_set_codec_gain(int gain, uint8_t ch, uint8_t sound_ch, 
     db_config.sound_ch = sound_ch;
     db_config.device   = device;
 
-    // LOG_E("set gain (%d)", gain);
+    // LOG_I("hl_mod_audio_set_codec_gain (%d)(%d)\n", ch, gain);
 #if HL_IS_TX_DEVICE()
     if(cap_info.card == NULL) {
         LOG_E("cap card is NULL");
@@ -1461,6 +1461,7 @@ static void hl_mod_audio_set_gain(int dB, uint8_t ch)
 {
     int8_t ret = 0;
 
+    // LOG_I("hl_mod_audio_set_gain (%d)(%d)\n", dB, ch);
     switch (ch) {
         case HL_AUDIO_CHANNEL_L:
             ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &dB, 4);
