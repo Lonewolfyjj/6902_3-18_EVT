@@ -106,6 +106,25 @@ void hl_app_audio_switch(void)
         }
     }
 }
+
+void hl_app_audio_gain(int32_t gain)
+{
+    tx_info.gain = gain;
+
+    if(tx_info.ex_mic_plug == 1) {          
+        if (tx_info.gain > 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+        } else if (tx_info.gain < 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+        } else {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+        }
+    } else {
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &gain, 4);
+    }  
+}
+
 #else
 /// 大容量状态处理
 static void hl_app_rx_mstorage_plug_pro(uint32_t value)

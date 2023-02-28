@@ -75,6 +75,23 @@ void hl_app_audio_stream_updata(void);
  */
 void hl_app_audio_switch(void);
 
+/**
+ * 
+ * @brief 音频的增益设置
+ * @param [in] gain 
+ * @date 2023-02-27
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-27      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_audio_gain(int32_t gain);
+
 #endif /* __HL_APP_AUDIO_MSG_PRO_H__ */
 /*
  * EOF
