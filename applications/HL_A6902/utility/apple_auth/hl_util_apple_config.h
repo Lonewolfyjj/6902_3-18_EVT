@@ -63,7 +63,7 @@
 #define TIMEOUT_US 1000
 
 // 厂商识别信息
-#define IAP2_DEVICE_NAME "Wireless microphone"
+#define IAP2_DEVICE_NAME "Wireless Microphone RX"
 #define IAP2_MODEID "Lark Max"
 #define IAP2_MANUFATORY "Shenzhen Hollyland technology Co.,LTD"
 #define IAP2_SERIAL_NAME "0123456789AB"
