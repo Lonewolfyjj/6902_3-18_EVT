@@ -92,6 +92,23 @@ void hl_app_audio_switch(void);
  */
 void hl_app_audio_gain(int32_t gain);
 
+/**
+ * 
+ * @brief uac增益设置
+ * @param [in] uac_gain 
+ * @date 2023-02-28
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-02-28      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_audio_gain_uac(int32_t uac_gain);
+
 #endif /* __HL_APP_AUDIO_MSG_PRO_H__ */
 /*
  * EOF

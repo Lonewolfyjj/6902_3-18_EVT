@@ -185,10 +185,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value     = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.uac_gain = (int)ptr_rf_value->val;
-            if (tx_info.mstorage_plug == 0) {
-                hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.uac_gain,
-                                     4);  // 待优化 （TX增益与UAC增益同时只能用一个）
-            }
+            hl_app_audio_gain_uac(tx_info.uac_gain);
             // 保存本地。。。
             LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;

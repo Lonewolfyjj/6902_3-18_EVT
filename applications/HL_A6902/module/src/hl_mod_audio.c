@@ -2193,7 +2193,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_mod_audio_set_gain(((int*)ptr)[0]+10, HL_AUDIO_CHANNEL_ALL);
+            hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_ALL);
             break;
         case HL_AUDIO_SET_GAIN_L_CMD:
             if (ptr == NULL) {
