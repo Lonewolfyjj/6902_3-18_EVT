@@ -249,6 +249,28 @@ static inline void _guage_interrupt_check(void)
     }
 }
 
+static uint8_t _soc_convert(uint8_t soc)
+{
+    if (soc > 100) {
+        return soc;
+    } else if (soc >= 96) {
+        return 100;
+    } else if (soc >= 86) {
+        return (soc + 5);
+    } else {
+        return (soc * 100 / 95);
+    }
+}
+
+static void _send_soc_msg_to_app(void)
+{
+    static uint8_t soc = 0;
+
+    soc = _soc_convert(_pm_mod.bat_info.soc.soc);
+
+    _mod_msg_send(HL_SOC_UPDATE_IND, &soc, sizeof(soc));
+}
+
 static void _pm_init_state_update(void)
 {
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
@@ -267,12 +289,26 @@ static void _pm_init_state_update(void)
 
     _pm_mod.charge_state = HL_CHARGE_STATE_UNKNOWN;
 
-    _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+    _send_soc_msg_to_app();
 }
+
+static bool _debug_switch_flag = false;
+
+static void hl_mod_pm_debug_bat_info_5s(void)
+{
+    if (_debug_switch_flag == true) {
+        _debug_switch_flag = false;
+    } else {
+        _debug_switch_flag = true;
+    }
+}
+
+MSH_CMD_EXPORT(hl_mod_pm_debug_bat_info_5s, 间隔5s打印电池信息);
 
 static void _guage_state_update()
 {
     uint8_t soc;
+    bool    flag = false;
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -284,9 +320,13 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CYCLE);
 
     if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
-        _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+        _send_soc_msg_to_app();
+        flag = true;
+    }
+
+    if (flag == true || _debug_switch_flag == true) {
         LOG_I("------bat log------");
-        LOG_I("soc:%d . %d", _pm_mod.bat_info.soc.soc, _pm_mod.bat_info.soc.soc_d);
+        LOG_I("soc:%d . %d", _pm_mod.bat_info.soc.soc, _pm_mod.bat_info.soc.soc_d * 10000 / 256);
         LOG_I("voltage:%d", _pm_mod.bat_info.voltage);
         LOG_I("current:%d", _pm_mod.bat_info.current);
         LOG_I("temp:%d . %d", _pm_mod.bat_info.temp.temp, _pm_mod.bat_info.temp.temp_d);
@@ -324,7 +364,7 @@ static void _guage_err_monitor(void)
 
 static void _guage_state_poll()
 {
-    static uint8_t count = 0;
+    static uint16_t count = 0;
 
     if (count == 0) {
         // _guage_err_monitor();
