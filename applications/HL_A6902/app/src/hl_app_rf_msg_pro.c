@@ -113,7 +113,6 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             if (tx_info.rec_auto_flag != bypass_switch) {
                 tx_info.rec_auto_flag = bypass_switch;
                 hl_util_nvram_param_set_integer("REC_AUTO_OPEN", bypass_switch);
-                // hl_util_nvram_param_save();
             }
             LOG_I("app get TX%d Auto Record(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
@@ -124,7 +123,6 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             if (tx_info.rec_protect_flag != bypass_switch) {
                 tx_info.rec_protect_flag = bypass_switch;
                 hl_util_nvram_param_set_integer("REC_PROTECT_OPEN", bypass_switch);
-                // hl_util_nvram_param_save();
             }
             LOG_I("app get TX%d Record Protect(%d) ", ptr_rf_state->chn, bypass_switch);
             break;
@@ -170,17 +168,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.gain = (int8_t)ptr_rf_value->val;
             tx_info.gain = tx_info.gain * 2;
-            // if (tx_info.gain > 0) {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
-            // } else if (tx_info.gain < 0) {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
-            // } else {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
-            // }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
-
-            // 保存本地。。。
+            hl_app_audio_gain(tx_info.gain);
+            hl_util_nvram_param_set_integer("TX_GAIN", tx_info.gain);
             LOG_D("app get TX%d Gain Value(%d)(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val, tx_info.gain);
             break;
 
@@ -193,11 +182,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value     = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.uac_gain = (int)ptr_rf_value->val;
-            if (tx_info.mstorage_plug == 0) {
-                hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.uac_gain,
-                                     4);  // 待优化 （TX增益与UAC增益同时只能用一个）
-            }
-            // 保存本地。。。
+            hl_app_audio_gain_uac(tx_info.uac_gain);
+            hl_util_nvram_param_set_integer("TX_UAC_GAIN", tx_info.uac_gain);
             LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
