@@ -221,6 +221,8 @@ static uint8_t cap2play2uac_thread_flag = 0;
 /// 初始化标志
 static uint8_t hl_mod_audio_init_flag = 0;
 
+/// 降噪标志
+static uint8_t hl_mod_audio_denoise_flag = 0;
 /* Private function(only *.c)  -----------------------------------------------*/
 
 #if HL_IS_TX_DEVICE()
@@ -1202,6 +1204,7 @@ static void _hl_cap2play_thread_entry(void* arg)
                            p_card_param->abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
+            rt_thread_mdelay(10);
             //break;
         }
 #if !HL_IS_TX_DEVICE()
@@ -1211,10 +1214,18 @@ static void _hl_cap2play_thread_entry(void* arg)
         }
 #endif
         hl_drv_rk_xtensa_dsp_transfer();
-
-        if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)
-            <= 0) {
-            LOG_E("write %s failed", play_info.card->parent.name);
+        if(hl_mod_audio_denoise_flag == 0) {
+            if (rt_device_write(play_info.card, 0, dsp_config->audio_process_out_buffer_b32_2ch, play_info.abuf.period_size)
+                <= 0) {
+                LOG_E("write %s failed", play_info.card->parent.name);
+            }
+        } else {
+            if (rt_device_write(play_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, play_info.abuf.period_size)
+                <= 0) {
+                LOG_E("write %s failed", play_info.card->parent.name);
+            }
+            hl_mod_audio_denoise_flag -= 1;
+            rt_kprintf("%d \n", hl_mod_audio_denoise_flag);
         }
 
         if (record_flag == 1) {
@@ -1263,6 +1274,7 @@ static void _hl_cap2uac_thread_entry(void* arg)
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
+            rt_thread_mdelay(10);
             //break;
         }
 
@@ -2181,6 +2193,8 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             }
 
             if (((char*)ptr)[0] != 0) {
+                hl_mod_audio_denoise_flag = 40;
+                rt_thread_mdelay(10);
                 hl_mod_audio_set_denoise(1);
                 LOG_I("[%s][line:%d] open denoise", __FUNCTION__, __LINE__);
             } else {

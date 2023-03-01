@@ -111,14 +111,12 @@ void hl_app_param_fun(void)
     hl_app_disp_state_led_set();
 }
 #else
-void          hl_app_param_loader(void)
+void hl_app_param_loader(void)
 {
     hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
     hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
     hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
-    
-    
 }
 
 void hl_app_param_fun(void)
