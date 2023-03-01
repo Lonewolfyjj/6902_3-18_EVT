@@ -136,6 +136,7 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
             break;
         case HL_RF_LR_CONNECT:
             ret = 1;
+            hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             LOG_D("no need to paire\r\n");
             break;
         case HL_RF_PAIRING:
