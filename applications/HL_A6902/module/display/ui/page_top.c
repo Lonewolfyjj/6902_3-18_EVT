@@ -64,6 +64,7 @@ LV_IMG_DECLARE(Other_usb_c);     //
 #define RIGHT_DEFAUTE_OFFSET -35
 
 #define ICON_HOLD_TIME 2000
+static uint8_t top_tplock_flag = 0;
 
 typedef struct _HL_DISPLAY_CENTER_T
 {
@@ -786,8 +787,8 @@ static lv_obj_t* lv_area_creat_fun(lv_align_t align, lv_event_cb_t event_cb, lv_
     lv_obj_t* null_area;
     null_area = lv_obj_create(lv_scr_act());
     lv_obj_add_style(null_area, &style_area_main, LV_PART_MAIN);
-    lv_obj_clear_flag(null_area, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_scrollbar_mode(null_area, LV_SCROLLBAR_MODE_OFF);
+    // lv_obj_clear_flag(null_area, LV_OBJ_FLAG_SCROLLABLE);
+    // lv_obj_set_scrollbar_mode(null_area, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_size(null_area, width, high);
     lv_obj_align(null_area, align, x_offset, y_offset);
     return null_area;
@@ -871,6 +872,7 @@ void hl_mod_top_ioctl(void* ctl_data)
             break;
 
         case HL_TOP_ALL_DEL:
+            top_tplock_flag = 0;
             hl_all_del_center_icon();
             lv_area_del();
             *(uint8_t*)&top_icon_sta    = 0;
@@ -891,14 +893,25 @@ void hl_mod_top_ioctl(void* ctl_data)
             break;
         case HL_TOP_LOCK_TP_FORBIDDEN:
             if (area != RT_NULL) {
-                lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
+                if (top_tplock_flag == 0) {
+                    lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
+                    top_tplock_flag = 1;
+                } else {
+                    rt_kprintf("tp_lcok is exi\n");
+                }
+
             } else {
                 rt_kprintf("area not exist\n");
             }
             break;
         case HL_TOP_UNKLOCK_TP:
             if (area != RT_NULL) {
-                lv_obj_remove_event_cb(area, lock_cb);
+                if (top_tplock_flag == 1) {
+                    top_tplock_flag = 0;
+                    lv_obj_remove_event_cb(area, lock_cb);
+                } else {
+                    rt_kprintf("tp_lcok is deled\n");
+                }
             } else {
                 rt_kprintf("area not exist\n");
             }
@@ -919,7 +932,9 @@ void hl_mod_top_init(void* init_data)
     }
 
     page_lock_cb = ptr->lock_event_cb;
-    area         = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, LV_VER_RES_MAX, LV_HOR_RES_MAX);
+    area            = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, 290, 120);
+    top_tplock_flag = 0;
+    // lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
 
     timer = lv_timer_create(centert_icon_timer_cb, ICON_HOLD_TIME, NULL);
     lv_timer_set_repeat_count(timer, -1);
@@ -927,4 +942,6 @@ void hl_mod_top_init(void* init_data)
     bat_icon         = lv_power_img_creat_fun(lv_scr_act(), 0, 0, 256);
     bat_bar          = lv_power_bar_creat_fun(bat_icon, 3, 0, 25, 14, ptr->electric_top);
     bat_charger_icon = lv_img_creat_fun(bat_icon, LV_ALIGN_CENTER, &Main_charging, -2, -2);
+
+    lv_obj_move_foreground(area);
 }
