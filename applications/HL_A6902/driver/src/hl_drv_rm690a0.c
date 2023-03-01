@@ -68,6 +68,7 @@ typedef struct _hl_drv_mipi_screen
 static uint8_t screen_sta = 1;
 
 static hl_drv_mipi_screen mipi_screen;
+static rt_thread_t screen_tid = RT_NULL;
 
 uint8_t tmp_screen[126 * 294 * 2];
 /* Private function(only *.c)  -----------------------------------------------*/
@@ -249,16 +250,43 @@ void hl_drv_rm690a0_otherpin_init(void)
     rt_pin_write(GPIO1_C4, PIN_HIGH);
 }
 
-static void screen_irq_fun(void *args)
+// static void screen_irq_fun(void *args)
+// {
+//     screen_sta = 1;
+// }
+
+static void hl_screen_task(void* param)
 {
-    screen_sta = 1;
+    uint8_t sta = 0,sta_bak = 0;
+    rt_pin_mode(GPIO1_C0,PIN_MODE_INPUT_PULLUP);
+    while(1){
+        sta = rt_pin_read(GPIO1_C0);
+        if(sta != sta_bak){
+            sta_bak = sta;
+            screen_sta = 1;
+        }
+        rt_thread_mdelay(10);
+    }    
+}
+
+
+static void screen_thread_creat(void)
+{
+    screen_tid = rt_thread_create("screen_thread", hl_screen_task, RT_NULL, 4096,
+                                   20, 5);
+
+    if (screen_tid != RT_NULL) {
+        rt_kprintf("screen_thread thread init ok!\r\n");
+        rt_thread_startup(screen_tid);
+    }
 }
 
 static void hl_drv_rm690a0_gpio_init(void)
 {
-    rt_pin_attach_irq(GPIO1_C0,PIN_IRQ_MODE_FALLING,screen_irq_fun,RT_NULL);
-    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);
+    // rt_pin_attach_irq(GPIO1_C0,PIN_IRQ_MODE_FALLING,screen_irq_fun,RT_NULL);
+    // rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);
     // rt_thread_mdelay(50);
+    screen_thread_creat();
     hl_drv_rm690a0_hardware_rst();
     rt_thread_mdelay(50);
     hl_drv_rm690a0_otherpin_init();
