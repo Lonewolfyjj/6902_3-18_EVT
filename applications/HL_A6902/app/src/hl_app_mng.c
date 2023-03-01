@@ -75,11 +75,15 @@ int hl_app_info(int argc, char** argv);
 #if HL_IS_TX_DEVICE()
 void hl_app_param_loader(void)
 {
+    uint8_t param = 0;
+
     hl_util_nvram_param_get_integer("MUTE_OPEN", &tx_info.mute_flag, 0);
     hl_util_nvram_param_get_integer("REC_PROTECT_OPEN", &tx_info.rec_protect_flag, 0);
     hl_util_nvram_param_get_integer("REC_AUTO_OPEN", &tx_info.rec_auto_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_PROTECT_OPEN", &tx_info.denoise_protect_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_AUTO_OPEN", &tx_info.denoise_auto_flag, 0);
+    hl_util_nvram_param_get_integer("DENOISE_OPEN", &param, 0);   
+    tx_info.denoise_flag = param;
     hl_util_nvram_param_get_integer("DENOISE_CLASS", &tx_info.denoise_class, 0);
 
     hl_util_nvram_param_get_integer("TX_GAIN", &tx_info.gain, 0);
@@ -102,11 +106,12 @@ void hl_app_param_fun(void)
         hl_app_pm_timer_set();
     }
 
-    if (tx_info.denoise_auto_flag == 1) {
-        tx_info.denoise_flag = 1;
+    if (tx_info.denoise_flag == 1) {
+        //tx_info.denoise_flag = 1;
         param_switch         = HL_SWITCH_ON;
         // 降噪等级设置 。。。
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &param_switch, 1);
+        //hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &param_switch, 1);
     }
     hl_app_disp_state_led_set();
 }
