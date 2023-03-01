@@ -63,15 +63,18 @@
 
 static hl_timeout_t rot_scan_in;
 
+#if 0
 // gsensor消抖时间
 static hl_timeout_t sensor_debance;
+#endif
 static lv_style_t lay_style;
 static rt_thread_t display_tid = RT_NULL;
 static lv_timer_t * timer;
 static lv_style_t style;
 static lv_obj_t* obj;
+#if 0
 static void hl_mod_screen_rot_scan(void);
-
+#endif
 // 在nvrma获取sn和rx版本号
 static void hl_mod_display_get_sn_version(void)
 {
@@ -79,7 +82,7 @@ static void hl_mod_display_get_sn_version(void)
     // hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
-    char rx_ver_buf[10] = { 0 };
+    // char rx_ver_buf[10] = { 0 };
 
 
     // 从NVRAM获取当前RX版本号
@@ -101,7 +104,7 @@ static void hl_mod_display_get_sn_version(void)
     }
 #endif 
 }
-
+#if 0
 static device_pose_t hl_mod_device_pose_val(void)
 {
     euler_angle_t        pose;
@@ -201,7 +204,7 @@ static void hl_mod_screen_rot_scan(void)
         hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     }
 }
-
+#endif
 uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     uint8_t                     res    = HL_DISPLAY_SUCCESS;
