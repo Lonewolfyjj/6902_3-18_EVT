@@ -685,7 +685,9 @@ int hl_mod_pm_start(void)
 #endif
     _pm_mod.thread_exit_flag = 0;
 
+#if HL_IS_TX_DEVICE()
     rt_timer_start(&(_pm_mod.shutdown_timer));
+#endif
 
     _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
