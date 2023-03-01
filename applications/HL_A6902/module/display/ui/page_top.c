@@ -245,17 +245,17 @@ static lv_obj_t* lv_power_img_creat_fun(lv_obj_t* align_obj, lv_coord_t x_offset
     return img;
 }
 
-static lv_obj_t* lv_power_lab_creat_fun(lv_obj_t* src_obj, lv_obj_t* align_obj, lv_obj_t* bar_obj, lv_coord_t x_offset,
-                                        lv_coord_t y_offset)
-{
-    char      buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    lv_obj_t* lab    = lv_label_create(src_obj);
-    lv_obj_add_style(lab, &style_power_label, LV_PART_MAIN);
-    lv_snprintf(buf, sizeof(buf), "%d%%", lv_bar_get_value(bar_obj));
-    lv_label_set_text(lab, buf);
-    lv_obj_align_to(lab, align_obj, LV_ALIGN_OUT_LEFT_MID, x_offset, y_offset);
-    return lab;
-}
+// static lv_obj_t* lv_power_lab_creat_fun(lv_obj_t* src_obj, lv_obj_t* align_obj, lv_obj_t* bar_obj, lv_coord_t x_offset,
+//                                         lv_coord_t y_offset)
+// {
+//     char      buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+//     lv_obj_t* lab    = lv_label_create(src_obj);
+//     lv_obj_add_style(lab, &style_power_label, LV_PART_MAIN);
+//     lv_snprintf(buf, sizeof(buf), "%d%%", lv_bar_get_value(bar_obj));
+//     lv_label_set_text(lab, buf);
+//     lv_obj_align_to(lab, align_obj, LV_ALIGN_OUT_LEFT_MID, x_offset, y_offset);
+//     return lab;
+// }
 
 static lv_obj_t* hl_mod_creat_top_icon(const void* img_src, lv_obj_t* align_obj, lv_align_t align, lv_coord_t x_ofs,
                                        lv_coord_t y_ofs)
@@ -278,7 +278,7 @@ static void hl_top_icon_init(void)
 
 static void hl_top_icon_ref(uint8_t typ, top_list_t* head)
 {
-    uint8_t     i    = 0;
+    // uint8_t     i    = 0;
     top_list_t* node = head;
     if (ICON_POS_LIFT == typ) {
         TOP_POS     = LV_ALIGN_TOP_LEFT;
@@ -374,16 +374,16 @@ del:
     return 0;
 }
 
-static void hl_top_list_clean(top_list_t* head)
-{
-    top_list_t *node = head->next, *last_node;
-    last_node        = node->next;
-    while (last_node != NULL) {
-        rt_free(node);
-        node      = last_node;
-        last_node = last_node->next;
-    }
-}
+// static void hl_top_list_clean(top_list_t* head)
+// {
+//     top_list_t *node = head->next, *last_node;
+//     last_node        = node->next;
+//     while (last_node != NULL) {
+//         rt_free(node);
+//         node      = last_node;
+//         last_node = last_node->next;
+//     }
+// }
 
 static void hl_del_ptr_null(void)
 {
@@ -802,9 +802,27 @@ static void lv_area_del()
     }
 }
 
+static void rx_stle_del(int16_t data)
+{
+    switch (data) {
+        case 0:
+            lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            break;
+        case 1:
+            lv_obj_remove_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
+            break;
+        case 2:
+            lv_obj_remove_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
+            break;
+        default:
+            lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            break;
+    }
+}
+
 void hl_mod_top_ioctl(void* ctl_data)
 {
-    char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     hl_lvgl_top_ioctl_t* ptr    = (hl_lvgl_top_ioctl_t*)ctl_data;
     switch (ptr->top_cmd) {
         case HL_TOP_INPUT_CMD:
@@ -831,17 +849,20 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_obj_clear_flag(bat_charger_icon, LV_OBJ_FLAG_HIDDEN);
             break;
         case HL_TOP_BAT_COLOR_GREEN:
-            lv_obj_remove_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
+            rx_stle_del(ptr->electric_top);
+            // lv_obj_remove_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             break;
 
         case HL_TOP_BAT_COLOR_WHITE:
-            lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            rx_stle_del(ptr->electric_top);
+            // lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
             break;
 
         case HL_TOP_BAT_COLOR_RED:
-            lv_obj_remove_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
+            rx_stle_del(ptr->electric_top);
+            // lv_obj_remove_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
             break;
 

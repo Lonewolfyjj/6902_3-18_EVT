@@ -188,7 +188,7 @@ static lv_obj_t * lv_device_lab_creat_fun(lv_obj_t *align_obj,lv_align_t align,l
 static void lv_device_top_creat(int16_t value)
 {
     img4 = lv_img_creat_fun(lv_scr_act(),LV_ALIGN_TOP_RIGHT,&Main_bat,-6,6);
-    bar_power4 = lv_power_bar_creat_fun(img4,&style_bar_top_indicator_green,&style_bar_top_indicator_white,3,0,25,14,LV_BAR_GREEN,value);
+    bar_power4 = lv_power_bar_creat_fun(img4,&style_bar_top_indicator_green,&style_bar_top_indicator_white,3,0,25,14,LV_BAR_WHITE,value);
     lab_power4 = lv_power_lab_creat_fun(lv_scr_act(),bar_power4,bar_power4,LV_ALIGN_OUT_LEFT_MID,-14,0);
 
     lab_case = lv_device_lab_creat_fun(lv_scr_act(),LV_ALIGN_TOP_LEFT,6,3,"CASE");
@@ -255,6 +255,68 @@ static void lv_delete_style(void)
     lv_style_reset(&style_bar_tx2_indicator_green);
     lv_style_reset(&style_bar_tx2_indicator_white);
     lv_style_reset(&style_bar_main);
+}
+
+static void box_style_del(int16_t data)
+{
+    switch (data) {
+        case 0:
+            lv_obj_remove_style(bar_power4, &style_bar_top_indicator_white, LV_PART_INDICATOR);
+            break;
+        case 1:
+        // 缺一个红色的报警的代码，后面会加上
+        case 2:
+            lv_obj_remove_style(bar_power4, &style_bar_top_indicator_green, LV_PART_INDICATOR);
+            break;
+        default:
+            lv_obj_remove_style(bar_power4, &style_bar_top_indicator_white, LV_PART_INDICATOR);
+            break;
+    }
+}
+
+static void rx_style_del(int16_t data)
+{
+    switch (data) {
+        case 0:
+            lv_obj_remove_style(bar_power_rx, &style_bar_rx_indicator_white, LV_PART_INDICATOR);
+            break;
+        case 2:
+            lv_obj_remove_style(bar_power_rx, &style_bar_rx_indicator_green, LV_PART_INDICATOR);
+            break;
+        default:
+            lv_obj_remove_style(bar_power_rx, &style_bar_rx_indicator_white, LV_PART_INDICATOR);
+            break;
+    }
+}
+
+static void tx1_style_del(int16_t data)
+{
+    switch (data) {
+        case 0:
+            lv_obj_remove_style(bar_power_tx1, &style_bar_tx1_indicator_white, LV_PART_INDICATOR);
+            break;
+        case 2:
+            lv_obj_remove_style(bar_power_tx1, &style_bar_tx1_indicator_green, LV_PART_INDICATOR);
+            break;
+        default:
+            lv_obj_remove_style(bar_power_tx1, &style_bar_tx1_indicator_white, LV_PART_INDICATOR);
+            break;
+    }
+}
+
+static void tx2_style_del(int16_t data)
+{
+    switch (data) {
+        case 0:
+            lv_obj_remove_style(bar_power_tx2, &style_bar_tx2_indicator_white, LV_PART_INDICATOR);
+            break;
+        case 2:
+            lv_obj_remove_style(bar_power_tx2, &style_bar_tx2_indicator_green, LV_PART_INDICATOR);
+            break;
+        default:
+            lv_obj_remove_style(bar_power_tx2, &style_bar_tx2_indicator_white, LV_PART_INDICATOR);
+            break;
+    }
 }
 
 void hl_mod_charge_ioctl(void * ctl_data)
@@ -328,35 +390,43 @@ void hl_mod_charge_ioctl(void * ctl_data)
             break;
 
         case HL_CHARGE_TOP_BAT_COLOR_GREEN:
-            lv_obj_remove_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);
+            box_style_del(ptr->electric.electric_box);
+            // lv_obj_remove_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TOP_BAT_COLOR_WHITE:
-            lv_obj_remove_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);
+            box_style_del(ptr->electric.electric_box);
+            // lv_obj_remove_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX1_BAT_COLOR_GREEN:
-            lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);
+            tx1_style_del(ptr->electric.electric_tx1);
+            // lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX1_BAT_COLOR_WHITE:
-            lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);
+            tx1_style_del(ptr->electric.electric_tx1);
+            // lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX2_BAT_COLOR_GREEN:
-            lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);
+            tx2_style_del(ptr->electric.electric_tx2);
+            // lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX2_BAT_COLOR_WHITE:
-            lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);
+            tx2_style_del(ptr->electric.electric_tx2);
+            // lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_RX_BAT_COLOR_GREEN:
-            lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
+            rx_style_del(ptr->electric.electric_rx);
+            // lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_RX_BAT_COLOR_WHITE:
-            lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
+            rx_style_del(ptr->electric.electric_rx);
+            // lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);  
             break;
         

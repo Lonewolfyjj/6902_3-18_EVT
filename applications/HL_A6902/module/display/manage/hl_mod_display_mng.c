@@ -31,6 +31,10 @@
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+#define DBG_SECTION_NAME "disp/page"
+#define DBG_LEVEL DBG_LOG
+#include <rtdbg.h>
+
 #define IS_PAGE(page)   ((page)<(MaxPage))
 
 #ifndef PAGE_NULL
@@ -192,7 +196,11 @@ bool PageManager_PagePush(uint8_t pageID)
     
     /*检查页面是否忙碌*/
     if(IsPageBusy)
-       return false; 
+    {
+        LOG_D("page busy(%d)",PageStack.Ptr[PageStack.Top]);
+        return false; 
+    }
+       
     
     /*防止栈溢出*/
     if(PageStack.Top >= PageStack.Size - 1)
