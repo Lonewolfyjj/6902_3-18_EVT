@@ -319,6 +319,19 @@ static void tx2_style_del(int16_t data)
     }
 }
 
+static int16_t hl_ioctl_power_limit(int16_t power)
+{
+    if((power >= 0) || (power <= 100)){
+        return power;
+    }else if(power < 0){
+        rt_kprintf("Charge power out of limit : %d\n",power);
+        return 0;
+    }else if(power > 100){
+        rt_kprintf("Charge power out of limit : %d\n",power);
+        return 100;
+    }
+}
+
 void hl_mod_charge_ioctl(void * ctl_data)
 {
     char buf[8] = {0,0,0,0,0,0,0,0};
@@ -329,7 +342,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_tx1,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX1;
                 lv_obj_del(area_tx1);
-                rt_thread_mdelay(5);                 
+                rt_thread_mdelay(10);                 
             }            
             break;
         case HL_DELETE_RX_DEVICE:
@@ -337,7 +350,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_rx,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_RX;
                 lv_obj_del(area_rx);
-                rt_thread_mdelay(5);                 
+                rt_thread_mdelay(10);                 
             }  
             break;
         case HL_DELETE_TX2_DEVICE:
@@ -345,7 +358,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_tx2,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX2;
                 lv_obj_del(area_tx2);
-                rt_thread_mdelay(5); 
+                rt_thread_mdelay(10); 
             }  
             break;
         
@@ -369,21 +382,25 @@ void hl_mod_charge_ioctl(void * ctl_data)
             break;
 
         case HL_CHARGE_CHANGE_BOX_ELEC:
+            ptr->electric.electric_box = hl_ioctl_power_limit(ptr->electric.electric_box);
             lv_bar_set_value(bar_power4, ptr->electric.electric_box, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_box);
             lv_label_set_text(lab_power4,buf);
             break;
         case HL_CHARGE_CHANGE_TX1_ELEC:
+            ptr->electric.electric_tx1 = hl_ioctl_power_limit(ptr->electric.electric_tx1);
             lv_bar_set_value(bar_power_tx1, ptr->electric.electric_tx1, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_tx1);
             lv_label_set_text(lab_power1,buf);
             break;
         case HL_CHARGE_CHANGE_RX_ELEC:
+            ptr->electric.electric_rx = hl_ioctl_power_limit(ptr->electric.electric_rx);
             lv_bar_set_value(bar_power_rx, ptr->electric.electric_rx, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_rx);
             lv_label_set_text(lab_power2,buf);
             break;
         case HL_CHARGE_CHANGE_TX2_ELEC:
+            ptr->electric.electric_tx2 = hl_ioctl_power_limit(ptr->electric.electric_tx2);
             lv_bar_set_value(bar_power_tx2, ptr->electric.electric_tx2, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_tx2);
             lv_label_set_text(lab_power3,buf);

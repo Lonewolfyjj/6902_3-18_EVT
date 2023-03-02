@@ -822,6 +822,19 @@ static void rx_stle_del(int16_t data)
     }
 }
 
+static int16_t hl_ioctl_power_limit(int16_t power)
+{
+    if((power >= 0) || (power <= 100)){
+        return power;
+    }else if(power < 0){
+        rt_kprintf("Top power out of limit : %d\n",power);
+        return 0;
+    }else if(power > 100){
+        rt_kprintf("Top power out of limit : %d\n",power);
+        return 100;
+    }
+}
+
 void hl_mod_top_ioctl(void* ctl_data)
 {
     // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -837,6 +850,9 @@ void hl_mod_top_ioctl(void* ctl_data)
             hl_delete_top_icon(ptr->top_param);
             break;
         case HL_TOP_BAT_VAL:
+
+            ptr->electric_top = hl_ioctl_power_limit(ptr->electric_top);
+
             lv_bar_set_value(bat_bar, ptr->electric_top, LV_ANIM_ON);
             // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
             // lv_label_set_text(bat_label, buf);

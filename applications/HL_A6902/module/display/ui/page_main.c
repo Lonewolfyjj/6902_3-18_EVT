@@ -1048,6 +1048,32 @@ static void tx2_stle_del(int16_t data)
     }
 }
 
+static int16_t hl_ioctl_voice_limit(int16_t voice)
+{
+    if((voice >= 0) || (voice <= 118)){
+        return voice;
+    }else if(voice < 0){
+        rt_kprintf("Voice out of limit : %d\n",voice);
+        return 0;
+    }else if(voice > 118){
+        rt_kprintf("Voice out of limit : %d\n",voice);
+        return 118;
+    }
+}
+
+static int16_t hl_ioctl_power_limit(int16_t power)
+{
+    if((power >= 0) || (power <= 100)){
+        return power;
+    }else if(power < 0){
+        rt_kprintf("Power out of limit : %d\n",power);
+        return 0;
+    }else if(power > 100){
+        rt_kprintf("Power out of limit : %d\n",power);
+        return 100;
+    }
+}
+
 void hl_mod_main_ioctl(void * ctl_data)
 {
     char buf[8] = {0,0,0,0,0,0,0,0};
@@ -1065,12 +1091,18 @@ void hl_mod_main_ioctl(void * ctl_data)
             main_init.tx_device_1.signal = ptr->tx_device_1.signal;
             break;
         case HL_CHANGE_TX1_ELEC:
+
+            ptr->tx_device_1.electric = hl_ioctl_power_limit(ptr->tx_device_1.electric);
+
             lv_bar_set_value(power_bar_tx1, ptr->tx_device_1.electric, LV_ANIM_ON);
             // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_1.electric);
             // lv_label_set_text(power_lab_tx1,buf);
             main_init.tx_device_1.electric = ptr->tx_device_1.electric;
             break;
-        case HL_CHANGE_TX1_VOL:           
+        case HL_CHANGE_TX1_VOL:  
+            
+            ptr->tx_device_1.volume = hl_ioctl_voice_limit(ptr->tx_device_1.volume);
+
             if(ptr->tx_device_1.volume > tx1_value_start){
                 lv_bar_anim_ctl(&animation_tx1,tx1_value_start,ptr->tx_device_1.volume,ANIMAtION_TIME_UP);                
             }else{
@@ -1118,12 +1150,18 @@ void hl_mod_main_ioctl(void * ctl_data)
             main_init.tx_device_2.signal = ptr->tx_device_2.signal;
             break;
         case HL_CHANGE_TX2_ELEC:
+
+            ptr->tx_device_2.electric = hl_ioctl_power_limit(ptr->tx_device_2.electric);
+
             lv_bar_set_value(power_bar_tx2, ptr->tx_device_2.electric, LV_ANIM_ON);
             // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->tx_device_2.electric);
             // lv_label_set_text(power_lab_tx2,buf);
             main_init.tx_device_2.electric = ptr->tx_device_2.electric;
             break;
         case HL_CHANGE_TX2_VOL:
+
+            ptr->tx_device_2.volume = hl_ioctl_voice_limit(ptr->tx_device_2.volume);
+
             if(ptr->tx_device_2.volume > tx2_value_start){
                 lv_bar_anim_ctl(&animation_tx2,tx2_value_start,ptr->tx_device_2.volume,ANIMAtION_TIME_UP);                
             }else{
