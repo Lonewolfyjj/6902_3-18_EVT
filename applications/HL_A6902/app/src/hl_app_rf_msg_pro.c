@@ -234,6 +234,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_REFACTORY_IND:
             bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
+            hl_app_param_reset();
             LOG_D("app get TX%d Refactory", bypass_chn);
             break;
 

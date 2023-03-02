@@ -1225,7 +1225,6 @@ static void _hl_cap2play_thread_entry(void* arg)
                 LOG_E("write %s failed", play_info.card->parent.name);
             }
             hl_mod_audio_denoise_flag -= 1;
-            rt_kprintf("%d \n", hl_mod_audio_denoise_flag);
         }
 
         if (record_flag == 1) {
