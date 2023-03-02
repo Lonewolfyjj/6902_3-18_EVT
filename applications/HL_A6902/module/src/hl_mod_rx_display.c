@@ -542,6 +542,7 @@ static void hl_mod_display_task(void* param)
     lv_style_init(&lay_style);
     lv_style_set_bg_color(&lay_style, lv_color_black());
     lv_style_set_bg_opa(&lay_style,LV_OPA_10);
+    lv_style_set_border_width(&lay_style, 0);
     wdg_reg = *(uint32_t*)(0x40050304);
     if(wdg_reg == 0){
         rt_kprintf("\nDevice normal reset ,reg= %X\n",wdg_reg);
