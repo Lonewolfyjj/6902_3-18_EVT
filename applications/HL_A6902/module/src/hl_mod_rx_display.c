@@ -509,7 +509,7 @@ static lv_obj_t* hl_mod_creat_lay(void)
     lv_obj_t* obj = lv_obj_create(lv_scr_act());
     lv_obj_add_style(obj,&lay_style,0);
     lv_obj_center(obj);
-    lv_obj_set_size(obj,126,294);
+    lv_obj_set_size(obj,290,120);
     lv_obj_move_foreground(obj);
     return obj;
 }

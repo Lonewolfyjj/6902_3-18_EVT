@@ -762,6 +762,7 @@ uint8_t hl_get_mipi_screen_sta(void)
 void hl_set_mipi_screen_sta(uint8_t data)
 {
     screen_sta = data;
+    screen_cnt = 0;
 }
 
 void a690a0_test(int argc, char** argv)
