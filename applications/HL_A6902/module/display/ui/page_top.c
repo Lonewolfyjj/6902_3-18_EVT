@@ -921,7 +921,7 @@ void hl_mod_top_init(void* init_data)
         lv_style_page_top_init();
         lv_lock_style_init();
     }
-
+    lock_flag = 0;
     page_lock_cb = ptr->lock_event_cb;
     area         = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, 290, 120);
 
