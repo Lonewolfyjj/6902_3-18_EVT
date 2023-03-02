@@ -282,7 +282,7 @@ static void hl_screen_task(void* param)
 
 static void screen_thread_creat(void)
 {
-    screen_tid = rt_thread_create("screen_thread", hl_screen_task, RT_NULL, 4096,
+    screen_tid = rt_thread_create("screen_thread", hl_screen_task, RT_NULL, 512,
                                    20, 5);
 
     if (screen_tid != RT_NULL) {
