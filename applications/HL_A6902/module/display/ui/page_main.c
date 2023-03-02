@@ -1088,12 +1088,12 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
         case HL_CHANGE_TX1_BAR_RED:
             tx1_stle_del(ptr->tx_device_1.electric);
-            // lv_obj_remove_style(power_bar_tx1,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+            lv_obj_remove_style(power_bar_tx1,&style_power_bar_red_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx1, &style_power_bar_red_indicator, LV_PART_INDICATOR);
             break;
         case HL_CHANGE_TX1_BAR_WHITE:
             tx1_stle_del(ptr->tx_device_1.electric);
-            // lv_obj_remove_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+            lv_obj_remove_style(power_bar_tx1,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx1, &style_power_bar_white_indicator, LV_PART_INDICATOR);
             break;
 
@@ -1139,14 +1139,14 @@ void hl_mod_main_ioctl(void * ctl_data)
             lv_set_vodeo_dot_status_cb(video_dot_tx2,ptr->tx_device_2.record);
             main_init.tx_device_2.record = ptr->tx_device_2.record; 
             break;
-        case HL_CHANGE_TX2_BAR_RED:
-            // lv_obj_remove_style(power_bar_tx2,&style_power_bar_red_indicator,LV_PART_INDICATOR);
+        case HL_CHANGE_TX2_BAR_RED:            
             tx2_stle_del(ptr->tx_device_2.electric);
+            lv_obj_remove_style(power_bar_tx2,&style_power_bar_red_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx2,&style_power_bar_red_indicator,LV_PART_INDICATOR);
             break;
-        case HL_CHANGE_TX2_BAR_WHITE:
-            // lv_obj_remove_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
+        case HL_CHANGE_TX2_BAR_WHITE:            
             tx2_stle_del(ptr->tx_device_2.electric);
+            lv_obj_remove_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx2,&style_power_bar_white_indicator,LV_PART_INDICATOR);
             break;
         case HL_CHANGE_TX2_MUTE:
@@ -1213,12 +1213,12 @@ void hl_mod_main_ioctl(void * ctl_data)
             break;
         case HL_CHANGE_TX1_BAR_GREEN:
             tx1_stle_del(ptr->tx_device_1.electric);
-            // lv_obj_remove_style(power_bar_tx1, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            lv_obj_remove_style(power_bar_tx1, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx1, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             break;
-        case HL_CHANGE_TX2_BAR_GREEN:
-            // lv_obj_remove_style(power_bar_tx2, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+        case HL_CHANGE_TX2_BAR_GREEN:            
             tx2_stle_del(ptr->tx_device_2.electric);
+            lv_obj_remove_style(power_bar_tx2, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(power_bar_tx2, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             break;
             /// @brief 隐藏TX1设备充电闪电图标

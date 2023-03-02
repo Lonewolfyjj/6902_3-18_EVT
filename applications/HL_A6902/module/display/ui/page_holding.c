@@ -161,12 +161,12 @@ void hl_mod_holding_ioctl(void* ctl_data)
             break;
         case HL_HOLDING_RX_BAT_COLOR_GREEN:
             rx_bat_style_del(ptr->electric);
-            // lv_obj_remove_style(bar_power,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power, &style_bar_rx_indicator_green, LV_PART_INDICATOR);
             break;
         case HL_HOLDING_RX_BAT_COLOR_WHITE:
             rx_bat_style_del(ptr->electric);
-            // lv_obj_remove_style(bar_power,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power, &style_bar_rx_indicator_white, LV_PART_INDICATOR);
             break;
         case HL_HOLDING_RX_ICON_HIDE:

@@ -65,7 +65,7 @@ typedef struct _hl_drv_mipi_screen
     struct rt_device_graphic_info dgi;
     uint32_t mipi_data_len;
 } hl_drv_mipi_screen;
-static uint8_t screen_sta = 1;
+static uint8_t screen_sta = 1,screen_cnt = 0;
 
 static hl_drv_mipi_screen mipi_screen;
 static rt_thread_t screen_tid = RT_NULL;
@@ -255,6 +255,15 @@ void hl_drv_rm690a0_otherpin_init(void)
 //     screen_sta = 1;
 // }
 
+uint8_t screen_cnt_fun(void)
+{
+    if(screen_cnt > 20){
+        screen_cnt = 0;
+        return 1;
+    }
+    return 0;
+}
+
 static void hl_screen_task(void* param)
 {
     uint8_t sta = 0,sta_bak = 0;
@@ -265,7 +274,8 @@ static void hl_screen_task(void* param)
             sta_bak = sta;
             screen_sta = 1;
         }
-        rt_thread_mdelay(10);
+        screen_cnt++;
+        rt_thread_mdelay(5);
     }    
 }
 

@@ -51,7 +51,7 @@
 #include <rtdbg.h>
 
 #define DISPLAY_THREAD_PRIORITY 20
-#define DISPLAY_THREAD_STACK_SIZE 40960
+#define DISPLAY_THREAD_STACK_SIZE 8192
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -516,16 +516,18 @@ static lv_obj_t* hl_mod_creat_lay(void)
 
 static void screen_timer(lv_timer_t * timer)
 {
-    if(hl_get_mipi_screen_sta()){
-        hl_set_mipi_screen_sta(0);
-    }else{
-        rt_kprintf("reset screen\n");
-        hl_drv_rm690a0_deinit();
-        hl_drv_rm690a0_init();
-        obj = hl_mod_creat_lay();
-        lv_obj_del_delayed(obj,50);
-        lv_timer_reset(timer);
-    }    
+    if(screen_cnt_fun()){
+        if(hl_get_mipi_screen_sta()){
+            hl_set_mipi_screen_sta(0);
+        }else{
+            rt_kprintf("reset screen\n");
+            hl_drv_rm690a0_deinit();
+            hl_drv_rm690a0_init();
+            obj = hl_mod_creat_lay();
+            lv_obj_del_delayed(obj,50);
+            lv_timer_reset(timer);
+        } 
+    }       
 }
 // RX
 static void hl_mod_display_task(void* param)
