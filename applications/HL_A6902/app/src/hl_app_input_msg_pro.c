@@ -92,8 +92,7 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
         case HL_KEY_EVENT_LONG:
             if (tx_info.on_off_flag == 1) {
                 // hl_app_mng_powerOff();
-                tx_info.on_off_flag = 0;
-                // hl_app_audio_switch();                
+                tx_info.on_off_flag = 0;            
                 hl_util_nvram_param_set_integer("HALT", 1);
                 hl_mod_audio_deinit();
                 hl_mod_display_deinit();
@@ -257,12 +256,7 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
         mic_select          = HL_MIC_INTERNAL;
         hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
         hl_app_audio_stream_updata();    
-        hl_app_audio_switch();
     }
-    
-
-    
-    
 }
 
 /// POGO VBUS的状态处理
