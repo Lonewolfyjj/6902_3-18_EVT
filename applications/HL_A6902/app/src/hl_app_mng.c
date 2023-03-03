@@ -111,14 +111,12 @@ void hl_app_param_fun(void)
     hl_app_disp_state_led_set();
 }
 #else
-void          hl_app_param_loader(void)
+void hl_app_param_loader(void)
 {
     hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
     hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
     hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
-    
-    
 }
 
 void hl_app_param_fun(void)
@@ -127,33 +125,33 @@ void hl_app_param_fun(void)
 
     // 读取TX的配置 发送配置给屏幕
     hl_util_nvram_param_get_integer("MUTE_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 0);
-    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 1);
+    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("REC_PROTECT_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("REC_AUTO_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("TX_GAIN", &param, 0);
-    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 1);
     hl_util_nvram_param_get_integer("TX_GAIN2", &param, 0);
-    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 1);
     
     hl_util_nvram_param_get_integer("TX_UAC_GAIN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 1);
 
     param = rx_info.cam_gain_l/2;
-    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
 
     param = rx_info.cam_gain_r/2;
-    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
 
     param = rx_info.hp_gain/2;
-    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
 }
@@ -184,7 +182,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 500) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 0) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -245,7 +243,7 @@ void hl_app_mng_init(void)
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 9, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -366,6 +364,8 @@ int hl_app_info(int argc, char** argv)
     LOG_I("mute_flag = %d ", tx_info.mute_flag);
     LOG_I("rf_state = %d ", tx_info.rf_state);
     LOG_I("tx_info.soc = %d ", tx_info.soc);
+    LOG_I("tx_info.gain = %d ", tx_info.gain);
+    LOG_I("tx_info.uac_gain = %d ", tx_info.uac_gain);
 #else
     LOG_I("------show rx app info------");
     LOG_I("on_off_flag = %d", rx_info.on_off_flag);

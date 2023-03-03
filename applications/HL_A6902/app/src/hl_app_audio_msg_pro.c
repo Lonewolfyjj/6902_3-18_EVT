@@ -83,28 +83,72 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 
 void hl_app_audio_switch(void)
 {
-    static uint8_t audio_mic_switch = 1;
+    static uint8_t audio_mic_switch = 0;
     int32_t audio_gain = -128;
 
-    // 设置外置麦的开关
-    if(audio_mic_switch == 1) {
-        if((tx_info.on_off_flag == 0)||(tx_info.ex_mic_plug == 0)) {
-            audio_gain = -128;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
-            audio_mic_switch = 0;
+    LOG_I("hl_app_audio_switch ====(%d)(%d)(%d)", audio_mic_switch, tx_info.ex_mic_plug ,tx_info.uac_link_flag);
+
+    if (tx_info.ex_mic_plug != 0) {
+        if(audio_mic_switch == 1) {
+            return;
+        }
+        audio_gain = 0;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_gain, 4);
+                           
+        rt_thread_mdelay(200);
+        hl_app_audio_gain(tx_info.gain);
+
+        audio_mic_switch = 1;
+    } else if(tx_info.uac_link_flag != 0) {
+        if(audio_mic_switch == 2) {
+            return;
+        }
+        audio_gain = -128;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+
+        hl_app_audio_gain_uac(tx_info.uac_gain);
+
+        audio_mic_switch = 2;
+    } else {
+        if(audio_mic_switch == 3) {
+            return;
+        }
+        audio_gain = -128;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+
+        hl_app_audio_gain(tx_info.gain);
+
+        audio_mic_switch = 3;
+    }    
+}
+
+void hl_app_audio_gain(int32_t gain)
+{
+    tx_info.gain = gain;
+
+    if(tx_info.ex_mic_plug == 1) {          
+        if (gain > 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+        } else if (gain < 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+        } else {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
         }
     } else {
-        if((tx_info.on_off_flag == 1)&&(tx_info.ex_mic_plug == 1)) {
-            if(tx_info.gain < 0) {
-                audio_gain = tx_info.gain;
-            } else {
-                audio_gain = 0;
-            }            
-            rt_thread_mdelay(200);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
-            audio_mic_switch = 1;
-        }
-    }
+        gain += 10;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &gain, 4);
+    }  
+}
+
+
+void hl_app_audio_gain_uac(int32_t uac_gain)
+{
+    tx_info.uac_gain = uac_gain;
+
+    if((tx_info.uac_link_flag == 1)&&(tx_info.ex_mic_plug == 0)) {       
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &uac_gain, 4);
+    } 
 }
 #else
 /// 大容量状态处理
@@ -207,6 +251,8 @@ void hl_app_audio_stream_updata(void)
         stream_mode = HL_STREAM_PDM2PLAY;
         hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e)); 
     }
+
+    hl_app_audio_switch();
 #else
     // if (rx_info.uac_link_flag != 0) {
     //     stream_mode = HL_STREAM_CAP2UAC_UAC2PLAY;

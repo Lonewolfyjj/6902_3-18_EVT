@@ -68,7 +68,7 @@ static void            hl_mod_page_home_tx2_update(hl_display_screen_change_s* f
 static void            hl_mod_page_main_update(hl_display_screen_change_s* flag, hl_display_screen_s* now);
 static hl_signal_int_t hl_mod_page_signal_deal(uint8_t data);
 static void            hl_mod_page_lock_event(hl_lvgl_lock_sta_t state);
-static uint8_t         bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho);
+// static uint8_t         bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho);
 static void            hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr);
 static void            hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr);
 static void            hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr);
@@ -226,27 +226,12 @@ static void hl_mod_icon_deal_deinit()
     }
 }
 
-static uint8_t bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho)
-{
-    uint8_t ret;
-
-    if (charge_state) {
-        ret = 2;
-    } else if (charge_state == 0 && bat_val > thresho) {
-        ret = 0;
-    } else if (charge_state == 0 && bat_val <= thresho) {
-        ret = 1;
-    } else {
-        ret = 0;
-    }
-
-    return ret;
-}
-
 static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_top_ioctl_t ioctrl;
-
+    int16_t  bat_state_last;
+    
+    bat_state_last = bat_state.rx;
     bat_state.rx = bat_state_deal(data_ptr->sys_status.rx_charge_status, data_ptr->rx_bat_val, LOWBAT_THRESHOLD);
 
     // 更新当前的RX电量信息
@@ -256,6 +241,7 @@ static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
 
     switch (bat_state.rx) {
         case 0:
+            ioctrl.electric_top = bat_state_last;
             ioctrl.top_cmd = HL_TOP_BAT_COLOR_WHITE;
             hl_mod_top_ioctl(&ioctrl);
 
@@ -263,6 +249,7 @@ static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_top_ioctl(&ioctrl);
             break;
         case 1:
+            ioctrl.electric_top = bat_state_last;
             ioctrl.top_cmd = HL_TOP_BAT_COLOR_RED;
             hl_mod_top_ioctl(&ioctrl);
 
@@ -270,6 +257,7 @@ static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_top_ioctl(&ioctrl);
             break;
         case 2:
+            ioctrl.electric_top = bat_state_last;
             ioctrl.top_cmd = HL_TOP_BAT_COLOR_GREEN;
             hl_mod_top_ioctl(&ioctrl);
 
@@ -284,7 +272,9 @@ static void hl_mod_home_rx_bat_update(hl_display_screen_s* data_ptr)
 static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_main_ioctl_t ioctrl;
-
+    int16_t  bat_state_last;
+    
+    bat_state_last = bat_state.tx1;
     bat_state.tx1 = bat_state_deal(data_ptr->sys_status.tx1_charge_status, data_ptr->tx1_bat_val, LOWBAT_THRESHOLD);
 
     ioctrl.cmd                  = HL_CHANGE_TX1_ELEC;
@@ -293,6 +283,8 @@ static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
 
     switch (bat_state.tx1) {
         case 0:
+            // 删除上一个电量的颜色风格
+            ioctrl.tx_device_1.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX1_BAR_WHITE;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -300,6 +292,7 @@ static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_main_ioctl(&ioctrl);
             break;
         case 1:
+            ioctrl.tx_device_1.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX1_BAR_RED;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -307,6 +300,7 @@ static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_main_ioctl(&ioctrl);
             break;
         case 2:
+            ioctrl.tx_device_1.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX1_BAR_GREEN;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -321,7 +315,9 @@ static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
 static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_main_ioctl_t ioctrl;
-
+    int16_t  bat_state_last;
+    
+    bat_state_last = bat_state.tx2;
     bat_state.tx2 = bat_state_deal(data_ptr->sys_status.tx2_charge_status, data_ptr->tx2_bat_val, LOWBAT_THRESHOLD);
 
     ioctrl.cmd                  = HL_CHANGE_TX2_ELEC;
@@ -330,6 +326,8 @@ static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
 
     switch (bat_state.tx2) {
         case 0:
+            // 删除上一个电量的颜色风格
+            ioctrl.tx_device_2.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX2_BAR_WHITE;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -337,6 +335,8 @@ static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_main_ioctl(&ioctrl);
             break;
         case 1:
+            // 删除上一个电量的颜色风格
+            ioctrl.tx_device_2.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX2_BAR_RED;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -344,6 +344,8 @@ static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_main_ioctl(&ioctrl);
             break;
         case 2:
+            // 删除上一个电量的颜色风格
+            ioctrl.tx_device_2.electric =  (int16_t)bat_state_last ;
             ioctrl.cmd = HL_CHANGE_TX2_BAR_GREEN;
             hl_mod_main_ioctl(&ioctrl);
 
@@ -405,8 +407,9 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.tx_device_1.record         = data_ptr->sys_status.tx1_record_state;
             data.tx_device_1.volume         = data_ptr->tx1_vu;
             hl_mod_main_init(&data);
-            break;
             hl_mod_home_tx1_bat_update(data_ptr);
+            break;
+
         case HL_RF_UNCONNECT:
             data.display_tx_device = HL_DISPLAY_DOUBLE;
 
@@ -913,7 +916,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_main_ioctl(&data2);
         LOG_D("mute2=%d", now->sys_status.tx2_mute_switch);
     }
-
+    
     if (flag->tx2_bat_val || flag->sys_status.tx2_charge_status) {
         hl_mod_home_tx2_bat_update(now);
         hl_mod_display_mux_take();
@@ -922,18 +925,20 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
         LOG_D("update bat tx2 %d,%d", now->sys_status.tx2_charge_status, now->tx2_bat_val);
     }
-
+    
     if (flag->tx2_signal) {
+        // LOG_D("testl4");
         hl_mod_display_mux_take();
-        flag->tx2_bat_val        = 0;
+        flag->tx2_signal        = 0;
         data2.cmd                = HL_CHANGE_TX2_SIGNAL;
         data2.tx_device_2.signal = hl_mod_page_signal_deal(now->tx2_signal);
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
     }
-
+   
     //vu值
     if (flag->tx2_vu) {
+        // LOG_D("testl5");
         hl_mod_display_mux_take();
         flag->tx2_vu             = 0;
         data2.cmd                = HL_CHANGE_TX2_VOL;
@@ -941,7 +946,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
     }
-
+    
     if (flag->sys_status.tx2_record_state) {
         hl_mod_display_mux_take();
         flag->sys_status.tx2_record_state = 0;
@@ -949,6 +954,7 @@ static void hl_mod_page_home_tx2_update(hl_display_screen_change_s* flag, hl_dis
         data2.tx_device_2.record          = (hl_record_status_t)now->sys_status.tx2_record_state;
         hl_mod_display_mux_release();
         hl_mod_main_ioctl(&data2);
+        // LOG_D("testl2");
     }
 }
 
@@ -1007,6 +1013,11 @@ static void hl_mod_page_setup(void)
     hl_display_screen_s* data_ptr = hl_mod_page_get_screen_data_ptr();
 
     main_tx = data_ptr->rf_net_connect;
+
+    // 默认白色
+    bat_state.tx1 = 0;
+    bat_state.rx  = 0;
+    bat_state.tx2 = 0;
     // hl_mod_icon_deal_init();
     hl_mod_page_top_init();
     hl_mod_main_tx_deal_init(data_ptr);
