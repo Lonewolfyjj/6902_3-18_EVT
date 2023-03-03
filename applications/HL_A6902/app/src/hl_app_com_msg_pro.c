@@ -155,7 +155,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", pair_mac_temp[0], pair_mac_temp[1],
                   pair_mac_temp[2], pair_mac_temp[3], pair_mac_temp[4], pair_mac_temp[5]);
 
-            hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+            if (tx_info.local_mac[0] != 0) {       //自己的mac地址不为0，说明 RF 已经启动了
+                rt_memcpy(pair_mac_temp, tx_info.remote_mac, sizeof(pair_mac_temp));
+                hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+            }
         } break;
         case HL_SET_PAIR_MAC_REQ_IND: {  // 请求设置rx的mac地址，为有线配对的流程
             rx_mac_addr = (uint8_t*)p_msg->param.ptr;
@@ -177,7 +180,13 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("tx%d mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", _dev_num, dev_mac_temp[0],
                   dev_mac_temp[1], dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
 
-            hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            if (tx_info.local_mac[0] == 0) {                 //自己的mac地址不为0，说明 RF 已经启动了
+                hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
+                hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);         
+            } else {
+                rt_memcpy(dev_mac_temp, tx_info.local_mac, sizeof(dev_mac_temp));
+                hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            }
         } break;
         case HL_GET_CHARGE_STATE_REQ_IND: {  // 请求获取充电状态
             charge_state_temp = tx_info.charge_flag + 1;
@@ -310,7 +319,13 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_I("rx mac addr: [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]", dev_mac_temp[0], dev_mac_temp[1],
                   dev_mac_temp[2], dev_mac_temp[3], dev_mac_temp[4], dev_mac_temp[5]);
 
-            hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            if (rx_info.local_mac[0] == 0) {                 //自己的mac地址不为0，说明 RF 已经启动了
+                hl_mod_telink_ioctl(HL_RF_GET_LOCAL_MAC_CMD, &_dev_num, 1);
+                hl_mod_telink_ioctl(HL_RF_GET_REMOTE_MAC_CMD, &_dev_num, 1);         
+            } else {
+                rt_memcpy(dev_mac_temp, rx_info.local_mac, sizeof(dev_mac_temp));
+                hl_mod_euc_ctrl(HL_SET_MAC_CMD, dev_mac_temp, sizeof(dev_mac_temp));
+            }
         } break;
         case HL_TX1_PAIR_START_IND: {  //请求开始Tx1有线配对
             LOG_I("Tx1 pair start!");
@@ -382,7 +397,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
                   pair_mac_temp[5], pair_mac_temp[6], pair_mac_temp[7], pair_mac_temp[8], pair_mac_temp[9],
                   pair_mac_temp[10], pair_mac_temp[11]);
 
-            hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+            if (rx_info.local_mac[0] != 0) {       //自己的mac地址不为0，说明 RF 已经启动了
+                rt_memcpy(pair_mac_temp, rx_info.remote_mac, sizeof(pair_mac_temp));
+                hl_mod_euc_ctrl(HL_SET_PAIR_MAC_CMD, pair_mac_temp, sizeof(pair_mac_temp));
+            }
         } break;
         case HL_GET_TURN_ON_STATE_REQ_IND: {
             turn_on_state = 1;
