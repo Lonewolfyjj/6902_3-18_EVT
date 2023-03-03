@@ -1204,7 +1204,8 @@ static void _hl_cap2play_thread_entry(void* arg)
                            p_card_param->abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
-            rt_thread_mdelay(10);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 #if !HL_IS_TX_DEVICE()
@@ -1273,7 +1274,8 @@ static void _hl_cap2uac_thread_entry(void* arg)
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            rt_thread_mdelay(10);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 
@@ -1397,6 +1399,8 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 
