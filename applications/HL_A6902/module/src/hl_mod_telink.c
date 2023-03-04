@@ -430,6 +430,7 @@ static void hl_mod_telink_thread_entry(void* parameter)
     rt_err_t result    = RT_EOK;
     uint16_t count     = 1;
     uint32_t data_size = 0;
+    uint32_t rf_reboot = 1;
     uint8_t  buf[256]  = { 0 };
 
     while (RT_TRUE == s_telink.thread_flag) {
@@ -445,6 +446,21 @@ static void hl_mod_telink_thread_entry(void* parameter)
 
         // 延时5ms
         rt_thread_mdelay(5);
+
+#if !HL_IS_TX_DEVICE()
+        rf_reboot++;
+        rf_reboot %= 3000;
+        if (!rf_reboot) {
+            app_msg_t.cmd       = HL_RF_REBOOT_IND;
+            app_msg_t.len       = 1;
+            app_msg_t.param.ptr = &rf_reboot;
+            rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
+        }
+
+        if (old_pair_info) {
+            rf_reboot = 0;
+        }
+#endif
 
         // LED配对状态灯更新间隔3秒
         count++;

@@ -431,6 +431,13 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(LED_BRITNESS_VAL_CMD, &ptr_rf_value->val, 1);
             break;
 
+        case HL_RF_REBOOT_IND:
+            if (!rx_info.usb_pogo_flag) {
+                LOG_I("[OK]RX Reboot Pair!!! \r\n");
+                hl_mod_telink_ioctl(HL_RF_REBOOT_CMD, &tx1_rssi, 1);
+            }
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
