@@ -39,28 +39,31 @@
 /// 无线模块交互信息结构体
 typedef struct _hl_s_rf_info_t
 {
-    uint8_t                    local_mac[6];
-    hl_rf_remote_mac_t         remote_mac;
-    hl_rf_version_t            version;
-    hl_rf_pair_info_t          mac;
-    hl_rf_rssi_t               rssi;
-    hl_rf_bypass_time_t        time;
-    hl_rf_bypass_version_t     remote_version;
-    hl_rf_bypass_state_t       mute;
-    hl_rf_bypass_state_t       denoise;
-    hl_rf_bypass_state_t       low_cut;
-    hl_rf_bypass_state_t       record;
-    hl_rf_bypass_state_t       charge;
-    hl_rf_bypass_state_t       sound_mix;
-    hl_rf_bypass_state_t       auto_record;
-    hl_rf_bypass_state_t       record_protect;
-    hl_rf_bypass_value_t       status_led;
-    hl_rf_bypass_value_t       uac_gain;
-    hl_rf_bypass_value_t       tx_gain;
-    hl_rf_bypass_value_t       battery;
-    hl_rf_bypass_value_t       auto_poweroff;
-    hl_rf_bypass_value_t       sound_effect;
-    hl_rf_bypass_update_info_t update_info;
+    hl_rf_channel_e       chn;
+    uint8_t               local_mac[6];
+    hl_rf_remote_mac_t    remote_mac;
+    hl_rf_version_t       rf_version;
+    hl_rf_pair_info_t     mac;
+    hl_rf_rssi_t          rssi;
+    hl_rf_bypass_time_t   time;
+    hl_rf_bypass_string_t tx1_version;
+    hl_rf_bypass_string_t tx2_version;
+    hl_rf_bypass_state_t  mute;
+    hl_rf_bypass_state_t  denoise;
+    hl_rf_bypass_state_t  low_cut;
+    hl_rf_bypass_state_t  record;
+    hl_rf_bypass_state_t  charge;
+    hl_rf_bypass_state_t  sound_mix;
+    hl_rf_bypass_state_t  auto_record;
+    hl_rf_bypass_state_t  record_protect;
+    hl_rf_bypass_value_t  status_led;
+    hl_rf_bypass_value_t  uac_gain;
+    hl_rf_bypass_value_t  tx_gain;
+    hl_rf_bypass_value_t  battery;
+    hl_rf_bypass_value_t  auto_poweroff;
+    hl_rf_bypass_value_t  sound_effect;
+    hl_rf_tx_info_t       tx1_info;
+    hl_rf_tx_info_t       tx2_info;
 } hl_rf_info_t;
 
 typedef struct
@@ -99,9 +102,11 @@ static hl_rf_info_t s_rf_info = { 0 };
 static hl_rf_telink_info_t* telink_info = NULL;
 
 /// 记录上次配对状态
-static uint8_t old_pair_info = 0x1f;
+static uint8_t old_pair_info = 0x00;
 /// 记录最新配对状态
-static uint8_t new_pair_info = 0x1f;
+static uint8_t new_pair_info = 0x00;
+/// 记录Telink启动状态
+static uint8_t telink_run_flag = 0x1f;
 
 /* Private function(only *.c)  -----------------------------------------------*/
 
@@ -109,6 +114,7 @@ static void telink_show_val(void)
 {
     LOG_I("\n\nold_pair_info = %02x\n", old_pair_info);
     LOG_I("new_pair_info = %02x\n", new_pair_info);
+    LOG_I("telink_run_flag = %02x\n", telink_run_flag);
 }
 MSH_CMD_EXPORT(telink_show_val, telink show val cmd);
 
@@ -140,12 +146,12 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
 
     switch (hup_frame.cmd) {
         case HL_RF_VERSION_IND:
-            s_rf_info.version.major_ver = ((hl_rf_version_t*)hup_frame.data_addr)->major_ver;
-            s_rf_info.version.mioor_bug = ((hl_rf_version_t*)hup_frame.data_addr)->mioor_bug;
-            s_rf_info.version.miror_rev = ((hl_rf_version_t*)hup_frame.data_addr)->miror_rev;
-            s_rf_info.version.miror_tes = ((hl_rf_version_t*)hup_frame.data_addr)->miror_tes;
-            app_msg_t.len               = sizeof(s_rf_info.version);
-            app_msg_t.param.ptr         = (uint8_t*)&s_rf_info.version;
+            s_rf_info.rf_version.major_ver = ((hl_rf_version_t*)hup_frame.data_addr)->major_ver;
+            s_rf_info.rf_version.mioor_bug = ((hl_rf_version_t*)hup_frame.data_addr)->mioor_bug;
+            s_rf_info.rf_version.miror_rev = ((hl_rf_version_t*)hup_frame.data_addr)->miror_rev;
+            s_rf_info.rf_version.miror_tes = ((hl_rf_version_t*)hup_frame.data_addr)->miror_tes;
+            app_msg_t.len                  = sizeof(s_rf_info.rf_version);
+            app_msg_t.param.ptr            = (uint8_t*)&s_rf_info.rf_version;
             break;
 
         case HL_RF_APP_INFO_IND:
@@ -205,14 +211,27 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_RF_BYPASS_UPDATE_IND:
-            s_rf_info.update_info.chn     = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->chn;
-            s_rf_info.update_info.denoise = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->denoise;
-            s_rf_info.update_info.charge  = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->charge;
-            s_rf_info.update_info.battery = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->battery;
-            s_rf_info.update_info.record  = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->record;
-            s_rf_info.update_info.mute    = ((hl_rf_bypass_update_info_t*)hup_frame.data_addr)->mute;
-            app_msg_t.len                 = sizeof(s_rf_info.update_info);
-            app_msg_t.param.ptr           = (uint8_t*)&s_rf_info.update_info;
+            s_rf_info.chn = ((hl_rf_tx_info_t*)hup_frame.data_addr)->chn;
+            if (HL_RF_LEFT_CHANNEL == s_rf_info.chn) {
+                s_rf_info.tx1_info.chn     = HL_RF_LEFT_CHANNEL;
+                s_rf_info.tx1_info.mute    = ((hl_rf_tx_info_t*)hup_frame.data_addr)->mute;
+                s_rf_info.tx1_info.denoise = ((hl_rf_tx_info_t*)hup_frame.data_addr)->denoise;
+                s_rf_info.tx1_info.charge  = ((hl_rf_tx_info_t*)hup_frame.data_addr)->charge;
+                s_rf_info.tx1_info.battery = ((hl_rf_tx_info_t*)hup_frame.data_addr)->battery;
+                s_rf_info.tx1_info.record  = ((hl_rf_tx_info_t*)hup_frame.data_addr)->record;
+                app_msg_t.len              = sizeof(s_rf_info.tx1_info);
+                app_msg_t.param.ptr        = (uint8_t*)&s_rf_info.tx1_info;
+            } else if (HL_RF_RIGHT_CHANNEL == s_rf_info.chn) {
+                s_rf_info.tx2_info.chn     = HL_RF_RIGHT_CHANNEL;
+                s_rf_info.tx2_info.mute    = ((hl_rf_tx_info_t*)hup_frame.data_addr)->mute;
+                s_rf_info.tx2_info.denoise = ((hl_rf_tx_info_t*)hup_frame.data_addr)->denoise;
+                s_rf_info.tx2_info.charge  = ((hl_rf_tx_info_t*)hup_frame.data_addr)->charge;
+                s_rf_info.tx2_info.battery = ((hl_rf_tx_info_t*)hup_frame.data_addr)->battery;
+                s_rf_info.tx2_info.record  = ((hl_rf_tx_info_t*)hup_frame.data_addr)->record;
+                app_msg_t.len              = sizeof(s_rf_info.tx2_info);
+                app_msg_t.param.ptr        = (uint8_t*)&s_rf_info.tx2_info;
+            } else {
+            }
             break;
 
         case HL_RF_BYPASS_MUTE_IND:
@@ -285,11 +304,19 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_RF_BYPASS_VERSION_IND:
-            s_rf_info.remote_version.chn     = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->chn;
-            s_rf_info.remote_version.mcu_ver = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->mcu_ver;
-            s_rf_info.remote_version.rf_ver  = ((hl_rf_bypass_version_t*)hup_frame.data_addr)->rf_ver;
-            app_msg_t.len                    = sizeof(s_rf_info.remote_version);
-            app_msg_t.param.ptr              = (uint8_t*)&s_rf_info.remote_version;
+            s_rf_info.chn = ((hl_rf_bypass_string_t*)hup_frame.data_addr)->chn;
+            if (HL_RF_LEFT_CHANNEL == s_rf_info.chn) {
+                rt_memset(&s_rf_info.tx1_version, 0, sizeof(s_rf_info.tx1_version));
+                rt_memcpy(&s_rf_info.tx1_version, hup_frame.data_addr, sizeof(s_rf_info.tx1_version));
+                app_msg_t.len       = sizeof(s_rf_info.tx1_version);
+                app_msg_t.param.ptr = (uint8_t*)&s_rf_info.tx1_version;
+            } else if (HL_RF_RIGHT_CHANNEL == s_rf_info.chn) {
+                rt_memset(&s_rf_info.tx2_version, 0, sizeof(s_rf_info.tx2_version));
+                rt_memcpy(&s_rf_info.tx2_version, hup_frame.data_addr, sizeof(s_rf_info.tx2_version));
+                app_msg_t.len       = sizeof(s_rf_info.tx2_version);
+                app_msg_t.param.ptr = (uint8_t*)&s_rf_info.tx2_version;
+            } else {
+            }
             break;
 
         case HL_RF_BYPASS_STATUS_LED_IND:
@@ -437,7 +464,8 @@ static void hl_mod_telink_thread_entry(void* parameter)
             result = rt_mq_send(s_telink.app_msq, (void*)&app_msg_t, sizeof(app_msg_t));
             if (RT_ERROR != result) {
                 // 更新配对状态
-                old_pair_info = new_pair_info;
+                old_pair_info   = new_pair_info;
+                telink_run_flag = old_pair_info;
             } else {
                 LOG_E("[%s][line:%d] Send MSG(pair info) To APP Error!!! \r\n", __FUNCTION__, __LINE__, result);
             }
@@ -781,6 +809,48 @@ void telink_set_remote_mac(int argc, char** argv)
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
+void telink_open_emi(int argc, char** argv)
+{
+    if (argc != 4) {
+        LOG_E("\n[error]send EMI(telink_emi + ant_sel + freq_chn + power_level)\n");
+    }
+
+    uint8_t buf[3] = { 0 };
+
+    buf[0] = (uint8_t)atoi(argv[1]);
+    buf[1] = (uint8_t)atoi(argv[2]);
+    buf[2] = (uint8_t)atoi(argv[3]);
+
+    LOG_I("[OK]Telink Open EMI\n");
+    rt_kprintf("--> ANT_SEL = %d\n", buf[0]);
+    rt_kprintf("--> FREQ_CHN = %d\n", buf[1]);
+    rt_kprintf("--> POWER_LEVEL = %d\n\n", buf[2]);
+
+    hl_mod_telink_ioctl(0x51, buf, 3);
+}
+MSH_CMD_EXPORT(telink_open_emi, Telink Open EMI cmd);
+
+void telink_close_emi(int argc, char** argv)
+{
+    LOG_I("[OK]Telink Close EMI\n");
+
+#if HL_IS_TX_DEVICE()
+    // 使能TX相关GPIO引脚
+    hl_hal_gpio_low(GPIO_DC3V3_EN);
+    hl_hal_gpio_low(GPIO_2831P_EN);
+    hl_hal_gpio_low(GPIO_RF_PWR_EN);
+    rt_thread_mdelay(1000);
+    hl_hal_gpio_high(GPIO_DC3V3_EN);
+    hl_hal_gpio_high(GPIO_2831P_EN);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#else
+    // 使能RX相关GPIO引脚
+    hl_hal_gpio_low(GPIO_RF_PWR_EN);
+    rt_thread_mdelay(1000);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#endif
+}
+MSH_CMD_EXPORT(telink_close_emi, Telink Close EMI cmd);
 /*
  * EOF
  */
