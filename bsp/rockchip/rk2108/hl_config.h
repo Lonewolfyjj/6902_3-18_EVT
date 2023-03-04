@@ -19,7 +19,7 @@
 
 #elif A6902_RX_HL_CH
 
-#define A6902_VERSION "V1.0.2.14"
+#define A6902_VERSION "V1.0.2.16"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_JF_CH
