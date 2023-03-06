@@ -275,7 +275,7 @@ static void hl_screen_task(void* param)
             screen_sta = 1;
         }
         screen_cnt++;
-        rt_thread_mdelay(50);
+        rt_thread_mdelay(5);
     }    
 }
 
@@ -283,7 +283,7 @@ static void hl_screen_task(void* param)
 static void screen_thread_creat(void)
 {
     screen_tid = rt_thread_create("screen_thread", hl_screen_task, RT_NULL, 512,
-                                   25, 5);
+                                   10, 5);
 
     if (screen_tid != RT_NULL) {
         rt_kprintf("screen_thread thread init ok!\r\n");
