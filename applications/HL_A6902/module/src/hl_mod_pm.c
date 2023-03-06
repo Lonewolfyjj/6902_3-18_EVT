@@ -334,7 +334,7 @@ static void _guage_state_update()
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
     }
 
-    if (_pm_mod.bat_info.soc.soc <= 3) {
+    if (_pm_mod.bat_info.soc.soc <= 3 && hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
         _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
     }
 }
