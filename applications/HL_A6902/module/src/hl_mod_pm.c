@@ -578,7 +578,8 @@ static void _pm_thread_entry(void* arg)
 
 int hl_mod_pm_init(rt_mq_t msg_hd)
 {
-    int ret;
+    int                  ret;
+    HL_SGM_INPUT_PARAM_T sgm_param;
 
     if (_pm_mod.init_flag == true) {
         LOG_W("pm is already inited!");
@@ -595,6 +596,12 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         _pm_mod.charger = HL_MOD_PM_CHARGER_SGM41518;
         pm_ioctl        = hl_drv_sgm41518_io_ctrl;
         LOG_I("sgm41518 charger init success!");
+
+        sgm_param.cfg_opt = RW_EN_BAT_CHARGING;
+        sgm_param.param   = 0;
+        hl_drv_sgm41518_io_ctrl(SGM_WRITE_CMD, &sgm_param, 1);
+        sgm_param.param = 1;
+        hl_drv_sgm41518_io_ctrl(SGM_WRITE_CMD, &sgm_param, 1);
     } else {
         _pm_mod.charger = HL_MOD_PM_CHARGER_UNKNOWN;
         LOG_E("all charger init err! please check charger");
