@@ -320,7 +320,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
-        rt_thread_mdelay(25);
+        rt_thread_mdelay(20);
         hl_mod_feed_dog();
     }
 }

@@ -2321,7 +2321,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
 
     LOG_D("audio ctrl thread run");
     while (1) {
-#ifdef RT_USB_DEVICE_UAC1
+#if 0 //def RT_USB_DEVICE_UAC1
         msg = 0;
         while (RT_EOK == rt_mb_recv(uac_info.p_mailbox, &msg, 0)) {
             switch (msg) {
