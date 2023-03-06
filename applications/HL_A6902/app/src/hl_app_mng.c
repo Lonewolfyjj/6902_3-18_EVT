@@ -320,7 +320,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
-        rt_thread_mdelay(5);
+        rt_thread_mdelay(25);
         hl_mod_feed_dog();
     }
 }
@@ -346,7 +346,7 @@ void hl_app_mng_init(void)
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 9, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 10, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -489,7 +489,21 @@ int hl_app_info(int argc, char** argv)
 INIT_APP_EXPORT(hl_app_mng_init);
 MSH_CMD_EXPORT(hl_app_info, show app info cmd);
 
+
 MSH_CMD_EXPORT(hl_app_param_reset, show app info cmd);
+
+static void _hl_et_sche_hook(rt_thread_t from, rt_thread_t to)
+{
+    rt_kprintf("%s[%d]->%s[%d]\r\n", from->name, from->remaining_tick, to->name, to->remaining_tick);
+}
+
+static int set_sche_hook(int argc, char **argv)
+{
+    rt_scheduler_sethook(_hl_et_sche_hook);
+    return 0;
+}
+
+MSH_CMD_EXPORT(set_sche_hook, set_sche_hook);
 /*
  * EOF
  */
