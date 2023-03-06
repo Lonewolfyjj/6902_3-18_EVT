@@ -372,7 +372,7 @@ static int _hl_mod_apple_auth_start()
         s_apple.apple.iap2.main_status = EM_HL_IAP2_STM_MAIN_IDLE;
         // 创建线程
         hl_mod_apple_auth_iap2_thread =
-            rt_thread_create("apple_auth_iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
+            rt_thread_create("iap2", hl_mod_apple_auth_iap2_thread_entry, RT_NULL, IAP2_THREAD_STACK_SIZE,
                              IAP2_THREAD_PRIORITY, IAP2_THREAD_TIMESLICE);
         if (RT_NULL == hl_mod_apple_auth_iap2_thread) {
             LOG_I("hl_mod_apple_auth_iap2_thread create faild!\n");
@@ -390,7 +390,7 @@ static int _hl_mod_apple_auth_start()
     if (!s_apple.eap_start_flag) {
         // 创建线程
         hl_mod_apple_auth_eap_thread =
-            rt_thread_create("apple_auth_eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL, EAP_THREAD_STACK_SIZE,
+            rt_thread_create("eap", hl_mod_apple_auth_eap_thread_entry, RT_NULL, EAP_THREAD_STACK_SIZE,
                              EAP_THREAD_PRIORITY, EAP_THREAD_TIMESLICE);
         if (RT_NULL == hl_mod_apple_auth_eap_thread) {
             LOG_I("hl_mod_apple_auth_eap_thread create faild!\n");

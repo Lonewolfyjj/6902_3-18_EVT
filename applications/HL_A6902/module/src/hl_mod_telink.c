@@ -77,8 +77,8 @@ typedef struct
 /* define --------------------------------------------------------------------*/
 
 #define TELINK_THREAD_STACK_SIZE 1024
-#define TELINK_THREAD_PRIORITY 20
-#define TELINK_THREAD_TIMESLICE 10
+#define TELINK_THREAD_PRIORITY 25
+#define TELINK_THREAD_TIMESLICE 100
 #define TELINK_UART_DEV_NAME "uart2"
 #define TELINK_UART_BUF_SIZE 1024
 #define TELINK_FIFO_BUF_SIZE 1024
