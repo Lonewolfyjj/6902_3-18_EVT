@@ -237,6 +237,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("app get TX%d Refactory", bypass_chn);
             break;
 
+        case HL_RF_ENTER_BQB_IND:
+            LOG_D("TX app get BQB Ack, Please Reboot Device!!!!\n");
+            break;
+
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -427,6 +431,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 LOG_I("[OK]RX Reboot Pair!!! \r\n");
                 hl_mod_telink_ioctl(HL_RF_REBOOT_CMD, &tx1_rssi, 1);
             }
+            break;
+
+        case HL_RF_ENTER_BQB_IND:
+            LOG_D("RX app get BQB Ack, Please Reboot Device!!!!\n");
             break;
 
         default:

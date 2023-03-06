@@ -7,6 +7,8 @@
 // 用于指示型号配置结束，注意该文件不可以加入文件头部注释，除了管理员外不可以在该行自行添加任何注释，否则编译会出问题
 // indicate end of config, do not add any comment in this line except the maintainer
 
+#define BQB_TEST 1
+
 #if A6902_TX_HL
 
 #define A6902_VERSION "V1.0.2.21"

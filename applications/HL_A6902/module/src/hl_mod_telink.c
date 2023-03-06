@@ -360,6 +360,11 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             app_msg_t.param.ptr = (uint8_t*)&s_rf_info.time;
             break;
 
+        case HL_RF_ENTER_BQB_IND:
+            app_msg_t.len             = sizeof(uint32_t);
+            app_msg_t.param.u32_param = (uint32_t)hup_frame.data_addr[0];
+            break;
+
         default:
             break;
     }
