@@ -2360,7 +2360,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 5 && idx >= 1000) {    
+        if(count_vu >= 5 && idx >= 50) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
@@ -2374,13 +2374,12 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
-#endif
-        rt_thread_mdelay(20);
-        
-        if (idx < 1001) {
+
+        if (idx <= 50) {
             idx++;
         }
-
+#endif
+        rt_thread_mdelay(20); 
     }
 }
 
