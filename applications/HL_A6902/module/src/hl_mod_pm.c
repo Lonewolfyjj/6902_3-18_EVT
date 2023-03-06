@@ -369,7 +369,7 @@ static void _guage_state_poll()
     if (count == 0) {
         // _guage_err_monitor();
         _guage_state_update();
-        count = 500;
+        count = 50;
     } else {
         count--;
     }
@@ -430,7 +430,7 @@ static void _charger_charge_state_poll(void)
 
     if (count == 0) {
         _charger_charge_state_update();
-        count = 100;
+        count = 10;
     } else {
         count--;
     }
@@ -563,8 +563,8 @@ static void _pm_thread_entry(void* arg)
         _charge_state_judge();
         _charge_full_timer_set();
 
-        rt_thread_mdelay(10);
-        if (delay_time++ > 500) {
+        rt_thread_mdelay(100);
+        if (delay_time++ > 50) {
             delay_time = 0;
             _hl_mod_pmwdg();
             _hl_mod_pm_input_check();
@@ -698,7 +698,7 @@ int hl_mod_pm_start(void)
     rt_timer_start(&(_pm_mod.shutdown_timer));
 #endif
 
-    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
+    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
         LOG_E("pm thread create failed");
         return HL_MOD_PM_FUNC_RET_ERR;
