@@ -622,7 +622,7 @@ static void _euc_thread_entry(void* arg)
         _record_hid_cmd_send_poll();
 #endif
 
-        rt_thread_mdelay(10);
+        rt_thread_mdelay(50);
     }
 
     _euc_mod.thread_exit_flag = -1;
