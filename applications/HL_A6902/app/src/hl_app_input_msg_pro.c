@@ -138,8 +138,9 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
             rf_bypass_value.chn = tx_info.rf_chn;
             rf_bypass_value.val = tx_info.denoise_flag;
             hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, sizeof(denoise_switch));
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, sizeof(denoise_switch));            
             hl_app_disp_state_led_set();
+            hl_util_nvram_param_set_integer("DENOISE_OPEN", denoise_switch);
             break;
         case HL_KEY_EVENT_LONG:
             channel = 0;

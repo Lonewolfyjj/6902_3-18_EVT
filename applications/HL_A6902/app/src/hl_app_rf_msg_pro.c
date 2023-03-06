@@ -201,9 +201,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 bypass_switch        = HL_SWITCH_OFF;
                 tx_info.denoise_flag = 0;
             }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));     
             hl_app_disp_state_led_set();
-            LOG_D("app get RX Denoise(%d)", bypass_switch);
+            hl_util_nvram_param_set_integer("DENOISE_OPEN", bypass_switch);
+            LOG_D("app get TX%d Denoise(%d)", ptr_rf_value->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_STATUS_LED_IND:
@@ -232,7 +233,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_REFACTORY_IND:
             bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
-            LOG_D("app get RX Refactory");
+            hl_app_param_reset();
+            LOG_D("app get TX%d Refactory", bypass_chn);
             break;
 
         default:

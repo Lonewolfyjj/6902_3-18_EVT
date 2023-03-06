@@ -129,8 +129,12 @@ void hl_app_audio_gain(int32_t gain)
     if(tx_info.ex_mic_plug == 1) {          
         if (gain > 0) {
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+            gain = 0;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);            
         } else if (gain < 0) {
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+            gain = 0;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
         } else {
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
