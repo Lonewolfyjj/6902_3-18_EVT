@@ -1088,7 +1088,7 @@ static void do_record_audio(void* arg)
     while (1) {
         if ((rt_ringbuffer_data_len(record_info.record_after_rb) < record_size) || (s_record_switch != 1)
             || (rt_ringbuffer_data_len(record_info.record_bypass_rb) < record_size1)) {
-            rt_thread_delay(1);
+            rt_thread_delay(10);
         } else {
             if (rt_ringbuffer_data_len(record_info.record_after_rb) >= record_size) {
                 rt_ringbuffer_get(record_info.record_after_rb, record_buffer, record_size);
@@ -1994,7 +1994,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 10 && idx >= 1000) {    
+        if(count_vu >= 5 && idx >= 1000) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
@@ -2009,7 +2009,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
             }
         }
 #endif
-        rt_thread_mdelay(10);
+        rt_thread_mdelay(20);
         
         if (idx < 1001) {
             idx++;
@@ -2068,7 +2068,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
         goto err3;
     }
 
-    record_thread_id = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, 16, 1);
+    record_thread_id = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, 10, 1);
     if (record_thread_id != RT_NULL) {
         rt_thread_startup(record_thread_id);
     } else {
@@ -2077,7 +2077,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 10, 5);
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
