@@ -150,10 +150,10 @@ typedef enum _rtc_device_e
 #define HL_PDM_CAP_DEV "pdmc"
 
 // 延时时间，单位ms
-// 1579*114   = 180000 ms
-// #define HL_RECORD_TIME_CNT  1579
+// 1579*114   = 1800000 ms
+#define HL_RECORD_TIME_CNT  15790
 // 176*114 = 20000 ms
-#define HL_RECORD_TIME_CNT  88
+// #define HL_RECORD_TIME_CNT  5264
 
 #define HL_RECORD_FILE_CNT  99999
 #else
@@ -645,7 +645,7 @@ static char rm_file_name_bypass[64];
 //-bypass.wav
 static void old_files_swap(struct dirent* dirent, char* cnt_s)
 {
-    rt_memset(rm_file_name_after, 0, 64);
+
     rt_memset(rm_file_name_bypass, 0, 64);
 
 
@@ -654,10 +654,10 @@ static void old_files_swap(struct dirent* dirent, char* cnt_s)
     strncat(rm_file_name_bypass, "/", 1);
     strncat(rm_file_name_bypass, dirent->d_name, rt_strlen(dirent->d_name));
 
-    strncat(rm_file_name_after, rm_file_name, rt_strlen(rm_file_name));
-    strncat(rm_file_name_after, "/", 1);
-    strncat(rm_file_name_after, dirent->d_name, rt_strlen(dirent->d_name) - 11);
-    strncat(rm_file_name_after, "-after.wav", sizeof("-after.wav"));
+    // strncat(rm_file_name_after, rm_file_name, rt_strlen(rm_file_name));
+    // strncat(rm_file_name_after, "/", 1);
+    // strncat(rm_file_name_after, dirent->d_name, rt_strlen(dirent->d_name) - 11);
+    // strncat(rm_file_name_after, "-after.wav", sizeof("-after.wav"));
 }
 
 // 找到文件删除
@@ -701,7 +701,7 @@ static int hl_mod_find_oledfile(uint8_t* state)
                     file_num = rt_strlen(dirent->d_name);
                     // 如果是文件
                     if (S_ISREG(stat.st_mode) && s && file_num >= 21 && file_num <= 25) {
-
+                        rt_memset(file_char, 0, 10);
                         file_num = rt_strlen(dirent->d_name) - 20;
                         rt_memcpy(file_char, dirent->d_name + 9, file_num);
                         // rt_kprintf("num:(%s)\n", file_char);
@@ -709,12 +709,14 @@ static int hl_mod_find_oledfile(uint8_t* state)
                         if (file_num <= HL_RECORD_FILE_CNT) {
 
                             if (*state == 0) {
+                                rt_kprintf("\nd(%d)\n", file_num);
                                 record_file_cout.min = file_num;
                                 old_files_swap(dirent, file_char);
                                 ret    = 2;
                                 *state = 1;
                             } else {
                                 if (file_num <= record_file_cout.min) {
+                                    rt_kprintf("\n1d(%d)\n", file_num);
                                     record_file_cout.min = file_num;
                                     old_files_swap(dirent, file_char);
                                     ret = 2;
@@ -769,6 +771,10 @@ static int hl_mod_audio_record_self_del(void)
         ret = hl_mod_find_rmfile(RT_SDCARD_MOUNT_POINT);
 
         if (2 == ret) {
+            rt_memset(rm_file_name_after, 0, 64);
+
+            strncat(rm_file_name_after, rm_file_name_bypass, rt_strlen(rm_file_name_bypass) - 11);
+            strncat(rm_file_name_after, "-after.wav", sizeof("-after.wav"));
 
             ret = unlink(rm_file_name_bypass);
             if (ret == -1) {
@@ -858,10 +864,15 @@ static int hl_mod_audio_record_front_inspection(void)
     rt_sprintf(timer_name_after, "%s/%s-%d-after.wav", timer_name_file, &timer_name[11], record_file_cout.max);
     rt_sprintf(timer_name_bypass, "%s/%s-%d-bypass.wav", timer_name_file, &timer_name[11], record_file_cout.max);
 
+    LOG_I("file(%d)", record_file_cout.max);
+    
     if (record_file_cout.max == HL_RECORD_FILE_CNT) {
         record_file_cout.max = 0;
+        hl_util_nvram_param_set_integer("TX_FCNT_MAX", record_file_cout.max);
+
     } else {
         record_file_cout.max++;
+        hl_util_nvram_param_set_integer("TX_FCNT_MAX", record_file_cout.max);
     }
 
     record_file_cout.record_cnt = HL_RECORD_TIME_CNT;
@@ -1410,6 +1421,8 @@ static void do_record_audio(void* arg)
     static uint8_t s_denoise_switch = 0;
     char*          record_buffer1;
     uint32_t       record_size1;
+    uint8_t record_ins_flag_after = 0;
+    uint8_t record_ins_flag_bypass = 0;
 
     record_size   = dsp_config->buffer_size_b24_1ch * 57;
     record_buffer = rt_malloc(record_size);
@@ -1432,16 +1445,21 @@ static void do_record_audio(void* arg)
         } else {
             // rt_kprintf("s%d",rt_tick_get());
             if (rt_ringbuffer_data_len(record_info.record_after_rb) >= record_size) {
+                record_ins_flag_after =1;
                 rt_ringbuffer_get(record_info.record_after_rb, record_buffer, record_size);
                 hl_mod_audio_record(record_info.file_audio_after, record_buffer, record_size, &s_record_after_size);
             }
 
             if (rt_ringbuffer_data_len(record_info.record_bypass_rb) >= record_size1) {
+                record_ins_flag_bypass = 1;
                 rt_ringbuffer_get(record_info.record_bypass_rb, record_buffer1, record_size1);
                 hl_mod_audio_record(record_info.file_audio_bypass, record_buffer1, record_size1, &s_record_bypass_size);
             }
-            if (s_record_switch == 1) {
+
+            if (record_ins_flag_after == 1 && record_ins_flag_bypass == 1) {
                 hl_mod_audio_record_segm_inspection(1);
+                record_ins_flag_after  = 0;
+                record_ins_flag_bypass = 0;
             }
         }
     }
