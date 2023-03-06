@@ -110,18 +110,20 @@ void hl_app_pm_timer_set(void)
         cmd = HL_PM_START_SHUTDOWN_TIMER_CMD;
         LOG_I("start No-Operation-Timer!");
     }
-#else
-    if (rx_info.usb_pogo_flag == true || rx_info.usb_plug == true
-        || rx_info.rf_state != HL_RF_UNCONNECT && rx_info.rf_state != HL_RF_PAIRING) {
-        cmd = HL_PM_STOP_SHUTDOWN_TIMER_CMD;
-        LOG_I("stop No-Operation-Timer!");
-    } else {
-        cmd = HL_PM_START_SHUTDOWN_TIMER_CMD;
-        LOG_I("start No-Operation-Timer!");
-    }
-#endif
 
     hl_mod_pm_ctrl(cmd, RT_NULL, 0);
+#else
+    // if (rx_info.usb_pogo_flag == true || rx_info.usb_plug == true
+    //     || rx_info.rf_state != HL_RF_UNCONNECT && rx_info.rf_state != HL_RF_PAIRING) {
+    //     cmd = HL_PM_STOP_SHUTDOWN_TIMER_CMD;
+    //     LOG_I("stop No-Operation-Timer!");
+    // } else {
+    //     cmd = HL_PM_START_SHUTDOWN_TIMER_CMD;
+    //     LOG_I("start No-Operation-Timer!");
+    // }
+
+    // hl_mod_pm_ctrl(cmd, RT_NULL, 0);
+#endif
 }
 
 static void hl_app_pm_close_no_operation_timer(void)

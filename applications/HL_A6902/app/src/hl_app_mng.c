@@ -185,21 +185,21 @@ void hl_app_param_fun(void)
     hl_util_nvram_param_get_integer("TX_GAIN", &param, 0);
     hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 1);
     hl_util_nvram_param_get_integer("TX_GAIN2", &param, 0);
-    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 1);
-    
+    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 0);
+
     hl_util_nvram_param_get_integer("TX_UAC_GAIN", &param, 0);
     hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 1);
 
-    param = rx_info.cam_gain_l/2;
-    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+    param = rx_info.cam_gain_l / 2;
+    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
 
-    param = rx_info.cam_gain_r/2;
-    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+    param = rx_info.cam_gain_r / 2;
+    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
 
-    param = rx_info.hp_gain/2;
-    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
+    param = rx_info.hp_gain / 2;
+    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 0);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
     // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
 }
@@ -285,7 +285,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 500) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 0) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -320,7 +320,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
-        rt_thread_mdelay(5);
+        rt_thread_mdelay(20);
         hl_mod_feed_dog();
     }
 }
@@ -346,7 +346,7 @@ void hl_app_mng_init(void)
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 10, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -389,10 +389,10 @@ void hl_app_mng_powerOn(void)
     if (msc_open_flag == 1) {
         hl_mod_audio_deinit();  //hl_mod_audio_init(&hl_app_mq);
     }
-#endif
 
     hl_mod_apple_auth_init(&hl_app_mq);
-    hl_mod_apple_auth_start();
+#endif
+
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
@@ -491,6 +491,19 @@ MSH_CMD_EXPORT(hl_app_info, show app info cmd);
 
 
 MSH_CMD_EXPORT(hl_app_param_reset, show app info cmd);
+
+static void _hl_et_sche_hook(rt_thread_t from, rt_thread_t to)
+{
+    rt_kprintf("%s[%d]->%s[%d]\r\n", from->name, from->remaining_tick, to->name, to->remaining_tick);
+}
+
+static int set_sche_hook(int argc, char **argv)
+{
+    rt_scheduler_sethook(_hl_et_sche_hook);
+    return 0;
+}
+
+MSH_CMD_EXPORT(set_sche_hook, set_sche_hook);
 /*
  * EOF
  */

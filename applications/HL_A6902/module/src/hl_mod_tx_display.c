@@ -142,7 +142,8 @@ static void _display_state_check_1(void)
         state = HL_DISPLAY_CONNECTED;
     } else if (_display_mod.net_mode == LED_NET_MODE_RECONNECTION) {
         state = HL_DISPLAY_RECONNECT;
-    } else if (_display_mod.bat_soc >= 95 && _display_mod.charge_state != NOT_CHARGE) {  //此处开始是关机的情况
+    } else if ((_display_mod.bat_soc >= 95 && _display_mod.charge_state != NOT_CHARGE)
+               || _display_mod.charge_state == FULL_CHARGE) {  //此处开始是关机的情况
         state = HL_DISPLAY_CHARGE_FULL;
     } else if (_display_mod.charge_state == NOT_CHARGE) {
         state = HL_DISPLAY_CHARGE_STOP;
@@ -410,7 +411,7 @@ uint8_t hl_mod_display_init(void* display_msq)
     _display_mod.thread_exit_flag = 0;
 
     _display_mod.display_thread =
-        rt_thread_create("hl_mod_display_thread", _display_thread_entry, RT_NULL, 1024, 15, 5);
+        rt_thread_create("hl_mod_display_thread", _display_thread_entry, RT_NULL, 1024, 25, 5);
     if (_display_mod.display_thread == RT_NULL) {
         LOG_E("display thread create failed");
         return HL_DISPLAY_FAILED;
@@ -554,7 +555,6 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             _display_mod.led_brightness = *(uint8_t*)ptr;
 
             hl_util_nvram_param_set_integer("LED_BRIGHTNESS", _display_mod.led_brightness);
-            hl_util_nvram_param_save();
 
             ret = _set_brightness();
             if (ret == HL_DISPLAY_FAILED) {

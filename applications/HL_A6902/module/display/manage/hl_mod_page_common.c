@@ -128,7 +128,7 @@ void hl_mod_display_mux_init(void)
 void hl_mod_display_mux_take(void)
 {
     if (display_mux) {
-        rt_mutex_take(display_mux, RT_WAITING_FOREVER);
+        rt_mutex_take(display_mux, 1000);
     }
 }
 

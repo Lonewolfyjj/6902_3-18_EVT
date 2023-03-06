@@ -56,6 +56,7 @@ static rt_err_t _hl_drv_usb_vendor_class_com_rx_ind(rt_device_t dev, rt_size_t s
 
 static rt_err_t _hl_drv_usb_vendor_class_com_tx_ind(rt_device_t dev, void* buffer)
 {
+    // rt_kprintf("USB TX Free Sem...\n");
     rt_sem_release(handle->tx_notice);
     return RT_EOK;
 }
@@ -81,7 +82,7 @@ uint8_t hl_drv_usb_vendor_class_com_init()
     RT_ASSERT(result == RT_EOK);
 
     handle->rx_notice = rt_sem_create("winusb_rx", 1, RT_IPC_FLAG_FIFO);
-    handle->tx_notice = rt_sem_create("winusb_tx", 0, RT_IPC_FLAG_FIFO);
+    handle->tx_notice = rt_sem_create("winusb_tx", 1, RT_IPC_FLAG_FIFO);
     if (handle->rx_notice == RT_NULL || handle->tx_notice == RT_NULL) {
         rt_kprintf("create dynamic semaphore failed.\n");
         return 3;
@@ -126,11 +127,15 @@ uint8_t hl_drv_usb_vendor_class_com_ioctl(uint8_t cmd, uint8_t* data, uint16_t l
 
 uint8_t hl_drv_usb_vendor_class_com_write(uint8_t* data, uint8_t data_len)
 {
-    uint8_t result = 0;
-    if (rt_device_write(handle->device, 0, data, data_len) == data_len) {
-        /*Must wait the usb send data finish */
-        result = rt_sem_take(handle->tx_notice, RT_WAITING_FOREVER);
-    } else {
+    uint8_t   result = 0;
+    rt_size_t size   = 0;
+    // rt_kprintf("USB TX Wait Sem...\n");
+    // 1.Get Tx Sem
+    result = rt_sem_take(handle->tx_notice, 500);
+    // rt_kprintf("USB TX Get Sem...\n");
+    // 2.Write Tx Data
+    size = rt_device_write(handle->device, 0, data, data_len);
+    if (size != data_len) {
         result = RT_ERROR;
     }
     return result;

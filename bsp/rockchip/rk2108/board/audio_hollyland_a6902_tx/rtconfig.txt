@@ -169,7 +169,7 @@
 #define RT_MMCSD_MAX_PARTITION 16
 #define RT_SDCARD_MOUNT_POINT "/mnt/sdcard"
 /* RT_SDIO_DEBUG is not set */
-#define RT_EMMC_USE_DDR_MOD
+/* RT_EMMC_USE_DDR_MOD is not set */
 #define RT_USING_SPI
 /* RT_USING_QSPI is not set */
 /* RT_USING_SPI_MSD is not set */

@@ -154,7 +154,7 @@ static rt_size_t rockchip_i2c_xfer(struct rt_i2c_bus_device *bus, struct rt_i2c_
     struct rockchip_i2c *i2c = bus->priv;
     struct I2C_HANDLE *pI2C = &i2c->instance;
     int i, ret = 0;
-    bool use_interrupt = true;
+    bool use_interrupt = false;
     const struct HAL_I2C_DEV *i2c_dev = i2c->dev;
 
     pm_runtime_request(i2c_dev->runtimeID);

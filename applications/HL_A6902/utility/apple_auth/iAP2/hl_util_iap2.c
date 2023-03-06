@@ -209,7 +209,12 @@ static int _hl_iap2_identify_process(hl_util_apple_p apple)
         case EM_HL_IAP2_STM_IDENTIFY_IDENTIFICATION_ACCEPTED:
             result = hl_iap2_identify_identification_accepted(apple);
             if (!result) {
+#if POWERUPDATE_OPEN
                 apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_POWER_UPDATE;
+#else
+                hl_iap2_link_send_ack(apple);
+                apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_SUCCEED;
+#endif
             } else {
                 apple->log("[ERROR][%s][line:%d][%d] identify set info!\n", __func__, __LINE__, result);
                 apple->iap2.main_status = EM_HL_IAP2_STM_MAIN_FAILED;
