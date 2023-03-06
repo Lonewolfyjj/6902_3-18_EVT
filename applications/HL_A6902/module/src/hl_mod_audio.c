@@ -754,6 +754,10 @@ static int hl_mod_audio_record_self_del(void)
     uint8_t       i = 0;
     ret             = dfs_statfs(RT_SDCARD_MOUNT_POINT, &buffer);
 
+    // LOG_D("free disk %ld\n", buffer.f_bfree);
+    // LOG_D("blk size %ld\n", buffer.f_bsize);
+    // LOG_D("ret %ld\n", ret);
+
     if (ret != 0) {
         LOG_D("no free disk get!");
         return -1;
@@ -799,7 +803,7 @@ static int hl_mod_audio_record_self_del(void)
         }
         i++;
         ret = dfs_statfs(RT_SDCARD_MOUNT_POINT, &buffer);
-        // LOG_D("free disk %ld\n", free_size);
+        // LOG_D("free disk %ld\n", buffer.f_bfree);
         if (ret != 0) {
             LOG_D("no free disk get!");
             return -1;
