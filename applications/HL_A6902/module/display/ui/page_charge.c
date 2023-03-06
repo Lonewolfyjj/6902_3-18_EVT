@@ -319,6 +319,19 @@ static void tx2_style_del(int16_t data)
     }
 }
 
+static int16_t hl_ioctl_power_limit(int16_t power)
+{
+    if((power >= 0) || (power <= 100)){
+        return power;
+    }else if(power < 0){
+        rt_kprintf("Charge power out of limit : %d\n",power);
+        return 0;
+    }else if(power > 100){
+        rt_kprintf("Charge power out of limit : %d\n",power);
+        return 100;
+    }
+}
+
 void hl_mod_charge_ioctl(void * ctl_data)
 {
     char buf[8] = {0,0,0,0,0,0,0,0};
@@ -329,7 +342,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_tx1,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX1;
                 lv_obj_del(area_tx1);
-                rt_thread_mdelay(5);                 
+                rt_thread_mdelay(10);                 
             }            
             break;
         case HL_DELETE_RX_DEVICE:
@@ -337,7 +350,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_rx,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_RX;
                 lv_obj_del(area_rx);
-                rt_thread_mdelay(5);                 
+                rt_thread_mdelay(10);                 
             }  
             break;
         case HL_DELETE_TX2_DEVICE:
@@ -345,7 +358,7 @@ void hl_mod_charge_ioctl(void * ctl_data)
                 // hl_obj_delete(area_tx2,true);
                 charge_init.display_device &= ~HL_CHARGE_DISPLAY_TX2;
                 lv_obj_del(area_tx2);
-                rt_thread_mdelay(5); 
+                rt_thread_mdelay(10); 
             }  
             break;
         
@@ -369,21 +382,25 @@ void hl_mod_charge_ioctl(void * ctl_data)
             break;
 
         case HL_CHARGE_CHANGE_BOX_ELEC:
+            ptr->electric.electric_box = hl_ioctl_power_limit(ptr->electric.electric_box);
             lv_bar_set_value(bar_power4, ptr->electric.electric_box, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_box);
             lv_label_set_text(lab_power4,buf);
             break;
         case HL_CHARGE_CHANGE_TX1_ELEC:
+            ptr->electric.electric_tx1 = hl_ioctl_power_limit(ptr->electric.electric_tx1);
             lv_bar_set_value(bar_power_tx1, ptr->electric.electric_tx1, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_tx1);
             lv_label_set_text(lab_power1,buf);
             break;
         case HL_CHARGE_CHANGE_RX_ELEC:
+            ptr->electric.electric_rx = hl_ioctl_power_limit(ptr->electric.electric_rx);
             lv_bar_set_value(bar_power_rx, ptr->electric.electric_rx, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_rx);
             lv_label_set_text(lab_power2,buf);
             break;
         case HL_CHARGE_CHANGE_TX2_ELEC:
+            ptr->electric.electric_tx2 = hl_ioctl_power_limit(ptr->electric.electric_tx2);
             lv_bar_set_value(bar_power_tx2, ptr->electric.electric_tx2, LV_ANIM_ON);
             lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric.electric_tx2);
             lv_label_set_text(lab_power3,buf);
@@ -391,42 +408,42 @@ void hl_mod_charge_ioctl(void * ctl_data)
 
         case HL_CHARGE_TOP_BAT_COLOR_GREEN:
             box_style_del(ptr->electric.electric_box);
-            // lv_obj_remove_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power4,&style_bar_top_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TOP_BAT_COLOR_WHITE:
             box_style_del(ptr->electric.electric_box);
-            // lv_obj_remove_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power4,&style_bar_top_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX1_BAT_COLOR_GREEN:
             tx1_style_del(ptr->electric.electric_tx1);
-            // lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx1,&style_bar_tx1_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX1_BAT_COLOR_WHITE:
             tx1_style_del(ptr->electric.electric_tx1);
-            // lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx1,&style_bar_tx1_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX2_BAT_COLOR_GREEN:
             tx2_style_del(ptr->electric.electric_tx2);
-            // lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx2,&style_bar_tx2_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_TX2_BAT_COLOR_WHITE:
             tx2_style_del(ptr->electric.electric_tx2);
-            // lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_tx2,&style_bar_tx2_indicator_white,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_RX_BAT_COLOR_GREEN:
             rx_style_del(ptr->electric.electric_rx);
-            // lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_rx,&style_bar_rx_indicator_green,LV_PART_INDICATOR);  
             break;
         case HL_CHARGE_RX_BAT_COLOR_WHITE:
             rx_style_del(ptr->electric.electric_rx);
-            // lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
+            lv_obj_remove_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);
             lv_obj_add_style(bar_power_rx,&style_bar_rx_indicator_white,LV_PART_INDICATOR);  
             break;
         
