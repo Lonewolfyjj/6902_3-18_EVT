@@ -1178,25 +1178,25 @@ static void _hl_cap2play_thread_entry(void* arg)
 
 #if HL_IS_TX_DEVICE()
 
-    // int32_t gain = 10;
-    // LOG_D("----cap_info.card_name : %s\r\n", p_card_param->card->parent.name);
-    // if (strcmp("pdmc", p_card_param->card->parent.name) == 0) {
-    //     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
-    // } else {
-    //     gain = 0;
-    //     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
-    // }
+    int32_t gain = 10;
+    LOG_D("----cap_info.card_name : %s\r\n", p_card_param->card->parent.name);
+    if (strcmp("pdmc", p_card_param->card->parent.name) == 0) {
+        hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
+    } else {
+        gain = 0;
+        hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_GAIN_L, &gain, sizeof(gain));
+    }
 
-    // hl_drv_rk_xtensa_dsp_transfer();
+    hl_drv_rk_xtensa_dsp_transfer();
 #endif
     hl_mod_audio_codec_buff_clear(&play_info);
     hl_mod_audio_codec_buff_clear(p_card_param);
 
 #if HL_IS_TX_DEVICE()
     // 关闭降噪
-    // uint8_t val = 0;
-    // hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
-    // hl_drv_rk_xtensa_dsp_transfer();
+    uint8_t val = 0;
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
+    hl_drv_rk_xtensa_dsp_transfer();
 #endif
 
     while (cap2play_thread_flag != 0) {
@@ -1511,12 +1511,11 @@ static void hl_mod_audio_set_mute(uint8_t mute)
 }
 
 // 设置输入TX进行降噪模式
-static void hl_mod_audio_set_denoise(int8_t denoise)
+static void hl_mod_audio_set_denoise(uint8_t denoise)
 {
     int8_t ret = 0;
-    int32_t lvl = denoise;
 
-    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_DENOISE_LVL, &lvl, 1);
+    ret = hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &denoise, 1);
     if (ret != RT_EOK) {
         LOG_E("fail to set denoise");
         return -RT_ERROR;
@@ -1595,10 +1594,8 @@ static void hl_mod_audio_send_msg(hl_mod_audio_indicate msg_cmd, uint32_t param)
 
     res = rt_mq_send(s_audio_to_app_mq, (void*)(&msg), sizeof(mode_to_app_msg_t));
     if (res == -RT_EFULL) {
-        LOG_E("audio to app msgq full %d, param %d", msg_cmd, param);
-        rt_thread_mdelay(100);
+        LOG_E("audio to app msgq full");
     } else if (res == -RT_ERROR) {
-        rt_thread_mdelay(100);
         LOG_E("audio to app msgq err");
     }
 }
@@ -2005,10 +2002,9 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                                       118 * s_vu_r / 70);  //(s_vu_r<-187)?0:s_vu_r+187);
                 s_vu_l = -187;
                 s_vu_r = -187;
-                // LOG_D("l:%d, r:%d  | l:%d, r:%d cnt = %d \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118, count_vu);
+                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
-        // LOG_D("cnt = %d \r\n", count_vu);
 #endif
         rt_thread_mdelay(10);
         
@@ -2078,7 +2074,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 15, 5);
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 10, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
@@ -2180,7 +2176,6 @@ void hl_mod_audio_show_info(void)
 uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 {
     int8_t ret = 0;
-    int8_t level = 0; 
 
     switch (cmd) {
         case HL_AUDIO_GET_INFO_CMD:
