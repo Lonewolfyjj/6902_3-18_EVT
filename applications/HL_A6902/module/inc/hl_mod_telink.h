@@ -61,7 +61,7 @@ typedef enum _hl_mod_telink_ctrl_cmd
     HL_RF_BYPASS_CHARGE_CMD = 0x22,
     /// 透传录制开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_CMD = 0x23,
-    /// 透传更新状态信息：类型hl_rf_bypass_update_info_t
+    /// 透传更新状态信息：类型hl_rf_tx_info_t
     HL_RF_BYPASS_UPDATE_CMD = 0x24,
     /// 透传电量信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_BATTERY_CMD = 0x25,
@@ -123,7 +123,7 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_CHARGE_IND = 0x22,
     /// 返回录音开关状态：类型hl_rf_bypass_state_t
     HL_RF_BYPASS_RECORD_IND = 0x23,
-    /// 返回更新状态信息：类型hl_rf_bypass_update_info_t
+    /// 返回更新状态信息：类型hl_rf_tx_info_t
     HL_RF_BYPASS_UPDATE_IND = 0x24,
     /// 返回电量信息：类型hl_rf_bypass_value_t
     HL_RF_BYPASS_BATTERY_IND = 0x25,
@@ -153,6 +153,8 @@ typedef enum _hl_mod_telink_ctrl_ind
     HL_RF_BYPASS_REFACTORY_IND = 0x31,
     /// 返回系统时间：类型hl_rf_bypass_time_t
     HL_RF_BYPASS_TIME_IND = 0x32,
+    /// 返回RF模块reboot
+    HL_RF_REBOOT_IND = 0xA5,
 } HL_ENUM8(hl_mod_telink_ctrl_ind);
 
 typedef enum _hl_rf_onoff_e
@@ -267,7 +269,7 @@ typedef struct
     hl_audio_time_t time;
 } hl_rf_bypass_time_t;
 
-typedef struct
+typedef struct _hl_rf_tx_info_t
 {
     /// 透传声道
     hl_rf_channel_e chn;
@@ -281,7 +283,7 @@ typedef struct
     uint8_t battery;
     /// 录制状态
     uint8_t record;
-} hl_rf_bypass_update_info_t;
+} hl_rf_tx_info_t;
 
 typedef struct
 {

@@ -49,11 +49,11 @@ typedef enum _hl_mod_appleauth_ctrl_ind
 
 #define MFI_IC_IIC_ADDR 0x10
 #define IAP2_THREAD_STACK_SIZE 4096
-#define IAP2_THREAD_PRIORITY 10
-#define IAP2_THREAD_TIMESLICE 10
+#define IAP2_THREAD_PRIORITY 25
+#define IAP2_THREAD_TIMESLICE 50
 #define EAP_THREAD_STACK_SIZE 4096
-#define EAP_THREAD_PRIORITY 10
-#define EAP_THREAD_TIMESLICE 10
+#define EAP_THREAD_PRIORITY 25
+#define EAP_THREAD_TIMESLICE 50
 
 /* variables -----------------------------------------------------------------*/
 
@@ -61,8 +61,10 @@ typedef struct
 {
     /// 线程初始化状态标志
     uint8_t init_flag;
-    /// 线程启动状态标志
-    uint8_t start_flag;
+    /// iAP2线程启动状态标志
+    uint8_t iap2_start_flag;
+    /// EAP线程启动状态标志
+    uint8_t eap_start_flag;
     /// 线程运行状态标志
     rt_bool_t iap2_thread_flag;
     /// 线程运行状态标志
@@ -112,40 +114,6 @@ int hl_mod_apple_auth_init(rt_mq_t* input_msq);
  * </table>
  */
 int hl_mod_apple_auth_deinit();
-
-/**
- * hl_mod_apple_auth_start
- * @brief 启动已初始化的线程，循环执行MFI认证、EAP通信、电源管理
- * @return int 成功 0 | 失败 非0
- * @date 2022-09-02
- * @author lisonglin (songlin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-02      <td>lisonglin     <td>新建
- * </table>
- */
-int hl_mod_apple_auth_start();
-
-/**
- * hl_mod_apple_auth_stop
- * @brief 停止线程
- * @return int 成功 0 | 失败 非0
- * @date 2022-09-02
- * @author lisonglin (songlin.li@hollyland-tech.com)
- * 
- * @details 
- * @note 
- * @par 修改日志:
- * <table>
- * <tr><th>Date             <th>Author         <th>Description
- * <tr><td>2022-09-02      <td>lisonglin     <td>新建
- * </table>
- */
-int hl_mod_apple_auth_stop();
 
 /**
  * hl_mod_appleauth_ioctl
