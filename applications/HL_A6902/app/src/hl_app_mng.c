@@ -47,6 +47,8 @@
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
 #include "hl_hal_gpio.h"
+#include "hl_drv_aw2016a.h"
+#include "hl_drv_rm690a0.h"
 
 #define DBG_SECTION_NAME "app_mng"
 #define DBG_LEVEL DBG_LOG
@@ -478,16 +480,29 @@ void hl_app_mng_init(void)
         hl_hal_gpio_init(GPIO_DC3V3_EN);
         hl_hal_gpio_init(GPIO_2831P_EN);
         hl_hal_gpio_init(GPIO_RF_PWR_EN);
+        hl_hal_gpio_init(GPIO_ALL_POWER);
         // hl_hal_gpio_high(GPIO_PWR_EN);
         hl_hal_gpio_high(GPIO_DC3V3_EN);
         hl_hal_gpio_high(GPIO_2831P_EN);
         hl_hal_gpio_high(GPIO_RF_PWR_EN);
+        hl_hal_gpio_high(GPIO_ALL_POWER);
+
+        hl_drv_aw2016a_led_ctrl_st led;
+        led.breath_mode = HL_DRV_AW2016A_BREATH_MODE_KEEP;
+        led.color       = HL_DRV_AW2016A_COLOR_WHITE;
+        hl_drv_aw2016a_init();
+        hl_drv_aw2016a_ctrl(HL_DRV_AW2016A_LED0, HL_DRV_AW2016A_LED_CTRL, &led, sizeof(led));
 #else
         // 使能RX相关GPIO引脚
         hl_hal_gpio_init(GPIO_ALL_POWER);
         hl_hal_gpio_high(GPIO_ALL_POWER);
         hl_hal_gpio_init(GPIO_RF_PWR_EN);
         hl_hal_gpio_high(GPIO_RF_PWR_EN);
+
+        uint16_t color = 0xFFFF;
+        hl_drv_rm690a0_init();
+        hl_drv_rm690a0_io_ctrl(FULL_COLOR_DISPLAY_INIT, NULL, 0);
+        hl_drv_rm690a0_io_ctrl(FULL_COLOR_DISPLAY_CMD, &color, 2);
 #endif
         hl_util_nvram_param_set_integer("BQB", 0);
         hl_util_nvram_param_save();
@@ -505,7 +520,7 @@ void hl_app_mng_init(void)
 #endif
         hl_app_param_loader();
         hl_mod_input_init(&hl_app_mq);
-        // hl_mod_display_init(&hl_app_mq);
+        hl_mod_display_init(&hl_app_mq);
         hl_mod_pm_init(&hl_app_mq);
         hl_mod_pm_start();
         hl_mod_euc_init(&hl_app_mq);
