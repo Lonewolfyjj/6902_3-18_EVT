@@ -520,7 +520,7 @@ static void hl_mod_input_task(void* param)
         //hl_mod_input_send_single();
         //hl_mod_input_insert_send();
 
-        rt_thread_mdelay(2);
+        rt_thread_mdelay(10);
     }
 }
 

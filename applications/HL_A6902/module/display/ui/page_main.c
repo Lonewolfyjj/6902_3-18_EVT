@@ -73,6 +73,8 @@ static lv_obj_t * tx1_signal_obj[5] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
 static lv_obj_t * tx2_signal_obj[5] = {RT_NULL,RT_NULL,RT_NULL,RT_NULL,RT_NULL};
 static lv_obj_t * imgftx1 = RT_NULL,*imgftx2 = RT_NULL;
 
+hl_page_style_bit page_style_bit ;
+
 static uint8_t sign_1 = 0xFF,sign_2 = 0xFF;
 static int16_t tx1_value_max;
 static int16_t tx2_value_max;

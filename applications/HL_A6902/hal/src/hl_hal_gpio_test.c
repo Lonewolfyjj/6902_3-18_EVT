@@ -130,7 +130,7 @@ void hl_hal_gpio_pwr_on(void)
     hl_hal_gpio_init(I2S0_LCLK);
     hl_hal_gpio_init(I2S0_DTATE);
 
-    rt_thread_mdelay(80);
+    rt_thread_mdelay(100);
 
     hl_hal_gpio_init(GPIO_CODEC_EN);
     hl_hal_gpio_high(GPIO_CODEC_EN);

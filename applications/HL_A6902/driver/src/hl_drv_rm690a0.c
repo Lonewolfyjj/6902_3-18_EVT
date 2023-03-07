@@ -257,7 +257,7 @@ void hl_drv_rm690a0_otherpin_init(void)
 
 uint8_t screen_cnt_fun(void)
 {
-    if(screen_cnt > 20){
+    if(screen_cnt > 30){
         screen_cnt = 0;
         return 1;
     }
@@ -283,7 +283,7 @@ static void hl_screen_task(void* param)
 static void screen_thread_creat(void)
 {
     screen_tid = rt_thread_create("screen_thread", hl_screen_task, RT_NULL, 512,
-                                   25, 50);
+                                   10, 5);
 
     if (screen_tid != RT_NULL) {
         rt_kprintf("screen_thread thread init ok!\r\n");

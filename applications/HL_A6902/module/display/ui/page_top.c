@@ -64,6 +64,7 @@ LV_IMG_DECLARE(Other_usb_c);     //
 #define RIGHT_DEFAUTE_OFFSET -35
 
 #define ICON_HOLD_TIME 2000
+static uint8_t top_tplock_flag = 0;
 
 typedef struct _HL_DISPLAY_CENTER_T
 {
@@ -889,6 +890,7 @@ void hl_mod_top_ioctl(void* ctl_data)
             break;
 
         case HL_TOP_ALL_DEL:
+            top_tplock_flag = 0;
             hl_all_del_center_icon();
             lv_area_del();
             *(uint8_t*)&top_icon_sta    = 0;
@@ -939,7 +941,9 @@ void hl_mod_top_init(void* init_data)
     }
     lock_flag = 0;
     page_lock_cb = ptr->lock_event_cb;
-    area         = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, 290, 120);
+    area            = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, 290, 120);
+    top_tplock_flag = 0;
+    // lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
 
     timer = lv_timer_create(centert_icon_timer_cb, ICON_HOLD_TIME, NULL);
     lv_timer_set_repeat_count(timer, -1);
