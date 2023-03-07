@@ -347,12 +347,26 @@ void hl_app_msg_thread(void* parameter)
 #if BQB_TEST
 void hl_app_telink_bqb_bypass(void* parameter)
 {
+    int      ret             = 0;
+    uint32_t count           = 0;
     uint32_t rk_data_size    = 0;
     uint32_t tl_data_size    = 0;
     uint8_t  rk_rev_buf[512] = { 0 };
     uint8_t  tl_rev_buf[512] = { 0 };
 
     while (1) {
+        ret = hl_hal_gpio_read(GPIO_PWR_KEY);
+        if (!ret) {
+            count++;
+        } else {
+            count = 0;
+        }
+
+        if (count > 2000) {
+            count = 0;
+            hl_board_reboot();
+        }
+
         rk_data_size = hl_util_fifo_data_size(&sg_bqb_rk_rev_fifo);
         rk_data_size = ((rk_data_size > 256) ? 256 : rk_data_size);
         if (rk_data_size > 0) {
@@ -481,6 +495,7 @@ void hl_app_mng_init(void)
         hl_hal_gpio_init(GPIO_2831P_EN);
         hl_hal_gpio_init(GPIO_RF_PWR_EN);
         hl_hal_gpio_init(GPIO_ALL_POWER);
+        hl_hal_gpio_init(GPIO_PWR_KEY);
         // hl_hal_gpio_high(GPIO_PWR_EN);
         hl_hal_gpio_high(GPIO_DC3V3_EN);
         hl_hal_gpio_high(GPIO_2831P_EN);
@@ -498,6 +513,7 @@ void hl_app_mng_init(void)
         hl_hal_gpio_high(GPIO_ALL_POWER);
         hl_hal_gpio_init(GPIO_RF_PWR_EN);
         hl_hal_gpio_high(GPIO_RF_PWR_EN);
+        hl_hal_gpio_init(GPIO_PWR_KEY);
 
         uint16_t color = 0xFFFF;
         hl_drv_rm690a0_init();
