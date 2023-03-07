@@ -496,6 +496,12 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             flag->systime = 1;
         } break;
+        case MONITOR_VOLUME_VAL_CMD: {
+
+            data_p->monitor_volume = *(int8_t*)ptr;
+
+            flag->monitor_volume = 1;
+        } break;        
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
