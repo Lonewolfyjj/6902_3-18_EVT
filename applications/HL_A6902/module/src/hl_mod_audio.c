@@ -2318,6 +2318,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
     int16_t s_vu_r = 0;
     static uint16_t idx = 0;
     static float show_vu_pre_cal = 118 / 187;
+    vu_mag vu = {0};
 
     LOG_D("audio ctrl thread run");
     while (1) {
@@ -2352,7 +2353,8 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
         }
 #if !HL_IS_TX_DEVICE()
         count_vu += 1;
-        if ((count_vu % 1 == 0) && (count_vu != 11)) {
+
+        if (NULL != dsp_config) {
             if (dsp_config->vu_l > s_vu_l) {
                 s_vu_l = dsp_config->vu_l;
             }
@@ -2360,18 +2362,18 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
+
         if(count_vu >= 5 && idx >= 50) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
                 s_vu_r = (s_vu_r < -70) ? 0 : s_vu_r + 70;
-                hl_mod_audio_send_msg(HL_AUDIO_L_VU_VAL,
-                                      118 * s_vu_l / 70);  //(s_vu_l<-187)?0:s_vu_l+187);
-                hl_mod_audio_send_msg(HL_AUDIO_R_VU_VAL,
-                                      118 * s_vu_r / 70);  //(s_vu_r<-187)?0:s_vu_r+187);
+                vu.l = 118 * s_vu_l / 70;
+                vu.r = 118 * s_vu_r / 70;
+                hl_mod_audio_send_msg(HL_AUDIO_VU_VAL, *(uint32_t *)&vu); 
+                // LOG_D("l:%d, r:%d, l:%d, r:%d, uv:%08x", dsp_config->vu_l, dsp_config->vu_r, 118 * s_vu_l / 70, 118 * s_vu_r / 70, *(uint32_t *)&vu);
                 s_vu_l = -187;
                 s_vu_r = -187;
-                //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
 
