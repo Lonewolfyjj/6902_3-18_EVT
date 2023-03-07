@@ -140,12 +140,12 @@ RT_WEAK struct rk_mmc_platform_data rk_mmc_table[] =
 {
 #ifdef RT_USING_SDIO0
     {
-        .flags = /*MMCSD_BUSWIDTH_4 |*/ MMCSD_MUTBLKWRITE | MMCSD_SUP_SDIO_IRQ | MMCSD_SUP_HIGHSPEED,
+        .flags = MMCSD_BUSWIDTH_4 | MMCSD_MUTBLKWRITE | MMCSD_SUP_SDIO_IRQ | MMCSD_SUP_HIGHSPEED,
         .irq = SDIO_IRQn,
         .base = SDIO_BASE,
         .clk_id = CLK_SDIO_PLL,
         .freq_min = 100000,
-        .freq_max = 25000000,
+        .freq_max = 50000000,
         .control_id = 0,
     },
 #endif

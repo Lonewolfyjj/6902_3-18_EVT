@@ -136,6 +136,7 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
             break;
         case HL_RF_LR_CONNECT:
             ret = 1;
+            hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             LOG_D("no need to paire\r\n");
             break;
         case HL_RF_PAIRING:
@@ -161,7 +162,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case RESTORE_SET_SWITCH_IND:
             // TBD: 恢复NVRAM的值并重启？
             rf_bypass_chn = HL_RF_DOUBLE_CHANNEL;
-            hl_mod_telink_ioctl(HL_RF_BYPASS_REFACTORY_CMD, &rf_bypass_chn, sizeof(rf_bypass_chn));
+            hl_mod_telink_ioctl(HL_RF_BYPASS_REFACTORY_CMD, &rf_bypass_chn, sizeof(rf_bypass_chn));    
+            hl_app_param_reset(); // 建议跳入语言设置和时间设置入用户进行重新设置     
             LOG_D("RESTORE_SET_SWITCH_IND\r\n");
             break;
         case AUTO_RECORD_SWITCH_IND:

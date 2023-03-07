@@ -50,8 +50,8 @@
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
-#define DISPLAY_THREAD_PRIORITY 20
-#define DISPLAY_THREAD_STACK_SIZE 40960
+#define DISPLAY_THREAD_PRIORITY 10
+#define DISPLAY_THREAD_STACK_SIZE 8192
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -509,23 +509,25 @@ static lv_obj_t* hl_mod_creat_lay(void)
     lv_obj_t* obj = lv_obj_create(lv_scr_act());
     lv_obj_add_style(obj,&lay_style,0);
     lv_obj_center(obj);
-    lv_obj_set_size(obj,126,294);
+    lv_obj_set_size(obj,290,120);
     lv_obj_move_foreground(obj);
     return obj;
 }
 
 static void screen_timer(lv_timer_t * timer)
 {
-    if(hl_get_mipi_screen_sta()){
-        hl_set_mipi_screen_sta(0);
-    }else{
-        rt_kprintf("reset screen\n");
-        hl_drv_rm690a0_deinit();
-        hl_drv_rm690a0_init();
-        obj = hl_mod_creat_lay();
-        lv_obj_del_delayed(obj,50);
-        lv_timer_reset(timer);
-    }    
+    if(screen_cnt_fun()){
+        if(hl_get_mipi_screen_sta()){
+            hl_set_mipi_screen_sta(0);
+        }else{
+            rt_kprintf("reset screen\n");
+            hl_drv_rm690a0_deinit();
+            hl_drv_rm690a0_init();
+            obj = hl_mod_creat_lay();
+            lv_obj_del_delayed(obj,50);
+            lv_timer_reset(timer);
+        } 
+    }       
 }
 // RX
 static void hl_mod_display_task(void* param)
@@ -540,6 +542,7 @@ static void hl_mod_display_task(void* param)
     lv_style_init(&lay_style);
     lv_style_set_bg_color(&lay_style, lv_color_black());
     lv_style_set_bg_opa(&lay_style,LV_OPA_10);
+    lv_style_set_border_width(&lay_style, 0);
     wdg_reg = *(uint32_t*)(0x40050304);
     if(wdg_reg == 0){
         rt_kprintf("\nDevice normal reset ,reg= %X\n",wdg_reg);

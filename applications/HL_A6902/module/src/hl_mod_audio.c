@@ -946,9 +946,9 @@ static void hl_mod_audio_dfs_sd()
 #ifdef RT_USING_DFS_MNTTABLE
     dfs_unmount_device(disk);
     if (dfs_mount_device(disk) < 0) {
-        // dfs_mkfs("elm", "sd0");
+        dfs_mkfs("elm", "sd0");
         dfs_mount_device(disk);
-        // LOG_I("sd0 elm mkfs dfs ");
+        LOG_I("sd0 elm mkfs dfs ");
     }
 #endif
     LOG_I("hl mod audio dfs");
@@ -1445,7 +1445,7 @@ static void do_record_audio(void* arg)
     while (1) {
         if ((rt_ringbuffer_data_len(record_info.record_after_rb) < record_size) || (s_record_switch != 1)
             || (rt_ringbuffer_data_len(record_info.record_bypass_rb) < record_size1)) {
-            rt_thread_delay(1);
+            rt_thread_delay(10);
         } else {
             // rt_kprintf("s%d",rt_tick_get());
             if (rt_ringbuffer_data_len(record_info.record_after_rb) >= record_size) {
@@ -1570,7 +1570,8 @@ static void _hl_cap2play_thread_entry(void* arg)
                            p_card_param->abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", p_card_param->card->parent.name);
-            rt_thread_mdelay(10);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 #if !HL_IS_TX_DEVICE()
@@ -1591,7 +1592,6 @@ static void _hl_cap2play_thread_entry(void* arg)
                 LOG_E("write %s failed", play_info.card->parent.name);
             }
             hl_mod_audio_denoise_flag -= 1;
-            rt_kprintf("%d \n", hl_mod_audio_denoise_flag);
         }
 
         if (record_flag == 1) {
@@ -1640,7 +1640,8 @@ static void _hl_cap2uac_thread_entry(void* arg)
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
-            rt_thread_mdelay(10);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 
@@ -1764,6 +1765,8 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
             <= 0) {
             LOG_E("read %s failed", cap_info.card->parent.name);
+            rt_thread_mdelay(1000);
+            continue;
             //break;
         }
 
@@ -2318,7 +2321,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
 
     LOG_D("audio ctrl thread run");
     while (1) {
-#ifdef RT_USB_DEVICE_UAC1
+#if 0 //def RT_USB_DEVICE_UAC1
         msg = 0;
         while (RT_EOK == rt_mb_recv(uac_info.p_mailbox, &msg, 0)) {
             switch (msg) {
@@ -2357,7 +2360,7 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 s_vu_r = dsp_config->vu_r;
             }
         }
-        if(count_vu >= 10 && idx >= 1000) {    
+        if(count_vu >= 5 && idx >= 50) {    
             count_vu = 0;                         
             if (NULL != dsp_config) {
                 s_vu_l = (s_vu_l < -70) ? 0 : s_vu_l + 70;
@@ -2371,13 +2374,12 @@ static void _hl_audio_ctrl_thread_entry(void* arg)
                 //LOG_D("l:%d, r:%d  | l:%d, r:%d  \r\n", dsp_config->vu_l, dsp_config->vu_r, (dsp_config->vu_l<-118)?0:dsp_config->vu_l+118, (dsp_config->vu_r<-118)?0:dsp_config->vu_r+118);
             }
         }
-#endif
-        rt_thread_mdelay(10);
-        
-        if (idx < 1001) {
+
+        if (idx <= 50) {
             idx++;
         }
-
+#endif
+        rt_thread_mdelay(20); 
     }
 }
 
@@ -2449,7 +2451,8 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    record_thread_id = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, 16, 1);
+
+    record_thread_id = rt_thread_create("record_after", do_record_audio, RT_NULL, 2048, 10, 1);
     if (record_thread_id != RT_NULL) {
         rt_thread_startup(record_thread_id);
     } else {
@@ -2458,7 +2461,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 10, 5);
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
@@ -2896,27 +2899,6 @@ int hl_mod_audio_test(int argc, char** argv)
 
 MSH_CMD_EXPORT(hl_mod_audio_test, audio io ctrl cmd);
 
-// int hl_mod_fs_test(int argc, char** argv)
-// {
-//     hl_mod_audio_ctrl_cmd cmd;
-//     int               ret;
-//     struct statfs buffer;
-//     buffer
-
-//     if (!strcmp(argv[1], "fs_stats")) {
-//         rt_snprintf();
-
-//         ret = dfs_statfs(RT_SDCARD_MOUNT_POINT,);
-        
-//          rt_kprintf("ret=%d\n",ret);
-//     } else {
-//         rt_kprintf("error\n");
-//     }
-
-//     return 0;
-// }
-
-// MSH_CMD_EXPORT(hl_mod_fs_test, fs io ctrl cmd);
 #endif
 
 // INIT_APP_EXPORT(hl_mod_audio_init);

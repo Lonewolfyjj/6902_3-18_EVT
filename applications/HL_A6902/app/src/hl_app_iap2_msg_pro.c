@@ -55,13 +55,13 @@ void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
     switch (p_msg->cmd) {
         case HL_APPLE_AUTH_SUCCEED_IND:
             val = 1;
-            hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &val, 1);
+            // hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &val, 1);
             LOG_E("\n\n*********iAP2 SUCCEED*********\n\n");
             break;
             
         case HL_APPLE_AUTH_FAILED_IND:
             val = 0;
-            hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &val, 1);
+            // hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &val, 1);
             LOG_E("\n\n**********iAP2 FAILED**********\n\n");
             break;
 

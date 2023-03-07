@@ -142,7 +142,7 @@ static lv_obj_t *  bat_icon = RT_NULL, *bat_bar = RT_NULL, *bat_label = RT_NULL,
 static lv_obj_t *  center_heatset = RT_NULL, *center_line_out = RT_NULL, *center_lock = RT_NULL, *center_unlock = RT_NULL, *center_usb_c = RT_NULL;
 static top_list_t *head_left_list = RT_NULL, *head_right_list = RT_NULL;
 static int8_t      TOP_POS, TOP_OUT_POS, TOP_OFFSET;
-
+static uint8_t     lock_flag = 0;
 static lv_obj_t* area     = RT_NULL;
 
 static img_info_t stereo_icon = { .default_pos = HL_TOP_ICON_STEREO_MOD, .img_src = &Main_stereo, .img_obj = NULL },
@@ -774,11 +774,12 @@ static lv_obj_t* hl_mod_icon_obj(hl_top_icon_t icon_typ)
 static void lock_cb(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-
-    if (code == LV_EVENT_CLICKED) {
-        rt_kprintf("reset lock\n");
-        hl_add_center_icon(HL_TOP_ICON_LOCK);
-    }
+    if(lock_flag){
+        if (code == LV_EVENT_CLICKED) {
+            rt_kprintf("reset lock\n");
+            hl_add_center_icon(HL_TOP_ICON_LOCK);
+        }
+    }    
 }
 
 static lv_obj_t* lv_area_creat_fun(lv_align_t align, lv_event_cb_t event_cb, lv_coord_t x_offset, lv_coord_t y_offset,
@@ -791,6 +792,7 @@ static lv_obj_t* lv_area_creat_fun(lv_align_t align, lv_event_cb_t event_cb, lv_
     // lv_obj_set_scrollbar_mode(null_area, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_size(null_area, width, high);
     lv_obj_align(null_area, align, x_offset, y_offset);
+    lv_obj_add_event_cb(null_area, lock_cb, LV_EVENT_CLICKED, NULL);
     return null_area;
 }
 
@@ -821,6 +823,19 @@ static void rx_stle_del(int16_t data)
     }
 }
 
+static int16_t hl_ioctl_power_limit(int16_t power)
+{
+    if((power >= 0) || (power <= 100)){
+        return power;
+    }else if(power < 0){
+        rt_kprintf("Top power out of limit : %d\n",power);
+        return 0;
+    }else if(power > 100){
+        rt_kprintf("Top power out of limit : %d\n",power);
+        return 100;
+    }
+}
+
 void hl_mod_top_ioctl(void* ctl_data)
 {
     // char                 buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -836,6 +851,9 @@ void hl_mod_top_ioctl(void* ctl_data)
             hl_delete_top_icon(ptr->top_param);
             break;
         case HL_TOP_BAT_VAL:
+
+            ptr->electric_top = hl_ioctl_power_limit(ptr->electric_top);
+
             lv_bar_set_value(bat_bar, ptr->electric_top, LV_ANIM_ON);
             // lv_snprintf(buf, sizeof(buf), "%d%%", ptr->electric_top);
             // lv_label_set_text(bat_label, buf);
@@ -851,19 +869,19 @@ void hl_mod_top_ioctl(void* ctl_data)
             break;
         case HL_TOP_BAT_COLOR_GREEN:
             rx_stle_del(ptr->electric_top);
-            // lv_obj_remove_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
+            lv_obj_remove_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_green_indicator, LV_PART_INDICATOR);
             break;
 
         case HL_TOP_BAT_COLOR_WHITE:
             rx_stle_del(ptr->electric_top);
-            // lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
+            lv_obj_remove_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_white_indicator, LV_PART_INDICATOR);
             break;
 
         case HL_TOP_BAT_COLOR_RED:
             rx_stle_del(ptr->electric_top);
-            // lv_obj_remove_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
+            lv_obj_remove_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
             lv_obj_add_style(bat_bar, &style_power_bar_red_indicator, LV_PART_INDICATOR);
             break;
 
@@ -892,29 +910,20 @@ void hl_mod_top_ioctl(void* ctl_data)
             lv_delete_style();
             break;
         case HL_TOP_LOCK_TP_FORBIDDEN:
-            if (area != RT_NULL) {
-                if (top_tplock_flag == 0) {
-                    lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
-                    top_tplock_flag = 1;
-                } else {
-                    rt_kprintf("tp_lcok is exi\n");
-                }
-
-            } else {
-                rt_kprintf("area not exist\n");
-            }
+            lock_flag = 1;
+            // if (area != RT_NULL) {
+            //     lv_obj_add_event_cb(area, lock_cb, LV_EVENT_CLICKED, NULL);
+            // } else {
+            //     rt_kprintf("area not exist\n");
+            // }
             break;
         case HL_TOP_UNKLOCK_TP:
-            if (area != RT_NULL) {
-                if (top_tplock_flag == 1) {
-                    top_tplock_flag = 0;
-                    lv_obj_remove_event_cb(area, lock_cb);
-                } else {
-                    rt_kprintf("tp_lcok is deled\n");
-                }
-            } else {
-                rt_kprintf("area not exist\n");
-            }
+            lock_flag = 0;
+            // if (area != RT_NULL) {
+            //     lv_obj_remove_event_cb(area, lock_cb);
+            // } else {
+            //     rt_kprintf("area not exist\n");
+            // }
             break;
         default:
             break;
@@ -930,7 +939,7 @@ void hl_mod_top_init(void* init_data)
         lv_style_page_top_init();
         lv_lock_style_init();
     }
-
+    lock_flag = 0;
     page_lock_cb = ptr->lock_event_cb;
     area            = lv_area_creat_fun(LV_ALIGN_CENTER, lock_cb, 0, 0, 290, 120);
     top_tplock_flag = 0;

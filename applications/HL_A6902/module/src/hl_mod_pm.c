@@ -249,6 +249,28 @@ static inline void _guage_interrupt_check(void)
     }
 }
 
+static uint8_t _soc_convert(uint8_t soc)
+{
+    if (soc > 100) {
+        return soc;
+    } else if (soc >= 96) {
+        return 100;
+    } else if (soc >= 86) {
+        return (soc + 5);
+    } else {
+        return (soc * 100 / 95);
+    }
+}
+
+static void _send_soc_msg_to_app(void)
+{
+    static uint8_t soc = 0;
+
+    soc = _soc_convert(_pm_mod.bat_info.soc.soc);
+
+    _mod_msg_send(HL_SOC_UPDATE_IND, &soc, sizeof(soc));
+}
+
 static void _pm_init_state_update(void)
 {
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_SOC);
@@ -267,12 +289,26 @@ static void _pm_init_state_update(void)
 
     _pm_mod.charge_state = HL_CHARGE_STATE_UNKNOWN;
 
-    _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+    _send_soc_msg_to_app();
 }
+
+static bool _debug_switch_flag = false;
+
+static void hl_mod_pm_debug_bat_info_5s(void)
+{
+    if (_debug_switch_flag == true) {
+        _debug_switch_flag = false;
+    } else {
+        _debug_switch_flag = true;
+    }
+}
+
+MSH_CMD_EXPORT(hl_mod_pm_debug_bat_info_5s, 间隔5s打印电池信息);
 
 static void _guage_state_update()
 {
     uint8_t soc;
+    bool    flag = false;
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -284,9 +320,13 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CYCLE);
 
     if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
-        _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.bat_info.soc.soc), sizeof(uint8_t));
+        _send_soc_msg_to_app();
+        flag = true;
+    }
+
+    if (flag == true || _debug_switch_flag == true) {
         LOG_I("------bat log------");
-        LOG_I("soc:%d . %d", _pm_mod.bat_info.soc.soc, _pm_mod.bat_info.soc.soc_d);
+        LOG_I("soc:%d . %d", _pm_mod.bat_info.soc.soc, _pm_mod.bat_info.soc.soc_d * 10000 / 256);
         LOG_I("voltage:%d", _pm_mod.bat_info.voltage);
         LOG_I("current:%d", _pm_mod.bat_info.current);
         LOG_I("temp:%d . %d", _pm_mod.bat_info.temp.temp, _pm_mod.bat_info.temp.temp_d);
@@ -324,12 +364,12 @@ static void _guage_err_monitor(void)
 
 static void _guage_state_poll()
 {
-    static uint8_t count = 0;
+    static uint16_t count = 0;
 
     if (count == 0) {
         // _guage_err_monitor();
         _guage_state_update();
-        count = 500;
+        count = 50;
     } else {
         count--;
     }
@@ -390,7 +430,7 @@ static void _charger_charge_state_poll(void)
 
     if (count == 0) {
         _charger_charge_state_update();
-        count = 100;
+        count = 10;
     } else {
         count--;
     }
@@ -457,12 +497,14 @@ static void _charge_full_timer_set(void)
             flag = true;
             rt_timer_start(&(_pm_mod.charge_full_timer));
             _pm_mod.charge_full_timeout_flag = false;
+            LOG_I("start charge-full timer!");
         }
     } else {
         if (flag == true) {
             flag = false;
             rt_timer_stop(&(_pm_mod.charge_full_timer));
             _pm_mod.charge_full_timeout_flag = false;
+            LOG_I("stop charge-full timer!");
         }
     }
 }
@@ -521,8 +563,8 @@ static void _pm_thread_entry(void* arg)
         _charge_state_judge();
         _charge_full_timer_set();
 
-        rt_thread_mdelay(10);
-        if (delay_time++ > 500) {
+        rt_thread_mdelay(100);
+        if (delay_time++ > 50) {
             delay_time = 0;
             _hl_mod_pmwdg();
             _hl_mod_pm_input_check();
@@ -536,7 +578,8 @@ static void _pm_thread_entry(void* arg)
 
 int hl_mod_pm_init(rt_mq_t msg_hd)
 {
-    int ret;
+    int                  ret;
+    HL_SGM_INPUT_PARAM_T sgm_param;
 
     if (_pm_mod.init_flag == true) {
         LOG_W("pm is already inited!");
@@ -553,6 +596,12 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         _pm_mod.charger = HL_MOD_PM_CHARGER_SGM41518;
         pm_ioctl        = hl_drv_sgm41518_io_ctrl;
         LOG_I("sgm41518 charger init success!");
+
+        sgm_param.cfg_opt = RW_EN_BAT_CHARGING;
+        sgm_param.param   = 0;
+        hl_drv_sgm41518_io_ctrl(SGM_WRITE_CMD, &sgm_param, 1);
+        sgm_param.param = 1;
+        hl_drv_sgm41518_io_ctrl(SGM_WRITE_CMD, &sgm_param, 1);
     } else {
         _pm_mod.charger = HL_MOD_PM_CHARGER_UNKNOWN;
         LOG_E("all charger init err! please check charger");
@@ -645,9 +694,11 @@ int hl_mod_pm_start(void)
 #endif
     _pm_mod.thread_exit_flag = 0;
 
+#if HL_IS_TX_DEVICE()
     rt_timer_start(&(_pm_mod.shutdown_timer));
+#endif
 
-    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 20, 10);
+    _pm_mod.pm_thread = rt_thread_create("hl_mod_pm_thread", _pm_thread_entry, RT_NULL, 1024, 25, 10);
     if (_pm_mod.pm_thread == RT_NULL) {
         LOG_E("pm thread create failed");
         return HL_MOD_PM_FUNC_RET_ERR;
