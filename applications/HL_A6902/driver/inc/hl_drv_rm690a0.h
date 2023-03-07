@@ -62,6 +62,8 @@ enum
 {
     /// 设置背光
     SET_MIPI_BACKLIGHT_CMD,
+    FULL_COLOR_DISPLAY_CMD,
+    FULL_COLOR_DISPLAY_INIT,
     // /// 设置屏幕显示纯色
     // DISPLAY_FULL_COLOR_CMD,
     /// 关闭屏幕的正负电压

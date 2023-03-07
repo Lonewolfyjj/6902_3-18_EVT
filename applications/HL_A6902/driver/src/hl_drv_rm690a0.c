@@ -128,6 +128,9 @@ const struct hl_util_format_info* hl_util_format_info_find(uint32_t format)
 #define HL_MAKE_RGB24(rgb, r, g, b) HL_MAKE_RGBA(rgb, r, g, b, 0)
 #define HL_MAKE_RGB16(rgb, r, g, b) HL_MAKE_RGBA(rgb, r, g, b, 0)
 
+static uint16_t*               framebufferaddr_clr_p = RT_NULL;
+static hl_mod_lvgl_video_mem_t* video_mem_p           = RT_NULL;
+
 static uint8_t get_color_format_byte(uint8_t format);
 static void hl_drv_rm690a0_hardware_rst(void);
 static void hl_fill_pix_rgb(uint8_t* buf1, uint8_t* data, uint32_t size, uint32_t byte)
@@ -545,8 +548,10 @@ uint8_t hl_drv_rm690a0_write(uint16_t x_start, uint16_t x_end, uint16_t y_start,
 uint8_t hl_drv_rm690a0_write(hl_mod_lvgl_video_mem_t* video_mem_p)
 {
     uint8_t ret = RT_ERROR;
-    uint32_t i;
-    hl_mod_lvgl_video_memory(video_mem_p);
+    if (video_mem_p->src != RT_NULL) {
+        hl_mod_lvgl_video_memory(video_mem_p);
+    }
+    
     mipi_screen.win_config->winId = 0;
     mipi_screen.win_config->winEn = 1;
 
@@ -581,6 +586,7 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
 {
     uint8_t result = RT_ERROR;
     uint8_t num    = 0;
+    uint16_t color_pix;
     switch (cmd) {
         case SET_MIPI_BACKLIGHT_CMD: {
             uint8_t val = *(uint8_t*)ptr;
@@ -609,6 +615,28 @@ uint8_t hl_drv_rm690a0_io_ctrl(uint8_t cmd, void* ptr, uint32_t len)
         // }
 
         // break;
+        case FULL_COLOR_DISPLAY_CMD:
+            color_pix = *(uint16_t*)ptr;
+            if (video_mem_p != RT_NULL) {
+
+                for (uint32_t i = 0; i < (mipi_screen.mipi_data_len / 2); i++) {
+                    framebufferaddr_clr_p[i] = color_pix;
+                }
+                hl_drv_rm690a0_write(video_mem_p);
+            }
+            break;
+        case FULL_COLOR_DISPLAY_INIT:
+            // hl_drv_rm690a0_init();
+
+            framebufferaddr_clr_p = (uint16_t*)hl_drv_rm690a0_malloc(mipi_screen.mipi_data_len);
+
+            rt_memset(framebufferaddr_clr_p, 0x00, 126 * 294 * 2);
+
+            video_mem_p = rt_malloc(sizeof(hl_mod_lvgl_video_mem_t));
+            rt_memset(video_mem_p, 0, sizeof(hl_mod_lvgl_video_mem_t));
+            video_mem_p->src = RT_NULL;
+            video_mem_p->dst = (uint8_t*)framebufferaddr_clr_p;
+            break;
         case FRAMEBUF_MALLOC_CMD: {
 
             uint32_t framebufferaddr;
@@ -790,6 +818,44 @@ void a690a0_test(int argc, char** argv)
 MSH_CMD_EXPORT(a690a0_test, run a690a0_test);
 
 
+int                            full_color_test(int argc, char** argv)
+{
+    uint16_t color;
+
+    uint32_t framebufferaddr_clr;
+
+    if (argc == 1) {
+    } else if (!strcmp(argv[1], "init")) {
+
+        hl_drv_rm690a0_init();
+
+        framebufferaddr_clr_p = (uint16_t*)hl_drv_rm690a0_malloc(mipi_screen.mipi_data_len);
+
+        rt_memset(framebufferaddr_clr_p, 0x00, 126 * 294 * 2);
+
+        video_mem_p = rt_malloc(sizeof(hl_mod_lvgl_video_mem_t));
+        rt_memset(video_mem_p, 0, sizeof(hl_mod_lvgl_video_mem_t));
+        video_mem_p->src = RT_NULL;
+        video_mem_p->dst = (uint8_t*)framebufferaddr_clr_p;
+
+    } else if (!strcmp(argv[1], "color")) {
+
+        color = atoi(argv[2]);
+
+        if (video_mem_p != RT_NULL) {
+
+            for (uint32_t i = 0; i < (mipi_screen.mipi_data_len / 2); i++) {
+                framebufferaddr_clr_p[i] = color;
+            }
+            hl_drv_rm690a0_write(video_mem_p);
+        }
+
+    } else {
+        rt_kprintf("wrong parameter, please type: oled_test \r\n");
+    }
+    return RT_EOK;
+}
+MSH_CMD_EXPORT(full_color_test, full color);
 
 #endif /* (!HL_IS_TX_DEVICE()) */
        /*

@@ -505,7 +505,7 @@ void hl_app_mng_init(void)
 #endif
         hl_app_param_loader();
         hl_mod_input_init(&hl_app_mq);
-        hl_mod_display_init(&hl_app_mq);
+        // hl_mod_display_init(&hl_app_mq);
         hl_mod_pm_init(&hl_app_mq);
         hl_mod_pm_start();
         hl_mod_euc_init(&hl_app_mq);
