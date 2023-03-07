@@ -405,8 +405,6 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
     memset(&time, 0, sizeof(rtc_time));
 
-    
-
     /* 时、分、秒 的校准 */
     time.hour   = (time.hour & 0x3f) % 24;
     time.minute = (time.minute & 0x7f) % 60;
@@ -2734,7 +2732,15 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
 
             hl_mod_audio_set_gain(((int*)ptr)[0], HL_AUDIO_CHANNEL_R);
             break;
+        
+        case HL_AUDIO_SET_GAIN_UAC_CMD:
+            if (ptr == NULL) {
+                LOG_E("HL_AUDIO_SET_GAIN_CMD parem error");
+                return -1;
+            }
 
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN, &((int*)ptr)[0], 4);
+            break;
         case HL_AUDIO_SET_HP_AMP_CMD:
             if (ptr == NULL) {
                 LOG_E("HL_AUDIO_SET_HP_AMP_CMD parem error");

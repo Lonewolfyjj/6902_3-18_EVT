@@ -115,6 +115,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_GAIN_L_CMD,
     /// 设置DSP的右通道增益 int(-103~24)
     HL_AUDIO_SET_GAIN_R_CMD,
+    /// 设置DSP的UAC增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_UAC_CMD,
     /// int8_t(0=OFF, 1=ON)
     HL_AUDIO_SET_HP_AMP_CMD, 
     /// 音频流设置命令，hl_mod_audio_io_ctrl的参数参考<hl_stream_mode_e>
