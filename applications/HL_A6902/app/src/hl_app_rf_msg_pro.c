@@ -167,18 +167,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.gain = (int8_t)ptr_rf_value->val;
             tx_info.gain = tx_info.gain * 2;
-            // if (tx_info.gain > 0) {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
-            // } else if (tx_info.gain < 0) {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
-            // } else {
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &tx_info.gain, 4);
-            //     hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &tx_info.gain, 4);
-            // }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.gain, 4);
-
-            // 保存本地。。。
-            LOG_D("app get RX Gain Value(%d)(%d)", (int8_t)ptr_rf_value->val, tx_info.gain);
+            hl_app_audio_gain(tx_info.gain);
+            hl_util_nvram_param_set_integer("TX_GAIN", tx_info.gain);
+            LOG_D("app get TX%d Gain Value(%d)(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val, tx_info.gain);
             break;
 
         case HL_RF_BYPASS_FORMAT_DISK_IND:
@@ -190,12 +181,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_UAC_GAIN_IND:
             ptr_rf_value     = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.uac_gain = (int)ptr_rf_value->val;
-            if (tx_info.mstorage_plug == 0) {
-                hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &tx_info.uac_gain,
-                                     4);  // 待优化 （TX增益与UAC增益同时只能用一个）
-            }
-            // 保存本地。。。
-            LOG_D("app get RX UAC In Gain(%d)", (int8_t)ptr_rf_value->val);
+            hl_app_audio_gain_uac(tx_info.uac_gain);
+            hl_util_nvram_param_set_integer("TX_UAC_GAIN", tx_info.uac_gain);
+            LOG_D("app get TX%d UAC In Gain(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val);
             break;
 
         case HL_RF_BYPASS_LOWCUT_IND:
@@ -213,9 +201,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                 bypass_switch        = HL_SWITCH_OFF;
                 tx_info.denoise_flag = 0;
             }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));     
             hl_app_disp_state_led_set();
-            LOG_D("app get RX Denoise(%d)", bypass_switch);
+            hl_util_nvram_param_set_integer("DENOISE_OPEN", bypass_switch);
+            LOG_D("app get TX%d Denoise(%d)", ptr_rf_value->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_STATUS_LED_IND:
@@ -244,7 +233,8 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_REFACTORY_IND:
             bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
-            LOG_D("app get RX Refactory");
+            hl_app_param_reset();
+            LOG_D("app get TX%d Refactory", bypass_chn);
             break;
 
         default:

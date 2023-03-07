@@ -72,7 +72,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_choose_main);
     lv_style_set_bg_opa(&style_choose_main, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_choose_main, lv_palette_darken(LV_PALETTE_GREY,4));
+    lv_style_set_bg_color(&style_choose_main, lv_palette_darken(LV_PALETTE_GREY,3));
     lv_style_set_border_width(&style_choose_main,0);
     lv_style_set_outline_width(&style_choose_main,0);
     lv_style_set_radius(&style_choose_main, 0);
@@ -91,7 +91,7 @@ static void lv_style_page4_init(void)
 
     lv_style_init(&style_back);
     lv_style_set_bg_opa(&style_back, LV_OPA_COVER);
-    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,3));
+    lv_style_set_bg_color(&style_back, lv_palette_darken(LV_PALETTE_GREY,2));
     lv_style_set_radius(&style_back, 3);
 
     lv_style_init(&style_indicator);
@@ -154,7 +154,7 @@ static lv_obj_t * lv_value_lab_creat_fun(lv_obj_t *src_obj,lv_obj_t *align_obj,l
     char buf[8] = {0,0,0,0,0,0,0,0};
     lv_obj_t * lab = lv_label_create(src_obj);
     lv_obj_add_style(lab, &style_label, LV_PART_MAIN);
-    lv_snprintf(buf, sizeof(buf), "%d", lv_bar_get_value(bar_obj));
+    lv_snprintf(buf, sizeof(buf), "%ld", lv_bar_get_value(bar_obj));
     lv_label_set_text(lab,buf);
     lv_obj_align_to(lab,align_obj,align,x_offset,y_offset);
     return lab;
