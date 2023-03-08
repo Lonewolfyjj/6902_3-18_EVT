@@ -53,7 +53,7 @@ static void hl_mod_wdog_idle_hook(void)
 
 void hl_mod_feed_dog(void)
 {
-    // rt_device_control(wdg_dev, RT_DEVICE_CTRL_WDT_KEEPALIVE, NULL);
+    rt_device_control(wdg_dev, RT_DEVICE_CTRL_WDT_KEEPALIVE, NULL);
 }
 
 /**
@@ -107,7 +107,7 @@ static int hl_mod_wdog_init(void)
     return ret;
 }
 
-// INIT_ENV_EXPORT(hl_mod_wdog_init);
+INIT_ENV_EXPORT(hl_mod_wdog_init);
 
 /**
  * 

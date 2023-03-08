@@ -110,6 +110,8 @@ static void hl_app_tx_pwr_key_pro(hl_key_event_e event)
             LOG_E("event(%d) unkown!!!", event);
             break;
     }
+
+    hl_app_pm_timer_set();
 }
 
 /// 配对键处理
@@ -153,6 +155,8 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
             LOG_E("event(%d) unkown!!! \r\n", event);
             break;
     }
+
+    hl_app_pm_timer_set();
 }
 
 /// 录制键处理
@@ -221,6 +225,8 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
             LOG_E("event(%d) unkown!!! \r\n", event);
             break;
     }
+
+    hl_app_pm_timer_set();
 }
 
 /// usb连接状态处理
@@ -258,6 +264,9 @@ static void hl_app_tx_ex_mic_plug_pro(uint32_t value)
         hl_mod_audio_io_ctrl(HL_AUDIO_MIC_SWITCH_CMD, &mic_select, 1);
         hl_app_audio_stream_updata();    
     }
+    
+
+    hl_app_pm_timer_set();
 }
 
 /// POGO VBUS的状态处理
