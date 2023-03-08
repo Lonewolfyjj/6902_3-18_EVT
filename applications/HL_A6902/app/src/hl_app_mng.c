@@ -280,7 +280,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 0) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), -1) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -315,7 +315,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
-        rt_thread_mdelay(20);
+        // rt_thread_mdelay(20);
         hl_mod_feed_dog();
     }
 }
