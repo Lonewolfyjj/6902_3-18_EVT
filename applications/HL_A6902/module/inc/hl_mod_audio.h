@@ -98,6 +98,8 @@ typedef enum _hl_mod_audio_indicate
     HL_AUDIO_UAC_LINK_IND = 1,
     /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
     MSG_USB_MSTORAGE_DET,
+    /// VU通道的数据：类型vu_mag
+    HL_AUDIO_VU_VAL,
     /// VU左通道的数据：类型uint8_t(0 ~ 128)
     HL_AUDIO_L_VU_VAL,
     /// VU右通道的数据：类型uint8_t(0 ~ 128)
@@ -115,6 +117,8 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_SET_GAIN_L_CMD,
     /// 设置DSP的右通道增益 int(-103~24)
     HL_AUDIO_SET_GAIN_R_CMD,
+    /// 设置DSP的UAC增益 int(-103~24)
+    HL_AUDIO_SET_GAIN_UAC_CMD,
     /// int8_t(0=OFF, 1=ON)
     HL_AUDIO_SET_HP_AMP_CMD, 
     /// 音频流设置命令，hl_mod_audio_io_ctrl的参数参考<hl_stream_mode_e>
@@ -151,6 +155,12 @@ typedef enum _hl_mod_audio_ctrl_cmd
     HL_AUDIO_MSTORAGE_SWITCH_CMD,
 } HL_ENUM8(hl_mod_audio_ctrl_cmd);
 #endif
+
+typedef struct _vu_mag
+{
+    uint16_t l;
+    uint16_t r;
+} vu_mag;
 
 typedef enum _hl_mod_audio_channel
 {
