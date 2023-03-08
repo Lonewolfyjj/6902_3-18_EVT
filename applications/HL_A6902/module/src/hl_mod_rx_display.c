@@ -516,18 +516,17 @@ static lv_obj_t* hl_mod_creat_lay(void)
 
 static void screen_timer(lv_timer_t * timer)
 {
-    if(screen_cnt_fun()){
-        if(hl_get_mipi_screen_sta()){
-            hl_set_mipi_screen_sta(0);
-        }else{
-            rt_kprintf("reset screen\n");
-            hl_drv_rm690a0_deinit();
-            hl_drv_rm690a0_init();
-            obj = hl_mod_creat_lay();
-            lv_obj_del_delayed(obj,50);
-            lv_timer_reset(timer);
-        } 
-    }       
+    if(hl_get_mipi_screen_sta()){
+        hl_set_mipi_screen_sta(0);
+    }else{
+        rt_kprintf("reset screen\n");
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+        obj = hl_mod_creat_lay();
+        lv_obj_del_delayed(obj,50);
+        lv_timer_reset(timer);
+    } 
+    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);     
 }
 // RX
 static void hl_mod_display_task(void* param)
