@@ -2433,6 +2433,8 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #else
 #endif
 
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
+
     rt_usbd_msc_switch(true);
 
     hl_mod_audio_rtc_init();
@@ -2494,7 +2496,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
+    // audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
