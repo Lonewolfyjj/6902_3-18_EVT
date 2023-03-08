@@ -65,6 +65,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
 
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
+    hl_led_switch temp = SWITCH_CLOSE;
     switch (p_msg->cmd) {
         case HL_AUDIO_UAC_LINK_IND:
             tx_info.uac_link_flag = 1;
@@ -74,6 +75,15 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_USB_MSTORAGE_DET:
             hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case RECORD_FAULT_MSG_ING:
+            if (p_msg->param.u32_param == 1) {
+                temp = SWITCH_OPEN;
+            } else {
+                temp = SWITCH_CLOSE;
+            }
+            hl_mod_display_io_ctrl(LED_RECORD_FAULT_CMD,&temp,1);
+			LOG_D("RECORD_FAULT_MSG_ING:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);

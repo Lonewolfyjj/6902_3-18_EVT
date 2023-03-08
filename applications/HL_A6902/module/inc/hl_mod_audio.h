@@ -85,6 +85,8 @@ typedef enum _hl_mod_audio_indicate
     HL_AUDIO_UAC_LINK_IND = 1,
     /// 大容量状态：类型uint8_t(0=OFF, 1=ON)
     MSG_USB_MSTORAGE_DET,
+    /// @brief  录制异常消息
+    RECORD_FAULT_MSG_ING,
 
 } HL_ENUM8(hl_mod_audio_indicate);
 
