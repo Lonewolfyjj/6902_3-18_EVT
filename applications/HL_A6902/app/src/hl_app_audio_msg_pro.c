@@ -65,6 +65,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
 
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
+    hl_led_switch temp = SWITCH_CLOSE;
     switch (p_msg->cmd) {
         case HL_AUDIO_UAC_LINK_IND:
             tx_info.uac_link_flag = 1;
@@ -75,6 +76,15 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
             break;
+        case RECORD_FAULT_MSG_ING:
+            if (p_msg->param.u32_param == 1) {
+                temp = SWITCH_OPEN;
+            } else {
+                temp = SWITCH_CLOSE;
+            }
+            hl_mod_display_io_ctrl(LED_RECORD_FAULT_CMD,&temp,1);
+			LOG_D("RECORD_FAULT_MSG_ING:(%d) \r\n", p_msg->param.u32_param);
+            break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
             break;
@@ -83,28 +93,76 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 
 void hl_app_audio_switch(void)
 {
-    static uint8_t audio_mic_switch = 1;
+    static uint8_t audio_mic_switch = 0;
     int32_t audio_gain = -128;
 
-    // 设置外置麦的开关
-    if(audio_mic_switch == 1) {
-        if((tx_info.on_off_flag == 0)||(tx_info.ex_mic_plug == 0)) {
-            audio_gain = -128;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
-            audio_mic_switch = 0;
+    LOG_I("hl_app_audio_switch ====(%d)(%d)(%d)", audio_mic_switch, tx_info.ex_mic_plug ,tx_info.uac_link_flag);
+
+    if (tx_info.ex_mic_plug != 0) {
+        if(audio_mic_switch == 1) {
+            return;
+        }
+        audio_gain = 0;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &audio_gain, 4);
+                           
+        rt_thread_mdelay(200);
+        hl_app_audio_gain(tx_info.gain);
+
+        audio_mic_switch = 1;
+    } else if(tx_info.uac_link_flag != 0) {
+        if(audio_mic_switch == 2) {
+            return;
+        }
+        audio_gain = -128;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+
+        hl_app_audio_gain_uac(tx_info.uac_gain);
+
+        audio_mic_switch = 2;
+    } else {
+        if(audio_mic_switch == 3) {
+            return;
+        }
+        audio_gain = -128;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
+
+        hl_app_audio_gain(tx_info.gain);
+
+        audio_mic_switch = 3;
+    }    
+}
+
+void hl_app_audio_gain(int32_t gain)
+{
+    tx_info.gain = gain;
+
+    if(tx_info.ex_mic_plug == 1) {          
+        if (gain > 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+            gain = 0;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);            
+        } else if (gain < 0) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+            gain = 0;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
+        } else {
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_PGA_GAIN_CMD, &gain, 4);
         }
     } else {
-        if((tx_info.on_off_flag == 1)&&(tx_info.ex_mic_plug == 1)) {
-            if(tx_info.gain < 0) {
-                audio_gain = tx_info.gain;
-            } else {
-                audio_gain = 0;
-            }            
-            rt_thread_mdelay(200);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIC_GAIN_CMD, &audio_gain, 4);
-            audio_mic_switch = 1;
-        }
-    }
+        gain += 10;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &gain, 4);
+    }  
+}
+
+
+void hl_app_audio_gain_uac(int32_t uac_gain)
+{
+    tx_info.uac_gain = uac_gain;
+
+    if((tx_info.uac_link_flag == 1)&&(tx_info.ex_mic_plug == 0)) {       
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_CMD, &uac_gain, 4);
+    } 
 }
 #else
 /// 大容量状态处理
@@ -124,6 +182,7 @@ static void hl_app_rx_mstorage_plug_pro(uint32_t value)
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
     uint8_t u8temp;
+    vu_mag  uv = {0};
 
     switch (p_msg->cmd) {
         case HL_AUDIO_UAC_LINK_IND:
@@ -135,14 +194,23 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d)", p_msg->param.u32_param);
             break;
+        
+        case HL_AUDIO_VU_VAL:
+            rt_memcpy((uint8_t *)&uv, (uint8_t *)&p_msg->param.u32_param, sizeof(vu_mag));
+            u8temp = (uint8_t)uv.l;
+            hl_mod_display_io_ctrl(TX1_VU_VAL_CMD, &u8temp, 1);
+            u8temp = (uint8_t)uv.r;
+            hl_mod_display_io_ctrl(TX2_VU_VAL_CMD, &u8temp, 1);
+            // LOG_I("l:%d r:%d uv:%08x param:%08x",(uint8_t)uv.l, (uint8_t)uv.r, *(uint32_t *)&uv, p_msg->param.u32_param);
+            break;
 
         case HL_AUDIO_L_VU_VAL:
-            u8temp = (uint8_t)(p_msg->param.u32_param);
+            u8temp = (uint8_t)p_msg->param.u32_param;
             hl_mod_display_io_ctrl(TX1_VU_VAL_CMD, &u8temp, 1);
             break;
         
         case HL_AUDIO_R_VU_VAL:
-            u8temp = (uint8_t)(p_msg->param.u32_param);
+            u8temp = (uint8_t)p_msg->param.u32_param;
             hl_mod_display_io_ctrl(TX2_VU_VAL_CMD, &u8temp, 1);
             break;
 
@@ -207,6 +275,8 @@ void hl_app_audio_stream_updata(void)
         stream_mode = HL_STREAM_PDM2PLAY;
         hl_mod_audio_io_ctrl(HL_AUDIO_STREAM_SET_CMD, &stream_mode, sizeof(hl_stream_mode_e)); 
     }
+
+    hl_app_audio_switch();
 #else
     // if (rx_info.uac_link_flag != 0) {
     //     stream_mode = HL_STREAM_CAP2UAC_UAC2PLAY;

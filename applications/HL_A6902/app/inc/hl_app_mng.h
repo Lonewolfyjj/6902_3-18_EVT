@@ -142,7 +142,8 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
-
+    /// 监听口增益设置
+    int32_t              uac_gain;
     /// 监听口增益设置
     int32_t              hp_gain;
     /// 相机口增益设置
@@ -226,6 +227,22 @@ void hl_app_mng_charger_entry(void *msg_q);
  * </table>
  */
 void hl_app_mng_charger_set_halt_state(uint8_t state);
+
+/**
+ * 
+ * @brief 配置初始化设置
+ * @date 2023-03-02
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-03-02      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_param_reset(void);
 
 #endif /* __HL_APP_MNG_H__ */
 /*

@@ -218,6 +218,7 @@ typedef struct _hl_display_screen_change_s{
     // 格式化页面TX声道标志,0表示格式化左声道，1表示格式化右声道
     uint32_t channel_format_flag:1;
     uint32_t voice_module:1;
+    uint32_t monitor_volume:1;
 }hl_display_screen_change_s;
 
 
@@ -253,7 +254,7 @@ uint8_t hl_mod_get_knob_okkey_val(void);
 int8_t hl_mod_get_rx_knob_val(void);
 void hl_mod_menu_knob_icon_change(int8_t center, uint8_t maxnum);
 void hl_mod_page_backlight_update(void);
-
+uint8_t bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho);
 void hl_mod_knob_select_val_set(int16_t* ptr, int16_t num);
 int16_t hl_mod_knob_select_val_get(int16_t* ptr);
 int16_t hl_mod_knob_select_val_change(int16_t* ptr, int16_t left, int16_t right, bool en);

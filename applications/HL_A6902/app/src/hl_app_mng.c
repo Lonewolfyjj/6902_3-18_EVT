@@ -75,11 +75,15 @@ int hl_app_info(int argc, char** argv);
 #if HL_IS_TX_DEVICE()
 void hl_app_param_loader(void)
 {
+    uint8_t param = 0;
+
     hl_util_nvram_param_get_integer("MUTE_OPEN", &tx_info.mute_flag, 0);
     hl_util_nvram_param_get_integer("REC_PROTECT_OPEN", &tx_info.rec_protect_flag, 0);
     hl_util_nvram_param_get_integer("REC_AUTO_OPEN", &tx_info.rec_auto_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_PROTECT_OPEN", &tx_info.denoise_protect_flag, 0);
     hl_util_nvram_param_get_integer("DENOISE_AUTO_OPEN", &tx_info.denoise_auto_flag, 0);
+    hl_util_nvram_param_get_integer("DENOISE_OPEN", &param, 0);   
+    tx_info.denoise_flag = param;
     hl_util_nvram_param_get_integer("DENOISE_CLASS", &tx_info.denoise_class, 0);
 
     hl_util_nvram_param_get_integer("TX_GAIN", &tx_info.gain, 0);
@@ -102,60 +106,152 @@ void hl_app_param_fun(void)
         hl_app_pm_timer_set();
     }
 
-    if (tx_info.denoise_auto_flag == 1) {
-        tx_info.denoise_flag = 1;
+    if (tx_info.denoise_flag == 1) {
+        //tx_info.denoise_flag = 1;
         param_switch         = HL_SWITCH_ON;
         // 降噪等级设置 。。。
         hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &param_switch, 1);
+        //hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &param_switch, 1);
     }
     hl_app_disp_state_led_set();
 }
+
+void hl_app_param_reset(void)
+{
+    uint8_t param = 0;
+    hl_switch_e param_switch = HL_SWITCH_OFF;
+
+    tx_info.mute_flag = 0;
+    hl_util_nvram_param_set_integer("MUTE_OPEN", tx_info.mute_flag);
+    tx_info.rec_protect_flag =0;
+    hl_util_nvram_param_set_integer("REC_PROTECT_OPEN", tx_info.rec_protect_flag);
+    tx_info.rec_auto_flag =0;
+    hl_util_nvram_param_set_integer("REC_AUTO_OPEN", tx_info.rec_auto_flag);
+    tx_info.denoise_protect_flag =0;
+    hl_util_nvram_param_set_integer("DENOISE_PROTECT_OPEN", tx_info.denoise_protect_flag);
+    tx_info.denoise_auto_flag =0;
+    hl_util_nvram_param_set_integer("DENOISE_AUTO_OPEN", tx_info.denoise_auto_flag);
+    param = 0;
+    tx_info.denoise_flag = param;
+    hl_util_nvram_param_set_integer("DENOISE_OPEN", param);       
+    tx_info.denoise_class = 0;
+    hl_util_nvram_param_set_integer("DENOISE_CLASS", tx_info.denoise_class);
+
+    tx_info.gain = 0;
+    hl_util_nvram_param_set_integer("TX_GAIN", tx_info.gain);
+    tx_info.uac_gain = 0;
+    hl_util_nvram_param_set_integer("TX_UAC_GAIN", tx_info.uac_gain);
+
+
+    if (tx_info.mute_flag == 0) {
+        param_switch = HL_SWITCH_OFF;
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &param_switch, 1);
+    }
+
+    if (tx_info.denoise_flag == 0) {
+        param_switch = HL_SWITCH_OFF;
+        // 降噪等级设置 。。。
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &param_switch, 1);
+    }
+
+    hl_app_audio_gain(tx_info.gain);
+    hl_app_audio_gain_uac(tx_info.uac_gain);    
+}
+
 #else
-void          hl_app_param_loader(void)
+void hl_app_param_loader(void)
 {
     hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
     hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
     hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
-    
-    
+    hl_util_nvram_param_get_integer("RX_UAC_GAIN", &rx_info.uac_gain, 0);
 }
 
 void hl_app_param_fun(void)
 {
-    uint8_t param = 0;
+    int8_t param = 0;
 
     // 读取TX的配置 发送配置给屏幕
     hl_util_nvram_param_get_integer("MUTE_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 0);
-    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 1);
+    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("REC_PROTECT_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("REC_AUTO_OPEN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 1);
 
     hl_util_nvram_param_get_integer("TX_GAIN", &param, 0);
-    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 1);
     hl_util_nvram_param_get_integer("TX_GAIN2", &param, 0);
-    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 0);
+    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 1);    
+
+    param = rx_info.uac_gain; 
+    hl_mod_display_io_ctrl(UAC_OUT_VOLUME_VAL_CMD, &param, 1);   
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &rx_info.uac_gain, 4);
+
+    param = rx_info.cam_gain_l / 2;
+    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+
+    param = rx_info.cam_gain_r / 2;
+    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+
+    param = rx_info.hp_gain / 2;
+    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
+}
+
+void hl_app_param_reset(void)
+{
+    uint8_t param = 0;
+    hl_switch_e param_switch = HL_SWITCH_OFF;
+
+    param = 0;
+    hl_util_nvram_param_set_integer("MUTE_OPEN", param);
+    hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &param, 1);
+    hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &param, 1);
+
+    param = 0;
+    hl_util_nvram_param_set_integer("REC_PROTECT_OPEN", param);
+    hl_mod_display_io_ctrl(AUTO_RECORD_PORTECT_SWITCH_CMD, &param, 1);
+
+    param = 0;
+    hl_util_nvram_param_set_integer("REC_AUTO_OPEN", param);
+    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 1);
+
+    param = 0;
+    hl_util_nvram_param_set_integer("TX_GAIN", param);
+    hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &param, 1);
+    hl_util_nvram_param_set_integer("TX_GAIN2", param);
+    hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &param, 1);
     
-    hl_util_nvram_param_get_integer("TX_UAC_GAIN", &param, 0);
-    hl_mod_display_io_ctrl(AUTO_RECORD_SWITCH_CMD, &param, 0);
+    param = 0;
+    rx_info.uac_gain = 0;
+    hl_util_nvram_param_set_integer("RX_UAC_GAIN", param);        
+    hl_mod_display_io_ctrl(UAC_OUT_VOLUME_VAL_CMD, &param, 1);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &rx_info.uac_gain, 4);
+
+    rx_info.hp_gain = 0;
+    hl_util_nvram_param_set_integer("RX_HP_L_GAIN", rx_info.hp_gain);
+    // hl_util_nvram_param_set_integer("RX_HP_R_GAIN", rx_info.hp_gain);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
+
+    rx_info.cam_gain_l = 0;
+    rx_info.cam_gain_r = 0;
+    hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
+    hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
 
     param = rx_info.cam_gain_l/2;
-    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
-    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
-
+    hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
     param = rx_info.cam_gain_r/2;
-    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 0);
-    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+    hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
     param = rx_info.hp_gain/2;
-    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 0);
-    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
-    // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
+    hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
 }
 #endif
 /* Exported functions --------------------------------------------------------*/
@@ -184,7 +280,7 @@ void hl_app_msg_thread(void* parameter)
 
     rt_memset(&msg, 0, sizeof(msg));
     while (1) {
-        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), 500) == RT_EOK) {
+        if (rt_mq_recv(&hl_app_mq, &msg, sizeof(msg), -1) == RT_EOK) {
             // LOG_D("recv msg sender:%d, cmd:%d, param:%d !!!", msg.sender, msg.cmd, msg.param);
             switch (msg.sender) {
                 case INPUT_MODE:
@@ -219,7 +315,7 @@ void hl_app_msg_thread(void* parameter)
                     break;
             }
         }
-        rt_thread_mdelay(5);
+        // rt_thread_mdelay(20);
         hl_mod_feed_dog();
     }
 }
@@ -245,7 +341,7 @@ void hl_app_mng_init(void)
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
-    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 15, 5);
+    app_task_tid = rt_thread_create("app_task", hl_app_msg_thread, RT_NULL, 10240, 10, 5);
     if (app_task_tid) {
         rt_thread_startup(app_task_tid);
     } else {
@@ -288,10 +384,10 @@ void hl_app_mng_powerOn(void)
     if (msc_open_flag == 1) {
         hl_mod_audio_deinit();  //hl_mod_audio_init(&hl_app_mq);
     }
-#endif
 
     hl_mod_apple_auth_init(&hl_app_mq);
-    hl_mod_apple_auth_start();
+#endif
+
     hl_mod_euc_init(&hl_app_mq);
     hl_mod_euc_start();
 
@@ -366,6 +462,8 @@ int hl_app_info(int argc, char** argv)
     LOG_I("mute_flag = %d ", tx_info.mute_flag);
     LOG_I("rf_state = %d ", tx_info.rf_state);
     LOG_I("tx_info.soc = %d ", tx_info.soc);
+    LOG_I("tx_info.gain = %d ", tx_info.gain);
+    LOG_I("tx_info.uac_gain = %d ", tx_info.uac_gain);
 #else
     LOG_I("------show rx app info------");
     LOG_I("on_off_flag = %d", rx_info.on_off_flag);
@@ -377,8 +475,9 @@ int hl_app_info(int argc, char** argv)
     LOG_I("charge_flag = %d ", rx_info.charge_flag);
     LOG_I("rf_state = %d ", rx_info.rf_state);
     LOG_I("rx_info.soc = %d ", rx_info.soc);
-    LOG_I("cur_volume_r = %d ", rx_info.cur_volume_r);
-    LOG_I("cur_volume_l = %d ", rx_info.cur_volume_l);
+    LOG_I("cam_gain_l = %d ", rx_info.cam_gain_l);
+    LOG_I("cam_gain_r = %d ", rx_info.cam_gain_r);
+    LOG_I("hp_gain = %d ", rx_info.hp_gain);
 #endif
     return 0;
 }
@@ -387,18 +486,20 @@ INIT_APP_EXPORT(hl_app_mng_init);
 MSH_CMD_EXPORT(hl_app_info, show app info cmd);
 
 
-void hl_app_test_init(void)
+MSH_CMD_EXPORT(hl_app_param_reset, show app info cmd);
+
+static void _hl_et_sche_hook(rt_thread_t from, rt_thread_t to)
 {
-    hl_mod_audio_init(&hl_app_mq);
+    rt_kprintf("%s[%d]->%s[%d]\r\n", from->name, from->remaining_tick, to->name, to->remaining_tick);
 }
 
-void hl_app_test_deinit(void)
+static int set_sche_hook(int argc, char **argv)
 {
-    hl_mod_audio_deinit();
+    rt_scheduler_sethook(_hl_et_sche_hook);
+    return 0;
 }
 
-MSH_CMD_EXPORT(hl_app_test_init, show app info cmd);
-MSH_CMD_EXPORT(hl_app_test_deinit, show app info cmd);
+MSH_CMD_EXPORT(set_sche_hook, set_sche_hook);
 /*
  * EOF
  */

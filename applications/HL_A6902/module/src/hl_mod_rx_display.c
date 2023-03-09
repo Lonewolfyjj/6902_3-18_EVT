@@ -50,8 +50,8 @@
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
 
-#define DISPLAY_THREAD_PRIORITY 20
-#define DISPLAY_THREAD_STACK_SIZE 40960
+#define DISPLAY_THREAD_PRIORITY 10
+#define DISPLAY_THREAD_STACK_SIZE 8192
 #define DISPLAY_THREAD_TIMESLICE 5
 
 // 单位 毫秒
@@ -63,15 +63,18 @@
 
 static hl_timeout_t rot_scan_in;
 
+#if 0
 // gsensor消抖时间
 static hl_timeout_t sensor_debance;
+#endif
 static lv_style_t lay_style;
 static rt_thread_t display_tid = RT_NULL;
 static lv_timer_t * timer;
 static lv_style_t style;
 static lv_obj_t* obj;
+#if 0
 static void hl_mod_screen_rot_scan(void);
-
+#endif
 // 在nvrma获取sn和rx版本号
 static void hl_mod_display_get_sn_version(void)
 {
@@ -79,7 +82,7 @@ static void hl_mod_display_get_sn_version(void)
     // hl_display_screen_change_s* flag     = hl_mod_page_get_screen_change_flag();
 
     char sn_buf[36]     = { 0 };
-    char rx_ver_buf[10] = { 0 };
+    // char rx_ver_buf[10] = { 0 };
 
 
     // 从NVRAM获取当前RX版本号
@@ -101,7 +104,7 @@ static void hl_mod_display_get_sn_version(void)
     }
 #endif 
 }
-
+#if 0
 static device_pose_t hl_mod_device_pose_val(void)
 {
     euler_angle_t        pose;
@@ -201,7 +204,7 @@ static void hl_mod_screen_rot_scan(void)
         hl_util_timeout_set(&rot_scan_in, ROT_SCAN_IN_TIME);
     }
 }
-
+#endif
 uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 {
     uint8_t                     res    = HL_DISPLAY_SUCCESS;
@@ -493,6 +496,12 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             flag->systime = 1;
         } break;
+        case MONITOR_VOLUME_VAL_CMD: {
+
+            data_p->monitor_volume = *(int8_t*)ptr;
+
+            flag->monitor_volume = 1;
+        } break;        
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -506,7 +515,7 @@ static lv_obj_t* hl_mod_creat_lay(void)
     lv_obj_t* obj = lv_obj_create(lv_scr_act());
     lv_obj_add_style(obj,&lay_style,0);
     lv_obj_center(obj);
-    lv_obj_set_size(obj,126,294);
+    lv_obj_set_size(obj,290,120);
     lv_obj_move_foreground(obj);
     return obj;
 }
@@ -522,7 +531,8 @@ static void screen_timer(lv_timer_t * timer)
         obj = hl_mod_creat_lay();
         lv_obj_del_delayed(obj,50);
         lv_timer_reset(timer);
-    }    
+    } 
+    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);     
 }
 // RX
 static void hl_mod_display_task(void* param)
@@ -537,6 +547,7 @@ static void hl_mod_display_task(void* param)
     lv_style_init(&lay_style);
     lv_style_set_bg_color(&lay_style, lv_color_black());
     lv_style_set_bg_opa(&lay_style,LV_OPA_10);
+    lv_style_set_border_width(&lay_style, 0);
     wdg_reg = *(uint32_t*)(0x40050304);
     if(wdg_reg == 0){
         rt_kprintf("\nDevice normal reset ,reg= %X\n",wdg_reg);

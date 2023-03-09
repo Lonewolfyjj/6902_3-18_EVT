@@ -41,7 +41,7 @@
 #include "hl_util_general_type.h"
 
 // logo页面定时器
-#define LOGO_PAGE_RUNTIME 3000
+#define LOGO_PAGE_RUNTIME 2000
 
 hl_screenofftime_t logo_page_timer;
 LV_IMG_DECLARE(logo);   // LOGO页面
@@ -75,8 +75,9 @@ static void hl_mod_page_exit(void)
 {
     LOG_E("exitPAGE_LOGO\n");
     hl_mod_page_screenofftimer_close(&logo_page_timer);
-    lv_obj_add_flag(img_obj,LV_OBJ_FLAG_HIDDEN);
-    lv_obj_del_delayed(img_obj,0);   
+    // lv_obj_add_flag(img_obj,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_del(img_obj);
+    rt_thread_mdelay(10);   
 }
 
 static void hl_mod_page_loop(void)

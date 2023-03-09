@@ -9,7 +9,7 @@
 
 #if A6902_TX_HL
 
-#define A6902_VERSION "V1.0.2.11"
+#define A6902_VERSION "V1.0.2.21"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_TX_JF
@@ -19,7 +19,7 @@
 
 #elif A6902_RX_HL_CH
 
-#define A6902_VERSION "V1.0.2.11"
+#define A6902_VERSION "V1.0.2.21"
 #define A6902_LANGUAGE "CN"
 
 #elif A6902_RX_JF_CH

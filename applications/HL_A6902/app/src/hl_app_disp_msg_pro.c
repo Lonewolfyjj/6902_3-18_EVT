@@ -136,6 +136,7 @@ static uint8_t _hl_app_disp_msg_pro_rf_connect()
             break;
         case HL_RF_LR_CONNECT:
             ret = 1;
+            hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             LOG_D("no need to paire\r\n");
             break;
         case HL_RF_PAIRING:
@@ -161,7 +162,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case RESTORE_SET_SWITCH_IND:
             // TBD: 恢复NVRAM的值并重启？
             rf_bypass_chn = HL_RF_DOUBLE_CHANNEL;
-            hl_mod_telink_ioctl(HL_RF_BYPASS_REFACTORY_CMD, &rf_bypass_chn, sizeof(rf_bypass_chn));
+            hl_mod_telink_ioctl(HL_RF_BYPASS_REFACTORY_CMD, &rf_bypass_chn, sizeof(rf_bypass_chn));    
+            hl_app_param_reset(); // 建议跳入语言设置和时间设置入用户进行重新设置     
             LOG_D("RESTORE_SET_SWITCH_IND\r\n");
             break;
         case AUTO_RECORD_SWITCH_IND:
@@ -291,14 +293,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
             LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
             ptr = p_msg->param.u32_param*2;
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
             LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_CATEGORY_VAL_IND:
@@ -318,6 +320,14 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             }
             LOG_D("MONITOR_CATEGORY_VAL_IND\r\n");
             break;
+        case UAC_OUT_VOLUME_VAL_IND:
+            // TBD: MONO设置UAC音量
+            ptr = p_msg->param.u32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &ptr, 4);
+            rx_info.uac_gain = ptr;
+            hl_util_nvram_param_set_integer("RX_UAC_GAIN", rx_info.uac_gain);
+            LOG_D("UAC_OUT_VOLUME_VAL_IND");
+            break;
         case MONO_LINE_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置相机口音量
             ptr = p_msg->param.u32_param*2;
@@ -325,8 +335,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
             rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
             LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
@@ -336,8 +346,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
             rx_info.cam_gain_l = ptr;
             rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", ptr);
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
+            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
             LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
             break;
         case MONITOR_VOLUME_VAL_IND:
@@ -346,8 +356,8 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr, 4);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr, 4);
             rx_info.hp_gain = ptr;
-            hl_util_nvram_param_set_integer("RX_HP_L_GAIN", ptr);
-            hl_util_nvram_param_set_integer("RX_HP_R_GAIN", ptr);
+            hl_util_nvram_param_set_integer("RX_HP_L_GAIN", rx_info.hp_gain);
+            hl_util_nvram_param_set_integer("RX_HP_R_GAIN", rx_info.hp_gain);
             LOG_D("MONITOR_VOLUME_VAL_IND\r\n");
             break;
         case LED_BRITNESS_VAL_IND:

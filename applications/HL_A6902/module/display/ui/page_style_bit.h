@@ -35,7 +35,7 @@ typedef struct _hl_page_style_bit
 } hl_page_style_bit;
 
 // 风格创建标记，为1表示已经创建，为0表示未创建
-hl_page_style_bit page_style_bit ;
+extern hl_page_style_bit page_style_bit ;
 // void page_test(void);
 
 void hl_page_style_bit_init(void);

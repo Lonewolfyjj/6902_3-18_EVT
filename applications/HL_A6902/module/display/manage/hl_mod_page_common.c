@@ -128,7 +128,7 @@ void hl_mod_display_mux_init(void)
 void hl_mod_display_mux_take(void)
 {
     if (display_mux) {
-        rt_mutex_take(display_mux, RT_WAITING_FOREVER);
+        rt_mutex_take(display_mux, 1000);
     }
 }
 
@@ -184,6 +184,23 @@ uint8_t hl_mode_report_event(hl_timeout_t* timer, uint32_t time, int16_t bar_num
     return changeflag;
 }
 
+// 2:充电中   1 ：欠压中   0 正常
+uint8_t bat_state_deal(uint8_t charge_state, uint8_t bat_val, uint8_t thresho)
+{
+    uint8_t ret;
+
+    if (charge_state) {
+        ret = 2;
+    } else if (charge_state == 0 && bat_val > thresho) {
+        ret = 0;
+    } else if (charge_state == 0 && bat_val <= thresho) {
+        ret = 1;
+    } else {
+        ret = 0;
+    }
+
+    return ret;
+}
 
 void hl_b_two_in_one_trg(hl_b_two_in_one_check_t choose)
 {    hl_lvgl_b_two_in_one_ioctl_t two_b_in_one_test_ctl;

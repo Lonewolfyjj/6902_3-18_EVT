@@ -1050,7 +1050,7 @@ static bool _upgrade_nuzip(void)
             goto err0;
         }
     } else {
-        s_upgrade.telink_state = HL_UPGRADE_SUCCEED_STATE;
+        s_upgrade.telink_state = HL_UPGRADE_IDLE_STATE;
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[1].name, s_pack_info.pack[1].hardversion);
     }
 
@@ -1077,7 +1077,7 @@ static bool _upgrade_nuzip(void)
             LOG_E("unlink error%s", packname);
             goto err0;
         }      
-        s_upgrade.ota_state = HL_UPGRADE_SUCCEED_STATE;
+        s_upgrade.ota_state = HL_UPGRADE_IDLE_STATE;
         LOG_I("delete file (%s) ", packname);
         LOG_E("upgrade %s hardversion %s error", s_pack_info.pack[0].name, s_pack_info.pack[0].hardversion);
     }    
@@ -1163,7 +1163,7 @@ static void hl_mod_upgrade_guard(void)
             break;
         }
         guard_time ++;
-        rt_thread_mdelay(1000);
+        rt_thread_mdelay(500);
     }
 }
 
