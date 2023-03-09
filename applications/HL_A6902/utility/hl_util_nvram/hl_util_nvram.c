@@ -140,12 +140,12 @@ static void _update_with_nvram_factory_string(void)
                 }
 
                 if (nvram_factory_string[i] == '}') {
-                    sg_nvram_handle->std_printf("nvram no need to update!");
+                    sg_nvram_handle->std_printf("nvram no need to update!\r\n");
                     return;
                 }
 
                 if (nvram_factory_string[i] == ',' && sg_json_str_buffer[j] == '}') {
-                    sg_nvram_handle->std_printf("add new nvram string : %s", &nvram_factory_string[i]);
+                    sg_nvram_handle->std_printf("add new nvram string : %s\r\n", &nvram_factory_string[i]);
                     memcpy(&sg_json_str_buffer[i], &nvram_factory_string[j], strlen(nvram_factory_string) - i + 1);
                     sg_nvram_handle->have_changed = 1;
                     return;
@@ -154,7 +154,7 @@ static void _update_with_nvram_factory_string(void)
             i++;
             j++;
         } else {
-            sg_nvram_handle->std_printf("nvram update err: different key name! using nvram factory string");
+            sg_nvram_handle->std_printf("nvram update err: different key name! using nvram factory string\r\n");
             memcpy(sg_json_str_buffer, nvram_factory_string, strlen(nvram_factory_string) + 1);
             sg_nvram_handle->have_changed = 1;
             return;
@@ -197,7 +197,7 @@ uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
     if (len) {
         if (strnlen(sg_json_str_buffer, HL_UTIL_NVRAM_JSON_BUFFER_SIZE) == HL_UTIL_NVRAM_JSON_BUFFER_SIZE) {
             sg_json_paramaters = cJSON_Parse(nvram_factory_string);
-            sg_nvram_handle->std_printf("get Json from factory string!");
+            sg_nvram_handle->std_printf("get Json from factory string!\r\n");
         } else {
             _update_with_nvram_factory_string();
             sg_json_paramaters = cJSON_Parse(sg_json_str_buffer);
