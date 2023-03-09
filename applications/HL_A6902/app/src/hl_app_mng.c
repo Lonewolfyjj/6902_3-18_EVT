@@ -193,12 +193,15 @@ void hl_app_param_fun(void)
     hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &rx_info.uac_gain, 4);
 
     param = rx_info.cam_gain_l / 2;
+    LOG_D("cam_gain_l=(%d)\r\n",rx_info.cam_gain_l);
     hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
     param = rx_info.cam_gain_r / 2;
+    LOG_D("cam_gain_r=(%d)\r\n",rx_info.cam_gain_r);
     hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
-    param = rx_info.hp_gain / 2;
+    param = rx_info.hp_gain;
+    LOG_D("hp_gain = (%d)\r\n",param);
     hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
 }
 
