@@ -86,6 +86,16 @@ typedef enum _hl_key_event_e
     HL_KEY_EVENT_RELEASE,
 } HL_ENUM8(hl_key_event_e);
 
+typedef enum _hl_display_sound_module_e
+{
+    /// 单声道,
+    MONO = 0,
+    /// 立体声
+    STEREO,
+    /// 安全音轨
+    SAFE_TRACK,
+} HL_ENUM8(hl_display_sound_module_e);
+
 typedef struct _hl_audio_time_t_
 {
     /// 年

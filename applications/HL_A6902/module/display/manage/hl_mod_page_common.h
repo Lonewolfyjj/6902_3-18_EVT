@@ -36,6 +36,7 @@ extern "C" {
 #include "hl_util_msg_type.h"
 #include "hl_util_timeout.h"
 #include "page_b_two_in_one.h"
+#include "hl_util_general_type.h"
 
 #define DBG_SECTION_NAME "display"
 #define DBG_LEVEL DBG_LOG

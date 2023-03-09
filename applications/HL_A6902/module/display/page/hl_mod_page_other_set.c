@@ -44,12 +44,12 @@
 #include "hl_util_general_type.h"
 #include "page_language.h"
 
-#define MENU_ICON_NUM 6
+#define MENU_ICON_NUM 5
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
     PAGE_PAIR,
     PAGE_SOUNDOUT_SETTING,
-    PAGE_SYS_TIME_SET,
+    // PAGE_SYS_TIME_SET,
     PAGE_VERSION,
     PAGE_RESTORE,
     PAGE_OPEN_MSC,
@@ -80,7 +80,7 @@ static void page_9_test(void)
     menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_pair, page_ptr->menu_page_ptr->page_other_set->ptr_pair),//"配对"),
         ADD_IMG_DATA(NULL,NULL,&Menu_voice_out,page_ptr->menu_page_ptr->page_other_set->ptr_voice_out),//"外放设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_time_config, page_ptr->menu_page_ptr->page_other_set->ptr_time_config),//"时间设置"),
+        // ADD_IMG_DATA(NULL, NULL, &Menu_time_config, page_ptr->menu_page_ptr->page_other_set->ptr_time_config),//"时间设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_verson, page_ptr->menu_page_ptr->page_other_set->ptr_verson),//"版本信息"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_reset_factory),//"恢复出厂设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_upgrade),//"开启升级"),

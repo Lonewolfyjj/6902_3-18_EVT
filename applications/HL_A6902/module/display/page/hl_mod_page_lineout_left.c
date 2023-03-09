@@ -56,6 +56,7 @@ static void page_voc_bar_left_init()
 {
     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
     a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
+    LOG_D("line_out1=(%d)\r\n",data->tx1_line_out_volume);
     hl_mod_page_volume_init(data->tx1_line_out_volume);
 
     hl_lvgl_barset_init_t bar_test = {

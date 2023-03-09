@@ -236,8 +236,8 @@ void hl_app_audio_switch(void)
         }
     } else {
         if((rx_info.on_off_flag == 1)&&(rx_info.cam_spk_plug == 1)&&((rx_info.rf_state == HL_RF_L_CONNECT)||(rx_info.rf_state == HL_RF_R_CONNECT)||(rx_info.rf_state == HL_RF_LR_CONNECT))) {
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.st_cam_gain_l, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.st_cam_gain_r, 4);
             audio_cam_switch = 1;
         }
     }

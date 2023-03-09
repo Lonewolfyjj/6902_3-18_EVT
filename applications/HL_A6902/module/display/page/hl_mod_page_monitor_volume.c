@@ -53,6 +53,7 @@ static void page_uac_out_init(void)
     hl_display_screen_s* data = hl_mod_page_get_screen_data_ptr();
     a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     // 设置当前音量
+    LOG_D("data_vol=(%d)\r\n",data->monitor_volume);
     hl_mod_page_volume_init(data->monitor_volume);
 
     hl_lvgl_barset_init_t bar_test = {

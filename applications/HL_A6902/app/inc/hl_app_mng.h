@@ -147,9 +147,15 @@ typedef struct _rx_app_info_t
     /// 监听口增益设置
     int32_t              hp_gain;
     /// 相机口增益设置
-    int32_t              cam_gain_l;
-    int32_t              cam_gain_r;
-
+    /// 立体声
+    int32_t              st_cam_gain_l;
+    int32_t              st_cam_gain_r;
+    // 单声道       0单声道  1 立体声  2 安全音轨
+    int32_t              mono_cam_gain;
+    // 安全音轨
+    int32_t              sft_cam_gain;
+    /// 声道模式 0 mono 类型 <`hl_display_sound_module_e>
+    uint8_t              sound_mod;
     /// TX1版本号
     uint8_t             tx1_version[32];
     /// TX2版本号
