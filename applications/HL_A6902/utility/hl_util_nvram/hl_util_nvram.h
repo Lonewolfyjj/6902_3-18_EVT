@@ -223,7 +223,7 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value);
  * hl_util_nvram_param_set_integer
  * @brief 获取数值参数，返回的是数值结果
  * @param [in] param_key 写入的参数名
- * @param [in] integer_value 写入的参数的值的保存地址
+ * @param [in] integer_value 写入的参数的值(注意类型：int8) 
  * @return uint8_t 写入状态 0：成功 | 非0：失败 
  * @date 2023-02-07
  * @author lixiang (rd37@hollyland-tech.com)
@@ -236,7 +236,7 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value);
  * <tr><td>2023-02-07      <td>lixiang     <td>新建
  * </table>
  */
-uint8_t hl_util_nvram_param_set_integer(char* param_key, uint8_t integer_value);
+uint8_t hl_util_nvram_param_set_integer(char* param_key, int8_t integer_value);
 
 /**
  * hl_util_nvram_param_save

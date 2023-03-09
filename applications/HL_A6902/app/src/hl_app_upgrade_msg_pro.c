@@ -104,7 +104,7 @@ static void hl_app_upgrade_state(hl_mod_upgrade_state upgrade_state)
             status = HL_UPGRADE_STATUS_SUCCESS;
             LOG_D("HL_UPGRADE_STATUS_SUCCESS");
             hl_mod_display_io_ctrl(UPDATE_STATE_CMD, &status, 0);
-            break;
+        break;
         case HL_UPGRADE_FAIL_STATE:  /// 升级失败状态
             param = 1; 
             hl_mod_audio_io_ctrl(HL_AUDIO_MSTORAGE_SWITCH_CMD, &param, 1);

@@ -730,8 +730,6 @@ int hl_mod_euc_stop(void)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
-    uart_deinit();
-
     _euc_mod.thread_exit_flag = 1;
 
     LOG_I("wait euc thread exit");
@@ -742,6 +740,8 @@ int hl_mod_euc_stop(void)
 
     LOG_I("euc stop success");
 
+    uart_deinit();
+    
     _euc_mod.start_flag = false;
 
     return HL_MOD_EUC_FUNC_RET_OK;

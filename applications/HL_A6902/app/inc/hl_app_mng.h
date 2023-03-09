@@ -142,7 +142,8 @@ typedef struct _rx_app_info_t
     int32_t             safety_volume_r;
     /// 安全音轨左音量
     int32_t             safety_volume_l;
-
+    /// 监听口增益设置
+    int32_t              uac_gain;
     /// 监听口增益设置
     int32_t              hp_gain;
     /// 相机口增益设置
