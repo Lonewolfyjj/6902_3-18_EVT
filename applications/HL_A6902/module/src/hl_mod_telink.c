@@ -830,10 +830,27 @@ void telink_set_remote_mac(int argc, char** argv)
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
-void telink_open_emi(int argc, char** argv)
+void hl_rf_open_EMI_test(int argc, char** argv)
 {
     if (argc != 4) {
-        LOG_E("\n[error]send EMI(telink_emi + ant_sel + freq_chn + power_level)\n");
+        rt_kprintf("\n\n\n");
+        rt_kprintf("\n[ERROR]!!! input arg error !!!\n");
+        rt_kprintf("\n>>>PS:hl_rf_open_EMI_test + Ant + Freq_Chn + PowerLevel)\n\n");
+        rt_kprintf("--> Arg[1] Select Antenna\n");
+        rt_kprintf("\t\t1-ant1 | 2-ant2\n");
+        rt_kprintf("--> Arg[2] Freq Channel\n");
+        rt_kprintf("\t\t(0~80) MHz\n");
+        rt_kprintf("--> Arg[3] RF Power Level\n");
+        rt_kprintf("\t\t(8) 3.3dbm\t(16) -2dbm\n");
+        rt_kprintf("\t\t(9) 2.8dbm\t(17) -3.4dbm\n");
+        rt_kprintf("\t\t(10) 2.3dbm\t(18) -4.8dbm\n");
+        rt_kprintf("\t\t(11) 1.7dbm\t(19) -6.5dbm\n");
+        rt_kprintf("\t\t(12) 0.8dbm\t(20) -8.8dbm\n");
+        rt_kprintf("\t\t(13) 0dbm\t(21) -12.1dbm\n");
+        rt_kprintf("\t\t(14) -0.5dbm\t(22) -17.8dbm\n");
+        rt_kprintf("\t\t(15) -1.4dbm\t(23) -23.5dbm\n");
+        rt_kprintf("\n\n\n");
+        return;
     }
 
     uint8_t buf[3] = { 0 };
@@ -844,14 +861,14 @@ void telink_open_emi(int argc, char** argv)
 
     LOG_I("[OK]Telink Open EMI\n");
     rt_kprintf("--> ANT_SEL = %d\n", buf[0]);
-    rt_kprintf("--> FREQ_CHN = %d\n", buf[1]);
+    rt_kprintf("--> FREQ_CHN = 2.4%02dGHz\n", buf[1]);
     rt_kprintf("--> POWER_LEVEL = %d\n\n", buf[2]);
 
-    hl_mod_telink_ioctl(0x51, buf, 3);
+    hl_mod_telink_ioctl(HL_RF_ENTER_EMI_CMD, buf, sizeof(buf));
 }
-MSH_CMD_EXPORT(telink_open_emi, Telink Open EMI cmd);
+MSH_CMD_EXPORT(hl_rf_open_EMI_test, Telink Open EMI cmd);
 
-void telink_close_emi(int argc, char** argv)
+void hl_rf_close_EMI_test(int argc, char** argv)
 {
     LOG_I("[OK]Telink Close EMI\n");
 
@@ -871,7 +888,7 @@ void telink_close_emi(int argc, char** argv)
     hl_hal_gpio_high(GPIO_RF_PWR_EN);
 #endif
 }
-MSH_CMD_EXPORT(telink_close_emi, Telink Close EMI cmd);
+MSH_CMD_EXPORT(hl_rf_close_EMI_test, Telink Close EMI cmd);
 /*
  * EOF
  */
