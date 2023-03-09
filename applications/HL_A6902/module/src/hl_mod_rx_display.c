@@ -496,6 +496,12 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
 
             flag->systime = 1;
         } break;
+        case MONITOR_VOLUME_VAL_CMD: {
+
+            data_p->monitor_volume = *(int8_t*)ptr;
+
+            flag->monitor_volume = 1;
+        } break;        
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;
@@ -516,18 +522,17 @@ static lv_obj_t* hl_mod_creat_lay(void)
 
 static void screen_timer(lv_timer_t * timer)
 {
-    if(screen_cnt_fun()){
-        if(hl_get_mipi_screen_sta()){
-            hl_set_mipi_screen_sta(0);
-        }else{
-            rt_kprintf("reset screen\n");
-            hl_drv_rm690a0_deinit();
-            hl_drv_rm690a0_init();
-            obj = hl_mod_creat_lay();
-            lv_obj_del_delayed(obj,50);
-            lv_timer_reset(timer);
-        } 
-    }       
+    if(hl_get_mipi_screen_sta()){
+        hl_set_mipi_screen_sta(0);
+    }else{
+        rt_kprintf("reset screen\n");
+        hl_drv_rm690a0_deinit();
+        hl_drv_rm690a0_init();
+        obj = hl_mod_creat_lay();
+        lv_obj_del_delayed(obj,50);
+        lv_timer_reset(timer);
+    } 
+    rt_pin_irq_enable(GPIO1_C0,PIN_IRQ_ENABLE);     
 }
 // RX
 static void hl_mod_display_task(void* param)

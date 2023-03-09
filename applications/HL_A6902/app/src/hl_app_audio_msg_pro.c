@@ -65,6 +65,7 @@ static void hl_app_tx_mstorage_plug_pro(uint32_t value)
 
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
+    hl_led_switch temp = SWITCH_CLOSE;
     switch (p_msg->cmd) {
         case HL_AUDIO_UAC_LINK_IND:
             tx_info.uac_link_flag = 1;
@@ -74,6 +75,15 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
         case MSG_USB_MSTORAGE_DET:
             hl_app_tx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d) \r\n", p_msg->param.u32_param);
+            break;
+        case RECORD_FAULT_MSG_ING:
+            if (p_msg->param.u32_param == 1) {
+                temp = SWITCH_OPEN;
+            } else {
+                temp = SWITCH_CLOSE;
+            }
+            hl_mod_display_io_ctrl(LED_RECORD_FAULT_CMD,&temp,1);
+			LOG_D("RECORD_FAULT_MSG_ING:(%d) \r\n", p_msg->param.u32_param);
             break;
         default:
             LOG_E("cmd(%d) unkown!!! \r\n", p_msg->cmd);
@@ -172,6 +182,7 @@ static void hl_app_rx_mstorage_plug_pro(uint32_t value)
 void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
 {
     uint8_t u8temp;
+    vu_mag  uv = {0};
 
     switch (p_msg->cmd) {
         case HL_AUDIO_UAC_LINK_IND:
@@ -183,14 +194,23 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             hl_app_rx_mstorage_plug_pro(p_msg->param.u32_param);
 			LOG_D("MSG_USB_MSTORAGE_DET:(%d)", p_msg->param.u32_param);
             break;
+        
+        case HL_AUDIO_VU_VAL:
+            rt_memcpy((uint8_t *)&uv, (uint8_t *)&p_msg->param.u32_param, sizeof(vu_mag));
+            u8temp = (uint8_t)uv.l;
+            hl_mod_display_io_ctrl(TX1_VU_VAL_CMD, &u8temp, 1);
+            u8temp = (uint8_t)uv.r;
+            hl_mod_display_io_ctrl(TX2_VU_VAL_CMD, &u8temp, 1);
+            // LOG_I("l:%d r:%d uv:%08x param:%08x",(uint8_t)uv.l, (uint8_t)uv.r, *(uint32_t *)&uv, p_msg->param.u32_param);
+            break;
 
         case HL_AUDIO_L_VU_VAL:
-            u8temp = (uint8_t)(p_msg->param.u32_param);
+            u8temp = (uint8_t)p_msg->param.u32_param;
             hl_mod_display_io_ctrl(TX1_VU_VAL_CMD, &u8temp, 1);
             break;
         
         case HL_AUDIO_R_VU_VAL:
-            u8temp = (uint8_t)(p_msg->param.u32_param);
+            u8temp = (uint8_t)p_msg->param.u32_param;
             hl_mod_display_io_ctrl(TX2_VU_VAL_CMD, &u8temp, 1);
             break;
 

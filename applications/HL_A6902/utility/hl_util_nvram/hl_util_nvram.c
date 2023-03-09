@@ -287,7 +287,8 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
     return ret;
 }
 
-uint8_t hl_util_nvram_param_set_integer(char* param_key, uint8_t integer_value)
+// param int8
+uint8_t hl_util_nvram_param_set_integer(char* param_key, int8_t integer_value)
 {
     char param_value[10] = {0};
 

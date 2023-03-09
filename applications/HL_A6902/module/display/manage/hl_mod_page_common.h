@@ -218,6 +218,7 @@ typedef struct _hl_display_screen_change_s{
     // 格式化页面TX声道标志,0表示格式化左声道，1表示格式化右声道
     uint32_t channel_format_flag:1;
     uint32_t voice_module:1;
+    uint32_t monitor_volume:1;
 }hl_display_screen_change_s;
 
 
