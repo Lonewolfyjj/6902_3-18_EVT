@@ -145,6 +145,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
             // telink_work_mode = HL_RF_FULL_POWER;
             // hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
+        case HL_SET_RF_LOWPOWER_IND: {  // 设置RF为低功耗工作模式
+            telink_work_mode = HL_RF_LOW_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
+        } break;
         case HL_GET_SOC_REQ_IND: {  //请求获取电量
             bat_soc_temp = tx_info.soc;
             hl_mod_euc_ctrl(HL_SET_SOC_CMD, &bat_soc_temp, sizeof(bat_soc_temp));
@@ -249,6 +253,10 @@ void hl_app_com_msg_pro(mode_to_app_msg_t* p_msg)
 
             hl_com_display_in_box_state_set();
             rt_thread_mdelay(500);
+        } break;
+        case HL_SET_RF_LOWPOWER_IND: {  // 设置RF为低功耗工作模式
+            telink_work_mode = HL_RF_LOW_POWER;
+            hl_mod_telink_ioctl(HL_RF_SET_WORK_MODE_CMD, &telink_work_mode, sizeof(telink_work_mode));
         } break;
         case HL_GET_SOC_REQ_IND: {  // 请求获取电池电量
             bat_soc_temp = rx_info.soc;

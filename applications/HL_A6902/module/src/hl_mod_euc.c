@@ -226,8 +226,9 @@ static int _hid_send_hup_data(char cmd, char* buf, int len)
 
 static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
-    uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
-    uint8_t  result = 0;
+    uint16_t        len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+    uint8_t         result = 0;
+    static uint16_t rf_send_count;
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
@@ -239,10 +240,15 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             rt_timer_start(&(_euc_mod.timer));
 
             if (_euc_mod.in_box_flag == true) {  //已经收到Tx探测包
+                if (rf_send_count != 0) {
+                    _mod_msg_send(HL_SET_RF_LOWPOWER_IND, NULL, 0);
+                    rf_send_count--;
+                }
                 _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 break;
             } else {  //第一次收到Tx探测包
                 _euc_mod.in_box_flag = true;
+                rf_send_count        = 6;
 
                 _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
@@ -291,9 +297,10 @@ static void hid_hup_success_handle_func(hup_protocol_type_t hup_frame)
 
 static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
 {
-    uint16_t len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
-    uint8_t  rx_num = 0;
-    uint8_t  result = 0;
+    uint16_t        len    = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
+    uint8_t         rx_num = 0;
+    uint8_t         result = 0;
+    static uint16_t rf_send_count;
 
     switch (hup_frame.cmd) {
         case HL_HUP_CMD_PROBE: {
@@ -305,10 +312,15 @@ static void uart_hup_success_handle_func(hup_protocol_type_t hup_frame)
             rt_timer_start(&(_euc_mod.timer));
 
             if (_euc_mod.in_box_flag == true) {  //已经收到过Rx探测包
+                if (rf_send_count != 0) {
+                    _mod_msg_send(HL_SET_RF_LOWPOWER_IND, NULL, 0);
+                    rf_send_count--;
+                }
                 _uart_send_hup_data(HL_HUP_CMD_PROBE, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 break;
             } else {  //第一次收到Rx探测包
                 _euc_mod.in_box_flag = true;
+                rf_send_count        = 6;
 
                 _mod_msg_send(HL_IN_BOX_IND, &(_euc_mod.dev_num), sizeof(_euc_mod.dev_num));
                 rt_thread_mdelay(100);  //此处延时100ms是为了方便上层App做一些入盒信息预处理。
@@ -741,7 +753,7 @@ int hl_mod_euc_stop(void)
     LOG_I("euc stop success");
 
     uart_deinit();
-    
+
     _euc_mod.start_flag = false;
 
     return HL_MOD_EUC_FUNC_RET_OK;

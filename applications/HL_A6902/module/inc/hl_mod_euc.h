@@ -72,6 +72,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_TURN_ON_STATE_REQ_IND,
     /// 请求 app 关机，无参数。
     HL_SHUT_DOWN_REQ_IND,
+    // 通知 app 设置RF为低功耗工作模式
+    HL_SET_RF_LOWPOWER_IND,
 } hl_mod_euc_ind_e;
 
 #else  // rx
@@ -150,6 +152,8 @@ typedef enum _hl_mod_euc_ind_e
     HL_GET_TURN_ON_STATE_REQ_IND,
     /// 请求 app 关机，无参数。
     HL_SHUT_DOWN_REQ_IND,
+    // 通知 app 设置RF为低功耗工作模式
+    HL_SET_RF_LOWPOWER_IND,
 } hl_mod_euc_ind_e;
 
 #endif
