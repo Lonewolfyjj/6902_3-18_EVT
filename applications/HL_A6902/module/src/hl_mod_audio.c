@@ -184,6 +184,8 @@ typedef struct s_record_file_cout_t
     uint32_t max;
     // uint32_t dir_max;
     uint32_t  record_cnt;
+    /// @brief  录制错误标志位
+    uint8_t record_fault_flag;
 } s_record_file_cout;
 
 static s_record_file_cout record_file_cout = { 0 };
@@ -255,6 +257,8 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
 static int hl_mod_audio_record_segm_inspection(uint8_t record_switch);
 static int hl_mod_audio_record_front_inspection(void);
 static int hl_mod_find_oledfile(uint8_t* state);
+static void hl_mod_audio_record_fault();
+static void hl_mod_audio_record_fault_close();
 #endif
 static void do_record_audio(void* arg);
 static int  hl_mod_audio_record_switch(uint8_t record_switch);
@@ -455,15 +459,33 @@ static void hl_mod_audio_rtc_set_param(void* timer_param)
 
 #if HL_IS_TX_DEVICE()
 
+static void hl_mod_audio_record_fault()
+{
+    if (record_file_cout.record_fault_flag == 0) {
+        record_file_cout.record_fault_flag = 1;
+        hl_mod_audio_send_msg(RECORD_FAULT_MSG_ING, 1);
+    }
+}
+
+static void hl_mod_audio_record_fault_close()
+{
+    if (record_file_cout.record_fault_flag == 1) {
+        record_file_cout.record_fault_flag = 0;
+        hl_mod_audio_send_msg(RECORD_FAULT_MSG_ING, 0);
+    }
+}
+
 static void hl_mod_audio_record(int p_file_audio, uint8_t* buffer, uint32_t size, uint32_t* s_record_size)
 {
     if (p_file_audio == -1) {
         LOG_E("Error record file no open");
+        hl_mod_audio_record_fault();
         return;
     }
 
     if (write(p_file_audio, buffer, size) != size) {
         LOG_E("write p_file_audio failed !!!");
+        hl_mod_audio_record_fault();
         return;
     }
     *s_record_size = (size / 1 / (3)) + *s_record_size;  // 只录制一个通道(1)
@@ -510,6 +532,7 @@ static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size)
     if (p_file_audio == -1) {
         LOG_E("%s:p_file_audio = -1");
         hl_mod_audio_record_stop(p_file_audio, s_record_size);
+        hl_mod_audio_record_fault();
         return;
     }
 
@@ -552,13 +575,15 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
         rt_ringbuffer_reset(record_info.record_after_rb);
         rt_ringbuffer_reset(record_info.record_bypass_rb);
         if (hl_mod_audio_record_front_inspection()) {
-            return 0;
+            hl_mod_audio_record_fault();
         }
 
         s_record_switch = 1;
         LOG_I("Audio mod record start");
     } else {
         s_record_switch = 0;
+        hl_mod_audio_record_fault_close();
+        
         hl_mod_audio_record_stop(record_info.file_audio_after, &s_record_after_size);
         hl_mod_audio_record_stop(record_info.file_audio_bypass, &s_record_bypass_size);
         LOG_I("Audio mod record stop");
@@ -752,9 +777,9 @@ static int hl_mod_audio_record_self_del(void)
     uint8_t       i = 0;
     ret             = dfs_statfs(RT_SDCARD_MOUNT_POINT, &buffer);
 
-    // LOG_D("free disk %ld\n", buffer.f_bfree);
-    // LOG_D("blk size %ld\n", buffer.f_bsize);
-    // LOG_D("ret %ld\n", ret);
+    LOG_D("free disk %ld\n", buffer.f_bfree);
+    LOG_D("blk size %ld\n", buffer.f_bsize);
+    LOG_D("ret %ld\n", ret);
 
     if (ret != 0) {
         LOG_D("no free disk get!");
@@ -809,6 +834,10 @@ static int hl_mod_audio_record_self_del(void)
         free_size = (uint64_t)buffer.f_bfree * (uint64_t)buffer.f_bsize;
     }
 
+    if (i >= 16 || free_size <= 671088640) {
+        ret = -1;
+    }
+
     return ret;
 }
 
@@ -858,7 +887,9 @@ static int hl_mod_audio_record_front_inspection(void)
 
     if (access(timer_name_file, 0) < 0) {
         LOG_I("create record mkdir %s.", timer_name_file);
-        mkdir(timer_name_file, 0);  //此处添加异常处理<
+        if (0 != mkdir(timer_name_file, 0)) {
+            return -1;
+        }  //此处添加异常处理<
     }
 
     rt_memset(timer_name_after, 0, 64);
@@ -900,12 +931,14 @@ static int hl_mod_audio_record_segm_inspection(uint8_t record_switch)
     if (record_file_cout.record_cnt == 0) {
         record_file_cout.record_cnt = HL_RECORD_TIME_CNT;
         if (record_switch == 1) {
-            LOG_D("stop%d\n",rt_tick_get());
+            LOG_D("stop%d\n", rt_tick_get());
             // 保存文件
             hl_mod_audio_record_stop(record_info.file_audio_after, &s_record_after_size);
             hl_mod_audio_record_stop(record_info.file_audio_bypass, &s_record_bypass_size);
-            hl_mod_audio_record_front_inspection();
-            LOG_D("sav%d\n",rt_tick_get());
+            if (-1 == hl_mod_audio_record_front_inspection()) {
+                hl_mod_audio_record_fault();
+            }
+            LOG_D("sav%d\n", rt_tick_get());
             return 1;
         }
     } else {
@@ -2400,6 +2433,8 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
 #else
 #endif
 
+    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
+
     rt_usbd_msc_switch(true);
 
     hl_mod_audio_rtc_init();
@@ -2461,7 +2496,7 @@ uint8_t hl_mod_audio_init(rt_mq_t* p_msg_handle)
     }
 #endif
 
-    audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
+    // audio_ctrl_thread_id = rt_thread_create("au_ctrl", _hl_audio_ctrl_thread_entry, RT_NULL, 2048, 25, 5);
     if (audio_ctrl_thread_id != RT_NULL) {
         rt_thread_startup(audio_ctrl_thread_id);
     } else {
