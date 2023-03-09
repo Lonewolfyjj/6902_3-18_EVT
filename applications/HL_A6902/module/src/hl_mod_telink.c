@@ -830,7 +830,26 @@ void telink_set_remote_mac(int argc, char** argv)
 }
 MSH_CMD_EXPORT(telink_set_remote_mac, telink set remote mac cmd);
 
-void hl_rf_open_EMI_test(int argc, char** argv)
+static void _hl_rf_reboot_EMI(void)
+{
+#if HL_IS_TX_DEVICE()
+    // 使能TX相关GPIO引脚
+    hl_hal_gpio_low(GPIO_DC3V3_EN);
+    hl_hal_gpio_low(GPIO_2831P_EN);
+    hl_hal_gpio_low(GPIO_RF_PWR_EN);
+    rt_thread_mdelay(1000);
+    hl_hal_gpio_high(GPIO_DC3V3_EN);
+    hl_hal_gpio_high(GPIO_2831P_EN);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#else
+    // 使能RX相关GPIO引脚
+    hl_hal_gpio_low(GPIO_RF_PWR_EN);
+    rt_thread_mdelay(1000);
+    hl_hal_gpio_high(GPIO_RF_PWR_EN);
+#endif
+}
+
+void hl_rf_EMI_test(int argc, char** argv)
 {
     if (argc != 4) {
         rt_kprintf("\n\n\n");
@@ -853,6 +872,8 @@ void hl_rf_open_EMI_test(int argc, char** argv)
         return;
     }
 
+    _hl_rf_reboot_EMI();
+
     uint8_t buf[3] = { 0 };
 
     buf[0] = (uint8_t)atoi(argv[1]);
@@ -863,32 +884,12 @@ void hl_rf_open_EMI_test(int argc, char** argv)
     rt_kprintf("--> ANT_SEL = %d\n", buf[0]);
     rt_kprintf("--> FREQ_CHN = 2.4%02dGHz\n", buf[1]);
     rt_kprintf("--> POWER_LEVEL = %d\n\n", buf[2]);
+    rt_thread_mdelay(300);
 
     hl_mod_telink_ioctl(HL_RF_ENTER_EMI_CMD, buf, sizeof(buf));
 }
-MSH_CMD_EXPORT(hl_rf_open_EMI_test, Telink Open EMI cmd);
+MSH_CMD_EXPORT(hl_rf_EMI_test, Telink EMI cmd);
 
-void hl_rf_close_EMI_test(int argc, char** argv)
-{
-    LOG_I("[OK]Telink Close EMI\n");
-
-#if HL_IS_TX_DEVICE()
-    // 使能TX相关GPIO引脚
-    hl_hal_gpio_low(GPIO_DC3V3_EN);
-    hl_hal_gpio_low(GPIO_2831P_EN);
-    hl_hal_gpio_low(GPIO_RF_PWR_EN);
-    rt_thread_mdelay(1000);
-    hl_hal_gpio_high(GPIO_DC3V3_EN);
-    hl_hal_gpio_high(GPIO_2831P_EN);
-    hl_hal_gpio_high(GPIO_RF_PWR_EN);
-#else
-    // 使能RX相关GPIO引脚
-    hl_hal_gpio_low(GPIO_RF_PWR_EN);
-    rt_thread_mdelay(1000);
-    hl_hal_gpio_high(GPIO_RF_PWR_EN);
-#endif
-}
-MSH_CMD_EXPORT(hl_rf_close_EMI_test, Telink Close EMI cmd);
 /*
  * EOF
  */
