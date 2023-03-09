@@ -278,15 +278,7 @@ typedef enum _hl_display_out_box_charge_state
     INBOX_OFFCHARGE_BOXPAGE
 }HL_ENUM8(hl_display_out_box_charge_state);
 
-typedef enum _hl_display_sound_module_e
-{
-    /// 单声道,
-    MONO = 0,
-    /// 立体声
-    STEREO,
-    /// 安全音轨
-    SAFE_TRACK,
-} HL_ENUM8(hl_display_sound_module_e);
+
 
 typedef enum _hl_display_fault_code_e
 {
@@ -495,6 +487,10 @@ typedef enum _hl_cmd_e
     TX1_LINE_OUT_VOLUME_VAL_CMD,
     TX2_LINE_OUT_VOLUME_VAL_CMD,
 
+    MONO_LINE_OUT_VOLUME_VAL_CMD,
+    SFT_LINE_OUT_VOLUME_VAL_CMD,
+
+    
     ///监听口音量设置 int8_t
     MONITOR_VOLUME_VAL_CMD,
 
