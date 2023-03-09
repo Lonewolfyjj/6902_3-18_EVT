@@ -567,12 +567,16 @@ int hl_iap2_identify_identification_info(hl_util_apple_p apple)
     st_iap2_ctrl_packet_t iap2_ctrl_packet;
 
     uint8_t data_1[4] = { 0xae, 0x00, 0xae, 0x02 };
+#if POWERUPDATE_OPEN
     uint8_t data_2[6] = { 0xae, 0x01, 0xea, 0x00, 0xea, 0x01 };
+#else
+    uint8_t data_2[4] = { 0xea, 0x00, 0xea, 0x01 };
+#endif
     uint8_t data_3    = 0x00;
     uint8_t data_4[2] = { 0x00, 0x64 };
     uint8_t data_5[2] = { 0x00, 0x01 };
     uint8_t data_6    = 0x01;
-    uint8_t data_7    = 0x02;
+    uint8_t data_7    = APP_MATCH_PROMPT;
 
     int      ret               = 0;
     uint8_t  payload_check_sum = 0;
@@ -610,8 +614,11 @@ int hl_iap2_identify_identification_info(hl_util_apple_p apple)
         hl_iap2_ctrl_add_param(addr + param_len, 5 + strlen(IAP2_HARDWAREVERSION), 0x0005, IAP2_HARDWAREVERSION);
     addr[param_len] = '\0';
 
-    // packet param < 8 >
+#if POWERUPDATE_OPEN
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_1), 0x0006, data_1);
+#else
+    param_len += hl_iap2_ctrl_add_param(addr + param_len, 4, 0x0006, data_1);
+#endif
 
     // packet param < 9 >
     param_len += hl_iap2_ctrl_add_param(addr + param_len, 4 + sizeof(data_2), 0x0007, data_2);

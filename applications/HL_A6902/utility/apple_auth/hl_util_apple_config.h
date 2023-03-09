@@ -50,6 +50,15 @@
 /// 发送PowerSourceUpdate消息
 #define POWERSOURCEUPDATE_OPEN 0
 
+/// 无动作且无法查找到配件APP
+#define APP_NO_ACTION 0
+/// 未安装则提醒安装配件APP
+#define APP_OPTIONAL_ACTION 1
+/// 无动作但可在设置中查找配件APP进行安装
+#define APP_NO_ALERT 2
+/// 认证成功后匹配APP的行为
+#define APP_MATCH_PROMPT (APP_OPTIONAL_ACTION)
+
 /// 苹果功能USB读写操作打印
 #define LOG_APPLE_USB_OPEN 0
 /// 苹果功能I2C读写操作打印
@@ -69,7 +78,7 @@
 #define IAP2_SERIAL_NAME "0123456789AB"
 #define IAP2_FIRMWAREVERSION A6902_VERSION
 #define IAP2_HARDWAREVERSION "v1.0.0.38"
-#define IAP2_PUID "0babaf959f694c97"
+#define IAP2_PUID "b0a0340195cc41ee"
 #define IAP2_UHOST_COMPONENT "USBHostTransportComponent"
 #define IAP2_HID_COMPONENT "HIDComponent"
 #define IAP2_EXTERNAL_ACCESSORY_PROTOCOL_NAME "com.hollyland.protocol"
