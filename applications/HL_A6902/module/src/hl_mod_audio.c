@@ -2808,7 +2808,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            // hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN, &((int*)ptr)[0], 4); //暂时屏蔽UAC设置增益
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN, &((int*)ptr)[0], 4); //暂时屏蔽UAC设置增益
             break;
         case HL_AUDIO_SET_HP_AMP_CMD:
             if (ptr == NULL) {

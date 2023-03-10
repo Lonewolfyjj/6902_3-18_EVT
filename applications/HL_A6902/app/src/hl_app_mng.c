@@ -221,8 +221,9 @@ void hl_app_param_fun(void)
     LOG_D("hp_gain = (%d)\r\n",param);
     hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
 
-    hl_app_audio_hp_gain_update();
-    hl_app_audio_cam_gain_update();
+    // hl_app_audio_hp_gain_update();
+    // hl_app_audio_cam_gain_update();
+    hl_app_audio_switch();
 }
 
 void hl_app_param_reset(void)
