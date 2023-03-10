@@ -31,6 +31,7 @@
 #include "hl_mod_audio.h"
 #include "hl_mod_telink.h"
 #include "hl_util_nvram.h"
+#include "hl_app_audio_msg_pro.h"
 
 #define DBG_SECTION_NAME "app_disp"
 #define DBG_LEVEL DBG_LOG
@@ -154,6 +155,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_bypass_value_t      rf_bypass_value = { 0 };
     hl_rf_bypass_state_t      rf_bypass_state = { 0 };
     uint32_t                  ptr;
+    int32_t                    ptr_int32;
     hl_display_sound_module_e sound_module;
     hl_audio_time_t           time;
     hl_display_systime_s      display_time;
@@ -183,8 +185,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case SOUND_MODULE_SET_IND:
             ptr          = (uint32_t)p_msg->param.u32_param;
             sound_module = (hl_display_sound_module_e)ptr;
+            rx_info.sound_mod = sound_module;
             sound_module = (sound_module == 1 ? 0 : 1);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MIX_SWITCH_CMD, &sound_module, 1);
+            hl_app_audio_cam_gain_update();
             // TBD: 音频模块控制声道模式
             LOG_D("SOUND_MODULE_SET_IND\r\n");
             break;
@@ -290,18 +294,20 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
-            ptr = p_msg->param.u32_param*2;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
-            rx_info.cam_gain_l = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
-            LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND\r\n");
+            ptr_int32 = p_msg->param.s32_param*2;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr_int32, 4);
+            rx_info.st_cam_gain_l = ptr_int32;
+            hl_app_audio_cam_gain_update();
+            hl_util_nvram_param_set_integer("ST_CAM_L_GAIN", rx_info.st_cam_gain_l);
+            LOG_D("TX1_LINE_OUT_VOLUME_VAL_IND(%d)\r\n",rx_info.st_cam_gain_l);
             break;
         case TX2_LINE_OUT_VOLUME_VAL_IND:
-            ptr = p_msg->param.u32_param*2;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
-            LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND\r\n");
+            ptr_int32 = p_msg->param.s32_param*2;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr_int32, 4);
+            rx_info.st_cam_gain_r = ptr_int32;
+            hl_app_audio_cam_gain_update();
+            hl_util_nvram_param_set_integer("ST_CAM_R_GAIN", rx_info.st_cam_gain_r);
+            LOG_D("TX2_LINE_OUT_VOLUME_VAL_IND(%d)\r\n",rx_info.st_cam_gain_r);
             break;
         case MONITOR_CATEGORY_VAL_IND:
             // 监听源切换：MONITOR_TX_IN MONITOR_UAC_IN | typedef enum _hl_stream_mode_e
@@ -322,43 +328,42 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             break;
         case UAC_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置UAC音量
-            ptr = p_msg->param.u32_param;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &ptr, 4);
-            rx_info.uac_gain = ptr;
+            ptr_int32 = p_msg->param.s32_param;
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &ptr_int32, 4);
+            rx_info.uac_gain = ptr_int32;
             hl_util_nvram_param_set_integer("RX_UAC_GAIN", rx_info.uac_gain);
-            LOG_D("UAC_OUT_VOLUME_VAL_IND");
+            LOG_D("UAC_OUT_VOLUME_VAL_IND(%d)",rx_info.uac_gain);
             break;
         case MONO_LINE_OUT_VOLUME_VAL_IND:
             // TBD: MONO设置相机口音量
-            ptr = p_msg->param.u32_param*2;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_l = ptr;
-            rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
-            LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND\r\n");
+            ptr_int32 = p_msg->param.s32_param*2;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr_int32, 4);
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr_int32, 4);            
+            rx_info.mono_cam_gain = ptr_int32;
+            hl_app_audio_cam_gain_update();
+            hl_util_nvram_param_set_integer("MONO_CAM_GAIN", rx_info.mono_cam_gain);
+            LOG_D("MONO_LINE_OUT_VOLUME_VAL_IND(%d)\r\n",rx_info.mono_cam_gain);
             break;
         case SAFETRACK_LINE_OUT_VOLUME_VAL_IND:
             // TBD: SAFETRACK设置相机口音量
-            ptr = p_msg->param.u32_param*2;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr, 4);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr, 4);
-            rx_info.cam_gain_l = ptr;
-            rx_info.cam_gain_r = ptr;
-            hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
-            hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
-            LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND\r\n");
+            ptr_int32 = p_msg->param.s32_param*2;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &ptr_int32, 4);
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &ptr_int32, 4);
+            rx_info.sft_cam_gain = ptr_int32;
+            hl_app_audio_cam_gain_update();
+            hl_util_nvram_param_set_integer("SFT_CAM_GAIN", rx_info.sft_cam_gain);
+            LOG_D("SAFETRACK_LINE_OUT_VOLUME_VAL_IND(%d)\r\n",rx_info.sft_cam_gain);
             break;
         case MONITOR_VOLUME_VAL_IND:
             // TBD: audio模块设置监听口音量
-            ptr = p_msg->param.u32_param;
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr, 4);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr, 4);
-            rx_info.hp_gain = ptr;
+            ptr_int32 = p_msg->param.s32_param;
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &ptr_int32, 4);
+            // hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &ptr_int32, 4);
+            rx_info.hp_gain = ptr_int32;
+            hl_app_audio_hp_gain_update();
             hl_util_nvram_param_set_integer("RX_HP_L_GAIN", rx_info.hp_gain);
             hl_util_nvram_param_set_integer("RX_HP_R_GAIN", rx_info.hp_gain);
-            LOG_D("MONITOR_VOLUME_VAL_IND\r\n");
+            LOG_D("MONITOR_VOLUME_VAL_IND(%d)\r\n",rx_info.hp_gain);
             break;
         case LED_BRITNESS_VAL_IND:
             // TBD: 透传通道给TX发出LED亮度调节命令

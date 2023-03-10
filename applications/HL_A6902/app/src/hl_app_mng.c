@@ -161,10 +161,18 @@ void hl_app_param_reset(void)
 #else
 void hl_app_param_loader(void)
 {
+    // 声道默认是立体声
+    rx_info.sound_mod = STEREO;
+
     hl_util_nvram_param_get_integer("RX_HP_L_GAIN", &rx_info.hp_gain, 6);
     // hl_util_nvram_param_get_integer("RX_HP_R_GAIN", &rx_info.hp_gain, 6);
-    hl_util_nvram_param_get_integer("RX_CAM_L_GAIN", &rx_info.cam_gain_l, 0);
-    hl_util_nvram_param_get_integer("RX_CAM_R_GAIN", &rx_info.cam_gain_r, 0);
+    hl_util_nvram_param_get_integer("ST_CAM_L_GAIN", &rx_info.st_cam_gain_l, 0);
+    // 默认立体声
+    // hl_util_nvram_param_get_integer("SOUND_MOD", &rx_info.sound_mod, 1);
+    hl_util_nvram_param_get_integer("MONO_CAM_GAIN", &rx_info.mono_cam_gain, 0);
+    hl_util_nvram_param_get_integer("SFT_CAM_GAIN", &rx_info.sft_cam_gain, 0);
+
+    hl_util_nvram_param_get_integer("ST_CAM_R_GAIN", &rx_info.st_cam_gain_r, 0);
     hl_util_nvram_param_get_integer("RX_UAC_GAIN", &rx_info.uac_gain, 0);
 }
 
@@ -192,14 +200,30 @@ void hl_app_param_fun(void)
     hl_mod_display_io_ctrl(UAC_OUT_VOLUME_VAL_CMD, &param, 1);   
     hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &rx_info.uac_gain, 4);
 
-    param = rx_info.cam_gain_l / 2;
+    // 声道模式默认开机改变
+    // LOG_D("soundmod=(%d)\r\n",rx_info.sound_mod);
+    // hl_mod_display_io_ctrl(,&rx_info.sound_mod,1);
+    param = rx_info.mono_cam_gain / 2;
+    hl_mod_display_io_ctrl(MONO_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+
+    param = rx_info.sft_cam_gain / 2;
+    hl_mod_display_io_ctrl(SFT_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
+
+    param = rx_info.st_cam_gain_l / 2;
+    LOG_D("st_cam_gain_l=(%d)\r\n",rx_info.st_cam_gain_l);
     hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
-    param = rx_info.cam_gain_r / 2;
+    param = rx_info.st_cam_gain_r / 2;
+    LOG_D("st_cam_gain_r=(%d)\r\n",rx_info.st_cam_gain_r);
     hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
-    param = rx_info.hp_gain / 2;
+    param = rx_info.hp_gain;
+    LOG_D("hp_gain = (%d)\r\n",param);
     hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, &param, 1);
+
+    // hl_app_audio_hp_gain_update();
+    // hl_app_audio_cam_gain_update();
+    hl_app_audio_switch();
 }
 
 void hl_app_param_reset(void)
@@ -238,16 +262,22 @@ void hl_app_param_reset(void)
     hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
     hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
 
-    rx_info.cam_gain_l = 0;
-    rx_info.cam_gain_r = 0;
-    hl_util_nvram_param_set_integer("RX_CAM_L_GAIN", rx_info.cam_gain_l);
-    hl_util_nvram_param_set_integer("RX_CAM_R_GAIN", rx_info.cam_gain_r);
-    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
-    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+    rx_info.st_cam_gain_l = 0;
+    rx_info.st_cam_gain_r = 0;
+    hl_util_nvram_param_set_integer("ST_CAM_L_GAIN", rx_info.st_cam_gain_l);
+    hl_util_nvram_param_set_integer("ST_CAM_R_GAIN", rx_info.st_cam_gain_r);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.st_cam_gain_l, 4);
+    hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.st_cam_gain_r, 4);
 
-    param = rx_info.cam_gain_l/2;
+    rx_info.mono_cam_gain = 0;
+    hl_util_nvram_param_set_integer("MONO_CAM_GAIN", rx_info.mono_cam_gain);
+
+    rx_info.sft_cam_gain = 0;
+    hl_util_nvram_param_set_integer("SFT_CAM_GAIN", rx_info.sft_cam_gain);
+
+    param = rx_info.st_cam_gain_l/2;
     hl_mod_display_io_ctrl(TX1_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
-    param = rx_info.cam_gain_r/2;
+    param = rx_info.st_cam_gain_r/2;
     hl_mod_display_io_ctrl(TX2_LINE_OUT_VOLUME_VAL_CMD, &param, 1);
 
     param = rx_info.hp_gain/2;
@@ -475,8 +505,8 @@ int hl_app_info(int argc, char** argv)
     LOG_I("charge_flag = %d ", rx_info.charge_flag);
     LOG_I("rf_state = %d ", rx_info.rf_state);
     LOG_I("rx_info.soc = %d ", rx_info.soc);
-    LOG_I("cam_gain_l = %d ", rx_info.cam_gain_l);
-    LOG_I("cam_gain_r = %d ", rx_info.cam_gain_r);
+    LOG_I("st_cam_gain_l = %d ", rx_info.st_cam_gain_l);
+    LOG_I("st_cam_gain_r = %d ", rx_info.st_cam_gain_r);
     LOG_I("hp_gain = %d ", rx_info.hp_gain);
 #endif
     return 0;

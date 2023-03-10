@@ -375,38 +375,46 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->out_box_poweroff_charge = data;
         } break;
         case TX1_LINE_OUT_VOLUME_VAL_CMD: {
-            int8_t data = *(uint8_t*)ptr;
-            switch (data_p->now_sound_module) {
-                case MONO:
-                    data_p->tx1_line_out_volume = data;
-                    flag->tx1_line_out_volume   = 1;
-                    break;
-                case STEREO:
-                    data_p->mono_line_out_volume = data;
-                    flag->mono_line_out_volume   = 1;
-                    break;
-                case SAFE_TRACK:
-                    data_p->track_line_out_volume = data;
-                    flag->track_line_out_volume   = 1;
-                    break;
-                default:
-                    break;
-            }
+            int8_t data = *(int8_t*)ptr;
+            // switch (data_p->now_sound_module) {
+            //     case MONO:
+            //         data_p->mono_line_out_volume = data;
+            //         flag->mono_line_out_volume   = 1;
+
+            //         break;
+            //     case STEREO:
+            //         data_p->tx1_line_out_volume = data;
+            //         flag->tx1_line_out_volume   = 1;
+            //         break;
+            //     case SAFE_TRACK:
+            //         data_p->track_line_out_volume = data;
+            //         flag->track_line_out_volume   = 1;
+            //         break;
+            //     default:
+            //         break;
+            // }
+
+            data_p->tx1_line_out_volume = data;
+            flag->tx1_line_out_volume   = 1;
         } break;
         case TX2_LINE_OUT_VOLUME_VAL_CMD: {
-            int8_t data = *(uint8_t*)ptr;
-            switch (data_p->now_sound_module) {
-                case MONO:
-                    data_p->tx1_line_out_volume = data;
-                    flag->tx1_line_out_volume   = 1;
-                    break;
-                case STEREO:
-                    break;
-                case SAFE_TRACK:
-                    break;
-                default:
-                    break;
-            }
+            int8_t data = *(int8_t*)ptr;
+            // switch (data_p->now_sound_module) {
+            //     case MONO:
+
+            //         break;
+            //     case STEREO:
+            //         data_p->tx2_line_out_volume = data;
+            //         flag->tx2_line_out_volume   = 1;
+            //         break;
+            //     case SAFE_TRACK:
+            //         break;
+            //     default:
+            //         break;
+            // }
+
+            data_p->tx2_line_out_volume = data;
+            flag->tx2_line_out_volume   = 1;
         } break;
         case UPDATE_REMAINED_VAL_CMD: {
             uint8_t data             = *(uint8_t*)ptr;
@@ -501,7 +509,27 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             data_p->monitor_volume = *(int8_t*)ptr;
 
             flag->monitor_volume = 1;
-        } break;        
+        } break;
+        case TX1_GAIN_VAL_CMD: {
+            data_p->tx1_gain_volume = *(int8_t*)ptr;
+            flag->tx1_gain_volume   = 1;
+        } break;
+        case TX2_GAIN_VAL_CMD: {
+            data_p->tx2_gain_volume = *(int8_t*)ptr;
+            flag->tx2_gain_volume   = 1;
+        } break;
+        case UAC_OUT_VOLUME_VAL_CMD: {
+            data_p->uac_out_volume = *(int8_t*)ptr;
+            flag->uac_out_volume   = 1;
+        } break;
+        case MONO_LINE_OUT_VOLUME_VAL_CMD: {
+            data_p->mono_line_out_volume = *(int8_t*)ptr;
+            flag->mono_line_out_volume   = 1;
+        } break;
+        case SFT_LINE_OUT_VOLUME_VAL_CMD: {
+            data_p->track_line_out_volume = *(int8_t*)ptr;
+            flag->track_line_out_volume   = 1;
+        } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);
             break;

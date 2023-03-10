@@ -219,6 +219,36 @@ void hl_app_audio_msg_pro(mode_to_app_msg_t *p_msg)
             break;
     }
 }
+void hl_app_audio_cam_gain_update(void)
+{
+    if ((rx_info.on_off_flag == 1) && (rx_info.cam_spk_plug == 1)
+        && ((rx_info.rf_state == HL_RF_L_CONNECT) || (rx_info.rf_state == HL_RF_R_CONNECT)
+            || (rx_info.rf_state == HL_RF_LR_CONNECT))) {
+        if (rx_info.sound_mod == MONO) {  /// 单声道,
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.mono_cam_gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.mono_cam_gain, 4);
+        } else if (rx_info.sound_mod == STEREO) {  /// 立体声
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.st_cam_gain_l, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.st_cam_gain_r, 4);
+        } else if (rx_info.sound_mod == SAFE_TRACK) {  /// 安全音轨
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.sft_cam_gain, 4);
+            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.sft_cam_gain, 4);
+        }else{
+            LOG_E("rx_info.sound_mod = %d error ", rx_info.sound_mod);
+        }
+    }
+}
+
+void hl_app_audio_hp_gain_update(void)
+{
+    if ((rx_info.on_off_flag == 1) && (rx_info.hp_spk_plug == 1)
+        && ((rx_info.rf_state == HL_RF_L_CONNECT) || (rx_info.rf_state == HL_RF_R_CONNECT)
+            || (rx_info.rf_state == HL_RF_LR_CONNECT))) {
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_L_CMD, &rx_info.hp_gain, 4);
+        hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
+    }
+}
+
 
 void hl_app_audio_switch(void)
 {
@@ -236,8 +266,16 @@ void hl_app_audio_switch(void)
         }
     } else {
         if((rx_info.on_off_flag == 1)&&(rx_info.cam_spk_plug == 1)&&((rx_info.rf_state == HL_RF_L_CONNECT)||(rx_info.rf_state == HL_RF_R_CONNECT)||(rx_info.rf_state == HL_RF_LR_CONNECT))) {
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.cam_gain_l, 4);
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.cam_gain_r, 4);
+            if(rx_info.sound_mod == MONO){/// 单声道,
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.mono_cam_gain, 4);
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.mono_cam_gain, 4);
+            } else if(rx_info.sound_mod == STEREO){/// 立体声
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.st_cam_gain_l, 4);
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.st_cam_gain_r, 4);
+            }else if(rx_info.sound_mod == SAFE_TRACK){/// 安全音轨
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_L_CMD, &rx_info.sft_cam_gain, 4);
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_CAM_GAIN_R_CMD, &rx_info.sft_cam_gain, 4);
+            }            
             audio_cam_switch = 1;
         }
     }
