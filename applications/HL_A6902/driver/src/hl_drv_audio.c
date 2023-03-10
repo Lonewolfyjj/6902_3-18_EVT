@@ -735,7 +735,22 @@ rt_err_t rk_audio_close(rt_device_t dev)
     return rk_audio_deinit(dev);
 }
 
-rt_size_t rk_audio_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
+rt_err_t rk_audio_reset(struct audio_stream *as)
+{
+    struct audio_pcm *pcm = as->pcm;
+
+    if (as->state != AUDIO_STREAM_STATE_RUNNING)
+    {
+        rt_kprintf("stream not running, no need to reset\n");
+        return RT_EOK;
+    }
+
+    pcm->status.appl_ptr = pcm->status.hw_ptr;
+
+    return RT_EOK;
+}
+
+rt_size_t rk_audio_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size)
 {
     struct audio_stream* as  = dev->user_data;
     struct audio_pcm*    pcm = as->pcm;
@@ -749,9 +764,12 @@ rt_size_t rk_audio_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t s
     switch (as->state) {
         case AUDIO_STREAM_STATE_PREPARED:
         case AUDIO_STREAM_STATE_XRUN:
+        if (as->state == AUDIO_STREAM_STATE_XRUN)
+            rt_set_errno(-11);
             rk_audio_start(as);
             break;
         case AUDIO_STREAM_STATE_RUNNING:
+        rt_set_errno(RT_EOK);
             break;
         default:
             ret = -RT_ERROR;
@@ -827,9 +845,12 @@ rt_size_t rk_audio_write(rt_device_t dev, rt_off_t pos, const void* buffer, rt_s
     switch (as->state) {
         case AUDIO_STREAM_STATE_PREPARED:
         case AUDIO_STREAM_STATE_XRUN:
+        if (as->state == AUDIO_STREAM_STATE_XRUN)
+            rt_set_errno(-12);
             rk_audio_start(as);
             break;
         case AUDIO_STREAM_STATE_RUNNING:
+        rt_set_errno(RT_EOK);
             break;
         default:
             ret = -RT_ERROR;
@@ -973,6 +994,9 @@ rt_err_t rk_audio_control(rt_device_t dev, int cmd, void* args)
         case RK_AUDIO_CTL_STOP:
             ret = rk_audio_stop(as);
             break;
+        case RK_AUDIO_CTL_RESET:
+            ret = rk_audio_reset(as);
+        break;
         case RK_AUDIO_CTL_SET_GAIN:
             ret = rk_audio_set_gain(as, args);
             break;

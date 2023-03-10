@@ -944,15 +944,18 @@ uint8_t hl_drv_rk_xtensa_dsp_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
             if (sg_dsp_io_ctrl.io_ctrl_notify) {
                 HL_DRV_DSP_LOG("already have a cmd param [%d] not proceed\r\n", sg_dsp_io_ctrl.io_ctrl_param);
                 // RX才有UAC GAIN
-                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl_next.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
                 sg_dsp_io_ctrl_next.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl_next.io_ctrl_value  = *(int32_t*)ptr + 10;
                 sg_dsp_io_ctrl_next.io_ctrl_notify = 1;
-            } else {
+            } else {                
                 // RX才有UAC GAIN
-                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_GET;
+                sg_dsp_io_ctrl.io_ctrl_op     = EM_A6902_ALGO_IO_CTL_OP_HL_ALGO_SET;
                 sg_dsp_io_ctrl.io_ctrl_param  = EM_A6902_ALGO_IO_CTL_PARAM_UAC_GAIN_ALL;
+                sg_dsp_io_ctrl.io_ctrl_value  = *(int32_t*)ptr + 10;
                 sg_dsp_io_ctrl.io_ctrl_notify = 1;
             }
+            
 #endif
             break;
         case HL_EM_DRV_RK_DSP_CMD_GET_UAC_GAIN:

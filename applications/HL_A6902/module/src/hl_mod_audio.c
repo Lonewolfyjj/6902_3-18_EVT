@@ -1314,24 +1314,31 @@ static rt_err_t hl_mod_audio_codec_buff_clear(hl_card_param_t* p_param)
 
     if (p_param->card == RT_NULL) {
         LOG_I("audio card param deconfig repeated!");
-        return;
-    }
-
-    ret = hl_mod_audio_codec_deconfig(p_param);
-    if (ret != RT_EOK) {
-        LOG_E("audio codec start failed! err: %d", ret);
+        ret = RT_ERROR;
         return ret;
     }
 
-    // rt_memset(&p_param->abuf, 0x0, sizeof(p_param->abuf));
-
-    ret = hl_mod_audio_codec_config(p_param);
+    ret = rt_device_control(p_param->card, RK_AUDIO_CTL_RESET, NULL);
     if (ret != RT_EOK) {
-        LOG_E("audio codec start failed! err: %d", ret);
+        LOG_E("audio codec reset failed! err: %d", ret);
         return ret;
     }
 
-    LOG_I("audio codec buff clear succeed!");
+    // ret = hl_mod_audio_codec_deconfig(p_param);
+    // if (ret != RT_EOK) {
+    //     LOG_E("audio codec start failed! err: %d", ret);
+    //     return ret;
+    // }
+
+    // // rt_memset(&p_param->abuf, 0x0, sizeof(p_param->abuf));
+
+    // if (ret != RT_EOK) {
+    // ret = hl_mod_audio_codec_config(p_param);
+    //     LOG_E("audio codec start failed! err: %d", ret);
+    //     return ret;
+    // }
+
+    // LOG_I("audio codec buff clear succeed!");
     return ret;
 }
 
@@ -1586,15 +1593,31 @@ static void _hl_cap2play_thread_entry(void* arg)
 
     hl_drv_rk_xtensa_dsp_transfer();
 #endif
-    hl_mod_audio_codec_buff_clear(&play_info);
-    hl_mod_audio_codec_buff_clear(p_card_param);
 
 #if HL_IS_TX_DEVICE()
     // 关闭降噪
     uint8_t val = 0;
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
     hl_drv_rk_xtensa_dsp_transfer();
-#endif
+#endif    
+    rt_thread_mdelay(100);
+    hl_mod_audio_codec_buff_clear(&play_info);
+    hl_mod_audio_codec_buff_clear(p_card_param); 
+    // if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch,
+    //                     p_card_param->abuf.period_size)
+    //     <= 0) {
+    //     LOG_E("read %s failed", p_card_param->card->parent.name);
+    // }
+    // if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch,
+    //                     p_card_param->abuf.period_size)
+    //     <= 0) {
+    //     LOG_E("read %s failed", p_card_param->card->parent.name);
+    // }
+    // if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch,
+    //                     p_card_param->abuf.period_size)
+    //     <= 0) {
+    //     LOG_E("read %s failed", p_card_param->card->parent.name);
+    // }
 
     while (cap2play_thread_flag != 0) {
         if (rt_device_read(p_card_param->card, 0, dsp_config->audio_process_in_buffer_b32_2ch,
@@ -1791,6 +1814,9 @@ static void _hl_cap2play2uac_thread_entry(void* arg)
         LOG_E("play_info.card is NULL, exit cap2play2uac thread");
         goto err;
     }
+
+    hl_mod_audio_codec_buff_clear(&play_info);
+    hl_mod_audio_codec_buff_clear(&cap_info);
 
     while (cap2play2uac_thread_flag != 0) {
         if (rt_device_read(cap_info.card, 0, dsp_config->audio_process_in_buffer_b32_2ch, cap_info.abuf.period_size)
@@ -2618,9 +2644,17 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 hl_mod_audio_denoise_flag = 40;
                 rt_thread_mdelay(10);
                 hl_mod_audio_set_denoise(1);
+                rt_thread_mdelay(5);//
+                hl_mod_audio_set_denoise(1);//
+                rt_thread_mdelay(5);//
+                hl_mod_audio_set_denoise(1);//
                 LOG_I("[%s][line:%d] open denoise", __FUNCTION__, __LINE__);
             } else {
                 hl_mod_audio_set_denoise(0);
+                rt_thread_mdelay(5);//
+                hl_mod_audio_set_denoise(0);//
+                rt_thread_mdelay(5);//
+                hl_mod_audio_set_denoise(0);//
                 LOG_I("[%s][line:%d] close denoise", __FUNCTION__, __LINE__);
             }
             break;
@@ -2774,7 +2808,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 return -1;
             }
 
-            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN, &((int*)ptr)[0], 4);
+            hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_UAC_GAIN, &((int*)ptr)[0], 4); //暂时屏蔽UAC设置增益
             break;
         case HL_AUDIO_SET_HP_AMP_CMD:
             if (ptr == NULL) {
