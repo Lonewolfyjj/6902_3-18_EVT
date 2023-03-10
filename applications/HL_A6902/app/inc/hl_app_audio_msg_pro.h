@@ -109,6 +109,37 @@ void hl_app_audio_gain(int32_t gain);
  */
 void hl_app_audio_gain_uac(int32_t uac_gain);
 
+/**
+ * 
+ * @brief 
+ * @date 2023-03-09
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-03-09      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_audio_cam_gain_update(void);
+
+/**
+ * 
+ * @brief 
+ * @date 2023-03-09
+ * @author lixiang (rd37@hollyland-tech.com)
+ * 
+ * @details 
+ * @note 
+ * @par 修改日志:
+ * <table>
+ * <tr><th>Date             <th>Author         <th>Description
+ * <tr><td>2023-03-09      <td>lixiang     <td>新建
+ * </table>
+ */
+void hl_app_audio_hp_gain_update(void);
 #endif /* __HL_APP_AUDIO_MSG_PRO_H__ */
 /*
  * EOF
