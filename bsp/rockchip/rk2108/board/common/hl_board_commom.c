@@ -279,6 +279,7 @@ uint8_t hl_board_nvram_init()
 
 void hl_board_reboot(void)
 {
+    rt_kprintf("hl_board_reboot \r\n");
     hl_util_nvram_param_save();
 #if HL_IS_TX_DEVICE()
     hl_hal_gpio_low(GPIO_DC3V3_EN);

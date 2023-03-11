@@ -43,6 +43,7 @@
 #include "page_menu.h"
 #include "hl_util_general_type.h"
 #include "page_language.h"
+#include "hl_util_nvram.h"
 
 #define MENU_ICON_NUM 5
 // 下级菜单表
@@ -75,6 +76,9 @@ static void page_9_test_cb(uint32_t current)
 
 static void page_9_test(void)
 {
+    int param;
+
+    hl_display_screen_s* datat_ptr = hl_mod_page_get_screen_data_ptr();
     hl_display_screen_change_s* flag = hl_mod_page_get_screen_change_flag();
     a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     menu_data_t pic_list[MENU_ICON_NUM] = {
@@ -83,8 +87,26 @@ static void page_9_test(void)
         // ADD_IMG_DATA(NULL, NULL, &Menu_time_config, page_ptr->menu_page_ptr->page_other_set->ptr_time_config),//"时间设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_verson, page_ptr->menu_page_ptr->page_other_set->ptr_verson),//"版本信息"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_reset_factory),//"恢复出厂设置"),
-        ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_upgrade),//"开启升级"),
+        // ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_upgrade),//"开启升级"),
     };
+
+    hl_util_nvram_param_get_integer("MSC_OPEN", &param, 0);
+
+    datat_ptr->msc_s = param;
+    if (param == 0) {
+        pic_list[4].lab     = NULL;
+        pic_list[4].obj     = NULL;
+        pic_list[4].pic_src = &Menu_reset_factory;
+        pic_list[4].ptr     = page_ptr->menu_page_ptr->page_other_set->ptr_upgrade;
+
+    } else {
+
+        pic_list[4].lab     = NULL;
+        pic_list[4].obj     = NULL;
+        pic_list[4].pic_src = &Menu_reset_factory;
+        pic_list[4].ptr     = "关闭升级";
+    }
+
     // 如果是下一级菜单，就默认显示最左边图标
     if (flag->menu_defaut) {
         flag->menu_defaut = 0;
