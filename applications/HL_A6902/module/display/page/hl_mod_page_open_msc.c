@@ -42,10 +42,12 @@
 #include "page_upgrade.h"
 #include "hl_util_general_type.h"
 #include "page_language.h"
+#include "hl_board_commom.h"
 
 static uint8_t                 update_state   = 0;
 static int16_t                 now_num        = HL_S_TWO_ONE_CHOOSE_LEFT;
 static hl_s_two_in_one_check_t display_choose = HL_S_TWO_ONE_CHECK_LEFT;
+static uint8_t  msc_open;
 
 static void hl_mod_page_exit(void);
 
@@ -63,7 +65,12 @@ static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
             case HL_S_TWO_ONE_CHECK_LEFT:
                 // 显示重启页面
                 value = 1;
-                hl_mod_display_send_msg(UPGRADE_SETTING_SWITCH_IND, &value, 0);
+                if (msc_open == 0) {
+                    hl_mod_display_send_msg(UPGRADE_SETTING_SWITCH_IND, &value, 0);
+                } else {
+                    hl_util_nvram_param_set_integer("MSC_OPEN", 0);
+                }
+
                 if (!update_state) {
                     update_state = 1;
                 }
@@ -88,22 +95,30 @@ static void hl_resetfactory_test_cb(hl_s_two_in_one_check_t event_num)
 
 static void hl_mod_page_setup(void)
 {
+    hl_display_screen_s*        datat_ptr         = hl_mod_page_get_screen_data_ptr();
     a6902_language_typ_t* page_ptr = (a6902_language_typ_t *)hl_a6902_language_ptr_get();
     hl_lvgl_s_two_in_one_init_t s_two_in_one_test = {
         .func_cb             = hl_resetfactory_test_cb,
         .ptr_lift            = page_ptr->s_two_in_one_page_ptr->page_open_msc->ptr_left,//"确定",
         .ptr_right           = page_ptr->s_two_in_one_page_ptr->page_open_msc->ptr_right,//"取消",
-        .ptr_top             = page_ptr->s_two_in_one_page_ptr->page_open_msc->prt_top,//"是否开启升级",
+       // .ptr_top             = page_ptr->s_two_in_one_page_ptr->page_open_msc->prt_top,//"是否开启升级",
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_LEFT,
     };
+    msc_open = datat_ptr->msc_s;
+    if (msc_open == 0) {
+        s_two_in_one_test.ptr_top = page_ptr->s_two_in_one_page_ptr->page_open_msc->prt_top;
+    } else {
+        s_two_in_one_test.ptr_top = "是否关闭升级";
+    }
     hl_mod_s_two_in_one_init(&s_two_in_one_test);
-
+    update_state = 0;
     display_choose = s_two_in_one_test.s_two_in_one_choose;
     now_num = (int16_t)display_choose;
 }
 
 static void hl_mod_page_exit(void)
 {
+    update_state = 0;
     hl_lvgl_s_two_in_one_ioctl_t s_two_in_one_test_ctl = {
         .s_two_in_one_choose = HL_S_TWO_ONE_CHOOSE_EXIT,
     };
@@ -122,8 +137,8 @@ static void hl_mod_page_loop(void)
     // 返回按键
     uint8_t back_btn = hl_mod_keypad_touchkey_read();
 
-    if (update_state == 3) {
-        return;
+    if (update_state >= 3) {
+        goto lable_reboot;
     }
     // 触摸返回
     if (1 == back_btn) {
@@ -142,6 +157,8 @@ static void hl_mod_page_loop(void)
         hl_mod_s_two_in_one_ioctl(&s_two_in_one_test);
     }
 
+lable_reboot:
+
     switch (update_state) {
         case 0: {
         } break;
@@ -153,10 +170,18 @@ static void hl_mod_page_loop(void)
             // hl_mod_page_exit();
             hl_lvgl_upgrade_ioctl_t ioctl;
             uint8_t                 ret = 0;
+            if (msc_open) {
+                hl_util_nvram_param_set("MSC_OPEN", "0");
+                // ret = hl_util_nvram_param_save();
 
-            hl_util_nvram_param_set("MSC_OPEN", "1");
-            ret = hl_util_nvram_param_save();
-            rt_kprintf("save ret = %d\r\n", ret);
+                rt_kprintf("save ret = %d\r\n", ret);
+            } else {
+                hl_util_nvram_param_set("MSC_OPEN", "1");
+                // ret = hl_util_nvram_param_save();
+                rt_kprintf("save ret = %d\r\n", ret);
+            }
+            ret = 0;
+
             if (ret == 0) {
                 ioctl.upgrade_ioctl = HL_UPGRADE_SUCCESS_CMD;
                 ioctl.ptr           = page_ptr->upgrade_page_ptr->page_upgrade->ptr_set_success;//"设置成功";
@@ -166,9 +191,13 @@ static void hl_mod_page_loop(void)
             }
 
             hl_mod_lvgl_upgrade_ioctl(&ioctl);
+
+            
             update_state = 3;
         } break;
         case 3: {
+            hl_board_reboot();
+            update_state = 4;
         } break;
         default:
             break;

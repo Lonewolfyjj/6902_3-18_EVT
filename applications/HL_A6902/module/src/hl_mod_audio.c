@@ -2553,6 +2553,7 @@ err0:
 
 uint8_t hl_mod_audio_deinit(void)
 {
+    rt_kprintf("hl_mod_audio_deinit \r\n");
     if (!hl_mod_audio_init_flag) {
         return RT_ERROR;
     }
