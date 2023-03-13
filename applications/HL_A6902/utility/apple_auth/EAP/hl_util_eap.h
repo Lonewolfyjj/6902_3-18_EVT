@@ -30,6 +30,34 @@
 
 /* typedef -------------------------------------------------------------------*/
 
+typedef enum _eap_ctrl_cmd_enum_
+{
+    EAP_GET_SOFT_VERSION_CMD  = 0x01,
+    EAP_GET_HARD_VERSION_CMD  = 0x02,
+    EAP_GET_CONTECT_STATE_CMD = 0x03,
+    EAP_GET_MAC_CMD           = 0x04,
+    EAP_GET_SOC_CMD           = 0x05,
+    EAP_GET_UV_CMD            = 0x06,
+    EAP_GET_DEV_NUB_CMD       = 0x07,
+    EAP_GET_GAIN_CMD          = 0x21,
+    EAP_SET_GAIN_CMD          = 0x22,
+    EAP_GET_DENOISE_CMD       = 0x23,
+    EAP_SET_DENOISE_CMD       = 0x24,
+    EAP_GET_LOWCUT_CMD        = 0x25,
+    EAP_SET_LOWCUT_CMD        = 0x26,
+    EAP_GET_MUTE_CMD          = 0x27,
+    EAP_SET_MUTE_CMD          = 0x28,
+    EAP_GET_SOUND_EFFECT_CMD  = 0x29,
+    EAP_SET_SOUND_EFFECT_CMD  = 0x2A,
+    EAP_GET_PHONE_OUT_CMD     = 0x2B,
+    EAP_SET_PHONE_OUT_CMD     = 0x2C,
+    EAP_UPDATE_START_CMD      = 0x41,
+    EAP_UPDATE_PACKET_CMD     = 0x42,
+    EAP_UPDATE_STOP_CMD       = 0x43,
+    EAP_KEEP_ALIVE_CMD        = 0x61,
+    EAP_REBOOT_CMD            = 0x62,
+} HL_ENUM8(hl_eap_ctrl_cmd_e);
+
 /* define --------------------------------------------------------------------*/
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
