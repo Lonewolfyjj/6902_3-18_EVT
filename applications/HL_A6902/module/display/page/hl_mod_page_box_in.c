@@ -129,6 +129,7 @@ static void hl_mod_box_rx_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_charge_ioctl(&ioctrl);
             break;
     }
+    LOG_D("box rx bat(%d)(%d)", data_ptr->sys_status.rx_charge_status, now_rx_data);
 }
 
 static void hl_mod_box_tx1_bat_update(hl_display_screen_s* data_ptr)
@@ -170,6 +171,7 @@ static void hl_mod_box_tx1_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_charge_ioctl(&ioctrl);
             break;
     }
+    LOG_D("box tx1 bat(%d)(%d)", data_ptr->sys_status.tx1_charge_status, now_tx1_data);
 }
 
 static void hl_mod_box_tx2_bat_update(hl_display_screen_s* data_ptr)
@@ -179,7 +181,7 @@ static void hl_mod_box_tx2_bat_update(hl_display_screen_s* data_ptr)
     uint8_t                now_tx2_data = data_ptr->tx2_bat_val;
 
     bat_state_last = bat_state.tx2;
-    bat_state.tx2  = bat_state_deal(data_ptr->sys_status.tx1_charge_status, now_tx2_data, 6);
+    bat_state.tx2  = bat_state_deal(data_ptr->sys_status.tx2_charge_status, now_tx2_data, 6);
 
     // 更新当前的RX电量信息
     ioctrl.charge_cmd            = HL_CHARGE_CHANGE_TX2_ELEC;
@@ -211,6 +213,7 @@ static void hl_mod_box_tx2_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_charge_ioctl(&ioctrl);
             break;
     }
+    LOG_D("box tx2 bat(%d)(%d)", data_ptr->sys_status.tx2_charge_status, now_tx2_data);
 }
 
 static void hl_mod_box_case_bat_update(hl_display_screen_s* data_ptr)
@@ -220,7 +223,7 @@ static void hl_mod_box_case_bat_update(hl_display_screen_s* data_ptr)
     uint8_t                now_data = data_ptr->case_bat_val;
 
     bat_state_last = bat_state.box;
-    bat_state.box = bat_state_deal(data_ptr->sys_status.box_charge_status, now_data, 6);
+    bat_state.box  = bat_state_deal(data_ptr->sys_status.box_charge_status, now_data, 6);
 
     // 更新当前的RX电量信息
     ioctrl.charge_cmd = HL_CHARGE_CHANGE_BOX_ELEC;
@@ -244,6 +247,7 @@ static void hl_mod_box_case_bat_update(hl_display_screen_s* data_ptr)
             hl_mod_charge_ioctl(&ioctrl);
             break;
     }
+    LOG_D("box case bat(%d)(%d)", data_ptr->sys_status.box_charge_status, now_data);
 }
 
 #define CASE_VIEW 0x01
