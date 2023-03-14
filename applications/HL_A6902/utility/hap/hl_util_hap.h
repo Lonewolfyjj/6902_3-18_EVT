@@ -191,7 +191,8 @@ int hl_util_hap_deinit(hl_util_hap_t* hap_ptr);
  * hl_util_hap_encode
  * @brief hap协议封包函数
  * @param [in] role hap当前角色
- * @param [in] cmd 控制命令
+ * @param [in] cmd 命令位
+ * @param [in] ctrl 控制位
  * @param [in] frame_buf 存放hap协议包的缓冲区
  * @param [in] buf_len 缓冲区大小
  * @param [in] data_addr 数据内容地址
@@ -208,8 +209,8 @@ int hl_util_hap_deinit(hl_util_hap_t* hap_ptr);
  * <tr><td>2023-03-13      <td>lisonglin     <td>新建
  * </table>
  */
-int hl_util_hap_encode(hap_role_em role, uint8_t cmd, uint8_t* frame_buf, uint16_t buf_len, uint8_t* data_addr,
-                       uint16_t data_len);
+int hl_util_hap_encode(hap_role_em role, uint8_t cmd, uint8_t ctrl, uint8_t* frame_buf, uint16_t buf_len,
+                       uint8_t* data_addr, uint16_t data_len);
 
 /**
  * hl_util_hap_decode

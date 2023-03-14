@@ -48,7 +48,7 @@ int hl_util_hap_deinit(hl_util_hap_t* hap_ptr)
     return 0;
 }
 
-int hl_util_hap_encode(hap_role_em role, uint8_t cmd, uint8_t* frame_buf, uint16_t buf_len, uint8_t* data_addr,
+int hl_util_hap_encode(hap_role_em role, uint8_t cmd, uint8_t ctrl, uint8_t* frame_buf, uint16_t buf_len, uint8_t* data_addr,
                        uint16_t data_len)
 {
     if ((NULL == frame_buf) | (NULL == data_addr)) {
@@ -67,13 +67,14 @@ int hl_util_hap_encode(hap_role_em role, uint8_t cmd, uint8_t* frame_buf, uint16
         frame_buf[1] = HAP_FRAME_CLIENT_HDR_L;
     }
     frame_buf[2] = cmd;
-    frame_buf[3] = (uint8_t)(0xFF & (data_len >> 8));
-    frame_buf[4] = (uint8_t)(0xFF & data_len);
-    memcpy(&frame_buf[5], data_addr, data_len);
+    frame_buf[3] = ctrl;
+    frame_buf[4] = (uint8_t)(0xFF & (data_len >> 8));
+    frame_buf[5] = (uint8_t)(0xFF & data_len);
+    memcpy(&frame_buf[6], data_addr, data_len);
 
-    frame_buf[5 + data_len] = hl_util_xor_calc_xor8(frame_buf, data_len + 5);
+    frame_buf[6 + data_len] = hl_util_xor_calc_xor8(frame_buf, data_len + 5);
 
-    return data_len + 6;
+    return data_len + 7;
 }
 
 int hl_util_hap_decode(hl_util_hap_t* hap_ptr, uint8_t data_byte)
