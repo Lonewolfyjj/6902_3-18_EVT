@@ -172,7 +172,7 @@
 /* RT_USING_SPI_WIFI is not set */
 #define RT_USING_WDT
 #define RT_USING_AUDIO
-#define RT_USING_HL_AUDIO
+/* RT_USING_HL_AUDIO is not set */
 /* RT_USING_SENSOR is not set */
 #define RT_USING_TOUCH
 

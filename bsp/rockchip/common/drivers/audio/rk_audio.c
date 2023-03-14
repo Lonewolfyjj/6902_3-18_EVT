@@ -112,7 +112,7 @@ static rt_err_t audio_wait_for_avail(struct audio_stream *as)
     rt_mutex_take(&as->lock, RT_WAITING_FOREVER);
     pcm->waiting = RT_TRUE;
     rt_mutex_release(&as->lock);
-    ret = rt_sem_take(pcm->wait, 200 /* RT_WAITING_FOREVER */);
+    rt_sem_take(pcm->wait, RT_WAITING_FOREVER);
 
     if (as->state != AUDIO_STREAM_STATE_RUNNING)
         ret = -RT_ERROR;
@@ -229,11 +229,11 @@ static rt_err_t rk_audio_start(struct audio_stream *as)
 
     audio_stream_set_state(as, AUDIO_STREAM_STATE_RUNNING);
 
-    if (as->stream == AUDIO_STREAM_CAPTURE)
-    {
-        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
-        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
-    }
+    // if (as->stream == AUDIO_STREAM_CAPTURE)
+    // {
+    //     rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+    //     rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
+    // }
 
     ret = pcm->ops->start(pcm);
 
@@ -277,10 +277,8 @@ static rt_err_t _rk_audio_stop(struct audio_stream *as, audio_stream_state_t sta
     pcm->waiting = RT_FALSE;
     rt_mutex_release(&as->lock);
 
-    if (as->stream == AUDIO_STREAM_PLAYBACK) {
-        rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
-        rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
-    }
+    rt_memset(&pcm->status, 0x0, sizeof(struct audio_buf_status));
+    rt_sem_control(pcm->wait, RT_IPC_CMD_RESET, 0);
 
     return ret;
 }
@@ -303,6 +301,7 @@ static rt_err_t rk_audio_init(rt_device_t dev)
     struct audio_dai *dai = card->dai;
     struct audio_dai *vad_dai = card->vad_dai;
     struct audio_codec *codec = card->codec;
+    struct audio_codec*      codechp = card->codechp;
     struct AUDIO_INIT_CONFIG cfg = { 0 };
     rt_err_t ret = RT_EOK;
 
@@ -328,7 +327,11 @@ static rt_err_t rk_audio_init(rt_device_t dev)
     if (codec)
     {
         cfg.master = desc->codec_master;
-        ret = codec->ops->init(codec, &cfg);
+        ret        = codec->ops->init(codec, &cfg);
+        if (codechp) 
+		{
+            ret |= card->codechp->ops->init(codechp, &cfg);
+        }
         if (ret)
             return ret;
     }
@@ -378,8 +381,24 @@ static rt_err_t rk_audio_set_gain(struct audio_stream *as,
     return ret;
 }
 
-static rt_err_t rk_audio_get_gain(struct audio_stream *as,
-                                  struct AUDIO_DB_CONFIG *db_config)
+static rt_err_t rk_audio_hl_set_gain(struct audio_stream* as, struct AUDIO_GAIN_CONFIG* db_config)
+{
+    struct audio_codec* codec = as->card->codec;
+    struct audio_codec* codechp = as->card->codechp;
+    rt_err_t            ret   = RT_EOK;
+
+    if (db_config->device == 1) {
+        if (codechp && codechp->ops->hl_set_gain)
+            ret = codechp->ops->hl_set_gain(codechp, db_config);
+    } else {
+        if (codec && codec->ops->hl_set_gain)
+            ret = codec->ops->hl_set_gain(codec, db_config);        
+    }
+
+    return ret;
+}
+
+static rt_err_t rk_audio_get_gain(struct audio_stream* as, struct AUDIO_DB_CONFIG* db_config)
 {
     struct audio_codec *codec = as->card->codec;
     rt_err_t ret = RT_EOK;
@@ -518,10 +537,17 @@ struct audio_codec *rk_audio_find_codec(uint32_t id)
     rt_mutex_take(&codec_lock, RT_WAITING_FOREVER);
     rt_list_for_each_entry(codec, &s_audio_codec_list, list)
     {
-        if (codec->id == id)
-        {
-            rt_mutex_release(&codec_lock);
-            return codec;
+        if (codec != NULL) 
+		{
+            if (codec && codec->id == id) {
+                rt_mutex_release(&codec_lock);
+                return codec;
+            }else {
+                rt_kprintf("----------error----------- codec is null or id not match\r\n");
+            }
+        }else{
+            rt_kprintf("----------error-----------find codec\r\n");
+            break;
         }
     }
     rt_mutex_release(&codec_lock);
@@ -629,6 +655,15 @@ struct audio_card *rk_audio_new_card(const struct audio_card_desc *acd)
             goto err_sub;
         }
         ac->codec->card = ac;
+    }
+
+    if (acd->codechp) {
+        ac->codechp = rk_audio_find_codec((uint32_t)acd->codechp);
+        if (!ac->codechp) {
+            rt_kprintf("can't find codechp: %p\n", acd->codechp);
+            goto err_sub;
+        }
+        ac->codechp->card = ac;
     }
 
     return ac;
@@ -994,6 +1029,9 @@ rt_err_t rk_audio_control(rt_device_t dev, int cmd, void *args)
         break;
     case RK_AUDIO_CTL_SET_GAIN:
         ret = rk_audio_set_gain(as, args);
+            break;
+        case RK_AUDIO_CTL_HL_SET_GAIN:
+            ret = rk_audio_hl_set_gain(as, args);
         break;
     case RK_AUDIO_CTL_GET_GAIN:
         ret = rk_audio_get_gain(as, args);
@@ -1062,7 +1100,7 @@ static const struct rt_device_ops rk_audio_ops =
     .read = rk_audio_plugin_read,
     .write = rk_audio_plugin_write,
 #else
-#if 1 
+#if 0
     //24bit set 1
     .read = rk_audio_read_24bit,
     .write = rk_audio_write_24bit,
