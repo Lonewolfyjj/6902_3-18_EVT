@@ -884,7 +884,8 @@ void hl_rf_EMI_test(int argc, char** argv)
     rt_kprintf("--> ANT_SEL = %d\n", buf[0]);
     rt_kprintf("--> FREQ_CHN = 2.4%02dGHz\n", buf[1]);
     rt_kprintf("--> POWER_LEVEL = %d\n\n", buf[2]);
-    rt_thread_mdelay(300);
+    rt_thread_mdelay(1000);
+    rt_kprintf("Wait 1S\n");
 
     hl_mod_telink_ioctl(HL_RF_ENTER_EMI_CMD, buf, sizeof(buf));
 }
