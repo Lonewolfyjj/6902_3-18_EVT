@@ -41,6 +41,7 @@
 #include "hl_app_input_msg_pro.h"
 #include "hl_app_pm_msg_pro.h"
 #include "hl_app_rf_msg_pro.h"
+#include "hl_app_larksound_msg_pro.h"
 #include "hl_app_upgrade_msg_pro.h"
 #include "hl_util_general_type.h"
 #include "hl_mod_wdog.h"
@@ -333,6 +334,9 @@ void hl_app_msg_thread(void* parameter)
                     break;
                 case PM_MODE:
                     hl_app_pm_msg_pro(&msg);
+                    break;
+                case LARKSOUND_MODE:
+                    hl_app_larksound_msg_pro(&msg);
                     break;
                 default:
                     LOG_E("sender(%d) unkown!!!", msg.sender);
