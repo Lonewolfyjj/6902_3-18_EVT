@@ -112,7 +112,8 @@ static void menu_timer(lv_timer_t * timer)
     if(pos == pos_bak){
         lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);
         lv_obj_scroll_to_view(pic_obj[center], LV_ANIM_ON);
-        lv_icon_alin_mode(center);     
+        lv_icon_alin_mode(center);
+        func_cb(center | 0x80);
         lv_timer_pause(timer); 
         lv_lab_hide_set(center);
     }else{
@@ -149,13 +150,15 @@ static void lv_icon_check(lv_coord_t current,lv_coord_t x)
         current+=1;       
         lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER); 
         lv_obj_scroll_to_view(pic_obj[current], LV_ANIM_ON);   
-        lv_icon_alin_mode(current);     
+        lv_icon_alin_mode(current);   
+        func_cb(current | 0x80);  
     }
     if(check_pos == LIFT_CHECK && current > 0){
         current-=1;     
         lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_CENTER);    
         lv_obj_scroll_to_view(pic_obj[current], LV_ANIM_ON);
-        lv_icon_alin_mode(current);  
+        lv_icon_alin_mode(current);
+        func_cb(current | 0x80);
     }
 }
 
