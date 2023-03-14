@@ -193,7 +193,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
             LOG_D("SOUND_MODULE_SET_IND\r\n");
             break;
         case TX1_NOISE_SWITCH_IND:
-            // TBD: 透传通道给TX1发出降噪
+            // TBD: 透传通道给TX1发出降噪 uint8_t 0是关闭降噪 1-254 表示降噪的等级   0XFF表示的是开启降噪功能
             rf_bypass_value.chn = HL_RF_LEFT_CHANNEL;
             rf_bypass_value.val = (uint8_t)p_msg->param.u32_param;
             if (rf_bypass_value.val) {
@@ -289,9 +289,12 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case TX_NOISE_LEVEL_VAL_IND:
             // TBD: 透传通道给TX发出降噪等级命令
             rf_bypass_value.chn = HL_RF_DOUBLE_CHANNEL;
-            rf_bypass_value.val = *(uint8_t*)p_msg->param.ptr;
+            rf_bypass_value.val = p_msg->param.u32_param;
+            if (rf_bypass_value.val == 0 || rf_bypass_value.val == 0xFF) {
+                rf_bypass_value.val = 1;
+            }
             hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
-            LOG_D("TX_NOISE_LEVEL_VAL_IND\r\n");
+            LOG_D("TX_NOISE_LEVEL_VAL_IND(%d)\r\n", rf_bypass_value.val);
             break;
         case TX1_LINE_OUT_VOLUME_VAL_IND:
             ptr_int32 = p_msg->param.s32_param*2;

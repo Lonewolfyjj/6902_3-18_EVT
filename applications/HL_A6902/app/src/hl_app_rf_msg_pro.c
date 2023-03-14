@@ -193,18 +193,31 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_DENOISE_IND:
             ptr_rf_value  = (hl_rf_bypass_value_t*)p_msg->param.ptr;
-            bypass_switch = (uint8_t)ptr_rf_value->val;
-            if (tx_info.denoise_flag == 0) {
-                bypass_switch        = HL_SWITCH_ON;
-                tx_info.denoise_flag = 1;
+            p_param = (uint8_t)ptr_rf_value->val;
+
+            if (p_param == 0 || p_param == 0xFF) {
+
+                if (tx_info.denoise_flag == 0) {
+                    if (p_param == 0xFF) {
+                        bypass_switch        = HL_SWITCH_ON;
+                        tx_info.denoise_flag = 1;
+                    }
+                } else {
+                    if (p_param == 0x00) {
+                        bypass_switch        = HL_SWITCH_OFF;
+                        tx_info.denoise_flag = 0;
+                    }
+                }
+
+                hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));
+                hl_app_disp_state_led_set();
+                hl_util_nvram_param_set_integer("DENOISE_OPEN", bypass_switch);
+                LOG_D("app get TX%d Denoise(%d)", ptr_rf_value->chn, bypass_switch);
             } else {
-                bypass_switch        = HL_SWITCH_OFF;
-                tx_info.denoise_flag = 0;
+                // 设置降噪等级
+                tx_info.denoise_class = p_param;
+                LOG_D("noise level(%d)", ptr_rf_value->val);
             }
-            hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &bypass_switch, sizeof(bypass_switch));
-            hl_app_disp_state_led_set();
-            hl_util_nvram_param_set_integer("DENOISE_OPEN", bypass_switch);
-            LOG_D("app get TX%d Denoise(%d)", ptr_rf_value->chn, bypass_switch);
             break;
 
         case HL_RF_BYPASS_STATUS_LED_IND:
@@ -350,17 +363,34 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             break;
 
         case HL_RF_BYPASS_DENOISE_IND:
-            ptr_rf_state = (hl_rf_bypass_state_t*)p_msg->param.ptr;
-            if (ptr_rf_state->chn == HL_RF_LEFT_CHANNEL) {
+            ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
 
-                hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_state->state, 1);
-            } else if (ptr_rf_state->chn == HL_RF_RIGHT_CHANNEL) {
-
-                hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_state->state, 1);
+            if (ptr_rf_value->val == 0xFF) {
+                ptr_rf_value->val = 1;
+                if (ptr_rf_value->chn == HL_RF_LEFT_CHANNEL) {
+                    rx_info.tx1_denoise = ptr_rf_value->val;
+                    hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_value->val, 1);
+                } else if (ptr_rf_value->chn == HL_RF_RIGHT_CHANNEL) {
+                    rx_info.tx2_denoise = ptr_rf_value->val;
+                    hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_value->val, 1);
+                } else {
+                    LOG_E("telink noise receive error(%02d -- %02d)", ptr_rf_value->chn, ptr_rf_value->val);
+                }
+            } else if (ptr_rf_value->val == 0) {
+                ptr_rf_value->val = 0;
+                if (ptr_rf_value->chn == HL_RF_LEFT_CHANNEL) {
+                    rx_info.tx1_denoise = ptr_rf_value->val;
+                    hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_value->val, 1);
+                } else if (ptr_rf_value->chn == HL_RF_RIGHT_CHANNEL) {
+                    rx_info.tx2_denoise = ptr_rf_value->val;
+                    hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_value->val, 1);
+                } else {
+                    LOG_E("telink noise receive error(%02d -- %02d)", ptr_rf_value->chn, ptr_rf_value->val);
+                }
             } else {
-                LOG_E("telink mute receive error(%02X -- %02X)", rx_info.tx1_mute, rx_info.tx2_mute);
+                // RX不会收到TX的降噪设置命令
+                LOG_D("app get TX%d Denoise level(%d)", ptr_rf_value->chn, ptr_rf_value->val);
             }
-            LOG_D("app get TX%d Denoise(%d)", ptr_rf_state->chn, ptr_rf_state->state);
             break;
 
         case HL_RF_BYPASS_CHARGE_IND:

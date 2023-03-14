@@ -110,10 +110,10 @@ typedef struct _rx_app_info_t
     /// MUTE标志(1:MUTE 0:正常)
     uint8_t             tx2_mute:1;
 
-    // /// 降噪标志(1:降噪中 0:不降噪)
-    // uint8_t             tx1_denoise:1;
-    // /// 降噪标志(1:降噪中 0:不降噪)
-    // uint8_t             tx2_denoise:1;
+    /// 降噪标志(1:降噪中 0:不降噪)
+    uint8_t             tx1_denoise:1;
+    /// 降噪标志(1:降噪中 0:不降噪)
+    uint8_t             tx2_denoise:1;
 
     // /// 录制标志(1:录制中 0:不录制)
     // uint8_t             tx1_record:1;
