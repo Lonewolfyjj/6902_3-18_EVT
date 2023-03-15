@@ -211,7 +211,7 @@ static void hl_app_tx_rec_key_pro(hl_key_event_e event)
                 mute_switch       = HL_SWITCH_OFF;
                 tx_info.mute_flag = 0;
             }
-            rt_thread_mdelay(10);
+            // rt_thread_mdelay(10);
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_MUTE_CMD, &mute_switch, 1);
 
             hl_app_disp_state_led_set();

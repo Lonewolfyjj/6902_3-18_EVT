@@ -2645,17 +2645,9 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
                 hl_mod_audio_denoise_flag = 40;
                 rt_thread_mdelay(10);
                 hl_mod_audio_set_denoise(1);
-                rt_thread_mdelay(5);//
-                hl_mod_audio_set_denoise(1);//
-                rt_thread_mdelay(5);//
-                hl_mod_audio_set_denoise(1);//
                 LOG_I("[%s][line:%d] open denoise", __FUNCTION__, __LINE__);
             } else {
                 hl_mod_audio_set_denoise(0);
-                rt_thread_mdelay(5);//
-                hl_mod_audio_set_denoise(0);//
-                rt_thread_mdelay(5);//
-                hl_mod_audio_set_denoise(0);//
                 LOG_I("[%s][line:%d] close denoise", __FUNCTION__, __LINE__);
             }
             break;
