@@ -843,7 +843,8 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
             _power_gpio_set(GPIO_ALL_POWER, true);
         } break;
         case HL_PM_POWER_DOWN_CMD: {
-            while (_pm_mod.guage_reinit_flag == true) {
+            int i = 100;
+            while (_pm_mod.guage_reinit_flag == true && i--) {
                 rt_thread_mdelay(10);
             }
             _power_gpio_set(GPIO_ALL_POWER, false);
