@@ -124,7 +124,7 @@ typedef struct _rx_app_info_t
     hl_rf_state_e       rf_state;    
     /// TX当前声道(0:左声道  1：右声道)
     hl_rf_channel_e     rf_chn;
-    /// 当前电量
+    /// 当前RX电量
     uint8_t             soc;
     /// 当前TX亮度
     uint8_t             tx_led_britness;
@@ -150,6 +150,26 @@ typedef struct _rx_app_info_t
     int32_t              cam_gain_l;
     int32_t              cam_gain_r;
 
+    /// USB连接设备状态(0:未连接 1:安卓 2:苹果)
+    uint8_t             usb_dev;
+    /// 低切状态(0:无 1:75Hz 2:150Hz)
+    uint8_t             lowcut;
+    /// 音效状态(0:高保真 1:人声模式)
+    uint8_t             sound_effect;
+    /// 手机外放状态(0:关闭 1:开启)
+    uint8_t             phone_out;
+    /// TX1充电状态
+    uint8_t             tx1_charge;
+    /// TX2充电状态
+    uint8_t             tx2_charge;
+    /// TX1电量
+    uint8_t             tx1_soc;
+    /// TX2电量
+    uint8_t             tx2_soc;
+    /// TX1降噪状态
+    uint8_t             tx1_denoise;
+    /// TX2降噪状态
+    uint8_t             tx2_denoise;
     /// TX1版本号
     uint8_t             tx1_version[32];
     /// TX2版本号

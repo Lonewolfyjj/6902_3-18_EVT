@@ -55,6 +55,7 @@ void hl_app_iap2_msg_pro(mode_to_app_msg_t *p_msg)
     switch (p_msg->cmd) {
         case HL_APPLE_AUTH_SUCCEED_IND:
             val = 1;
+            rx_info.usb_dev = 2;
             // hl_mod_display_io_ctrl(APPLE_AUTH_SWITCH_CMD, &val, 1);
             LOG_E("\n\n*********iAP2 SUCCEED*********\n\n");
             break;

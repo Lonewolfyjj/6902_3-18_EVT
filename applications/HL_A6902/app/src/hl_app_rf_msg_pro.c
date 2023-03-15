@@ -313,7 +313,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_UPDATE_IND:
             ptr_rf_info = (hl_rf_tx_info_t*)p_msg->param.ptr;
             if (HL_RF_LEFT_CHANNEL == ptr_rf_info->chn) {
-                rx_info.tx1_mute = ptr_rf_info->mute;
+                rx_info.tx1_mute    = ptr_rf_info->mute;
+                rx_info.tx1_soc     = ptr_rf_info->battery;
+                rx_info.tx1_denoise = ptr_rf_info->denoise;
+                rx_info.tx1_charge  = ptr_rf_info->charge;
                 hl_mod_display_io_ctrl(TX1_BAT_VAL_VAL_CMD, &ptr_rf_info->battery, sizeof(ptr_rf_info->battery));
                 hl_mod_display_io_ctrl(TX1_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_info->mute, 1);
                 hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
@@ -322,7 +325,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
                     hl_mod_display_io_ctrl(TX1_RECORD_STATE_SWITCH_CMD, &ptr_rf_info->record, 1);
                 }
             } else if (HL_RF_RIGHT_CHANNEL == ptr_rf_info->chn) {
-                rx_info.tx2_mute = ptr_rf_info->mute;
+                rx_info.tx2_mute    = ptr_rf_info->mute;
+                rx_info.tx2_soc     = ptr_rf_info->battery;
+                rx_info.tx2_denoise = ptr_rf_info->denoise;
+                rx_info.tx2_charge  = ptr_rf_info->charge;
                 hl_mod_display_io_ctrl(TX2_BAT_VAL_VAL_CMD, &ptr_rf_info->battery, sizeof(ptr_rf_info->battery));
                 hl_mod_display_io_ctrl(TX2_MUTE_SWITCH_SWITCH_CMD, &ptr_rf_info->mute, 1);
                 hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &ptr_rf_info->denoise, 1);
