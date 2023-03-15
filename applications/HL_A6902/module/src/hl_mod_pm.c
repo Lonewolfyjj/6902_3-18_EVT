@@ -59,6 +59,7 @@ typedef struct _hl_mod_pm_st
 {
     bool                     init_flag;
     bool                     guage_init_flag;
+    bool                     guage_reinit_flag;
     bool                     start_flag;
     bool                     interrupt_update_flag;
     hl_mod_pm_charger_e      charger;
@@ -191,6 +192,14 @@ static void _power_gpio_set(hl_gpio_pin_e power_gpio, bool flag)
 static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
 {
     hl_mod_pm_bat_info_st* p_bat_info;
+    bool                   flag;
+    int                    ret;
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IF_READY, &flag, sizeof(flag));
+    if (ret == CW2215_FUNC_RET_ERR || flag == false) {
+        LOG_W("guage caculate not ready!");
+        return;
+    }
 
     p_bat_info = &(_pm_mod.bat_info);
 
@@ -307,8 +316,20 @@ MSH_CMD_EXPORT(hl_mod_pm_debug_bat_info_5s, 间隔5s打印电池信息);
 
 static void _guage_state_update()
 {
+    if (_pm_mod.guage_init_flag == false) {
+        return;
+    }
+
     uint8_t soc;
     bool    flag = false;
+    int     ret;
+    bool    ready_flag;
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IF_READY, &ready_flag, sizeof(ready_flag));
+    if (ret == CW2215_FUNC_RET_ERR || ready_flag == false) {
+        LOG_W("guage caculate not ready!");
+        return;
+    }
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -334,30 +355,52 @@ static void _guage_state_update()
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
     }
 
-    if (_pm_mod.bat_info.soc.soc <= 3 && hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
+    if (_pm_mod.bat_info.soc.soc <= 3 && hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH
+        && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
         _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
     }
 }
 
 static void _guage_err_monitor(void)
 {
-    int ret;
+    int  ret;
+    char chip_id;
+    bool flag;
 
-    if (_pm_mod.guage_init_flag == true) {
-        ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, RT_NULL, 0);
-        if (ret == CW2215_FUNC_RET_ERR) {
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CHIP_ID, &chip_id, sizeof(chip_id));
+    if (ret == CW2215_FUNC_RET_ERR || chip_id != CW2215_CHIP_ID) {  //通信不正常
+        LOG_W("guage bad i2c!");
+        if (_pm_mod.guage_init_flag == true) {
             _pm_mod.guage_init_flag = false;
             // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
         }
-    } else {
-        ret = hl_drv_cw2215_deinit();
-        if (ret == CW2215_FUNC_RET_OK) {
-            ret = hl_drv_cw2215_init();
+    } else {  //通信正常
+        ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, &flag, sizeof(flag));
+        if (ret == CW2215_FUNC_RET_ERR) {
+            return;
         }
 
-        if (ret == CW2215_FUNC_RET_OK) {
-            _pm_mod.guage_init_flag = true;
-            // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+        if (flag == true) {  //需要重新初始化
+            if (_pm_mod.guage_init_flag == true) {
+                _pm_mod.guage_init_flag = false;
+                // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+            }
+
+            LOG_W("reinit guage!");
+            ret = hl_drv_cw2215_deinit();
+            if (ret == CW2215_FUNC_RET_OK) {
+                ret = hl_drv_cw2215_init();
+                if (ret == CW2215_FUNC_RET_OK) {
+                    LOG_W("guage need calibration!");
+                    _pm_mod.guage_reinit_flag = true;
+                }
+            }
+        } else {  //不需要重新初始化
+            if (_pm_mod.guage_init_flag == false) {
+                LOG_W("guage good again!");
+                _pm_mod.guage_init_flag = true;
+                // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+            }
         }
     }
 }
@@ -367,12 +410,38 @@ static void _guage_state_poll()
     static uint16_t count = 0;
 
     if (count == 0) {
-        // _guage_err_monitor();
+        _guage_err_monitor();
         _guage_state_update();
-        count = 50;
+        count = 20;
     } else {
         count--;
     }
+}
+
+static void _guage_reinit_check_poll(void)
+{
+    if (_pm_mod.guage_reinit_flag == false || _pm_mod.guage_init_flag == false) {  //不需要校准或者电量计不正常
+        return;
+    }
+
+    int ret;
+
+    if (hl_hal_gpio_read(GPIO_VBUS_DET) != PIN_HIGH || hl_hal_gpio_read(GPIO_PBUS_DET) != PIN_HIGH) {  //插入充电电源
+        if (_pm_mod.charger_charge_terminate_flag == false) {  //充电状态未终止
+            return;
+        }
+    }
+
+    LOG_W("calibration guage!");
+    ret = hl_drv_cw2215_deinit();
+    if (ret == CW2215_FUNC_RET_OK) {
+        ret = hl_drv_cw2215_init();
+        if (ret == CW2215_FUNC_RET_OK) {
+            LOG_W("guage calibration ok!");
+        }
+    }
+
+    _pm_mod.guage_reinit_flag = false;
 }
 
 static void _charger_charge_state_update(void)
@@ -558,6 +627,8 @@ static void _pm_thread_entry(void* arg)
         _guage_state_poll();
 #endif
 
+        _guage_reinit_check_poll();
+
         _charger_charge_state_poll();
         // _charger_fault_state_poll();
         _charge_state_judge();
@@ -580,6 +651,7 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
 {
     int                  ret;
     HL_SGM_INPUT_PARAM_T sgm_param;
+    bool                 flag;
 
     if (_pm_mod.init_flag == true) {
         LOG_W("pm is already inited!");
@@ -606,6 +678,17 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         _pm_mod.charger = HL_MOD_PM_CHARGER_UNKNOWN;
         LOG_E("all charger init err! please check charger");
         return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, &flag, sizeof(flag));
+    if (ret != CW2215_FUNC_RET_ERR) {
+        if (flag == true) {
+            LOG_W("guage need calibration!");
+            _pm_mod.guage_reinit_flag = true;
+        } else {
+            LOG_W("guage no need calibration!");
+            _pm_mod.guage_reinit_flag = false;
+        }
     }
 
     ret = hl_drv_cw2215_init();
@@ -752,11 +835,16 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
+    int ret;
+
     switch (cmd) {
         case HL_PM_POWER_UP_CMD: {
             _power_gpio_set(GPIO_ALL_POWER, true);
         } break;
         case HL_PM_POWER_DOWN_CMD: {
+            while (_pm_mod.guage_reinit_flag == true) {
+                rt_thread_mdelay(10);
+            }
             _power_gpio_set(GPIO_ALL_POWER, false);
         } break;
         case HL_PM_BAT_INFO_UPDATE_CMD: {

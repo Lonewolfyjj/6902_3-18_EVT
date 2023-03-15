@@ -19,7 +19,7 @@
 
 #include "hl_drv_cw2215.h"
 
-#include "hl_hal_gpio.h"
+#include "stdbool.h"
 
 #define DBG_SECTION_NAME "cw2215"
 #define DBG_LEVEL DBG_INFO
@@ -717,13 +717,41 @@ static int dump_all_register_value(void)
     return 0;
 }
 
-static int _self_check(void)
+static int _self_check(bool* arg)
 {
     int ret;
 
-    ret = init();
+    ret = get_state();
+    if (ret < 0) {
+        return ret;
+    }
 
-    return ret;
+    if (ret != 0) {
+        *arg = true;
+    } else {
+        *arg = false;
+    }
+
+    return 0;
+}
+
+static int _check_if_ready(bool* arg)
+{
+    int     ret;
+    uint8_t reg_val;
+
+    ret = cw_read(CW2215_REG_IC_STATE, &reg_val);
+    if (ret == CW2215_FUNC_RET_ERR) {
+        return CW2215_ERROR_IIC;
+    }
+
+    if (CW2215_IC_READY_MARK == (reg_val & CW2215_IC_READY_MARK)) {
+        *arg = true;
+    } else {
+        *arg = false;
+    }
+
+    return 0;
 }
 
 /* Exported functions --------------------------------------------------------*/
@@ -743,12 +771,10 @@ int8_t hl_drv_cw2215_init(void)
         return CW2215_FUNC_RET_ERR;
     }
 
-    if (hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
-        ret = init();
-        if (ret < 0) {
-            LOG_E("Guage init err!");
-            return CW2215_FUNC_RET_ERR;
-        }
+    ret = init();
+    if (ret < 0) {
+        LOG_E("Guage init err!");
+        return CW2215_FUNC_RET_ERR;
     }
 
     LOG_D("Guage init success!");
@@ -783,8 +809,10 @@ int8_t hl_drv_cw2215_deinit(void)
 int8_t hl_drv_cw2215_ctrl(hl_drv_guage_op_t op, void* arg, int32_t arg_size)
 {
     int ret;
-    if (_init_flag != 1) {
-        LOG_E("Guage is not inited!");
+
+    _p_i2c_bus = (struct rt_i2c_bus_device*)rt_device_find(CW2215_IIC_BUS_NAME);
+    if (_p_i2c_bus == NULL) {
+        LOG_E("i2c dev not found!:%s", CW2215_IIC_BUS_NAME);
         return CW2215_FUNC_RET_ERR;
     }
 
@@ -895,7 +923,13 @@ int8_t hl_drv_cw2215_ctrl(hl_drv_guage_op_t op, void* arg, int32_t arg_size)
             }
         } break;
         case HL_DRV_GUAGE_CHIP_SELF_CHECK: {
-            ret = _self_check();
+            ret = _self_check((bool*)arg);
+            if (ret < 0) {
+                return CW2215_FUNC_RET_ERR;
+            }
+        } break;
+        case HL_DRV_GUAGE_CHECK_IF_READY: {
+            ret = _check_if_ready((bool*)arg);
             if (ret < 0) {
                 return CW2215_FUNC_RET_ERR;
             }
