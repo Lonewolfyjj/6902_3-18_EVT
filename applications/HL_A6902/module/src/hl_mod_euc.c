@@ -25,6 +25,7 @@
 
 #include "hl_mod_euc.h"
 #include "hl_util_hup.h"
+#include "hl_util_hap.h"
 #include "hl_util_msg_type.h"
 
 #define DBG_SECTION_NAME "euc"
@@ -83,6 +84,7 @@ typedef struct _hl_mod_euc
     bool                       init_flag;
     bool                       start_flag;
     bool                       in_box_flag;
+    bool                       factory_flag;
     uint8_t                    dev_num;
     uint8_t                    tx1_bat_info;
     uint8_t                    tx2_bat_info;
@@ -100,6 +102,7 @@ typedef struct _hl_mod_euc
     int                        thread_exit_flag;
     hl_util_hup_t              uart_hup;
     hl_util_hup_t              hid_hup;
+    hl_util_hap_t              hid_hap;
     rt_mq_t                    msg_handle;
     rt_device_t                uart_dev;
     rt_device_t                hid_dev;
@@ -115,18 +118,22 @@ typedef struct _hl_mod_euc
 #define HL_MOD_EUC_UART_BUFSZ 256
 #define HL_MOD_EUC_UART_HUP_BUFSZ 256
 #define HL_MOD_EUC_HID_HUP_BUFSZ 256
+#define HL_MOD_EUC_HID_HAP_BUFSZ 256
 
 #define HL_MOD_EUC_MAX_UART_HUP_SEND_BUFSZ 256
 #define HL_MOD_EUC_MAX_HID_HUP_SEND_BUFSZ 256
+#define HL_MOD_EUC_MAX_HID_HAP_SEND_BUFSZ 256
 
 /* variables -----------------------------------------------------------------*/
 
 static hl_mod_euc_st _euc_mod = { .init_flag        = false,
                                   .start_flag       = false,
+                                  .factory_flag     = false,
                                   .euc_thread       = NULL,
                                   .thread_exit_flag = 0,
                                   .uart_hup         = { 0 },
                                   .hid_hup          = { 0 },
+                                  .hid_hap          = { 0 },
                                   .msg_handle       = NULL,
                                   .uart_dev         = NULL,
                                   .hid_dev          = NULL,
@@ -143,6 +150,7 @@ static hl_mod_euc_st _euc_mod = { .init_flag        = false,
 
 static uint8_t uart_hup_buf[HL_MOD_EUC_UART_HUP_BUFSZ] = { 0 };
 static uint8_t hid_hup_buf[HL_MOD_EUC_HID_HUP_BUFSZ]   = { 0 };
+static uint8_t hid_hap_buf[HL_MOD_EUC_HID_HAP_BUFSZ]   = { 0 };
 
 #if HL_IS_TX_DEVICE() == 1
 //tx
@@ -173,6 +181,28 @@ static int _mod_msg_send(uint8_t cmd, void* param, uint16_t len)
     msg.cmd       = cmd;
     msg.param.ptr = param;
     msg.len       = len;
+
+    rt_err = rt_mq_send(_euc_mod.msg_handle, (void*)&msg, sizeof(msg));
+    if (RT_EOK != rt_err) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    return HL_MOD_EUC_FUNC_RET_OK;
+}
+
+static int _larksound_msg_send(uint8_t cmd, uint32_t param, uint16_t len)
+{
+    if (_euc_mod.msg_handle == NULL) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    mode_to_app_msg_t msg;
+    rt_err_t          rt_err;
+
+    msg.sender          = LARKSOUND_MODE;
+    msg.cmd             = cmd;
+    msg.param.u32_param = param;
+    msg.len             = len;
 
     rt_err = rt_mq_send(_euc_mod.msg_handle, (void*)&msg, sizeof(msg));
     if (RT_EOK != rt_err) {
@@ -218,6 +248,17 @@ static int _hid_send_hup_data(char cmd, char* buf, int len)
     }
 
     rt_device_write(_euc_mod.hid_dev, 0, buf_send, size);
+
+    return HL_MOD_EUC_FUNC_RET_OK;
+}
+
+static int _hid_send_hap_data(char* buf, int len)
+{
+    if (len > HL_MOD_EUC_MAX_HID_HAP_SEND_BUFSZ) {
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    rt_device_write(_euc_mod.hid_dev, 0, buf, len);
 
     return HL_MOD_EUC_FUNC_RET_OK;
 }
@@ -282,6 +323,16 @@ static void hid_hup_success_handle_func(hup_protocol_type_t hup_frame)
     uint16_t len = ((uint16_t)(hup_frame.data_len_h) << 8) | hup_frame.data_len_l;
 
     switch (hup_frame.cmd) {
+        default:
+            break;
+    }
+}
+
+static void hid_hap_success_handle_func(hap_protocol_type_t hap_frame)
+{
+    uint16_t len = ((uint16_t)(hap_frame.data_len_h) << 8) | hap_frame.data_len_l;
+
+    switch (hap_frame.cmd) {
         default:
             break;
     }
@@ -450,6 +501,21 @@ static void hid_hup_success_handle_func(hup_protocol_type_t hup_frame)
     }
 }
 
+static void hid_hap_success_handle_func(hap_protocol_type_t hap_frame)
+{
+    uint32_t param = 0;
+    uint16_t len   = ((uint16_t)(hap_frame.data_len_h) << 8) | hap_frame.data_len_l;
+
+    rt_kprintf("\nhid_hap_success_handle_func [%08X]\n", param);
+    param |= (hap_frame.data_addr[0]<<0);
+    param |= (hap_frame.data_addr[1]<<8);
+    param |= (hap_frame.data_addr[2]<<16);
+    param |= (hap_frame.data_addr[3]<<24);
+    rt_kprintf("\nhid_hap_success_handle_func [%08X]\n", param);
+    
+    _larksound_msg_send(hap_frame.cmd, param, hap_frame.ctrl);
+}
+
 #endif
 
 static inline int _hl_mod_euc_hup_init(void)
@@ -475,6 +541,17 @@ static inline int _hl_mod_euc_hup_init(void)
         hl_util_hup_init(&(_euc_mod.hid_hup), hid_hup_buf, (uint32_t(*)(void))rt_tick_get, hid_hup_success_handle_func);
     if (ret == -1) {
         LOG_E("hid_hup init err!");
+        return HL_MOD_EUC_FUNC_RET_ERR;
+    }
+
+    _euc_mod.hid_hap.hap_handle.frame_data_len = sizeof(hid_hap_buf);
+    _euc_mod.hid_hap.hap_handle.role           = EM_HAP_ROLE_SLAVE;
+    _euc_mod.hid_hap.hap_handle.timer_state    = EM_HAP_TIMER_DISABLE;
+
+    ret =
+        hl_util_hup_init(&(_euc_mod.hid_hap), hid_hap_buf, (uint32_t(*)(void))rt_tick_get, hid_hap_success_handle_func);
+    if (ret == -1) {
+        LOG_E("hid_hap init err!");
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
@@ -504,6 +581,7 @@ static inline void _hl_mod_euc_hup_deinit(void)
 {
     hl_util_hup_deinit(&(_euc_mod.uart_hup));
     hl_util_hup_deinit(&(_euc_mod.hid_hup));
+    hl_util_hap_deinit(&(_euc_mod.hid_hap));
 }
 
 static int uart_init(void)
@@ -569,14 +647,23 @@ static void _hid_data_process()
 {
     uint8_t buf[64];
     int     size;
+    int     i;
 
     size = rt_device_read(_euc_mod.hid_dev, 0, buf, sizeof(buf));
     if (size <= 0) {
         return;
     }
 
-    for (int i = 0; i < size; i++) {
-        hl_util_hup_decode(&(_euc_mod.hid_hup), buf[i]);
+    if (_euc_mod.factory_flag) {
+        for (i = 0; i < size; i++) {
+            rt_kprintf("%02X", buf[i]);
+            hl_util_hup_decode(&(_euc_mod.hid_hup), buf[i]);
+        }
+    } else {
+        for (i = 0; i < size; i++) {
+            rt_kprintf("%02X", buf[i]);
+            hl_util_hap_decode(&(_euc_mod.hid_hap), buf[i]);
+        }
     }
 }
 
@@ -897,6 +984,9 @@ int hl_mod_euc_ctrl(hl_mod_euc_cmd_e cmd, void* arg, int arg_size)
         } break;
         case HL_SHUTDOWN_ACK_CMD: {
             _uart_send_hup_data(HL_HUP_CMD_SHUT_DOWN, &charge_state, sizeof(charge_state));
+        } break;
+        case HL_LARKSOUND_CMD: {
+            _hid_send_hap_data((uint8_t*)arg, arg_size);
         } break;
         default:
             break;

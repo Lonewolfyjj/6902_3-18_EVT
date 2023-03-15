@@ -98,6 +98,8 @@ typedef enum _hl_mod_euc_cmd_e
     HL_SET_TURN_ON_STATE_CMD,
     /// 回复收纳盒准备关机，无参数
     HL_SHUTDOWN_ACK_CMD,
+    /// 手机应用LarkSound命令
+    HL_LARKSOUND_CMD,
 } hl_mod_euc_cmd_e;
 
 typedef enum _hl_mod_euc_ind_e

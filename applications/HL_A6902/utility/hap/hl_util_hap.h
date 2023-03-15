@@ -145,6 +145,11 @@ typedef struct
 #define HAP_FRAME_CLIENT_HDR_H 0xBB
 #define HAP_FRAME_CLIENT_HDR_L 0xDD
 
+#define HAP_CTRL_RX (1 << 0)
+#define HAP_CTRL_TX1 (1 << 1)
+#define HAP_CTRL_TX2 (1 << 2)
+#define HAP_CTRL_PHONE (1 << 3)
+
 /* variables -----------------------------------------------------------------*/
 /* Private function(only *.c)  -----------------------------------------------*/
 /**
