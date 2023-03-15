@@ -421,6 +421,7 @@ static void _guage_state_poll()
 static void _guage_reinit_check_poll(void)
 {
     if (_pm_mod.guage_reinit_flag == false || _pm_mod.guage_init_flag == false) {  //不需要校准或者电量计不正常
+        _pm_mod.guage_reinit_flag = false;
         return;
     }
 
