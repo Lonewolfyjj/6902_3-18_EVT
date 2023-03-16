@@ -56,6 +56,8 @@ static int _hl_app_larksound_encode(uint8_t cmd, uint8_t ctrl, uint8_t* data, ui
         return 0;
     }
 
+    rt_memset(data_buffer, 0, sizeof(data_buffer));
+
     int size = hl_util_hap_encode(EM_HAP_ROLE_SLAVE, cmd, ctrl, data_buffer, sizeof(data_buffer), data, data_size);
     if (size == -1) {
         return 0;
@@ -85,6 +87,7 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
     uint8_t              ctrl            = 0;
     int                  len             = 0;
     uint8_t              keep_alive[7]   = { 0 };
+    int8_t               tx_gain         = 0;
 
     temp_ver[0] = 1;
     temp_ver[1] = 2;
@@ -179,9 +182,19 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
             break;
 
         case LARKSOUND_SET_TX_GAIN_CMD:
-            LOG_I("app get(%d) larksound set TX Gain(%08X)\n", p_msg->cmd, p_msg->param.u32_param);
+            tx_gain  = (int8_t)(p_msg->param.u32_param & 0xFF);
             temp_ret = 1;
-            _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_RX, &temp_ret, 1);
+            if (ctrl & HAP_CTRL_TX1) {
+                LOG_I("app get(%d) larksound get TX1 Gain(%d)\n", p_msg->cmd, tx_gain);
+                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_TX1, &temp_ret, 1);
+                hl_mod_display_io_ctrl(TX1_GAIN_VAL_CMD, &tx_gain, 1);
+            }
+            if (ctrl & HAP_CTRL_TX2) {
+                LOG_I("app get(%d) larksound get TX2 Gain(%d)\n", p_msg->cmd, tx_gain);
+                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_TX2, &temp_ret, 1);
+                hl_mod_display_io_ctrl(TX2_GAIN_VAL_CMD, &tx_gain, 1);
+            }
+            temp_ret = 1;
             break;
 
         case LARKSOUND_GET_DENOISE_CMD:
@@ -204,21 +217,15 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
                 rf_bypass_value.val = 0x00;
             }
             temp_devid = 1;
-            if (ctrl & HAP_CTRL_TX1) {
-                rf_bypass_value.chn = HL_RF_LEFT_CHANNEL;
+            if (ctrl & HAP_CTRL_RX) {
+                rf_bypass_value.chn = HL_RF_DOUBLE_CHANNEL;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
                 rx_info.tx1_denoise = temp_ret;
-                LOG_I("app get(%d) larksound set TX1 Denoise[%d]\n", p_msg->cmd, temp_ret);
-                hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &temp_ret, 1);
-                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_TX1, &temp_devid, 1);
-            }
-            if (ctrl & HAP_CTRL_TX2) {
-                rf_bypass_value.chn = HL_RF_RIGHT_CHANNEL;
-                hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
                 rx_info.tx2_denoise = temp_ret;
-                LOG_I("app get(%d) larksound set TX2 Denoise[%d]\n", p_msg->cmd, temp_ret);
+                LOG_I("app get(%d) larksound set RX Denoise[%d]\n", p_msg->cmd, temp_ret);
+                hl_mod_display_io_ctrl(TX1_NOISE_SWITCH_CMD, &temp_ret, 1);
                 hl_mod_display_io_ctrl(TX2_NOISE_SWITCH_CMD, &temp_ret, 1);
-                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_TX2, &temp_devid, 1);
+                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_RX, &temp_devid, 1);
             }
             break;
 
@@ -232,6 +239,7 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
         case LARKSOUND_SET_LOWCUT_CMD:
             temp_ret = (uint8_t)p_msg->param.u32_param;
             if (ctrl & HAP_CTRL_RX) {
+                hl_mod_display_io_ctrl(LOW_CUT_VAL_CMD, &temp_ret, 1);
                 rf_bypass_state.chn   = HL_RF_DOUBLE_CHANNEL;
                 rf_bypass_state.state = temp_ret;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_LOWCUT_CMD, &rf_bypass_state, sizeof(rf_bypass_state));
@@ -286,6 +294,7 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
         case LARKSOUND_SET_SOUND_EFFECT_CMD:
             temp_ret = (uint8_t)p_msg->param.u32_param;
             if (ctrl & HAP_CTRL_RX) {
+                hl_mod_display_io_ctrl(VOICE_MODULE_VAL_CMD, &temp_ret, 1);
                 rf_bypass_value.chn = HL_RF_DOUBLE_CHANNEL;
                 rf_bypass_value.val = temp_ret;
                 hl_mod_telink_ioctl(HL_RF_BYPASS_SOUND_EFFECT_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
@@ -304,6 +313,8 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
         case LARKSOUND_SET_PHONE_OUT_CMD:
             rx_info.phone_out = (uint8_t)p_msg->param.u32_param;
             if (ctrl & HAP_CTRL_RX) {
+                rx_info.phone_out = !rx_info.phone_out;
+                hl_mod_display_io_ctrl(SOUNDOUT_SETTING_SWITCH_CMD, &rx_info.phone_out, 1);
                 LOG_I("app get(%d) larksound set Phone Out[%d]\n", p_msg->cmd, rx_info.phone_out);
             }
             break;
@@ -319,7 +330,7 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
         case LARKSOUND_SET_UAC_GAIN_CMD:
             rx_info.uac_gain = (int32_t)p_msg->param.u32_param;
             if (ctrl & HAP_CTRL_RX) {
-                LOG_I("app get(%d) larksound set UAC Gain[%d]\n", p_msg->cmd, rx_info.uac_gain);
+                LOG_I("app get(%d) larksound set UAC Gain[%08X]\n", p_msg->cmd, rx_info.uac_gain);
                 hl_mod_audio_io_ctrl(HL_AUDIO_SET_GAIN_UAC_CMD, &rx_info.uac_gain, 4);
                 hl_util_nvram_param_set_integer("RX_UAC_GAIN", rx_info.uac_gain);
                 temp_ret = 1;
@@ -343,8 +354,9 @@ void hl_app_larksound_msg_pro(mode_to_app_msg_t* p_msg)
                 hl_mod_audio_io_ctrl(HL_AUDIO_SET_HP_GAIN_R_CMD, &rx_info.hp_gain, 4);
                 hl_util_nvram_param_set_integer("RX_HP_L_GAIN", rx_info.hp_gain);
                 hl_util_nvram_param_set_integer("RX_HP_R_GAIN", rx_info.hp_gain);
+                hl_mod_display_io_ctrl(MONITOR_VOLUME_VAL_CMD, (int8_t*)&rx_info.hp_gain, 1);
                 temp_ret = 1;
-                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_RX, temp_ret, 1);
+                _hl_app_larksound_encode(p_msg->cmd, 0x80 | HAP_CTRL_RX, &temp_ret, 1);
             }
             break;
 

@@ -258,7 +258,16 @@ static int _hid_send_hap_data(char* buf, int len)
         return HL_MOD_EUC_FUNC_RET_ERR;
     }
 
-    rt_device_write(_euc_mod.hid_dev, 0, buf, len);
+    rt_kprintf("LarkSound Send:\n");
+    for (uint8_t i = 0; i < len; i++) {
+        rt_kprintf("%02X ", buf[i]);
+        if (i % 16 == 15) {
+            rt_kprintf("\n");
+        }
+    }
+    rt_kprintf("\n\n");
+
+    rt_device_write(_euc_mod.hid_dev, 0, buf, 64);
 
     return HL_MOD_EUC_FUNC_RET_OK;
 }
@@ -506,13 +515,11 @@ static void hid_hap_success_handle_func(hap_protocol_type_t hap_frame)
     uint32_t param = 0;
     uint16_t len   = ((uint16_t)(hap_frame.data_len_h) << 8) | hap_frame.data_len_l;
 
-    rt_kprintf("\nhid_hap_success_handle_func [%08X]\n", param);
-    param |= (hap_frame.data_addr[0]<<0);
-    param |= (hap_frame.data_addr[1]<<8);
-    param |= (hap_frame.data_addr[2]<<16);
-    param |= (hap_frame.data_addr[3]<<24);
-    rt_kprintf("\nhid_hap_success_handle_func [%08X]\n", param);
-    
+    param |= (hap_frame.data_addr[0] << 0);
+    param |= (hap_frame.data_addr[1] << 8);
+    param |= (hap_frame.data_addr[2] << 16);
+    param |= (hap_frame.data_addr[3] << 24);
+
     _larksound_msg_send(hap_frame.cmd, param, hap_frame.ctrl);
 }
 
@@ -656,14 +663,18 @@ static void _hid_data_process()
 
     if (_euc_mod.factory_flag) {
         for (i = 0; i < size; i++) {
-            rt_kprintf("%02X", buf[i]);
             hl_util_hup_decode(&(_euc_mod.hid_hup), buf[i]);
         }
     } else {
+        rt_kprintf("LarkSound Recv:\n");
         for (i = 0; i < size; i++) {
-            rt_kprintf("%02X", buf[i]);
+            rt_kprintf("%02X ", buf[i]);
+            if (i % 16 == 15) {
+                rt_kprintf("\n");
+            }
             hl_util_hap_decode(&(_euc_mod.hid_hap), buf[i]);
         }
+        rt_kprintf("\n\n");
     }
 }
 
@@ -828,7 +839,7 @@ int hl_mod_euc_stop(void)
     LOG_I("euc stop success");
 
     uart_deinit();
-    
+
     _euc_mod.start_flag = false;
 
     return HL_MOD_EUC_FUNC_RET_OK;
