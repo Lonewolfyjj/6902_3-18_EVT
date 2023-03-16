@@ -1400,11 +1400,17 @@ static rt_err_t hl_mod_audio_dsp_config(void)
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_SET_CONFIG, dsp_config, sizeof(hl_drv_rk_xtensa_dsp_config_t));
     hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_START_DSP, NULL, 0);
 
+
+
 #if HL_IS_TX_DEVICE()
+    // 关闭降噪
+    val = 0;
     memset(dsp_config->audio_process_in_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
     memset(dsp_config->audio_process_out_buffer_b32_2ch, 0x00, dsp_config->buffer_size_b32_2ch);
     memset(dsp_config->audio_after_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
     memset(dsp_config->audio_before_process_out_buffer_b24_1ch, 0x00, dsp_config->buffer_size_b24_1ch);
+    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
+    hl_drv_rk_xtensa_dsp_transfer();
     hl_drv_rk_xtensa_dsp_transfer();
 #endif
 
@@ -1593,13 +1599,7 @@ static void _hl_cap2play_thread_entry(void* arg)
 
     hl_drv_rk_xtensa_dsp_transfer();
 #endif
-
-#if HL_IS_TX_DEVICE()
-    // 关闭降噪
-    uint8_t val = 0;
-    hl_drv_rk_xtensa_dsp_io_ctrl(HL_EM_DRV_RK_DSP_CMD_DENOISE_DSP, &val, 1);
-    hl_drv_rk_xtensa_dsp_transfer();
-#endif    
+  
     rt_thread_mdelay(100);
     hl_mod_audio_codec_buff_clear(&play_info);
     hl_mod_audio_codec_buff_clear(p_card_param); 
