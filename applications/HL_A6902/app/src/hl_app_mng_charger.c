@@ -38,6 +38,10 @@
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
 
+#if HL_IS_TX_DEVICE()
+#include "./class/mstorage.h"
+#endif
+
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
 #include <rtdbg.h>
@@ -521,6 +525,7 @@ void hl_app_mng_charger_entry(void* msg_q)
     mode_to_app_msg_t       msg    = { 0 };
 #if HL_IS_TX_DEVICE()
     hl_led_switch led_ctrl;
+    uint8_t usb_state;
 
     // 在收纳盒中则关闭led
     if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {
@@ -562,6 +567,14 @@ void hl_app_mng_charger_entry(void* msg_q)
     }
     LOG_D("charge exit\r\n");
     hl_util_msg_queue_clear(app_mq);
+    // msc = 1
+#if HL_IS_TX_DEVICE()
+    usb_state = tx_info.mstorage_plug;
+
+    tx_info.mstorage_plug = hl_usbd_msc_flag_get();
+    
+#endif
+
 }
 /*
  * EOF
