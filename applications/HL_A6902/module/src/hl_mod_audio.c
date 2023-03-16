@@ -989,8 +989,8 @@ static void hl_mod_audio_mkfs_dfs_sd()
 {
     rt_device_t disk;
     char file_name[20] = {0};
-    int ret = 0;
-    
+    int         ret           = 0;
+
     disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
     if(disk == RT_NULL)
     {
@@ -1013,10 +1013,13 @@ static void hl_mod_audio_mkfs_dfs_sd()
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    dfs_mkfs("elm", "sd0");
-    if (dfs_mount_device(disk) < 0) {
-        LOG_I("sd0 elm mkfs dfs ");
+    ret = dfs_unmount_device(disk);
+    LOG_I("dfs_unmount_sd0(%d)", ret);
+    ret = dfs_mkfs("elm", "sd0");
+    LOG_I("mkfs sd0(%d)", ret);
+    ret = dfs_mount_device(disk);
+    if (ret < 0) {
+        LOG_I("sd0 elm mkfs dfs(%d)", ret);
     }
 #endif
     LOG_I("hl mod audio dfs");
@@ -1025,6 +1028,7 @@ static void hl_mod_audio_mkfs_dfs_sd()
 static void hl_mod_audio_dfs_root()
 {
     rt_device_t disk;
+    int         ret = 0;
 
     disk = rt_device_find("root");
     if (disk == RT_NULL) {
@@ -1033,15 +1037,18 @@ static void hl_mod_audio_dfs_root()
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "root");
-        dfs_mount_device(disk);
-        LOG_I("root elm mkfs dfs ");
+    ret = dfs_unmount_device(disk);
+    LOG_I("dfs_unmount(%d)", ret);
+    ret = dfs_mount_device(disk);
+    if (ret < 0) {
+        ret = dfs_mkfs("elm", "root");
+        LOG_I("mkfs(%d)", ret);
+        ret = dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs(%d) ", ret);
     }
 #endif
 
-    LOG_I("hl mod audio dfs");
+    LOG_I("hl mod audio dfs root");
 }
 
 static void hl_mod_audio_mkfs_dfs_root()
@@ -2739,12 +2746,12 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 3), HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_MKFS_DFS_CMD:
-            hl_mod_audio_mkfs_dfs_root();
+            // hl_mod_audio_mkfs_dfs_root();
             hl_mod_audio_mkfs_dfs_sd();
             break;
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
-            hl_mod_audio_dfs_sd();
+            // hl_mod_audio_dfs_sd();
             break;    
         case HL_AUDIO_MSTORAGE_SWITCH_CMD:
             if (ptr == NULL) {

@@ -38,9 +38,9 @@
 #include "hl_util_nvram.h"
 #include "hl_board_commom.h"
 
-#if HL_IS_TX_DEVICE()
+
 #include "./class/mstorage.h"
-#endif
+
 
 #define DBG_SECTION_NAME "app_charger"
 #define DBG_LEVEL DBG_LOG
@@ -140,7 +140,7 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         LOG_D("charge full done!");
         tx_info.charge_flag = 3;
         state               = FULL_CHARGE;
-    } 
+    }
     hl_mod_display_io_ctrl(LED_CHARGE_STATUS_CMD, &state, sizeof(state));
 #else
     uint8_t state = 0;
@@ -523,9 +523,9 @@ void hl_app_mng_charger_entry(void* msg_q)
 {
     struct rt_messagequeue* app_mq = msg_q;
     mode_to_app_msg_t       msg    = { 0 };
+    uint8_t                 usb_state;
 #if HL_IS_TX_DEVICE()
     hl_led_switch led_ctrl;
-    uint8_t usb_state;
 
     // 在收纳盒中则关闭led
     if (hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_LOW) {
@@ -569,12 +569,12 @@ void hl_app_mng_charger_entry(void* msg_q)
     hl_util_msg_queue_clear(app_mq);
     // msc = 1
 #if HL_IS_TX_DEVICE()
-    usb_state = tx_info.mstorage_plug;
-
+    usb_state             = tx_info.mstorage_plug;
     tx_info.mstorage_plug = hl_usbd_msc_flag_get();
-    
+#else
+    usb_state = rx_info.mstorage_plug;
+    rx_info.mstorage_plug = hl_usbd_msc_flag_get();
 #endif
-
 }
 /*
  * EOF

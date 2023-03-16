@@ -174,8 +174,12 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
 
         case HL_RF_BYPASS_FORMAT_DISK_IND:
             bypass_chn = *(hl_rf_channel_e*)p_msg->param.ptr;
-            hl_mod_audio_io_ctrl(HL_AUDIO_MKFS_DFS_CMD, NULL, 0);
-            LOG_D("app get RX Format disk");
+            if (tx_info.mstorage_plug == 1) {
+                LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
+            } else {
+                hl_mod_audio_io_ctrl(HL_AUDIO_MKFS_DFS_CMD, NULL, 0);
+                LOG_D("app get RX Format disk");
+            }
             break;
 
         case HL_RF_BYPASS_UAC_GAIN_IND:
