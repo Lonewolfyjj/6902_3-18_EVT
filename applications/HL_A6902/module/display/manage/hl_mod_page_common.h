@@ -161,10 +161,10 @@ typedef struct _hl_display_screen_s
     uint16_t auto_poweroff;
     hl_upgrade_status upgrade_status;
     
-    char tx1_ver[10];
-    char tx2_ver[10];
-    char rx_ver[10];
-    char case_ver[10];
+    char tx1_ver[16];
+    char tx2_ver[16];
+    char rx_ver[16];
+    char case_ver[16];
     char sn[36];
     char device_fault_code[20];
     // 显示系统当前状态信息

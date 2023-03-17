@@ -429,25 +429,29 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         } break;
         case TX1_VER_STRING_CMD: {
             char* buf = (char*)ptr;
-            len       = len > 10 ? 10 : len;
+            len       = len > 16 ? 16 : len;
+            rt_memset(data_p->tx1_ver, 0, 16);
             rt_memcpy(data_p->tx1_ver, buf, len);
             flag->tx1_ver = 1;
         } break;
         case TX2_VER_STRING_CMD: {
             char* buf = (char*)ptr;
-            len       = len > 10 ? 10 : len;
+            len       = len > 16 ? 16 : len;
+            rt_memset(data_p->tx2_ver, 0, 16);
             rt_memcpy(data_p->tx2_ver, buf, len);
             flag->tx2_ver = 1;
         } break;
         case RX_VER_STRING_CMD: {
             char* buf = (char*)ptr;
-            len       = len > 10 ? 10 : len;
+            len       = len > 16 ? 16 : len;
+            rt_memset(data_p->rx_ver, 0, 16);
             rt_memcpy(data_p->rx_ver, buf, len);
             flag->rx_ver = 1;
         } break;
         case CASE_VER_STRING_CMD: {
             char* buf = (char*)ptr;
-            len       = len > 10 ? 10 : len;
+            len       = len > 16 ? 16 : len;
+            rt_memset(data_p->case_ver, 0, 16);
             rt_memcpy(data_p->case_ver, buf, len);
             flag->case_ver = 1;
         } break;
@@ -529,6 +533,10 @@ uint8_t hl_mod_display_io_ctrl(uint8_t cmd, void* ptr, uint16_t len)
         case SFT_LINE_OUT_VOLUME_VAL_CMD: {
             data_p->track_line_out_volume = *(int8_t*)ptr;
             flag->track_line_out_volume   = 1;
+        } break;
+        case VOICE_MODULE_VAL_CMD: {
+            data_p->voice_module = *(hl_display_vocie_mode_e*)ptr;
+            flag->voice_module   = 1;
         } break;
         default:
             LOG_D("unknow cmd=%d\r\n", cmd);

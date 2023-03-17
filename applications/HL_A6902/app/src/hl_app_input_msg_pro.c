@@ -133,12 +133,14 @@ static void hl_app_tx_pair_key_pro(hl_key_event_e event)
             if (tx_info.denoise_flag == 0) {
                 denoise_switch       = HL_SWITCH_ON;
                 tx_info.denoise_flag = 1;
+                channel              = 0xFF;
             } else {
                 denoise_switch       = HL_SWITCH_OFF;
                 tx_info.denoise_flag = 0;
+                channel              = 0;
             }
             rf_bypass_value.chn = tx_info.rf_chn;
-            rf_bypass_value.val = tx_info.denoise_flag;
+            rf_bypass_value.val = channel;
             hl_mod_telink_ioctl(HL_RF_BYPASS_DENOISE_CMD, &rf_bypass_value, sizeof(rf_bypass_value));
             hl_mod_audio_io_ctrl(HL_AUDIO_SET_DENOISE_CMD, &denoise_switch, sizeof(denoise_switch));            
             hl_app_disp_state_led_set();

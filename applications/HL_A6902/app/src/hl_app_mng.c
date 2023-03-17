@@ -295,6 +295,7 @@ void hl_app_msg_thread(void* parameter)
     hl_mod_upgrade_init(&hl_app_mq);
 
 #if HL_IS_TX_DEVICE()
+    rt_thread_mdelay(5);
     if (tx_info.mstorage_plug == 0) {
 #else
     if (rx_info.mstorage_plug == 0) {

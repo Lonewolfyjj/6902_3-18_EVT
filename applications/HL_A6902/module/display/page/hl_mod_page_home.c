@@ -312,6 +312,32 @@ static void hl_mod_home_tx1_bat_update(hl_display_screen_s* data_ptr)
     }
 }
 
+static void hl_mod_home_tx1mute_update(hl_display_screen_s* now)
+{    
+    hl_lvgl_main_ioctl_t data1;
+
+    if (now->sys_status.tx1_mute_switch) {
+        data1.cmd = HL_CHANGE_TX1_MUTE;
+    } else {
+        data1.cmd = HL_CHANGE_TX1_MUTE_DEL;
+    }
+    hl_mod_main_ioctl(&data1);
+    LOG_D("mute1=%d", now->sys_status.tx1_mute_switch);
+}
+
+static void hl_mod_home_tx2mute_update(hl_display_screen_s* now)
+{
+    hl_lvgl_main_ioctl_t data2;
+
+    if (now->sys_status.tx2_mute_switch) {
+        data2.cmd = HL_CHANGE_TX2_MUTE;
+    } else {
+        data2.cmd = HL_CHANGE_TX2_MUTE_DEL;
+    }
+    hl_mod_main_ioctl(&data2);
+    LOG_D("mute1=%d", now->sys_status.tx2_mute_switch);
+}
+
 static void hl_mod_home_tx2_bat_update(hl_display_screen_s* data_ptr)
 {
     hl_lvgl_main_ioctl_t ioctrl;
@@ -383,6 +409,8 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
 
             hl_mod_home_tx1_bat_update(data_ptr);
             hl_mod_home_tx2_bat_update(data_ptr);
+            hl_mod_home_tx1mute_update(data_ptr);
+            hl_mod_home_tx2mute_update(data_ptr);
             break;
         case HL_RF_R_CONNECT:
             data.display_tx_device = HL_DISPLAY_TX2;
@@ -396,6 +424,7 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             hl_mod_main_init(&data);
 
             hl_mod_home_tx2_bat_update(data_ptr);
+            hl_mod_home_tx2mute_update(data_ptr);
             break;
         case HL_RF_L_CONNECT:
             data.display_tx_device = HL_DISPLAY_TX1;
@@ -408,6 +437,8 @@ static void hl_mod_main_tx_deal_init(hl_display_screen_s* data_ptr)
             data.tx_device_1.volume         = data_ptr->tx1_vu;
             hl_mod_main_init(&data);
             hl_mod_home_tx1_bat_update(data_ptr);
+            hl_mod_home_tx1mute_update(data_ptr);
+
             break;
 
         case HL_RF_UNCONNECT:

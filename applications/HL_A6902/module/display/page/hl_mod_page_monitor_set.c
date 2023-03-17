@@ -176,7 +176,7 @@ static void hl_mod_page_exit(void)
 {
     hl_lvgl_b_two_in_one_ioctl_t two_in_one_test_ctl;
     
-    two_in_one_test_ctl.b_two_in_one_choose = HL_TWO_ONE_CHOOSE_EXIT;
+    two_in_one_test_ctl.b_two_in_one_choose = HL_B_TWO_ONE_CHOOSE_EXIT;
     hl_mod_b_two_in_one_ioctl(&two_in_one_test_ctl);
 
     // two_in_one_test_ctl.b_two_in_one_choose = HL_TWO_ONE_CHOOSE_DEL_STYLE;

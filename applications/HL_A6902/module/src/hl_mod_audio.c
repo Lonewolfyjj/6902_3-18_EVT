@@ -151,11 +151,17 @@ typedef enum _rtc_device_e
 #define HL_CAPTURE_DEV "codecc"
 #define HL_PDM_CAP_DEV "pdmc"
 
-// 延时时间，单位ms
-// 1579*114   = 1800000 ms
-#define HL_RECORD_TIME_CNT  15790
-// 176*114 = 20000 ms
-// #define HL_RECORD_TIME_CNT  5264
+// // 延时时间，单位ms
+// // 1579*114   = 1800000 ms
+// #define HL_RECORD_TIME_CNT  15790
+// // 176*114 = 20000 ms
+// // #define HL_RECORD_TIME_CNT  5264
+// #define HL_RECORD_TIME_CNT  2900174
+//1min
+// #define HL_RECORD_TIME_CNT  2900158
+//30min
+#define HL_RECORD_TIME_CNT  87005146
+
 
 #define HL_RECORD_FILE_CNT  99999
 #else
@@ -185,7 +191,7 @@ typedef struct s_record_file_cout_t
     uint32_t min;
     uint32_t max;
     // uint32_t dir_max;
-    uint32_t  record_cnt;
+    // uint32_t  record_cnt;
     /// @brief  录制错误标志位
     uint8_t record_fault_flag;
 } s_record_file_cout;
@@ -259,7 +265,7 @@ static void hl_mod_audio_record_save(int p_file_audio, char* file_name, uint32_t
 static void hl_mod_audio_record_stop(int p_file_audio, uint32_t* s_record_size);
 static void hl_mod_audio_record_start(int p_file_audio, uint32_t* s_record_size);
 // 开始录制前文件分段 0表示可以分段 1表示不能分段
-static int hl_mod_audio_record_segm_inspection(uint8_t record_switch);
+static int hl_mod_audio_record_segm_inspection();
 static int hl_mod_audio_record_front_inspection(void);
 static int hl_mod_find_oledfile(uint8_t* state);
 static void hl_mod_audio_record_fault();
@@ -908,7 +914,8 @@ static int hl_mod_audio_record_front_inspection(void)
         hl_util_nvram_param_set_integer("TX_FCNT_MAX", record_file_cout.max);
     }
 
-    record_file_cout.record_cnt = HL_RECORD_TIME_CNT;
+    s_record_after_size  = 0;
+    s_record_bypass_size = 0;
 
     record_info.file_audio_after =
         open(timer_name_after,
@@ -926,27 +933,20 @@ static int hl_mod_audio_record_front_inspection(void)
 }
 
 // 开始录制前文件分段 0表示可以分段 1表示不能分段
-static int hl_mod_audio_record_segm_inspection(uint8_t record_switch)
+static int hl_mod_audio_record_segm_inspection()
 {
-    if (record_file_cout.record_cnt == 0) {
-        record_file_cout.record_cnt = HL_RECORD_TIME_CNT;
-        if (record_switch == 1) {
-            LOG_D("stop%d\n", rt_tick_get());
-            // 保存文件
-            hl_mod_audio_record_stop(record_info.file_audio_after, &s_record_after_size);
-            hl_mod_audio_record_stop(record_info.file_audio_bypass, &s_record_bypass_size);
-            if (-1 == hl_mod_audio_record_front_inspection()) {
-                hl_mod_audio_record_fault();
-            }
-            LOG_D("sav%d\n", rt_tick_get());
-            return 1;
+    if (s_record_after_size >= HL_RECORD_TIME_CNT && s_record_bypass_size >= HL_RECORD_TIME_CNT) {
+        LOG_D("stop%d\n", rt_tick_get());
+        // 保存文件
+        hl_mod_audio_record_stop(record_info.file_audio_after, &s_record_after_size);
+        hl_mod_audio_record_stop(record_info.file_audio_bypass, &s_record_bypass_size);
+        if (-1 == hl_mod_audio_record_front_inspection()) {
+            hl_mod_audio_record_fault();
         }
-    } else {
-        if (record_file_cout.record_cnt > 0) {
-            record_file_cout.record_cnt--;
-        }
-        return 0;
+        LOG_D("sav%d\n", rt_tick_get());
+        return 1;
     }
+
     return 0;
 }
 
@@ -975,12 +975,16 @@ static void hl_mod_audio_dfs_sd()
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "sd0");
-        dfs_mount_device(disk);
-        LOG_I("sd0 elm mkfs dfs ");
-    }
+    ret = dfs_mount_device(disk);
+    LOG_I("sd0 mount(%d)", ret);
+    ret = dfs_mount_device(disk);
+    LOG_I("sd0 mount(%d)", ret);
+    // dfs_unmount_device(disk);
+    // if (dfs_mount_device(disk) < 0) {
+    //     dfs_mkfs("elm", "sd0");
+    //     dfs_mount_device(disk);
+    //     LOG_I("sd0 elm mkfs dfs ");
+    // }
 #endif
     LOG_I("hl mod audio dfs");
 }
@@ -989,8 +993,8 @@ static void hl_mod_audio_mkfs_dfs_sd()
 {
     rt_device_t disk;
     char file_name[20] = {0};
-    int ret = 0;
-    
+    int         ret           = 0;
+
     disk = rt_device_find(RT_USB_MSTORAGE_DISK_NAME);
     if(disk == RT_NULL)
     {
@@ -1013,10 +1017,13 @@ static void hl_mod_audio_mkfs_dfs_sd()
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    dfs_mkfs("elm", "sd0");
-    if (dfs_mount_device(disk) < 0) {
-        LOG_I("sd0 elm mkfs dfs ");
+    ret = dfs_unmount_device(disk);
+    LOG_I("dfs_unmount_sd0(%d)", ret);
+    ret = dfs_mkfs("elm", "sd0");
+    LOG_I("mkfs sd0(%d)", ret);
+    ret = dfs_mount_device(disk);
+    if (ret < 0) {
+        LOG_I("sd0 elm mkfs dfs(%d)", ret);
     }
 #endif
     LOG_I("hl mod audio dfs");
@@ -1025,6 +1032,7 @@ static void hl_mod_audio_mkfs_dfs_sd()
 static void hl_mod_audio_dfs_root()
 {
     rt_device_t disk;
+    int         ret = 0;
 
     disk = rt_device_find("root");
     if (disk == RT_NULL) {
@@ -1033,15 +1041,18 @@ static void hl_mod_audio_dfs_root()
     }
 
 #ifdef RT_USING_DFS_MNTTABLE
-    dfs_unmount_device(disk);
-    if (dfs_mount_device(disk) < 0) {
-        dfs_mkfs("elm", "root");
-        dfs_mount_device(disk);
-        LOG_I("root elm mkfs dfs ");
+    ret = dfs_unmount_device(disk);
+    LOG_I("dfs_unmount(%d)", ret);
+    ret = dfs_mount_device(disk);
+    if (ret < 0) {
+        ret = dfs_mkfs("elm", "root");
+        LOG_I("mkfs(%d)", ret);
+        ret = dfs_mount_device(disk);
+        LOG_I("root elm mkfs dfs(%d) ", ret);
     }
 #endif
 
-    LOG_I("hl mod audio dfs");
+    LOG_I("hl mod audio dfs root");
 }
 
 static void hl_mod_audio_mkfs_dfs_root()
@@ -1505,7 +1516,7 @@ static void do_record_audio(void* arg)
             }
 
             if (record_ins_flag_after == 1 && record_ins_flag_bypass == 1) {
-                hl_mod_audio_record_segm_inspection(1);
+                hl_mod_audio_record_segm_inspection();
                 record_ins_flag_after  = 0;
                 record_ins_flag_bypass = 0;
             }
@@ -2707,7 +2718,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
             hl_mod_audio_set_codec_gain((((int*)ptr)[0] + 3), HL_CODEC_CH_PGA, HL_CODEC_SOUND_CH_ALL, HL_CODEC_DEVICE_MIC);
             break;
         case HL_AUDIO_MKFS_DFS_CMD:
-            hl_mod_audio_mkfs_dfs_root();
+            // hl_mod_audio_mkfs_dfs_root();
             hl_mod_audio_mkfs_dfs_sd();
             break;
         case HL_AUDIO_CHECK_DFS_CMD:

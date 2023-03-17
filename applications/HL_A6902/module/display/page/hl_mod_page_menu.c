@@ -53,12 +53,17 @@ LV_IMG_DECLARE(Menu_monitor_config);  //监听设置
 LV_IMG_DECLARE(Menu_high_true);       //音效模式
 LV_IMG_DECLARE(Menu_common_config);   //通用设置
 
-#define MENU_ICON_NUM 6
+#define MENU_ICON_NUM 7
 static int16_t menu_center_icon = 0;
 // 下级菜单表
 static const hl_screen_page_e next_level_menu_tab[MENU_ICON_NUM] = {
-    PAGE_SOUND_MODULE,      PAGE_TX_CONF_MENU, /*PAGE_NOISE_REDUCTION_INTENSITY,*/ PAGE_VOLUME_MENU, PAGE_MONITOR_SET,
-    PAGE_SOUND_EFFECT_MODE, PAGE_OTHER_SET
+    PAGE_SOUND_MODULE,
+    PAGE_TX_CONF_MENU,
+    PAGE_NOISE_REDUCTION_INTENSITY,
+    PAGE_VOLUME_MENU,
+    PAGE_MONITOR_SET,
+    PAGE_SOUND_EFFECT_MODE,
+    PAGE_OTHER_SET,
 };
 
 static void hl_mod_menu_defaut_set(uint32_t current)
@@ -104,7 +109,7 @@ static void hl_mod_page_setup(void)
     menu_data_t pic_list[MENU_ICON_NUM] = {
         ADD_IMG_DATA(NULL, NULL, &Menu_single_voice, page_ptr->menu_page_ptr->page_menu->ptr_single_voice),//"单声道"),
         ADD_IMG_DATA(NULL, NULL, &Menu_tx_config, page_ptr->menu_page_ptr->page_menu->ptr_tx_config),//"TX设置"),
-        // ADD_IMG_DATA(NULL, NULL, &Menu_noise_config, page_ptr->menu_page_ptr->page_menu->ptr_noise_config),//"降噪设置"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_noise_config, page_ptr->menu_page_ptr->page_menu->ptr_noise_config),//"降噪设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_voice_config, page_ptr->menu_page_ptr->page_menu->ptr_voice_config),//"音量调节"),
         ADD_IMG_DATA(NULL, NULL, &Menu_monitor_config, page_ptr->menu_page_ptr->page_menu->ptr_monitor_config),//"监听设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_high_true, page_ptr->menu_page_ptr->page_menu->ptr_high_true),//"音效模式"),

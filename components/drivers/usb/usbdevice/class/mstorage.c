@@ -1020,6 +1020,8 @@ static rt_err_t _interface_handler(ufunction_t func, ureq_t setup)
  * @return RT_EOK on successful.
  */
 static ufunction_t temp = NULL;
+// 在APP和charger线程起来前，s_p_metorage_switch_cb不起作用，所以需要有一个变量用来存储当前的USB枚举状态
+static uint8_t usb_mstorage_before_flag = 0;
 static rt_err_t _function_enable(ufunction_t func)
 {
     struct mstorage *data;
@@ -1033,6 +1035,10 @@ static rt_err_t _function_enable(ufunction_t func)
         return -RT_ERROR;
     }
 
+    // rt_kprintf("msc on\n");
+
+    usb_mstorage_before_flag = 1;
+    
     if(s_p_metorage_switch_cb != NULL) {
         s_p_metorage_switch_cb(1);
     }    
@@ -1127,6 +1133,8 @@ static rt_err_t _function_disable(ufunction_t func)
     
     data->status = STAT_CBW;
 
+    usb_mstorage_before_flag = 0;
+    
     if(s_p_metorage_switch_cb != NULL) {
         s_p_metorage_switch_cb(0);
     }
@@ -1260,5 +1268,10 @@ void rt_usbd_msc_disable(void)
 void rt_usbd_msc_switch(uint8_t mstorage_switch)
 {
     s_metorage_switch = (bool)mstorage_switch;
+}
+
+uint8_t hl_usbd_msc_flag_get(void)
+{
+    return usb_mstorage_before_flag;
 }
 #endif
