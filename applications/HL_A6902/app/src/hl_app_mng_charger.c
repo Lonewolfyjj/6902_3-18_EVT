@@ -87,7 +87,7 @@ static void _hl_app_mng_charger_power_on_stm()
             }
             break;
         case EM_CHARGER_POWER_ON_STM_HOLD:
-            if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW) {
+            if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_LOW && last_halt_state == 0) {
                 hold_times--;
                 if (!hold_times) {
                     sg_stm_charger_pwr_key_state++;
