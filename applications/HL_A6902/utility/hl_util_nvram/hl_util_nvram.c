@@ -18,6 +18,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "cJSON/cJSON.h"
 #include "hl_util_nvram.h"
+#include "hl_util_nvram_factory.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -116,6 +117,51 @@ static void _hl_util_nvram_print_json_data_from_a_json(char* cjosn_data, uint16_
     sg_nvram_handle->std_printf("%s", data_temp);
 }
 
+static void _update_with_nvram_factory_string(void)
+{
+    int i = 0;
+    int j = 0;
+
+    while (nvram_factory_string[i] != '\0') {
+        if (nvram_factory_string[i] == sg_json_str_buffer[j]) {
+            if (nvram_factory_string[i] == ':') {
+                while (1) {
+                    i++;
+                    if (nvram_factory_string[i] == ',' || nvram_factory_string[i] == '}') {
+                        break;
+                    }
+                }
+
+                while (1) {
+                    j++;
+                    if (sg_json_str_buffer[j] == ',' || sg_json_str_buffer[j] == '}') {
+                        break;
+                    }
+                }
+
+                if (nvram_factory_string[i] == '}') {
+                    sg_nvram_handle->std_printf("nvram no need to update!\r\n");
+                    return;
+                }
+
+                if (nvram_factory_string[i] == ',' && sg_json_str_buffer[j] == '}') {
+                    sg_nvram_handle->std_printf("add new nvram string : %s\r\n", &nvram_factory_string[i]);
+                    memcpy(&sg_json_str_buffer[i], &nvram_factory_string[j], strlen(nvram_factory_string) - i + 1);
+                    sg_nvram_handle->have_changed = 1;
+                    return;
+                }
+            }
+            i++;
+            j++;
+        } else {
+            sg_nvram_handle->std_printf("nvram update err: different key name! using nvram factory string\r\n");
+            memcpy(sg_json_str_buffer, nvram_factory_string, strlen(nvram_factory_string) + 1);
+            sg_nvram_handle->have_changed = 1;
+            return;
+        }
+    }
+}
+
 /* Exported functions --------------------------------------------------------*/
 
 uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
@@ -149,8 +195,14 @@ uint8_t hl_util_nvram_param_init(void (*std_printf)(const char* fmt, ...),
     ret = sg_nvram_handle->nvram_read((char*)sg_json_str_buffer, &len);
 
     if (len) {
-        sg_json_paramaters = cJSON_Parse(sg_json_str_buffer);
-        sg_nvram_handle->std_printf("get nvram read len = %d, str len = %d\r\n", len, strlen(sg_json_str_buffer));
+        if (strnlen(sg_json_str_buffer, HL_UTIL_NVRAM_JSON_BUFFER_SIZE) == HL_UTIL_NVRAM_JSON_BUFFER_SIZE) {
+            sg_json_paramaters = cJSON_Parse(nvram_factory_string);
+            sg_nvram_handle->std_printf("get Json from factory string!\r\n");
+        } else {
+            _update_with_nvram_factory_string();
+            sg_json_paramaters = cJSON_Parse(sg_json_str_buffer);
+            sg_nvram_handle->std_printf("get nvram read len = %d, str len = %d\r\n", len, strlen(sg_json_str_buffer));
+        }
     } else {
         sg_nvram_handle->std_printf("error of get nvram json\r\n");
         return 3;
@@ -188,7 +240,7 @@ uint8_t hl_util_nvram_param_get(char* param_key, char* param_value, char* defaul
 
     cJSON*     item;
     cJSON_bool check_ret = cJSON_False;
-    uint8_t     ret       = 0;
+    uint8_t    ret       = 0;
 
     check_ret = cJSON_HasObjectItem(sg_json_paramaters, param_key);
 
@@ -290,7 +342,7 @@ uint8_t hl_util_nvram_param_set(char* param_key, char* param_value)
 // param int8
 uint8_t hl_util_nvram_param_set_integer(char* param_key, int8_t integer_value)
 {
-    char param_value[10] = {0};
+    char param_value[10] = { 0 };
 
     sprintf(param_value, "%d", integer_value);
     return hl_util_nvram_param_set(param_key, param_value);

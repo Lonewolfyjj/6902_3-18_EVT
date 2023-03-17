@@ -63,7 +63,9 @@ typedef enum _hl_drv_guage_op
     HL_DRV_GUAGE_CLEAR_IT_FLAG,
     ///dump all register value, no param
     HL_DRV_GUAGE_DUMP_ALL_REGISTER_VALUE,
-    ///自检测，无参数
+    /// 检查电量计是否准备好，参数为<bool *>(true：准备好，可以获取准确的数值 false：未准备好)
+    HL_DRV_GUAGE_CHECK_IF_READY,
+    /// 自检测，参数为<bool *>(true:需要重新初始化 false:不需要重新初始化)
     HL_DRV_GUAGE_CHIP_SELF_CHECK,
 } hl_drv_guage_op_t;
 

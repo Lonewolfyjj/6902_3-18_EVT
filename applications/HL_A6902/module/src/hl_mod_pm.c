@@ -45,6 +45,16 @@ typedef enum _hl_mod_pm_charger_e
     HL_MOD_PM_CHARGER_SGM41518,
 } hl_mod_pm_charger_e;
 
+typedef enum _hl_mod_pm_ntc_state_e
+{
+    HL_NTC_STATE_UNKNOWN = 0,
+    HL_NTC_STATE_COLD,
+    HL_NTC_STATE_COOL,
+    HL_NTC_STATE_NORMAL,
+    HL_NTC_STATE_WARM,
+    HL_NTC_STATE_HOT,
+} hl_mod_pm_ntc_state_e;
+
 typedef struct _hl_mod_pm_bat_info_st
 {
     hl_st_drv_guage_soc_t  soc;
@@ -59,6 +69,9 @@ typedef struct _hl_mod_pm_st
 {
     bool                     init_flag;
     bool                     guage_init_flag;
+    bool                     guage_reinit_flag;
+    bool                     charger_init_flag;
+    hl_mod_pm_ntc_state_e    charger_ntc_state;
     bool                     start_flag;
     bool                     interrupt_update_flag;
     hl_mod_pm_charger_e      charger;
@@ -74,6 +87,7 @@ typedef struct _hl_mod_pm_st
     rt_thread_t              pm_thread;
     int                      thread_exit_flag;
     hl_mod_pm_bat_info_st    bat_info;
+    uint8_t                  ui_soc;
 } hl_mod_pm_st;
 
 typedef enum _hl_mod_pm_bat_info_e
@@ -100,7 +114,7 @@ static hl_mod_pm_st _pm_mod = { .init_flag             = false,
                                 .pm_thread             = NULL,
                                 .thread_exit_flag      = 0,
                                 .bat_info              = {
-                                    .soc.soc     = 0,
+                                    .soc.soc     = 100,
                                     .soc.soc_d   = 0,
                                     .current     = 0,
                                     .cycle       = 0,
@@ -191,6 +205,14 @@ static void _power_gpio_set(hl_gpio_pin_e power_gpio, bool flag)
 static void _pm_update_bat_info(hl_mod_pm_bat_info_e type)
 {
     hl_mod_pm_bat_info_st* p_bat_info;
+    bool                   flag;
+    int                    ret;
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IF_READY, &flag, sizeof(flag));
+    if (ret == CW2215_FUNC_RET_ERR || flag == false) {
+        LOG_W("guage caculate not ready!");
+        return;
+    }
 
     p_bat_info = &(_pm_mod.bat_info);
 
@@ -262,13 +284,24 @@ static uint8_t _soc_convert(uint8_t soc)
     }
 }
 
-static void _send_soc_msg_to_app(void)
+static void _ui_soc_convert(void)
 {
-    static uint8_t soc = 0;
+    int     sum;
+    uint8_t soc;
 
-    soc = _soc_convert(_pm_mod.bat_info.soc.soc);
+    if (_pm_mod.bat_info.soc.soc >= 96) {
+        soc = 100;
+    } else {
+        sum = _pm_mod.bat_info.soc.soc;
+        sum = (sum * 10) + (_pm_mod.bat_info.soc.soc_d * 10 / 256);
+        sum = (sum * 100 / 95) / 10;
+        soc = sum;
+    }
 
-    _mod_msg_send(HL_SOC_UPDATE_IND, &soc, sizeof(soc));
+    if (soc != _pm_mod.ui_soc) {
+        _pm_mod.ui_soc = soc;
+        _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.ui_soc), sizeof(_pm_mod.ui_soc));
+    }
 }
 
 static void _pm_init_state_update(void)
@@ -289,7 +322,8 @@ static void _pm_init_state_update(void)
 
     _pm_mod.charge_state = HL_CHARGE_STATE_UNKNOWN;
 
-    _send_soc_msg_to_app();
+    _ui_soc_convert();
+    _mod_msg_send(HL_SOC_UPDATE_IND, &(_pm_mod.ui_soc), sizeof(_pm_mod.ui_soc));
 }
 
 static bool _debug_switch_flag = false;
@@ -307,8 +341,20 @@ MSH_CMD_EXPORT(hl_mod_pm_debug_bat_info_5s, 间隔5s打印电池信息);
 
 static void _guage_state_update()
 {
+    if (_pm_mod.guage_init_flag == false) {
+        return;
+    }
+
     uint8_t soc;
     bool    flag = false;
+    int     ret;
+    bool    ready_flag;
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHECK_IF_READY, &ready_flag, sizeof(ready_flag));
+    if (ret == CW2215_FUNC_RET_ERR || ready_flag == false) {
+        LOG_W("guage caculate not ready!");
+        return;
+    }
 
     soc = _pm_mod.bat_info.soc.soc;
 
@@ -320,9 +366,10 @@ static void _guage_state_update()
     _pm_update_bat_info(HL_MOD_PM_BAT_INFO_CYCLE);
 
     if (soc != _pm_mod.bat_info.soc.soc && _pm_mod.bat_info.soc.soc <= 100) {
-        _send_soc_msg_to_app();
         flag = true;
     }
+
+    _ui_soc_convert();
 
     if (flag == true || _debug_switch_flag == true) {
         LOG_I("------bat log------");
@@ -334,30 +381,52 @@ static void _guage_state_update()
         LOG_I("cycle:%d", _pm_mod.bat_info.cycle);
     }
 
-    if (_pm_mod.bat_info.soc.soc <= 3 && hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
+    if (_pm_mod.bat_info.soc.soc <= 3 && hl_hal_gpio_read(GPIO_VBUS_DET) == PIN_HIGH
+        && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
         _mod_msg_send(HL_ULTRA_LOWPOWER_IND, NULL, 0);
     }
 }
 
 static void _guage_err_monitor(void)
 {
-    int ret;
+    int  ret;
+    char chip_id;
+    bool flag;
 
-    if (_pm_mod.guage_init_flag == true) {
-        ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, RT_NULL, 0);
-        if (ret == CW2215_FUNC_RET_ERR) {
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_GET_CHIP_ID, &chip_id, sizeof(chip_id));
+    if (ret == CW2215_FUNC_RET_ERR || chip_id != CW2215_CHIP_ID) {  //通信不正常
+        LOG_W("guage bad i2c!");
+        if (_pm_mod.guage_init_flag == true) {
             _pm_mod.guage_init_flag = false;
             // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
         }
-    } else {
-        ret = hl_drv_cw2215_deinit();
-        if (ret == CW2215_FUNC_RET_OK) {
-            ret = hl_drv_cw2215_init();
+    } else {  //通信正常
+        ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, &flag, sizeof(flag));
+        if (ret == CW2215_FUNC_RET_ERR) {
+            return;
         }
 
-        if (ret == CW2215_FUNC_RET_OK) {
-            _pm_mod.guage_init_flag = true;
-            // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+        if (flag == true) {  //需要重新初始化
+            if (_pm_mod.guage_init_flag == true) {
+                _pm_mod.guage_init_flag = false;
+                // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+            }
+
+            LOG_W("reinit guage!");
+            ret = hl_drv_cw2215_deinit();
+            if (ret == CW2215_FUNC_RET_OK) {
+                ret = hl_drv_cw2215_init();
+                if (ret == CW2215_FUNC_RET_OK) {
+                    LOG_W("guage need calibration!");
+                    _pm_mod.guage_reinit_flag = true;
+                }
+            }
+        } else {  //不需要重新初始化
+            if (_pm_mod.guage_init_flag == false) {
+                LOG_W("guage good again!");
+                _pm_mod.guage_init_flag = true;
+                // _mod_msg_send(HL_MOD_PM_GUAGE_ERR_MSG, &(_pm_mod.guage_init_flag), sizeof(bool));
+            }
         }
     }
 }
@@ -367,12 +436,39 @@ static void _guage_state_poll()
     static uint16_t count = 0;
 
     if (count == 0) {
-        // _guage_err_monitor();
+        _guage_err_monitor();
         _guage_state_update();
-        count = 50;
+        count = 20;
     } else {
         count--;
     }
+}
+
+static void _guage_reinit_check_poll(void)
+{
+    if (_pm_mod.guage_reinit_flag == false || _pm_mod.guage_init_flag == false) {  //不需要校准或者电量计不正常
+        _pm_mod.guage_reinit_flag = false;
+        return;
+    }
+
+    int ret;
+
+    if (hl_hal_gpio_read(GPIO_VBUS_DET) != PIN_HIGH || hl_hal_gpio_read(GPIO_PBUS_DET) != PIN_HIGH) {  //插入充电电源
+        if (_pm_mod.charger_charge_terminate_flag == false) {  //充电状态未终止
+            return;
+        }
+    }
+
+    LOG_W("calibration guage!");
+    ret = hl_drv_cw2215_deinit();
+    if (ret == CW2215_FUNC_RET_OK) {
+        ret = hl_drv_cw2215_init();
+        if (ret == CW2215_FUNC_RET_OK) {
+            LOG_W("guage calibration ok!");
+        }
+    }
+
+    _pm_mod.guage_reinit_flag = false;
 }
 
 static void _charger_charge_state_update(void)
@@ -424,12 +520,59 @@ static void _charger_charge_state_update(void)
     }
 }
 
+static void _charger_ntc_state_poll(void)
+{
+    HL_SY_INPUT_PARAM_T   sy6971_param;
+    HL_SGM_INPUT_PARAM_T  sgm_param;
+    hl_mod_pm_ntc_state_e ntc_state = HL_NTC_STATE_UNKNOWN;
+
+    if (_pm_mod.charger == HL_MOD_PM_CHARGER_SY6971) {
+        sy6971_param.cfg_opt = E_NTC_FAULT;
+        hl_drv_sy6971_io_ctrl(SY_READ_CMD, &sy6971_param, 1);
+
+        if (sy6971_param.param == 0) {
+            ntc_state = HL_NTC_STATE_NORMAL;
+        } else if (sy6971_param.param == 2) {
+            ntc_state = HL_NTC_STATE_WARM;
+        } else if (sy6971_param.param == 3) {
+            ntc_state = HL_NTC_STATE_COOL;
+        } else if (sy6971_param.param == 5) {
+            ntc_state = HL_NTC_STATE_COLD;
+        } else if (sy6971_param.param == 6) {
+            ntc_state = HL_NTC_STATE_HOT;
+        }
+    } else if (_pm_mod.charger == HL_MOD_PM_CHARGER_SGM41518) {
+        sgm_param.cfg_opt = R_NTC_FAULT;
+        hl_drv_sgm41518_io_ctrl(SGM_READ_CMD, &sgm_param, 1);
+
+        if (sgm_param.param == 0) {
+            ntc_state = HL_NTC_STATE_NORMAL;
+        } else if (sgm_param.param == 2) {
+            ntc_state = HL_NTC_STATE_WARM;
+        } else if (sgm_param.param == 3) {
+            ntc_state = HL_NTC_STATE_COOL;
+        } else if (sgm_param.param == 5) {
+            ntc_state = HL_NTC_STATE_COLD;
+        } else if (sgm_param.param == 6) {
+            ntc_state = HL_NTC_STATE_HOT;
+        }
+    } else {
+        return;
+    }
+
+    if (ntc_state != _pm_mod.charger_ntc_state) {
+        _pm_mod.charger_ntc_state = ntc_state;
+        LOG_I("charger NTC state:%d", ntc_state);
+    }
+}
+
 static void _charger_charge_state_poll(void)
 {
     static uint8_t count = 0;
 
     if (count == 0) {
         _charger_charge_state_update();
+        _charger_ntc_state_poll();
         count = 10;
     } else {
         count--;
@@ -457,26 +600,64 @@ static void _charge_state_judge(void)
     static bool              flag         = false;
     hl_mod_pm_charge_state_e charge_state = HL_CHARGE_STATE_UNKNOWN;
 
-    if (_pm_mod.vbus_c_state == 1 || _pm_mod.vbus_p_state == 1) {
-        if (_pm_mod.charge_full_timeout_flag == true) {
-            charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
-        } else {
-            if (_pm_mod.charger_charge_terminate_flag == true) {
-                if (_pm_mod.bat_info.soc.soc != 100) {
-                    // 重新初始化电量计
-                }
+    if (_pm_mod.guage_init_flag == true && _pm_mod.charger_init_flag == true) {
+        if (_pm_mod.vbus_c_state == 1 || _pm_mod.vbus_p_state == 1) {
+            if (_pm_mod.charge_full_timeout_flag == true) {
                 charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
             } else {
-                if (_pm_mod.bat_info.soc.soc >= 95) {
-                    charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+                if (_pm_mod.charger_charge_terminate_flag == true) {
+                    if (_pm_mod.bat_info.soc.soc != 100) {
+                        // 重新初始化电量计
+                    }
+                    charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
+                } else {
+                    if (_pm_mod.bat_info.soc.soc >= 95) {
+                        charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+                    } else {
+                        charge_state = HL_CHARGE_STATE_CHARGING;
+                    }
+                }
+            }
+        } else {
+            charge_state                          = HL_CHARGE_STATE_NO_CHARGE;
+            _pm_mod.charger_charge_terminate_flag = false;
+        }
+    } else if (_pm_mod.guage_init_flag == false && _pm_mod.charger_init_flag == true) {
+        if (_pm_mod.vbus_c_state == 1 || _pm_mod.vbus_p_state == 1) {
+            if (_pm_mod.charge_full_timeout_flag == true) {
+                charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
+            } else {
+                if (_pm_mod.charger_charge_terminate_flag == true) {
+                    charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
                 } else {
                     charge_state = HL_CHARGE_STATE_CHARGING;
                 }
             }
+        } else {
+            charge_state                          = HL_CHARGE_STATE_NO_CHARGE;
+            _pm_mod.charger_charge_terminate_flag = false;
+        }
+    } else if (_pm_mod.guage_init_flag == true && _pm_mod.charger_init_flag == false) {
+        if (_pm_mod.bat_info.current > 0) {
+            if (_pm_mod.charge_full_timeout_flag == true) {
+                charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
+            } else {
+                if (_pm_mod.bat_info.soc.soc == 100) {
+                    charge_state = HL_CHARGE_STATE_CHARGE_FULL_DONE;
+                } else {
+                    if (_pm_mod.bat_info.soc.soc >= 95) {
+                        charge_state = HL_CHARGE_STATE_CHARGE_DONE;
+                    } else {
+                        charge_state = HL_CHARGE_STATE_CHARGING;
+                    }
+                }
+            }
+        } else {
+            charge_state                          = HL_CHARGE_STATE_NO_CHARGE;
+            _pm_mod.charger_charge_terminate_flag = false;
         }
     } else {
-        charge_state                          = HL_CHARGE_STATE_NO_CHARGE;
-        _pm_mod.charger_charge_terminate_flag = false;
+        charge_state = HL_CHARGE_STATE_NO_CHARGE;
     }
 
     if (charge_state != _pm_mod.charge_state) {
@@ -486,18 +667,70 @@ static void _charge_state_judge(void)
     }
 }
 
+static bool _use_charge_full_timer_flag = true;
+
+static void hl_mod_pm_stop_charge_full_timer(void)
+{
+    _use_charge_full_timer_flag = false;
+}
+
+MSH_CMD_EXPORT(hl_mod_pm_stop_charge_full_timer, 停止充电终止定时器);
+
 static void _charge_full_timer_set(void)
 {
     static bool flag = false;
 
-    if (_pm_mod.vbus_p_state == 1
-        && (_pm_mod.guage_init_flag == false
-            || (_pm_mod.bat_info.temp.temp > MIN_CHARGE_TEMP && _pm_mod.bat_info.temp.temp < MAX_CHARGE_TEMP))) {
-        if (flag == false) {
-            flag = true;
-            rt_timer_start(&(_pm_mod.charge_full_timer));
-            _pm_mod.charge_full_timeout_flag = false;
-            LOG_I("start charge-full timer!");
+    if (_pm_mod.guage_init_flag == true && _pm_mod.charger_init_flag == true) {
+        if (_use_charge_full_timer_flag == true && _pm_mod.vbus_p_state == 1
+            && (_pm_mod.charger_init_flag == false
+                || (_pm_mod.charger_ntc_state < HL_NTC_STATE_HOT && _pm_mod.charger_ntc_state > HL_NTC_STATE_COOL))) {
+            if (flag == false) {
+                flag = true;
+                rt_timer_start(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("start charge-full timer!");
+            }
+        } else {
+            if (flag == true) {
+                flag = false;
+                rt_timer_stop(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("stop charge-full timer!");
+            }
+        }
+    } else if (_pm_mod.guage_init_flag == false && _pm_mod.charger_init_flag == true) {
+        if (_use_charge_full_timer_flag == true && _pm_mod.vbus_p_state == 1
+            && (_pm_mod.charger_init_flag == false
+                || (_pm_mod.charger_ntc_state < HL_NTC_STATE_HOT && _pm_mod.charger_ntc_state > HL_NTC_STATE_COOL))) {
+            if (flag == false) {
+                flag = true;
+                rt_timer_start(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("start charge-full timer!");
+            }
+        } else {
+            if (flag == true) {
+                flag = false;
+                rt_timer_stop(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("stop charge-full timer!");
+            }
+        }
+    } else if (_pm_mod.guage_init_flag == true && _pm_mod.charger_init_flag == false) {
+        if (_use_charge_full_timer_flag == true && _pm_mod.vbus_p_state == 1 && _pm_mod.bat_info.current > 0) {
+            if (flag == false) {
+                flag = true;
+                rt_timer_start(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("start charge-full timer!");
+            }
+        } else {
+            if (flag == true) {
+                flag = false;
+                rt_timer_stop(&(_pm_mod.charge_full_timer));
+                _pm_mod.charge_full_timeout_flag = false;
+                LOG_I("stop charge-full timer!");
+            }
         }
     } else {
         if (flag == true) {
@@ -558,6 +791,8 @@ static void _pm_thread_entry(void* arg)
         _guage_state_poll();
 #endif
 
+        _guage_reinit_check_poll();
+
         _charger_charge_state_poll();
         // _charger_fault_state_poll();
         _charge_state_judge();
@@ -580,6 +815,7 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
 {
     int                  ret;
     HL_SGM_INPUT_PARAM_T sgm_param;
+    bool                 flag;
 
     if (_pm_mod.init_flag == true) {
         LOG_W("pm is already inited!");
@@ -587,14 +823,16 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
     }
 
     if (hl_drv_sy6971_init() == HL_SUCCESS) {
-        power_ic_typ    = HL_MOD_PM_CHARGER_SY6971;
-        _pm_mod.charger = HL_MOD_PM_CHARGER_SY6971;
-        pm_ioctl        = hl_drv_sy6971_io_ctrl;
+        power_ic_typ              = HL_MOD_PM_CHARGER_SY6971;
+        _pm_mod.charger           = HL_MOD_PM_CHARGER_SY6971;
+        pm_ioctl                  = hl_drv_sy6971_io_ctrl;
+        _pm_mod.charger_init_flag = true;
         LOG_I("sy6971 charger init success!");
     } else if (hl_drv_sgm41518_init() == HL_SUCCESS) {
-        power_ic_typ    = HL_MOD_PM_CHARGER_SGM41518;
-        _pm_mod.charger = HL_MOD_PM_CHARGER_SGM41518;
-        pm_ioctl        = hl_drv_sgm41518_io_ctrl;
+        power_ic_typ              = HL_MOD_PM_CHARGER_SGM41518;
+        _pm_mod.charger           = HL_MOD_PM_CHARGER_SGM41518;
+        pm_ioctl                  = hl_drv_sgm41518_io_ctrl;
+        _pm_mod.charger_init_flag = true;
         LOG_I("sgm41518 charger init success!");
 
         sgm_param.cfg_opt = RW_EN_BAT_CHARGING;
@@ -603,9 +841,21 @@ int hl_mod_pm_init(rt_mq_t msg_hd)
         sgm_param.param = 1;
         hl_drv_sgm41518_io_ctrl(SGM_WRITE_CMD, &sgm_param, 1);
     } else {
-        _pm_mod.charger = HL_MOD_PM_CHARGER_UNKNOWN;
+        _pm_mod.charger           = HL_MOD_PM_CHARGER_UNKNOWN;
+        _pm_mod.charger_init_flag = false;
         LOG_E("all charger init err! please check charger");
         return HL_MOD_PM_FUNC_RET_ERR;
+    }
+
+    ret = hl_drv_cw2215_ctrl(HL_DRV_GUAGE_CHIP_SELF_CHECK, &flag, sizeof(flag));
+    if (ret != CW2215_FUNC_RET_ERR) {
+        if (flag == true) {
+            LOG_W("guage need calibration!");
+            _pm_mod.guage_reinit_flag = true;
+        } else {
+            LOG_W("guage no need calibration!");
+            _pm_mod.guage_reinit_flag = false;
+        }
     }
 
     ret = hl_drv_cw2215_init();
@@ -689,6 +939,8 @@ int hl_mod_pm_start(void)
     _pm_mod.vbus_p_state                  = 0;
     _pm_mod.charge_full_timeout_flag      = false;
     _pm_mod.charger_charge_terminate_flag = false;
+    _pm_mod.charger_ntc_state             = HL_NTC_STATE_UNKNOWN;
+    _pm_mod.ui_soc                        = 0xff;
 #if 0
     _guage_gpio_irq_enable(true);
 #endif
@@ -752,11 +1004,17 @@ int hl_mod_pm_ctrl(hl_mod_pm_cmd_e cmd, void* arg, int arg_size)
         return HL_MOD_PM_FUNC_RET_ERR;
     }
 
+    int ret;
+
     switch (cmd) {
         case HL_PM_POWER_UP_CMD: {
             _power_gpio_set(GPIO_ALL_POWER, true);
         } break;
         case HL_PM_POWER_DOWN_CMD: {
+            int i = 100;
+            while (_pm_mod.guage_reinit_flag == true && i--) {
+                rt_thread_mdelay(10);
+            }
             _power_gpio_set(GPIO_ALL_POWER, false);
         } break;
         case HL_PM_BAT_INFO_UPDATE_CMD: {

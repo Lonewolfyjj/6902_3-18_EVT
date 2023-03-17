@@ -63,6 +63,9 @@ extern bool    _rx_in_box_flag;
 extern bool    _tx1_in_box_flag;
 extern bool    _tx2_in_box_flag;
 extern uint8_t _dev_num;
+
+static bool _in_box_flag    = false;
+static bool _shut_down_flag = false;
 /* Private function(only *.c)  -----------------------------------------------*/
 static void _hl_app_mng_charger_power_on_stm()
 {
@@ -162,9 +165,11 @@ static void _hl_app_mng_charger_charge_pro(hl_mod_pm_charge_state_e charge_state
         state = OUTBOX_OFFCHARGE_OFFPAGE;
     }
 
-    if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH) {
+    if (hl_hal_gpio_read(GPIO_PWR_KEY) == PIN_HIGH && hl_hal_gpio_read(GPIO_PBUS_DET) == PIN_HIGH
+        && _in_box_flag == false) {
         hl_mod_display_io_ctrl(OUT_BOX_CHARGER_SWITCH_CMD, &state, 1);
     }
+
     if (rx_info.charge_flag == 1) {
         state = 1;
     } else {
@@ -309,9 +314,6 @@ static void hl_app_mng_charger_goto_power_on()
 {
     sg_stm_charger_pwr_key_state = EM_CHARGER_POWER_ON_STM_PROCESS;
 }
-
-static bool _in_box_flag    = false;
-static bool _shut_down_flag = false;
 
 #if HL_IS_TX_DEVICE()
 static void _hl_app_mng_charger_euc_process(mode_to_app_msg_t* p_msg)
