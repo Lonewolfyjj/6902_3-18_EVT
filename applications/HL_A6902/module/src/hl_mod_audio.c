@@ -582,6 +582,7 @@ static int hl_mod_audio_record_switch(uint8_t record_switch)
         rt_ringbuffer_reset(record_info.record_bypass_rb);
         if (hl_mod_audio_record_front_inspection()) {
             hl_mod_audio_record_fault();
+            return -1;
         }
 
         s_record_switch = 1;
@@ -795,6 +796,10 @@ static int hl_mod_audio_record_self_del(void)
     free_size = (uint64_t)buffer.f_bfree * (uint64_t)buffer.f_bsize;
     // LOG_D("free disk %ld\n", free_size);
     // 1024*1024*320*2 = 1048576*320*2 = 671088640 当容量大于320*M的大小时，就开始删旧的文件
+    if (free_size == 0) {
+        return -1;
+    }
+
     if (free_size >= 671088640) {
         return 0;
     }
@@ -2724,7 +2729,7 @@ uint8_t hl_mod_audio_io_ctrl(hl_mod_audio_ctrl_cmd cmd, void* ptr, uint16_t len)
         case HL_AUDIO_CHECK_DFS_CMD:
             hl_mod_audio_dfs_root();
             hl_mod_audio_dfs_sd();
-            break;    
+            break;
         case HL_AUDIO_MSTORAGE_SWITCH_CMD:
             if (ptr == NULL) {
                 LOG_E("HL_AUDIO_MSTORAGE_SWITCH_CMD parem error");

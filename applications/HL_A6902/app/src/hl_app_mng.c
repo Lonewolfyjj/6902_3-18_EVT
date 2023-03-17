@@ -287,6 +287,11 @@ void hl_app_param_reset(void)
 /* Exported functions --------------------------------------------------------*/
 void hl_app_msg_thread(void* parameter)
 {
+#if HL_IS_TX_DEVICE()
+    int mkfs_flag = 0;
+    uint8_t mkfs_flag_u = 0;
+#endif
+
     hl_mod_feed_dog();
     mode_to_app_msg_t msg = { 0 };
 
@@ -296,11 +301,36 @@ void hl_app_msg_thread(void* parameter)
 
 #if HL_IS_TX_DEVICE()
     rt_thread_mdelay(5);
+    // MKFS_FLAG 表示当前sd0和root是否是烧录代码后未格式化的状态，为17（0x11）表示当前是sd0和root均未格式化，为1(0x01)表示是只有root未格式化
+    // 为16(0x10)表示当前是只有sd0未格式化
+    hl_util_nvram_param_get_integer("MKFS_FLAG", &mkfs_flag, 1);
+    mkfs_flag_u = mkfs_flag;
+    LOG_D("MKFS_FLAG(%d)",mkfs_flag_u);
+    if ((mkfs_flag_u & 0x0F) == 0x01) {
+        // 只格式化root分区
+        hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);
+        mkfs_flag_u = mkfs_flag_u & 0xF0;
+        mkfs_flag = mkfs_flag_u;
+        LOG_D("MKFS_FLAG(%x)",mkfs_flag);
+        hl_util_nvram_param_set_integer("MKFS_FLAG", (int8_t)mkfs_flag);
+    }
+
     if (tx_info.mstorage_plug == 0) {
+        // tx 插入usb都格式化root
+        if ((mkfs_flag_u & 0xF0) == 0x10) {
+            hl_mod_audio_io_ctrl(HL_AUDIO_MKFS_DFS_CMD, NULL, 0);
+            mkfs_flag_u = mkfs_flag_u & 0x0F;
+
+            mkfs_flag = mkfs_flag_u;
+            LOG_D("MKFS_FLAG(%x)",mkfs_flag);
+            hl_util_nvram_param_set_integer("MKFS_FLAG", (int8_t)mkfs_flag);
+        }
+
 #else
     if (rx_info.mstorage_plug == 0) {
-#endif
         hl_mod_audio_io_ctrl(HL_AUDIO_CHECK_DFS_CMD, NULL, 0);
+        
+#endif
         hl_mod_upgrade_io_ctrl(HL_UPGRADE_OPEN_CMD, NULL, 0);
     }
     hl_app_param_fun();
