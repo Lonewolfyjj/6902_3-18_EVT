@@ -153,6 +153,7 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
     hl_rf_channel_e           rf_bypass_chn   = 0;
     hl_rf_bypass_value_t      rf_bypass_value = { 0 };
     hl_rf_bypass_state_t      rf_bypass_state = { 0 };
+    hl_rf_bypass_time_t       rf_bypass_time  = { 0 };
     uint32_t                  ptr;
     hl_display_sound_module_e sound_module;
     hl_audio_time_t           time;
@@ -373,6 +374,10 @@ void hl_app_disp_msg_pro(mode_to_app_msg_t* p_msg)
         case SYSTIME_SET_VAL_IND:
             // 调用音量设置接口设置时间
             LOG_D("SYSTIME_SET_VAL_IND\r\n");
+            hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &rf_bypass_time.time, sizeof(rf_bypass_time.time));
+            rt_kprintf("\nTIME-->[%d][%d][%d][%d][%d][%d]\n", rf_bypass_time.time.year, rf_bypass_time.time.month,
+                       rf_bypass_time.time.day, rf_bypass_time.time.hour, rf_bypass_time.time.minute, rf_bypass_time.time.second);
+            hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &rf_bypass_time, sizeof(rf_bypass_time));
             break;
         case POWEROFF_SET_VAL_IND:
             // 自动关机时间设置

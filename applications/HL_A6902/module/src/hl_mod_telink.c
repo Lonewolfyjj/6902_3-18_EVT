@@ -355,7 +355,7 @@ static void _telink_hup_success_handle_cb(hup_protocol_type_t hup_frame)
             break;
 
         case HL_RF_BYPASS_TIME_IND:
-            rt_memcpy(&s_rf_info.time, (hl_rf_bypass_time_t*)&hup_frame.data_addr, sizeof(hl_rf_bypass_time_t));
+            rt_memcpy(&s_rf_info.time, (hl_rf_bypass_time_t*)hup_frame.data_addr, sizeof(hl_rf_bypass_time_t));
             app_msg_t.len       = sizeof(s_rf_info.time);
             app_msg_t.param.ptr = (uint8_t*)&s_rf_info.time;
             break;
