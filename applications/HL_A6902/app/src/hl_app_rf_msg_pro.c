@@ -242,9 +242,9 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_TIME_IND:
             ptr_rf_time = (hl_rf_bypass_time_t*)p_msg->param.ptr;
             // hl_mod_audio_io_ctrl(HL_AUDIO_SET_TIME_CMD, &ptr_rf_time->time, sizeof(ptr_rf_time->time));
-            // LOG_D("app get TX%d Time[%d][%d][%d][%d][%d][%d]", ptr_rf_time->chn, ptr_rf_time->time.year,
-            //       ptr_rf_time->time.month, ptr_rf_time->time.day, ptr_rf_time->time.hour, ptr_rf_time->time.minute,
-            //       ptr_rf_time->time.second);
+            LOG_D("\napp get TX%d Time[%02d][%02d][%02d][%02d][%02d][%02d]\n", ptr_rf_time->chn, ptr_rf_time->time.year,
+                  ptr_rf_time->time.month, ptr_rf_time->time.day, ptr_rf_time->time.hour, ptr_rf_time->time.minute,
+                  ptr_rf_time->time.second);
             break;
 
         case HL_RF_BYPASS_SOUND_EFFECT_IND:
@@ -294,8 +294,10 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
             hl_mod_display_io_ctrl(RX_RF_STATE_VAL_CMD, &rx_info.rf_state, sizeof(rx_info.rf_state));
             bypass_time.chn = rx_info.rf_chn;
             hl_app_pm_timer_set();
-            // hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &bypass_time.time, sizeof(bypass_time.time));
-            // hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &bypass_time, sizeof(bypass_time));
+            hl_mod_audio_io_ctrl(HL_AUDIO_GET_RTC_TIME_CMD, &bypass_time.time, sizeof(bypass_time.time));
+            rt_kprintf("\nTIME-->[%d][%d][%d][%d][%d][%d]\n", bypass_time.time.year, bypass_time.time.month,
+                       bypass_time.time.day, bypass_time.time.hour, bypass_time.time.minute, bypass_time.time.second);
+            hl_mod_telink_ioctl(HL_RF_BYPASS_TIME_CMD, &bypass_time, sizeof(bypass_time));
             break;
 
         case HL_RF_REFRESH_STATE_IND:
