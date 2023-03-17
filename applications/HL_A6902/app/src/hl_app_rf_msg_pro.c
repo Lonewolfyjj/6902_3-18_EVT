@@ -170,7 +170,7 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_TX_GAIN_IND:
             ptr_rf_value = (hl_rf_bypass_value_t*)p_msg->param.ptr;
             tx_info.gain = (int8_t)ptr_rf_value->val;
-            tx_info.gain = tx_info.gain * 2;
+            tx_info.gain = tx_info.gain;
             hl_app_audio_gain(tx_info.gain);
             hl_util_nvram_param_set_integer("TX_GAIN", tx_info.gain);
             LOG_D("app get TX%d Gain Value(%d)(%d)", ptr_rf_value->chn, (int8_t)ptr_rf_value->val, tx_info.gain);
