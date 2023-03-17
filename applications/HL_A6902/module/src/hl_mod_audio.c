@@ -409,27 +409,22 @@ static void hl_mod_audio_rtc_get_param(void* timer_param)
     if (timer_param == NULL) {
         return;
     }
-    rtc_time    time;
+
     int         ret;
     hl_audio_time_t* timer = (hl_audio_time_t*)timer_param;
-    memset(&time, 0, sizeof(rtc_time));
+    memset(timer, 0, sizeof(rtc_time));
 
-    /* 时、分、秒 的校准 */
-    time.hour   = (time.hour & 0x3f) % 24;
-    time.minute = (time.minute & 0x7f) % 60;
-    time.second = (time.second & 0x7f) % 60;
+    ret = hl_mod_audio_rtc(RTC_GET_TIME, (void*)timer, sizeof(rtc_time));
 
-    timer->year   = time.year + 2000;
-    timer->month  = time.month & 0x1f;
-    timer->day    = time.day & 0x3f;
-    timer->hour   = time.hour;
-    timer->minute = time.minute;
-    timer->second = time.second;
+    /* 月、日、时、分、秒 的校准 */
+    timer->month  = timer->month & 0x1f;
+    timer->day    = timer->day & 0x3f;
+    timer->hour   = (timer->hour & 0x3f) % 24;
+    timer->minute = (timer->minute & 0x7f) % 60;
+    timer->second = (timer->second & 0x7f) % 60;
 
-    ret = hl_mod_audio_rtc(RTC_SET_TIME, (void*)&time, sizeof(rtc_time));
-
-    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", time.year, time.month & 0x1f, time.day & 0x3f, time.hour,
-               time.minute, time.second);
+    rt_kprintf("20%02d-%02d-%02d-%02d-%02d-%02d\r\n", timer->year, timer->month, timer->day, timer->hour,
+               timer->minute, timer->second);
 }
 
 // 设置时间
