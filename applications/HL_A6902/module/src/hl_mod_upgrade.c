@@ -468,7 +468,7 @@ void hl_mod_upgrade_telink_start(void)
 
     LOG_I("%s telink start !\n", __func__);
 
-    s_upgrade.telink_task_thread = rt_thread_create("TelinkUp", _upgrade_telink_do, RT_NULL, 3072, 15, 20);
+    s_upgrade.telink_task_thread = rt_thread_create("TelinkUp", _upgrade_telink_do, RT_NULL, 3072, 10, 20);
 
     if (!s_upgrade.telink_task_thread) {
         LOG_E("telink task create failed");
@@ -564,7 +564,7 @@ END:
 void hl_mod_upgrade_ota_start(void)
 {
     rt_kprintf("%s ota start !\n", __func__);
-    s_upgrade.ota_task_thread = rt_thread_create("OtaUp", hl_mod_upgrade_ota, RT_NULL, 8192 * 2, 15, 20);
+    s_upgrade.ota_task_thread = rt_thread_create("OtaUp", hl_mod_upgrade_ota, RT_NULL, 8192 * 2, 10, 20);
 
     if (!s_upgrade.ota_task_thread) {
         rt_kprintf("ota test task create failed");

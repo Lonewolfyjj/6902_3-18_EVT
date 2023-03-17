@@ -129,11 +129,15 @@ void hl_app_rf_msg_pro(mode_to_app_msg_t* p_msg)
         case HL_RF_BYPASS_RECORD_IND:
             ptr_rf_state  = (hl_rf_bypass_state_t*)p_msg->param.ptr;
             bypass_switch = (hl_switch_e)ptr_rf_state->state;
-            if (tx_info.rec_flag != bypass_switch) {
-                tx_info.rec_flag = bypass_switch;
-                hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
-                hl_app_disp_state_led_set();
-                hl_app_pm_timer_set();
+            if (tx_info.mstorage_plug == 1) {
+                LOG_I("USB insert state (%d) !!! \r\n", tx_info.mstorage_plug);
+            }else {
+                if (tx_info.rec_flag != bypass_switch) {
+                    tx_info.rec_flag = bypass_switch;
+                    hl_mod_audio_io_ctrl(HL_AUDIO_RECORD_CMD, &bypass_switch, 1);
+                    hl_app_disp_state_led_set();
+                    hl_app_pm_timer_set();
+                }
             }
             LOG_I("app get RX Record Switch(%d) ", bypass_switch);
             break;
