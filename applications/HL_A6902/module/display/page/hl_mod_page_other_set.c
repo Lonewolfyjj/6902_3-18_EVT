@@ -87,7 +87,7 @@ static void page_9_test(void)
         ADD_IMG_DATA(NULL, NULL, &Menu_time_config, page_ptr->menu_page_ptr->page_other_set->ptr_time_config),//"时间设置"),
         ADD_IMG_DATA(NULL, NULL, &Menu_verson, page_ptr->menu_page_ptr->page_other_set->ptr_verson),//"版本信息"),
         ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_reset_factory),//"恢复出厂设置"),
-        // ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_upgrade),//"开启升级"),
+        ADD_IMG_DATA(NULL, NULL, &Menu_reset_factory, page_ptr->menu_page_ptr->page_other_set->ptr_upgrade),//"开启升级"),
     };
 
     hl_util_nvram_param_get_integer("MSC_OPEN", &param, 0);
